@@ -1,0 +1,28 @@
+# Requirements for the FastAPI application
+fastapi==0.121.0
+uvicorn==0.38.0
+python-dotenv==1.2.1
+
+
+# Database
+sqlalchemy==2.0.44
+asyncpg==0.30.0
+alembic==1.17.1
+
+# Authentication & Security
+passlib[argon2]==1.7.4
+PyJWT==2.10.1
+pyotp==2.9.0
+qrcode[pil]==8.2
+
+
+# Caching
+redis==7.0.1
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Configuration & Validation
+pydantic-settings==2.11.0
+email-validator==2.3.0
+python-multipart==0.0.20
