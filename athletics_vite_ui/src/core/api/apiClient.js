@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Settings from '@components/constants';
+import Settings from '@config/enviroment';
 
 const BASE_URL = Settings.API_URL + '/api/v1';
 
@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
 // Request interceptor for adding auth token
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('access_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -28,8 +28,9 @@ axiosInstance.interceptors.response.use(
     (error) => {
         // Handle specific error codes (e.g., 401 for logout)
         if (error.response && error.response.status === 401) {
-            // localStorage.removeItem('token');
-            // window.location.href = '/login';
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
