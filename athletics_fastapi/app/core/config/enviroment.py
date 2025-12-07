@@ -1,10 +1,15 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from functools import lru_cache
-from typing import List
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_ignore_empty=True, case_sensitive=False)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_ignore_empty=True,
+        case_sensitive=False,
+        extra="ignore"  
+    )
     
     # ============================================
     # CONFIGURACIÓN DE LA APLICACIÓN
@@ -37,7 +42,7 @@ class Settings(BaseSettings):
     access_token_expires_minutes: int = Field(15, alias="ACCESS_TOKEN_EXPIRES_MINUTES", required=True)
     refresh_token_expires_days: int = Field(7, alias="REFRESH_TOKEN_EXPIRES_DAYS", required=True)
 
-    #  Email
+    # Email
     email_host: str = Field("smtp.gmail.com", alias="EMAIL_HOST", required=True)
     email_port: int = Field(587, alias="EMAIL_PORT", required=True)
     email_use_tls: bool = Field(True, alias="EMAIL_USE_TLS", required=True)
@@ -46,11 +51,23 @@ class Settings(BaseSettings):
 
     @property
     def database_url_async(self) -> str:
-        return f"postgresql+asyncpg://{self.database_user}:{self.database_password}@{self.database_host}:{self.database_port}/{self.database_name}"
+        return (
+            f"postgresql+asyncpg://{self.database_user}:{self.database_password}"
+            f"@{self.database_host}:{self.database_port}/{self.database_name}"
+        )
+
+    @property
+    def database_url_sync(self) -> str:
+        return (
+            f"postgresql://{self.database_user}:{self.database_password}"
+            f"@{self.database_host}:{self.database_port}/{self.database_name}"
+        )
 
 
 @lru_cache
 def load_settings() -> Settings:
     return Settings()
 
+
 _SETTINGS = load_settings()
+
