@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.cache.redis import get_redis
 from typing import Optional
@@ -10,6 +10,8 @@ from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.password_reset_service import PasswordResetService
 from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.modules.auth.services.two_factor_service import TwoFactorService
+from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.core.jwt.jwt import get_current_user
 
 async def get_users_repo(session: AsyncSession = Depends(get_session)) -> AuthUsersRepository:
     return AuthUsersRepository(session)
@@ -55,3 +57,12 @@ async def delete_password_reset_code(email: str) -> None:
     r = get_redis()
     key = f"pwd_reset:{email.strip().lower()}"
     await r.delete(key)
+
+#obteniendo el usuario actual y verificando si es admin
+async def get_current_admin_user(current_user = Depends(get_current_user)):
+    if current_user.role != RoleEnum.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos de administrador"
+        )
+    return current_user
