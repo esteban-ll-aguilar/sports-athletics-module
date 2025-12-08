@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
@@ -10,7 +10,8 @@ import {
     Menu,
     X,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Settings
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
 
@@ -28,12 +29,19 @@ const Sidebar = () => {
         navigate('/login');
     };
 
+    const goTo = (path) => {
+        navigate(path);
+        setIsMobileOpen(false);
+    };
+
     const menuItems = [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/competitions', icon: Trophy, label: 'Competencias' },
         { path: '/dashboard/events', icon: Calendar, label: 'Eventos' },
         { path: '/dashboard/results', icon: Activity, label: 'Resultados' },
+        { path: '/dashboard/users', icon: Settings, label: 'Administración' },
+
     ];
 
     const isActive = (path) => location.pathname === path;
@@ -90,10 +98,11 @@ const Sidebar = () => {
                 {/* Navigation Items */}
                 <nav className="mt-6 px-2 space-y-2">
                     {menuItems.map((item) => (
-                        <Link
+                        <div
                             key={item.path}
-                            to={item.path}
+                            onClick={() => goTo(item.path)}
                             className={`
+                                cursor-pointer
                                 flex items-center px-4 py-3 rounded-lg transition-colors duration-200
                                 ${isActive(item.path)
                                     ? 'bg-indigo-50 text-indigo-600'
@@ -110,7 +119,7 @@ const Sidebar = () => {
                                     {item.label}
                                 </div>
                             )}
-                        </Link>
+                        </div>
                     ))}
                 </nav>
 

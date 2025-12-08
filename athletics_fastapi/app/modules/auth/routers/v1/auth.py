@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
-    UserCreate, UserRead, TokenPair, RefreshRequest, TwoFactorRequired
+    UserCreate, UserRead, TokenPair, RefreshRequest, TwoFactorRequired, 
 )
 from app.modules.auth.dependencies import (
     get_users_repo, get_sessions_repo, get_jwt_manager, 
@@ -222,7 +222,6 @@ async def logout(
     except Exception as e:
         logger.error(f"Error al revocar refresh token: {e}")
         pass
-    
-    return
 
+    return
 

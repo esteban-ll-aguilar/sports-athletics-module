@@ -7,6 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
 
+
 const router = createBrowserRouter([
     {
         path: '/',
