@@ -112,7 +112,9 @@ async def get_current_user(
     user_id = payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Token inválido")
-    res = await session.execute(select(AuthUserModel).where(AuthUserModel.id == user_id))
+    
+    #Actualmente el usuario maneja int en su id user_id, por lo que se debe convertir
+    res = await session.execute(select(AuthUserModel).where(AuthUserModel.id == int(user_id)))
     user = res.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="Usuario no autorizado")
