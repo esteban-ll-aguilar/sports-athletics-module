@@ -100,7 +100,7 @@ async def login(
     # Si tiene 2FA habilitado, retornar token temporal en el body
     if user.two_factor_enabled:
         # Crear token temporal de corta duración (5 minutos)
-        temp_token = jwtm.create_access_token(str(user.id))
+        temp_token = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
         logger.info(f"Login paso 1 exitoso (2FA requerido) para: {user.email}")
         return TwoFactorRequired(
             temp_token=temp_token,
@@ -109,8 +109,8 @@ async def login(
     
     # Login normal sin 2FA
     # Generar tokens
-    access = jwtm.create_access_token(str(user.id))
-    refresh = jwtm.create_refresh_token(str(user.id))
+    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
+    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.nombre)
     
     # Decodificar para obtener JTIs y exp
     access_payload = jwtm.decode(access)
@@ -173,8 +173,8 @@ async def refresh_token(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh inválido o reutilizado")
 
     # Emitir nuevos tokens y guardar nuevo refresh
-    access = jwtm.create_access_token(sub)
-    new_refresh = jwtm.create_refresh_token(sub)
+    access = jwtm.create_access_token(sub, payload.get("role"), payload.get("email"), payload.get("name"))
+    new_refresh = jwtm.create_refresh_token(sub, payload.get("role"), payload.get("email"), payload.get("name"))
     
     # Decodificar para obtener JTIs
     access_payload = jwtm.decode(access)

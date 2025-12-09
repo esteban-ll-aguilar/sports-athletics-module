@@ -13,6 +13,8 @@ import {
     ChevronRight
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
+import { getUserRole, getUserEmail } from '../../../../auth/utils/roleUtils';
+import rolePermissions from '../const/rolePermissions';
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
@@ -28,13 +30,11 @@ const Sidebar = () => {
         navigate('/login');
     };
 
-    const menuItems = [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
-        { path: '/dashboard/competitions', icon: Trophy, label: 'Competencias' },
-        { path: '/dashboard/events', icon: Calendar, label: 'Eventos' },
-        { path: '/dashboard/results', icon: Activity, label: 'Resultados' },
-    ];
+    const menuItems = []
+    const role = getUserRole();
+    if (role) {
+        menuItems.push(...rolePermissions[role]);
+    }
 
     const isActive = (path) => location.pathname === path;
 
@@ -123,7 +123,7 @@ const Sidebar = () => {
                         {isOpen && (
                             <div className="ml-3 overflow-hidden">
                                 <p className="text-sm font-medium text-gray-900 truncate">Usuario</p>
-                                <p className="text-xs text-gray-500 truncate">admin@athletics.com</p>
+                                <p className="text-xs text-gray-500 truncate">{getUserEmail() || 'Cargando...'}</p>
                             </div>
                         )}
                     </div>

@@ -15,4 +15,4 @@ api_auth_router_v1.include_router(auth_email_router_v1, prefix="/email", tags=[A
 api_auth_router_v1.include_router(reset_password_router_v1, prefix="/password-reset", tags=[APP_TAGS_V1.V1_AUTH_RESET_PASSWORD.value])
 api_auth_router_v1.include_router(auth_sessions_router_v1, prefix="/sessions", tags=[APP_TAGS_V1.V1_AUTH_SESSIONS.value])
 api_auth_router_v1.include_router(auth_twofa_router_v1, prefix="/2fa", tags=[APP_TAGS_V1.V1_AUTH_2FA.value])
-api_auth_router_v1.include_router(admin_router, prefix="/admin", tags=[APP_TAGS_V1.V1_ADMIN.value])
+api_auth_router_v1.include_router(admin_router, prefix="/admin", tags=[APP_TAGS_V1.V1_AUTH_ADMIN.value])
