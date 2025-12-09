@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Table, select, update
+from sqlalchemy import Table, select, update, func
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from typing import Optional
 import random, string
@@ -14,15 +14,26 @@ class AuthUsersRepository:
         res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.email == email))
         return res.scalar_one_or_none()
 
-    async def get_by_id(self, user_id: str) -> AuthUserModel | None:
-        """Obtiene un usuario por su ID (UUID o string)."""
+    async def get_all(self, skip: int = 0, limit: int = 20) -> list[AuthUserModel]:
+        res = await self.session.execute(select(AuthUserModel).offset(skip).limit(limit))
+        return list(res.scalars().all())
+
+    async def count(self) -> int:
+        res = await self.session.execute(select(func.count()).select_from(AuthUserModel))
+        return res.scalar()
+
+    async def get_by_id(self, user_id: int) -> AuthUserModel | None:
+        """Obtiene un usuario por su ID interno (int)."""
+        res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.id == user_id))
+        return res.scalar_one_or_none()
+
+    async def get_by_external_id(self, external_id: str) -> AuthUserModel | None:
+        """Obtiene un usuario por su external_id (UUID)."""
         try:
-            # Convertir a UUID si es string
-            if isinstance(user_id, str):
-                import uuid
-                user_id = uuid.UUID(user_id)
-            
-            res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.id == user_id))
+            import uuid
+            if isinstance(external_id, str):
+                external_id = uuid.UUID(external_id)
+            res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.external_id == external_id))
             return res.scalar_one_or_none()
         except (ValueError, TypeError):
             return None

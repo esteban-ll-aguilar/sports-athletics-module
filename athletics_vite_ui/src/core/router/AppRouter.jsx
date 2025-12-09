@@ -6,6 +6,7 @@ import LoginPage from '@modules/auth/ui/pages/LoginPage';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
+import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
 
 
 const router = createBrowserRouter([
@@ -42,6 +43,16 @@ const router = createBrowserRouter([
                     {
                         index: true,
                         element: <DashboardPage />,
+                    },
+                    {
+                        path: 'users',
+                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+                        children: [
+                            {
+                                index: true,
+                                element: <UserRoleManagementPage />,
+                            },
+                        ],
                     },
                     // Add other dashboard routes here
                 ],

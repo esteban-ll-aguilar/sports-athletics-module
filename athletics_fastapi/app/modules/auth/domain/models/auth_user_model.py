@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, DateTime, Text, JSON, func, Date, Integer
+from sqlalchemy import String, Boolean, DateTime, Text, JSON, func, Date, Integer, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid, datetime
@@ -40,4 +40,4 @@ class AuthUserModel(Base):
     fecha_nacimiento: Mapped[datetime.date] = mapped_column(Date, nullable=True)
     sexo: Mapped[str] = mapped_column(String, nullable=True)
     external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
-    role: Mapped[RoleEnum] = mapped_column(String, nullable=True, default=RoleEnum.ATLETA, index=True, server_default=RoleEnum.ATLETA)
+    role: Mapped[RoleEnum] = mapped_column(Enum(RoleEnum), nullable=True, default=RoleEnum.ATLETA, index=True, server_default=RoleEnum.ATLETA.value)
