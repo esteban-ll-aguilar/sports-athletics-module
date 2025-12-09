@@ -16,16 +16,7 @@ const UserRoleManagementPage = () => {
 
     const roles = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
 
-    useEffect(() => {
-        fetchUsers();
-    }, [currentPage]);
-
-    // Reset page when search term changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [searchTerm]);
-
-    const fetchUsers = async () => {
+    const fetchUsers = React.useCallback(async () => {
         setLoading(true);
         try {
             const data = await adminService.getUsers(currentPage, itemsPerPage);
@@ -37,7 +28,11 @@ const UserRoleManagementPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
 
     const handleRoleChange = (userId, newRole) => {
         setRoleChanges(prev => ({
@@ -87,7 +82,7 @@ const UserRoleManagementPage = () => {
             toast.success("Todos los roles actualizados");
             fetchUsers();
             setRoleChanges({});
-        } catch (error) {
+        } catch {
             toast.error("Error al guardar algunos cambios");
         }
     };
