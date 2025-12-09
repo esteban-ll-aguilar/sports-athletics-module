@@ -50,13 +50,13 @@ class JWTManager:
         current_secret = self.secret_rotation.get_current_secret()
         return jwt.encode(to_encode, current_secret, algorithm=self.algorithm)
 
-    def create_access_token(self, sub: str) -> str:
+    def create_access_token(self, sub: str, role: str, email: str, name: str) -> str:
         """Crea un access token con JTI único para revocación."""
-        return self._encode({"sub": str(sub), "type": "access"}, self.access_exp)
+        return self._encode({"sub": str(sub), "type": "access", "role": role, "email": email, "name": name}, self.access_exp)
 
-    def create_refresh_token(self, sub: str) -> str:
+    def create_refresh_token(self, sub: str, role: str, email: str, name: str) -> str:
         """Crea un refresh token con JTI único para revocación."""
-        return self._encode({"sub": str(sub), "type": "refresh"}, self.refresh_exp)
+        return self._encode({"sub": str(sub), "type": "refresh", "role": role, "email": email, "name": name}, self.refresh_exp)
 
     def decode(self, token: str) -> dict[str, Any]:
         """

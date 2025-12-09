@@ -2,15 +2,30 @@ from fastapi import APIRouter, Depends, status
 from app.modules.auth.dependencies import get_current_admin_user
 from app.modules.admin.dependencies import get_admin_user_service
 from app.modules.admin.services.admin_user_service import AdminUserService
-from app.modules.admin.domain.schemas.user_role_schema import UserRoleUpdate
+from app.modules.admin.domain.schemas import UserRoleUpdate, PaginatedUsers
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.schemas import UserRead
 
 user_management_router = APIRouter(prefix="/users")
 
+
+
+@user_management_router.get("/", response_model=PaginatedUsers)
+async def list_users(
+    page: int = 1,
+    size: int = 20,
+    service: AdminUserService = Depends(get_admin_user_service),
+    current_admin: AuthUserModel = Depends(get_current_admin_user)
+):
+    """
+    Lista todos los usuarios con paginación.
+    Solo accesible por administradores.
+    """
+    return await service.get_all_users(page=page, size=size)
+
 @user_management_router.put("/{user_id}/role", response_model=UserRead)
 async def update_user_role(
-    user_id: int,
+    user_id: str,
     role_data: UserRoleUpdate,
     service: AdminUserService = Depends(get_admin_user_service),
     current_admin: AuthUserModel = Depends(get_current_admin_user)
