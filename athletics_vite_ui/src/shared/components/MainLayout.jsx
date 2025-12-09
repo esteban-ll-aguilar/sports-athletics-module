@@ -1,3 +1,16 @@
+/**
+ * MainLayout Component
+ * --------------------
+ * Este layout define la estructura general de la interfaz principal fuera del dashboard.
+ * Incluye:
+ *  - Un encabezado con título del módulo y espacio para navegación.
+ *  - Un contenedor principal donde se renderizan las rutas hijas utilizando <Outlet />.
+ *
+ * Estilos:
+ *  - Fondo gris claro para toda la interfaz.
+ *  - Tipografía estándar y contenedores responsivos mediante Tailwind CSS.
+ */
+
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 
