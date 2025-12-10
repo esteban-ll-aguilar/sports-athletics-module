@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:18
+    env_file:
+      - ./athletics_fastapi/.env
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DATABASE_USER}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  athletics_fastapi:
+    build:
+      context: ./athletics_fastapi
+      dockerfile: Dockerfile
+    env_file:
+      - ./athletics_fastapi/.env
+    ports:
+      - "8000:8080"
+    depends_on:
+      - postgres
+
+    command: sh -c "alembic upgrade head && uvicorn app.main:_APP --host 0.0.0.0 --port 8080"
+
+  athletics_vite_ui:
+    build:
+      context: ./athletics_vite_ui
+      dockerfile: Dockerfile
+    env_file:
+      - ./athletics_vite_ui/.env
+    ports:
+      - "5173:80"
+    depends_on:
+      - athletics_fastapi
+
+volumes:
+  postgres_data:
