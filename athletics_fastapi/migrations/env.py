@@ -11,6 +11,7 @@ from alembic import context
 # Añadir directorio raíz al path para que los imports funcionen
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# Importa la configuración y los modelos necesarios para las migraciones
 
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
@@ -21,38 +22,38 @@ from app.modules.entrenador.domain.models import Entrenador, Entrenamiento, Hora
 from app.modules.competencia.domain.models import Baremo, Prueba, RegistroPruebaCompetencia, TipoDisciplina
 
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Este es el objeto de configuración de Alembic 
+# que proporciona acceso a los valores del archivo .ini en uso.
 config = context.config
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Interpreta el archivo de configuración para el logging de Python.
+# Esta línea configura los loggers.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# Agrega el objeto MetaData de tus modelos aquí para el soporte de 'autogenerate'
+# Esto permite que Alembic detecte los cambios en los modelos automáticamente.
+
+target_metadata = Base.metadata
 target_metadata = Base.metadata
 
 
 def get_url() -> str:
+    """
+    Obtiene la URL de la base de datos asíncrona desde la configuración.
+    """
     return _SETTINGS.database_url_async
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
     """
+    Ejecuta las migraciones en modo 'offline'.
+
+    En este modo, se configura el contexto solo con la URL de la base de datos,
+    sin necesidad de crear un Engine ni requerir un DBAPI disponible.
+    Las llamadas a context.execute() emitirán el SQL generado como texto.
+    """
+
     url = get_url()
     context.configure(
         url=url,
@@ -67,6 +68,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
+    """
+    Configura y ejecuta las migraciones utilizando una conexión proporcionada.
+    Args:
+        connection (Connection): Conexión a la base de datos.
+    """
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
@@ -77,17 +83,18 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """
+    Ejecuta las migraciones en modo 'online'.
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
+    En este escenario, se crea un Engine asíncrono y se asocia una conexión
+    con el contexto de Alembic para aplicar las migraciones directamente a la base de datos.
     """
     connectable = create_async_engine(get_url(), poolclass=pool.NullPool)
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
 
+# Determina si Alembic debe correr en modo offline u online y ejecuta la función correspondiente.
 
 if context.is_offline_mode():
     run_migrations_offline()

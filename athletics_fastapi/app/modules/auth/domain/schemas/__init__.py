@@ -2,9 +2,11 @@ from app.modules.auth.domain.schemas.schemas_two_factor import Enable2FAResponse
 from app.modules.auth.domain.schemas.schemas_mail_service import EmailVerificationRequest, ResendVerificationRequest
 from app.modules.auth.domain.schemas.schemas_auth import UserCreate, UserRead, TokenPair, RefreshRequest, PasswordResetRequest, PasswordResetCodeValidation, PasswordResetConfirm, PasswordResetComplete, PasswordChangeRequest, MessageResponse
 from app.modules.auth.domain.schemas.schemas_session import SessionInfo, SessionsListResponse, RevokeSessionRequest
+from app.modules.auth.domain.schemas.schemas_user_list import UsersPaginatedResponse
+
 
 
 __all__ = ["Enable2FAResponse", "Verify2FARequest", "Disable2FARequest", "Login2FARequest", "TwoFactorRequired", "LoginBackupCodeRequest",
            "EmailVerificationRequest", "ResendVerificationRequest",
            "UserCreate", "UserRead", "TokenPair", "RefreshRequest", "PasswordResetRequest", "PasswordResetCodeValidation", "PasswordResetConfirm", "PasswordResetComplete", "PasswordChangeRequest", "MessageResponse",
-           "SessionInfo", "SessionsListResponse", "RevokeSessionRequest"]
+           "SessionInfo", "SessionsListResponse", "RevokeSessionRequest","UsersPaginatedResponse"]

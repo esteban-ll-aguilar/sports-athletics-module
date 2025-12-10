@@ -41,4 +41,6 @@ class APP_TAGS_V1(enum.Enum):
     V1_AUTH_RESET_PASSWORD = "Auth V1 - Password Reset"
 
     # Etiqueta para endpoints administrativos / panel de administración
+    V1_AUTH_ADMIN = "Auth V1 - Admin"
+
     V1_ADMIN = "Admin V1"

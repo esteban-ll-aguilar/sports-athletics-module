@@ -48,14 +48,15 @@ class Settings(BaseSettings):
     email_use_tls: bool = Field(True, alias="EMAIL_USE_TLS", required=True)
     email_host_user: str = Field("create.send.mails@gmail.com", alias="EMAIL_HOST_USER", required=True)
     email_host_password: str = Field("eitm vwur ivzb zvrm", alias="EMAIL_HOST_PASSWORD", required=True)
-
+    
+    #Propiedades para consumir las URLS de la base de datos
     @property
     def database_url_async(self) -> str:
         return (
             f"postgresql+asyncpg://{self.database_user}:{self.database_password}"
             f"@{self.database_host}:{self.database_port}/{self.database_name}"
         )
-
+    
     @property
     def database_url_sync(self) -> str:
         return (

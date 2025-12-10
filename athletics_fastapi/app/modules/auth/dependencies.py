@@ -60,7 +60,7 @@ async def delete_password_reset_code(email: str) -> None:
 
 #obteniendo el usuario actual y verificando si es admin
 async def get_current_admin_user(current_user = Depends(get_current_user)):
-    if current_user.role != RoleEnum.ADMIN:
+    if current_user.role != RoleEnum.ADMINISTRADOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos de administrador"

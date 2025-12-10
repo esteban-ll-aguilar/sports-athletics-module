@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 from uuid import UUID
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 
 class UserCreate(BaseModel):
@@ -26,6 +27,9 @@ class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
     email: EmailStr
     is_active: bool
+    role: RoleEnum | None = None
+    nombre: str | None = None
+    profile_image: str | None = None
     
     class Config:
         from_attributes = True  # Permite crear desde ORM models
@@ -71,4 +75,5 @@ class PasswordChangeRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str
+
 
