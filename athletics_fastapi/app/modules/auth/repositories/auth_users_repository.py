@@ -11,6 +11,11 @@ class AuthUsersRepository:
     async def get_by_email(self, email: str) -> AuthUserModel | None:
         res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.email == email))
         return res.scalar_one_or_none()
+    
+    async def get_by_username(self, username: str) -> AuthUserModel | None:
+        """Busca usuario por nombre (username)."""
+        res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.nombre == username))
+        return res.scalar_one_or_none()
 
     async def get_by_id(self, user_id: str) -> AuthUserModel | None:
         """Obtiene un usuario por su ID (UUID o string)."""
@@ -30,6 +35,13 @@ class AuthUsersRepository:
         user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active)
         self.session.add(user)
         await self.session.flush()
+        return user
+    
+    async def create_user(self, user: AuthUserModel) -> AuthUserModel:
+        """Crea un nuevo usuario a partir de un modelo completo."""
+        self.session.add(user)
+        await self.session.flush()
+        await self.session.refresh(user)
         return user
 
     async def activate_user(self, email: str) -> bool:

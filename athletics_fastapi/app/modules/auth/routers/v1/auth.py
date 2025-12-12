@@ -32,34 +32,50 @@ async def register(
     data: UserCreate,
     repo: AuthUsersRepository = Depends(get_users_repo),
     hasher: PasswordHasher = Depends(get_password_hasher),
-    email_service: AuthEmailService = Depends(get_email_service),
-    verification_service: EmailVerificationService = Depends(get_email_verification_service)
 ):
     """
     Registra un nuevo usuario en el sistema.
-    El usuario queda INACTIVO hasta que verifique su email.
+    El usuario queda ACTIVO por defecto con rol ATLETA.
     """
+    # Validar unicidad de email
     if await repo.get_by_email(data.email):
         logger.warning(f"Intento de registro con email duplicado: {data.email}")
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email ya registrado")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="El email ya está registrado"
+        )
     
-    # Crear usuario INACTIVO (is_active=False)
+    # Validar unicidad de username (nombre)
+    if await repo.get_by_username(data.username):
+        logger.warning(f"Intento de registro con username duplicado: {data.username}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="El username ya está registrado"
+        )
+    
+    # Hashear password
     password_hash = hasher.hash(data.password)
-    user = await repo.create(data.email, password_hash, is_active=False)
+    
+    # Crear usuario ACTIVO con rol ATLETA por defecto
+    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+    from app.modules.auth.domain.enums.role_enum import RoleEnum
+    
+    user = AuthUserModel(
+        email=data.email,
+        hashed_password=password_hash,
+        is_active=True,
+        role=RoleEnum.ATLETA,
+        nombre=data.username  # Mapear username a nombre
+    )
+    
+    # Persistir en BD
+    created_user = await repo.create_user(user)
     await repo.session.commit()
+    await repo.session.refresh(created_user)
     
-    # Generar y enviar código de verificación
-    code = verification_service.generate_verification_code()
-    await verification_service.store_verification_code(data.email, code)
+    logger.info(f"Nuevo usuario registrado: {created_user.email} (username: {data.username})")
     
-    try:
-        email_service.send_email_verification_code(data.email, code)
-        logger.info(f"Nuevo usuario registrado (pendiente verificación): {user.email}")
-    except Exception as e:
-        logger.error(f"Error enviando código de verificación a {data.email}: {e}")
-        # No fallar el registro, el usuario puede solicitar reenvío
-    
-    return UserRead.model_validate(user)
+    return UserRead.model_validate(created_user)
 
 @auth_router_v1.post("/login", response_model=Union[TokenPair, TwoFactorRequired])
 @limiter.limit("5/minute")  # Limitar a 5 intentos por minuto por IP

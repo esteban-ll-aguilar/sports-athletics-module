@@ -10,6 +10,19 @@ class AuthService {
         return data;
     }
 
+    async register(data) {
+        try {
+            const response = await authRepository.register(data);
+            return response;
+        } catch (error) {
+            // Propagar el error con formato adecuado
+            if (error.detail) {
+                throw new Error(error.detail);
+            }
+            throw error;
+        }
+    }
+
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

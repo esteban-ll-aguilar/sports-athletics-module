@@ -24,11 +24,20 @@ class UserCreate(BaseModel):
 
 class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
+    username: str | None = Field(None, serialization_alias="username")
     email: EmailStr
     is_active: bool
+    role: RoleEnum | None = None
+    nombre: str | None = None
+    created_at: str | None = None
     
     class Config:
         from_attributes = True  # Permite crear desde ORM models
+    
+    def model_post_init(self, __context) -> None:
+        """Mapea nombre a username después de la validación."""
+        if self.nombre and not self.username:
+            self.username = self.nombre
 
 class TokenPair(BaseModel):
     access_token: str

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
+import ApiClient from '../../../core/api/apiClient';
 
 const API_URL = `${Settings.API_URL}/api/v1`;
 
@@ -17,6 +18,14 @@ class AuthRepository {
                 }
             });
             return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+
+    async register(data) {
+        try {
+            return await ApiClient.post('/auth/register', data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
