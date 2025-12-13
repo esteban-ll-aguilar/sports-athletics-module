@@ -28,7 +28,7 @@ class UserRead(BaseModel):
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
-    nombre: str | None = None
+    username: str | None = None
     profile_image: str | None = None
     
     class Config:

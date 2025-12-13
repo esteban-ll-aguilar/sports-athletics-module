@@ -90,7 +90,7 @@ const UserRoleManagementPage = () => {
     // Filter users locally (within the current page) and exclude current user
     const filteredUsers = users.filter(user => {
         const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (user.nombre && user.nombre.toLowerCase().includes(searchTerm.toLowerCase()));
+            (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase()));
         const isNotCurrentUser = user.email !== currentUserEmail;
         return matchesSearch && isNotCurrentUser;
     });
@@ -151,7 +151,7 @@ const UserRoleManagementPage = () => {
                                             )}
                                         </div>
                                         <div className="ml-4">
-                                            <div className="text-sm font-medium text-gray-900">{user.nombre || 'Usuario sin nombre'}</div>
+                                            <div className="text-sm font-medium text-gray-900">{user.username || 'Usuario sin nombre'}</div>
                                             <div className="text-sm text-gray-500">{user.email}</div>
                                         </div>
                                     </div>

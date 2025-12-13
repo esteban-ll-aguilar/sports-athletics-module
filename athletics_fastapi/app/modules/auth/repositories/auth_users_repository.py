@@ -36,12 +36,24 @@ class AuthUsersRepository:
         except (ValueError, TypeError):
             return None
 
-    async def create(self, email: str, password_hash: str, is_active: bool = False) -> AuthUserModel:
+    async def create(self, email: str, password_hash: str, is_active: bool = False, username: str = None) -> AuthUserModel:
         """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
-        user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active)
+        user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active, username=username)
         self.session.add(user)
         await self.session.flush()
         return user
+
+    # async def create_user_v2(
+    #     self, 
+    #     email: str, 
+    #     password_hash: str, 
+    #     is_active: bool = False
+    #     ) -> AuthUserModel:
+    #     """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
+    #     user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active)
+    #     self.session.add(user)
+    #     await self.session.flush()
+    #     return user
 
     async def activate_user(self, email: str) -> bool:
         """Activa un usuario después de verificar el email."""

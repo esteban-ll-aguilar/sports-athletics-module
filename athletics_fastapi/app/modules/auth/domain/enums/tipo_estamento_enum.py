@@ -1,0 +1,8 @@
+from enum import Enum
+
+class TipoEstamento(str, Enum):
+    ESTUDIANTES = "ESTUDIANTES"
+    DOCENTES = "DOCENTES"
+    ADMINISTRATIVOS = "ADMINISTRATIVOS"
+    TRABAJADORES = "TRABAJADORES"
+    EXTERNOS = "EXTERNOS"
