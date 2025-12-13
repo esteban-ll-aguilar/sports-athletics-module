@@ -3,6 +3,8 @@ from sqlalchemy import Table, select, update, func
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from typing import Optional
 import random, string
+from typing import List, Tuple
+
 
 class AuthUsersRepository:
     def __init__(self, session: AsyncSession):
@@ -84,3 +86,21 @@ class AuthUsersRepository:
             if c in users_table.c:
                 return c
         return None
+
+    async def get_users_paginated(self, page: int = 1, page_size: int = 10) -> Tuple[int, List[AuthUserModel]]:
+        """
+        Retorna usuarios paginados y total de usuarios.
+        """
+        # Calcular offset
+        offset = (page - 1) * page_size
+
+        # Query principal
+        query = select(AuthUserModel).offset(offset).limit(page_size)
+        result = await self.session.execute(query)
+        users = result.scalars().all()
+
+        # Contar total de usuarios (más eficiente sería con COUNT, pero funciona)
+        total_result = await self.session.execute(select(AuthUserModel))
+        total = len(total_result.scalars().all())
+
+        return total, users

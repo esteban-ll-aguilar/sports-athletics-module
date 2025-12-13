@@ -8,8 +8,7 @@ from app.modules.auth.domain.schemas import UserRead
 
 user_management_router = APIRouter(prefix="/users")
 
-
-
+# Ruta para listar usuarios con paginación los administradores pueden acceder
 @user_management_router.get("/", response_model=PaginatedUsers)
 async def list_users(
     page: int = 1,

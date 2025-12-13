@@ -12,9 +12,10 @@ from app.core.db.database import get_session
 from app.modules.auth.domain.models import AuthUserModel
 from app.core.jwt.secret_rotation import JWTSecretRotation
 
+# Clase para hashear y verificar contraseñas usando Argon2
 pwd_ctx = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
-
+# Clase para hashear y verificar contraseñas
 class PasswordHasher:
     def hash(self, password: str) -> str:
         return pwd_ctx.hash(password)
@@ -22,6 +23,7 @@ class PasswordHasher:
     def verify(self, password: str, password_hash: str) -> bool:
         return pwd_ctx.verify(password, password_hash)
 
+# Clase para manejar la creación, decodificación y revocación de JWTs
 class JWTManager:
     def __init__(self):
         self.algorithm = _SETTINGS.jwt_algorithm

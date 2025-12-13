@@ -76,3 +76,4 @@ class PasswordChangeRequest(BaseModel):
 class MessageResponse(BaseModel):
     message: str
 
+
