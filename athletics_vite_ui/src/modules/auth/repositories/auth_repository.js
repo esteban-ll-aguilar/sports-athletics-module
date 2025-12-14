@@ -30,6 +30,14 @@ class AuthRepository {
             throw error.response ? error.response.data : error;
         }
     }
+
+    async getRoles() {
+        try {
+            return await ApiClient.get('/auth/roles');
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 }
 
 export default new AuthRepository();

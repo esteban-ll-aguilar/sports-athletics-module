@@ -37,6 +37,7 @@ class AuthUserModel(Base):
 
     # Common Profile Fields
     nombre: Mapped[str] = mapped_column(String, nullable=True)
+    cedula: Mapped[str] = mapped_column(String(20), unique=True, nullable=True, index=True)
     fecha_nacimiento: Mapped[datetime.date] = mapped_column(Date, nullable=True)
     sexo: Mapped[str] = mapped_column(String, nullable=True)
     external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)

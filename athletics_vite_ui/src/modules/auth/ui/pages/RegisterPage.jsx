@@ -8,8 +8,15 @@ const RegisterPage = () => {
         username: '',
         email: '',
         password: '',
-        passwordConfirm: ''
+        passwordConfirm: '',
+        role: 'ATLETA',
+        nombre_completo: '',
+        cedula: '',
+        fecha_nacimiento: '',
+        sexo: '',
+        telefono: ''
     });
+    const [roles, setRoles] = useState([]);
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
@@ -22,7 +29,18 @@ const RegisterPage = () => {
         if (authService.isAuthenticated()) {
             navigate('/dashboard');
         }
+        // Cargar roles disponibles
+        loadRoles();
     }, [navigate]);
+
+    const loadRoles = async () => {
+        try {
+            const rolesData = await authService.getRoles();
+            setRoles(rolesData);
+        } catch (error) {
+            console.error('Error loading roles:', error);
+        }
+    };
 
     const validateField = (name, value) => {
         const newErrors = { ...errors };
@@ -75,6 +93,22 @@ const RegisterPage = () => {
                 }
                 break;
 
+            case 'cedula':
+                if (value && !/^[0-9\-]+$/.test(value)) {
+                    newErrors.cedula = 'La cédula solo debe contener números y guiones';
+                } else {
+                    delete newErrors.cedula;
+                }
+                break;
+
+            case 'telefono':
+                if (value && !/^[\d\s\-\+\(\)]+$/.test(value)) {
+                    newErrors.telefono = 'El teléfono contiene caracteres inválidos';
+                } else {
+                    delete newErrors.telefono;
+                }
+                break;
+
             case 'passwordConfirm':
                 if (!value) {
                     newErrors.passwordConfirm = 'Confirma tu contraseña';
@@ -119,8 +153,8 @@ const RegisterPage = () => {
         setLoading(true);
 
         try {
-            const { username, email, password } = formData;
-            await authService.register({ username, email, password });
+            const { passwordConfirm, ...registerData } = formData;
+            await authService.register(registerData);
             
             setSuccess(true);
             setTimeout(() => {
@@ -192,7 +226,7 @@ const RegisterPage = () => {
                         {/* Username */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Nombre de Usuario
+                                Nombre de Usuario *
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -212,6 +246,59 @@ const RegisterPage = () => {
                             </div>
                             {errors.username && (
                                 <p className="mt-1 text-sm text-red-600">{errors.username}</p>
+                            )}
+                        </div>
+
+                        {/* Selector de Rol */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Tipo de Usuario *
+                            </label>
+                            <select
+                                name="role"
+                                required
+                                className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 sm:text-sm"
+                                value={formData.role}
+                                onChange={handleChange}
+                            >
+                                {roles.map(role => (
+                                    <option key={role.value} value={role.value}>
+                                        {role.label} - {role.description}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Nombre Completo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Nombre Completo (Opcional)
+                            </label>
+                            <input
+                                type="text"
+                                name="nombre_completo"
+                                className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm"
+                                placeholder="Tu nombre completo"
+                                value={formData.nombre_completo}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        {/* Cédula */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Cédula de Identidad (Opcional)
+                            </label>
+                            <input
+                                type="text"
+                                name="cedula"
+                                className={`block w-full px-3 py-2.5 border ${errors.cedula ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm`}
+                                placeholder="Ej: 12345678-9"
+                                value={formData.cedula}
+                                onChange={handleChange}
+                            />
+                            {errors.cedula && (
+                                <p className="mt-1 text-sm text-red-600">{errors.cedula}</p>
                             )}
                         </div>
 

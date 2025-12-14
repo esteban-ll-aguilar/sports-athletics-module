@@ -34,8 +34,14 @@ async def register(
     hasher: PasswordHasher = Depends(get_password_hasher),
 ):
     """
-    Registra un nuevo usuario en el sistema.
-    El usuario queda ACTIVO por defecto con rol ATLETA.
+    Registra un nuevo usuario en el sistema con validaciones completas.
+    
+    Validaciones:
+    - Email único
+    - Username único
+    - Cédula única (si se proporciona)
+    - Password fuerte (validado en schema)
+    - Rol válido (ATLETA, REPRESENTANTE, ENTRENADOR)
     """
     # Validar unicidad de email
     if await repo.get_by_email(data.email):
@@ -53,19 +59,32 @@ async def register(
             detail="El username ya está registrado"
         )
     
+    # Validar unicidad de cédula (si se proporciona)
+    if data.cedula:
+        existing_cedula = await repo.get_by_cedula(data.cedula)
+        if existing_cedula:
+            logger.warning(f"Intento de registro con cédula duplicada: {data.cedula}")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, 
+                detail="La cédula ya está registrada"
+            )
+    
     # Hashear password
     password_hash = hasher.hash(data.password)
     
-    # Crear usuario ACTIVO con rol ATLETA por defecto
+    # Crear usuario ACTIVO con el rol especificado
     from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-    from app.modules.auth.domain.enums.role_enum import RoleEnum
     
     user = AuthUserModel(
         email=data.email,
         hashed_password=password_hash,
         is_active=True,
-        role=RoleEnum.ATLETA,
-        nombre=data.username  # Mapear username a nombre
+        role=data.role,
+        nombre=data.nombre_completo or data.username,  # Usar nombre completo o username
+        cedula=data.cedula,
+        fecha_nacimiento=data.fecha_nacimiento,
+        sexo=data.sexo,
+        phone=data.telefono
     )
     
     # Persistir en BD
@@ -73,7 +92,9 @@ async def register(
     await repo.session.commit()
     await repo.session.refresh(created_user)
     
-    logger.info(f"Nuevo usuario registrado: {created_user.email} (username: {data.username})")
+    logger.info(f"Nuevo usuario registrado: {created_user.email} (rol: {data.role}, username: {data.username})")
+    
+    return UserRead.model_validate(created_user)
     
     return UserRead.model_validate(created_user)
 

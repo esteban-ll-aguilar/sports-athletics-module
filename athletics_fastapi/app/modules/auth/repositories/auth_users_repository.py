@@ -16,6 +16,11 @@ class AuthUsersRepository:
         """Busca usuario por nombre (username)."""
         res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.nombre == username))
         return res.scalar_one_or_none()
+    
+    async def get_by_cedula(self, cedula: str) -> AuthUserModel | None:
+        """Busca usuario por cédula."""
+        res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.cedula == cedula))
+        return res.scalar_one_or_none()
 
     async def get_by_id(self, user_id: str) -> AuthUserModel | None:
         """Obtiene un usuario por su ID (UUID o string)."""

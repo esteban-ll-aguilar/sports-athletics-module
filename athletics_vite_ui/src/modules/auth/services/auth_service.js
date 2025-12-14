@@ -23,6 +23,15 @@ class AuthService {
         }
     }
 
+    async getRoles() {
+        try {
+            return await authRepository.getRoles();
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            throw error;
+        }
+    }
+
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
