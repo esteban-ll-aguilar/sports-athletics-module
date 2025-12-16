@@ -34,6 +34,32 @@ class AuthRepository {
             throw error.response ? error.response.data : error;
         }
     }
+
+    async verifyEmail(email, code) {
+        try {
+            const response = await axios.post(`${API_URL}/auth/email/verify`, { email, code }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+
+    async resendVerification(email) {
+        try {
+            const response = await axios.post(`${API_URL}/auth/email/resend-verification`, { email }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 }
 
 export default new AuthRepository();
