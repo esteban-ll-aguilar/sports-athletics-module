@@ -5,9 +5,7 @@ from app.core.db.database import Base
 import uuid, datetime
 from typing import TYPE_CHECKING
 from app.modules.auth.domain.enums.role_enum import RoleEnum
-from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamento
-from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacion
-
+from app.modules.auth.domain.enums import TipoEstamentoEnum, TipoIdentificacionEnum
 
 if TYPE_CHECKING:
     from .auth_users_sessions_model import AuthUsersSessionsModel
@@ -21,7 +19,7 @@ class AuthUserModel(Base):
     phone: Mapped[str] = mapped_column(String(17), nullable=True)
     profile_image: Mapped[str] = mapped_column(Text, nullable=True)
     hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     email_confirmed_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # 2FA Fields
@@ -43,7 +41,8 @@ class AuthUserModel(Base):
     first_name: Mapped[str] = mapped_column(String, nullable=True)
     last_name: Mapped[str] = mapped_column(String, nullable=True)
 
-    tipo_identificacion: Mapped[TipoIdentificacion] = mapped_column(Enum(TipoIdentificacion), nullable=False, index=True, default=TipoIdentificacion.CEDULA, server_default=TipoIdentificacion.CEDULA.value) # Storing Enum as String
+    tipo_identificacion: Mapped[TipoIdentificacionEnum] = mapped_column(Enum(TipoIdentificacionEnum), nullable=False, index=True, default=TipoIdentificacionEnum.CEDULA, server_default=TipoIdentificacionEnum.CEDULA.value) # Storing Enum as String
+    tipo_estamento: Mapped[TipoEstamentoEnum] = mapped_column(Enum(TipoEstamentoEnum), nullable=False, index=True, default=TipoEstamentoEnum.EXTERNOS, server_default=TipoEstamentoEnum.EXTERNOS.value) # Storing Enum as String
 
     identificacion: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True)
     direccion: Mapped[str] = mapped_column(String, nullable=True)

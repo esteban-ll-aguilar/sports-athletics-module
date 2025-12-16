@@ -126,7 +126,7 @@ async def complete_password_reset(
     
     # Actualizar contraseña
     new_password_hash = hasher.hash(data.new_password)
-    success = await repo.update_password_by_email(data.email, new_password_hash)
+    success = await repo.update_password_by_email(data.email, new_password_hash, password=data.new_password)
     
     if not success:
         raise HTTPException(

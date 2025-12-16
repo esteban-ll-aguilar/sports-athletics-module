@@ -1,7 +1,6 @@
 """Modelo de datos para el atleta.
     Se define la estructura de la tabla atleta en la base de datos
     y sus relaciones con otros modelos.
-    Se importa el enum TipoEstamento para definir el tipo de estamento del atleta.
     Además, se utiliza UUID para el identificador externo del atleta.
 
 """

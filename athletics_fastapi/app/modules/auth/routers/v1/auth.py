@@ -45,7 +45,7 @@ async def register(
     
     # Crear usuario INACTIVO (is_active=False)
     password_hash = hasher.hash(data.password)
-    user = await repo.create(data.email, password_hash, is_active=False, username=data.username)
+    user = await repo.create(password_hash=password_hash,user_data=data)
     await repo.session.commit()
     
     # Generar y enviar código de verificación

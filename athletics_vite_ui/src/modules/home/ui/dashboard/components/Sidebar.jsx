@@ -13,7 +13,7 @@ import {
     ChevronRight
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
-import { getUserRole, getUserEmail } from '../../../../auth/utils/roleUtils';
+import { getUserRole, getUserEmail, getUserName } from '../../../../auth/utils/roleUtils';
 import rolePermissions from '../const/rolePermissions';
 
 const Sidebar = () => {
@@ -122,7 +122,7 @@ const Sidebar = () => {
                         </div>
                         {isOpen && (
                             <div className="ml-3 overflow-hidden">
-                                <p className="text-sm font-medium text-gray-900 truncate">Usuario</p>
+                                <p className="text-sm font-medium text-gray-900 truncate">{getUserName() || 'Cargando...'}</p>
                                 <p className="text-xs text-gray-500 truncate">{getUserEmail() || 'Cargando...'}</p>
                             </div>
                         )}

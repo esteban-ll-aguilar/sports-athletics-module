@@ -34,8 +34,8 @@ async def verify_email(
     verification_service: EmailVerificationService = Depends(get_email_verification_service)
 ):
     """
-    Verifica el email del usuario con el código recibido.
-    Activa la cuenta si el código es correcto.
+    Activa la cuenta si el código es correcto a través del codigo OTP enviado por el email.
+
     """
     # Validar el código
     is_valid = await verification_service.validate_verification_code(data.email, data.code)

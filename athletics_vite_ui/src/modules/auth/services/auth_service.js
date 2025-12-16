@@ -10,6 +10,10 @@ class AuthService {
         return data;
     }
 
+    async register(userData) {
+        return await authRepository.register(userData);
+    }
+
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

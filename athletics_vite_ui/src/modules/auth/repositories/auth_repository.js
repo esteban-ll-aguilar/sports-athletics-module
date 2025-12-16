@@ -21,6 +21,19 @@ class AuthRepository {
             throw error.response ? error.response.data : error;
         }
     }
+
+    async register(userData) {
+        try {
+            const response = await axios.post(`${API_URL}/auth/register`, userData, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 }
 
 export default new AuthRepository();

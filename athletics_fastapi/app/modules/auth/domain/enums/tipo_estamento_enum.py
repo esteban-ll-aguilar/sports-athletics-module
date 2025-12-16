@@ -1,8 +1,12 @@
 from enum import Enum
 
-class TipoEstamento(str, Enum):
-    ESTUDIANTES = "ESTUDIANTES"
-    DOCENTES = "DOCENTES"
+class TipoEstamentoEnum(str, Enum):
     ADMINISTRATIVOS = "ADMINISTRATIVOS"
+    DOCENTES = "DOCENTES"
+    ESTUDIANTES = "ESTUDIANTES"
     TRABAJADORES = "TRABAJADORES"
     EXTERNOS = "EXTERNOS"
+
+    @classmethod
+    def values(cls):
+        return [item.value for item in cls]
