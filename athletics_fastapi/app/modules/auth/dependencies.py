@@ -12,6 +12,8 @@ from app.modules.auth.services.email_verification_service import EmailVerificati
 from app.modules.auth.services.two_factor_service import TwoFactorService
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.core.jwt.jwt import get_current_user
+# from app.modules.external.services import ExternalUsersApiService
+# from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
 
 async def get_users_repo(session: AsyncSession = Depends(get_session)) -> AuthUsersRepository:
     return AuthUsersRepository(session)
@@ -36,6 +38,11 @@ def get_email_verification_service() -> EmailVerificationService:
 
 def get_two_factor_service() -> TwoFactorService:
     return TwoFactorService()
+
+
+# async def get_external_users_api_service(session: AsyncSession = Depends(get_session)) -> ExternalUsersApiService:
+#     repo = ExternalUsersApiRepository(session)
+#     return ExternalUsersApiService(repo)
 
 
 async def set_password_reset_code(email: str, code: str, ttl_seconds: int = 600) -> None:

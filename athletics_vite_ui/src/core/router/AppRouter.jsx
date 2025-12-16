@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import MainLayout from '@shared/components/MainLayout';
 import HomePage from '@modules/home/ui/pages/HomePage';
 import LoginPage from '@modules/auth/ui/pages/LoginPage';
+import RegisterPage from '@modules/auth/ui/pages/RegisterPage';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
     {
         path: '/login',
         element: <LoginPage />,
+    },
+    {
+        path: '/register',
+        element: <RegisterPage />,
     },
     {
         path: '/dashboard',

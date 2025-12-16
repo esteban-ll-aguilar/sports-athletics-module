@@ -10,6 +10,18 @@ class AuthService {
         return data;
     }
 
+    async register(userData) {
+        return await authRepository.register(userData);
+    }
+
+    async verifyEmail(email, code) {
+        return await authRepository.verifyEmail(email, code);
+    }
+
+    async resendVerification(email) {
+        return await authRepository.resendVerification(email);
+    }
+
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

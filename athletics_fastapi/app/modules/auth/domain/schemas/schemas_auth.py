@@ -1,14 +1,27 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 from uuid import UUID
-from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.modules.auth.domain.enums import RoleEnum, TipoEstamentoEnum, TipoIdentificacionEnum
 
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=4, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+    first_name: str = Field(min_length=2, max_length=50)
+    last_name: str = Field(min_length=2, max_length=50)
     
+    tipo_identificacion: TipoIdentificacionEnum = Field(default=TipoIdentificacionEnum.CEDULA)
+    identificacion: str = Field(min_length=8, max_length=128)
+    
+    tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
+
+    phone: str = Field(min_length=8, max_length=128, default="")
+    direccion: str = Field(min_length=8, max_length=128, default="")
+
+    role: RoleEnum = Field(default=RoleEnum.ATLETA)
+
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
@@ -22,6 +35,22 @@ class UserCreate(BaseModel):
         if not re.search(r'[!@#$%^&*(),.?":{}|<>\-_=+\[\]\\\/;\'`~]', v):
             raise ValueError('La contraseña debe contener al menos un carácter especial')
         return v
+
+    @field_validator('role')
+    @classmethod
+    def validate_role(cls, v: RoleEnum) -> RoleEnum:
+        """Valida que el rol sea válido."""
+        if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
+            raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
+        return v
+
+
+class UserCreateAdmin(UserCreate):
+    @field_validator('password')
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        return v  # 🔓 sin validación
+
 
 class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON

@@ -44,3 +44,6 @@ class APP_TAGS_V1(enum.Enum):
     V1_AUTH_ADMIN = "Auth V1 - Admin"
 
     V1_ADMIN = "Admin V1"
+
+
+    V1_EXTERNAL = "External API V1"

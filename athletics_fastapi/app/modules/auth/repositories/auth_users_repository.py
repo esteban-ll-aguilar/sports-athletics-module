@@ -1,10 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import Table, select, update, func
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from typing import Optional
 import random, string
 from typing import List, Tuple
-
+from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+from app.modules.auth.domain.schemas.schemas_auth import UserCreate, UserCreateAdmin
+from app.modules.external.services import ExternalUsersApiService
+from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
+from app.modules.external.domain.schemas.users_api_schemas import UserCreateRequest, UserUpdateRequest
+from app.modules.external.dependencies import get_external_users_service
 
 class AuthUsersRepository:
     def __init__(self, session: AsyncSession):
@@ -38,24 +42,48 @@ class AuthUsersRepository:
         except (ValueError, TypeError):
             return None
 
-    async def create(self, email: str, password_hash: str, is_active: bool = False, username: str = None) -> AuthUserModel:
+    async def create(self,password_hash: str, user_data: UserCreate | UserCreateAdmin) -> AuthUserModel:
         """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
-        user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active, username=username)
+        service = await get_external_users_service(self.session)
+
+        user_search = await service.search_user_by_dni(user_data.identificacion)
+        if user_search.status != 200:
+            external_user = await service.create_user(
+                user=UserCreateRequest(
+                    identification=user_data.identificacion,
+                    first_name=user_data.first_name,
+                    last_name=user_data.last_name,
+                    type_identification=user_data.tipo_identificacion,
+                    type_stament=user_data.tipo_estamento,
+                    direction=user_data.direccion,
+                    phono=user_data.phone,
+                    email=user_data.email,
+                    password=user_data.password
+                )
+            )
+        
+        else:
+            external_user = await service.update_user(
+                user=UserUpdateRequest(
+                    dni=user_data.identificacion,
+                    first_name=user_data.first_name,
+                    last_name=user_data.last_name,
+                    type_identification=user_data.tipo_identificacion,
+                    type_stament=user_data.tipo_estamento,
+                    direction=user_data.direccion,
+                    phono=user_data.phone,
+                )
+            )
+
+        user = AuthUserModel(
+            hashed_password=password_hash,
+            **user_data.model_dump(exclude={"password"}))
+        
         self.session.add(user)
         await self.session.flush()
         return user
 
-    # async def create_user_v2(
-    #     self, 
-    #     email: str, 
-    #     password_hash: str, 
-    #     is_active: bool = False
-    #     ) -> AuthUserModel:
-    #     """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
-    #     user = AuthUserModel(email=email, hashed_password=password_hash, is_active=is_active)
-    #     self.session.add(user)
-    #     await self.session.flush()
-    #     return user
+   
 
     async def activate_user(self, email: str) -> bool:
         """Activa un usuario después de verificar el email."""
@@ -66,10 +94,18 @@ class AuthUsersRepository:
             return True
         return False
 
-    async def update_password_by_email(self, email: str, new_password_hash: str) -> bool:
+    async def update_password_by_email(self, email: str, new_password_hash: str, password: str) -> bool:
         """Actualiza la contraseña de un usuario por email. Retorna True si se actualizó."""
         user = await self.get_by_email(email)
+        service = await get_external_users_service(self.session)
+
         if user:
+            external_user = await service.update_account(
+                user=UserUpdateAccountRequest(
+                    dni=user.identificacion,
+                    password=password
+                )
+            )
             user.hashed_password = new_password_hash
             await self.session.commit()
             return True
