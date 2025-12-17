@@ -4,8 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid, datetime
 from typing import TYPE_CHECKING
-from app.modules.auth.domain.enums.role_enum import RoleEnum
-from app.modules.auth.domain.enums import TipoEstamentoEnum, TipoIdentificacionEnum
+from app.modules.auth.domain.enums import TipoEstamentoEnum, TipoIdentificacionEnum, RoleEnum, SexoEnum
 
 if TYPE_CHECKING:
     from .auth_users_sessions_model import AuthUsersSessionsModel
@@ -48,6 +47,6 @@ class AuthUserModel(Base):
     direccion: Mapped[str] = mapped_column(String, nullable=True)
 
     fecha_nacimiento: Mapped[datetime.date] = mapped_column(Date, nullable=True)
-    sexo: Mapped[str] = mapped_column(String, nullable=True)
+    sexo: Mapped[SexoEnum] = mapped_column(Enum(SexoEnum), nullable=True, default=SexoEnum.M, server_default=SexoEnum.M.value)
     external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
     role: Mapped[RoleEnum] = mapped_column(Enum(RoleEnum), nullable=False, default=RoleEnum.ATLETA, index=True, server_default=RoleEnum.ATLETA.value)

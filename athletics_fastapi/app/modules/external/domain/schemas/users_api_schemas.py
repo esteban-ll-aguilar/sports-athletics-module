@@ -5,7 +5,7 @@ from app.modules.auth.domain.enums import TipoIdentificacionEnum, TipoEstamentoE
 # ============================================
 # CONFIGURACIÓN  REQUEST
 # ============================================
-class UserCreateRequest(BaseModel):
+class UserExternalCreateRequest(BaseModel):
     """
     Schema para crear un usuario
     """
@@ -31,7 +31,7 @@ class UserCreateRequest(BaseModel):
             raise ValueError("Invalid type_stament")
         return v
 
-class UserUpdateRequest(BaseModel):
+class UserExternalUpdateRequest(BaseModel):
     """
     Schema para actualizar un usuario
     """
@@ -56,7 +56,7 @@ class UserUpdateRequest(BaseModel):
             raise ValueError("Invalid type_stament")
         return v
 
-class UserUpdateAccountRequest(BaseModel):
+class UserExternalUpdateAccountRequest(BaseModel):
     """
     Schema para actualizar un usuario
     """

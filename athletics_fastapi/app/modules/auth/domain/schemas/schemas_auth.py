@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
+from datetime import date
 from uuid import UUID
-from app.modules.auth.domain.enums import RoleEnum, TipoEstamentoEnum, TipoIdentificacionEnum
+from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
 
 
 class UserCreate(BaseModel):
@@ -43,6 +44,24 @@ class UserCreate(BaseModel):
         if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
             raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
         return v
+
+
+class UserUpdateRequest(BaseModel):
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    tipo_identificacion: TipoIdentificacionEnum 
+    tipo_estamento: TipoEstamentoEnum
+    fecha_nacimiento: date | None = None
+    phone: str | None = None
+    direccion: str | None = None
+    sexo: SexoEnum
+    profile_image: str | None = None
+    
+
+
+
+
 
 
 class UserCreateAdmin(UserCreate):

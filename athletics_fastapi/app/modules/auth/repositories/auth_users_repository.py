@@ -4,10 +4,10 @@ from typing import Optional
 import random, string
 from typing import List, Tuple
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.schemas.schemas_auth import UserCreate, UserCreateAdmin
+from app.modules.auth.domain.schemas.schemas_auth import UserCreate, UserCreateAdmin, UserUpdateRequest
 from app.modules.external.services import ExternalUsersApiService
 from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
-from app.modules.external.domain.schemas.users_api_schemas import UserCreateRequest, UserUpdateRequest
+from app.modules.external.domain.schemas.users_api_schemas import UserExternalCreateRequest, UserExternalUpdateAccountRequest, UserExternalUpdateRequest
 from app.modules.external.dependencies import get_external_users_service
 
 class AuthUsersRepository:
@@ -49,7 +49,7 @@ class AuthUsersRepository:
         user_search = await service.search_user_by_dni(user_data.identificacion)
         if user_search.status != 200:
             external_user = await service.create_user(
-                user=UserCreateRequest(
+                user=UserExternalCreateRequest(
                     identification=user_data.identificacion,
                     first_name=user_data.first_name,
                     last_name=user_data.last_name,
@@ -64,7 +64,7 @@ class AuthUsersRepository:
         
         else:
             external_user = await service.update_user(
-                user=UserUpdateRequest(
+                user=UserExternalUpdateRequest(
                     dni=user_data.identificacion,
                     first_name=user_data.first_name,
                     last_name=user_data.last_name,
@@ -101,7 +101,7 @@ class AuthUsersRepository:
 
         if user:
             external_user = await service.update_account(
-                user=UserUpdateAccountRequest(
+                user=UserExternalUpdateAccountRequest(
                     dni=user.identificacion,
                     password=password
                 )
@@ -140,3 +140,33 @@ class AuthUsersRepository:
         total = len(total_result.scalars().all())
 
         return total, users
+
+    async def update_user(self, user_id: int, user_data: UserUpdateRequest):
+        user = await self.get_by_id(user_id)
+        if user:
+            service = await get_external_users_service(self.session)
+            external_user = await service.update_user(
+                user=UserExternalUpdateRequest(
+                    dni=user.identificacion,
+                    first_name=user_data.first_name,
+                    last_name=user_data.last_name,
+                    type_identification=user_data.tipo_identificacion,
+                    type_stament=user_data.tipo_estamento,
+                    direction=user_data.direccion,
+                    phono=user_data.phone,
+                )
+            )
+
+            user.username = user_data.username
+            user.first_name = user_data.first_name
+            user.last_name = user_data.last_name
+            user.tipo_identificacion = user_data.tipo_identificacion
+            user.tipo_estamento = user_data.tipo_estamento
+            user.fecha_nacimiento = user_data.fecha_nacimiento
+            user.phone = user_data.phone
+            user.direccion = user_data.direccion
+            user.sexo = user_data.sexo
+            user.profile_image = user_data.profile_image
+
+            await self.session.commit()
+            return user

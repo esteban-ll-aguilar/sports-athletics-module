@@ -60,6 +60,35 @@ class AuthRepository {
             throw error.response ? error.response.data : error;
         }
     }
+
+    async getProfile() {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await axios.get(`${API_URL}/auth/users/user`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
+
+    async updateProfile(userData) {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await axios.put(`${API_URL}/auth/users/user`, userData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 }
 
 export default new AuthRepository();
