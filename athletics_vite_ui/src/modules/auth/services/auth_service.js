@@ -22,6 +22,14 @@ class AuthService {
         return await authRepository.resendVerification(email);
     }
 
+    async getProfile() {
+        return await authRepository.getProfile();
+    }
+
+    async updateProfile(userData) {
+        return await authRepository.updateProfile(userData);
+    }
+
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');

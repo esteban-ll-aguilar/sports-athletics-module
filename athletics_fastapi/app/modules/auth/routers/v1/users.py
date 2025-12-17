@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException
-from app.modules.auth.domain.schemas import UsersPaginatedResponse, UserRead, UserUpdateRequest, UserGet
+from app.modules.auth.domain.schemas import UsersPaginatedResponse, UserRead, UserUpdateRequest, UserGet, UserProfile
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse
@@ -35,17 +35,12 @@ async def list_users(
     summary="Detalle de un usuario",
 )
 async def get_user(
-    data: UserGet = Depends(),
+    current_user: AuthUserModel = Depends(get_current_user),
     repo: AuthUsersRepository = Depends(get_users_repo)
 ):
-    user = await repo.get_by_external_id(data.external_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
-        )
+
     return BaseResponse(
-        data=UserRead.from_orm(user).model_dump(by_alias=True),
+        data=UserProfile.from_orm(current_user).model_dump(by_alias=True),
         message="Usuario encontrado exitosamente",
         status=status.HTTP_200_OK
     )

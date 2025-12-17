@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
+    User,
     Trophy,
     Calendar,
     Activity,
@@ -112,6 +113,19 @@ const Sidebar = () => {
                             )}
                         </Link>
                     ))}
+                    {/* #Perfil de usuario */}
+                    <Link
+                        to="/profile"
+                        className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200
+                            ${isActive('/profile')
+                                ? 'bg-indigo-50 text-indigo-600'
+                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                            ${!isOpen && 'justify-center px-2'}
+                        `}
+                    >
+                        <User size={24} />
+                        {isOpen && <span className="ml-3">Perfil de usuario</span>}
+                    </Link>
                 </nav>
 
                 {/* User Section & Logout */}
