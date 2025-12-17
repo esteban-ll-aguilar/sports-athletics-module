@@ -1,12 +1,12 @@
 from .users_api_schemas import (
-    UserCreateRequest,
-    UserUpdateRequest,
-    UserUpdateAccountRequest
+    UserExternalCreateRequest,
+    UserExternalUpdateRequest,
+    UserExternalUpdateAccountRequest
 )
 
 
 __all__ = [
-    "UserCreateRequest",
-    "UserUpdateRequest",
-    "UserUpdateAccountRequest"
+    "UserExternalCreateRequest",
+    "UserExternalUpdateRequest",
+    "UserExternalUpdateAccountRequest"
 ]

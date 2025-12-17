@@ -7,5 +7,5 @@ class BaseResponse(BaseModel):
     """
     data: dict
     message: str
-    errors: Optional[List[str]]
+    errors: Optional[List[str]] = []
     status: int

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from app.core.config.enviroment import _SETTINGS
 from app.modules.external.domain.enums import ExternalClassTokenType
 from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
-from app.modules.external.domain.schemas import UserCreateRequest, UserUpdateRequest, UserUpdateAccountRequest
+from app.modules.external.domain.schemas import UserExternalCreateRequest, UserExternalUpdateRequest, UserExternalUpdateAccountRequest
 from app.public.schemas import BaseResponse
 
 
@@ -33,6 +33,8 @@ class ExternalUsersApiService:
                 token, external_id = await self.fetch_and_store_token()
                 self.token = token
                 self.external_id = external_id
+
+                return token, external_id
             except Exception as e:
                 raise HTTPException(status_code=404, detail="Token no encontrado")
         
@@ -71,7 +73,7 @@ class ExternalUsersApiService:
     
 
 
-    async def create_user(self, user: UserCreateRequest) -> BaseResponse:
+    async def create_user(self, user: UserExternalCreateRequest) -> BaseResponse:
         await self._ensure_token()
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(
@@ -95,7 +97,7 @@ class ExternalUsersApiService:
         )
 
 
-    async def update_user(self, user: UserUpdateRequest) -> BaseResponse:
+    async def update_user(self, user: UserExternalUpdateRequest) -> BaseResponse:
 
         await self._ensure_token()
         user_search = await self.search_user_by_dni(user.dni)
@@ -113,7 +115,7 @@ class ExternalUsersApiService:
         user.external = user_search.data.get("external")
 
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.put(
+            response = await client.post(
                 _SETTINGS.users_api_url + "/api/person/update",
                 json=user.dict(),
                 headers=self.headers
@@ -130,7 +132,7 @@ class ExternalUsersApiService:
             data=response.json().get("data"),
             message=response.json().get("message"),
             errors=response.json().get("errors"),
-            status=response.status_code
+            status=200 if response.json().get("status") == "success" else 404
         )
 
     async def search_user_by_dni(self, user_dni: int) -> BaseResponse:
@@ -160,7 +162,7 @@ class ExternalUsersApiService:
             status=200 if response.json().get("status") == "success" else 404
         )
 
-    async def update_account(self, user: UserUpdateAccountRequest) -> BaseResponse:
+    async def update_account(self, user: UserExternalUpdateAccountRequest) -> BaseResponse:
         await self._ensure_token()
         
         search_user = await self.search_user_by_dni(user.dni)

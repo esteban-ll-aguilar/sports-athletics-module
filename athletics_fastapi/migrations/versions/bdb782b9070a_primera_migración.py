@@ -1,8 +1,8 @@
 """primera migración
 
-Revision ID: 90c824751194
+Revision ID: bdb782b9070a
 Revises: 
-Create Date: 2025-12-16 08:29:43.608751
+Create Date: 2025-12-16 23:59:10.005744
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '90c824751194'
+revision: str = 'bdb782b9070a'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('identificacion', sa.String(), nullable=False),
     sa.Column('direccion', sa.String(), nullable=True),
     sa.Column('fecha_nacimiento', sa.Date(), nullable=True),
-    sa.Column('sexo', sa.String(), nullable=True),
+    sa.Column('sexo', sa.Enum('M', 'F', name='sexoenum'), server_default='M', nullable=True),
     sa.Column('external_id', sa.UUID(), nullable=False),
     sa.Column('role', sa.Enum('ADMINISTRADOR', 'ATLETA', 'ENTRENADOR', 'REPRESENTANTE', name='roleenum'), server_default='ATLETA', nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -76,7 +76,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_baremo_external_id'), 'baremo', ['external_id'], unique=True)
     op.create_index(op.f('ix_baremo_id'), 'baremo', ['id'], unique=False)
     op.create_table('external_tokens',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('token', sa.String(), nullable=False),
     sa.Column('external_id', sa.String(), nullable=False),
     sa.Column('token_type', sa.Enum('AUTH_TOKEN', name='externalclasstokentype'), nullable=False),
