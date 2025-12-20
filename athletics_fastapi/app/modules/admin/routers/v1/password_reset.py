@@ -11,8 +11,8 @@ from app.modules.auth.dependencies import (
 )
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.core.jwt.jwt import PasswordHasher
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.password_reset_service import PasswordResetService
+from app.modules.admin.services.auth_email_service import AuthEmailService
+from app.modules.admin.services.password_reset_service import PasswordResetService
 from app.core.logging.logger import logger
 from app.modules.modules import APP_TAGS_V1
 

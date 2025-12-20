@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.modules.auth.domain.schemas import (
+from app.modules.admin.domain.schemas import (
     TokenPair,  MessageResponse,
     Enable2FAResponse, Verify2FARequest, Disable2FARequest, Login2FARequest, LoginBackupCodeRequest
 )
@@ -12,7 +12,7 @@ from app.modules.auth.dependencies import (
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, PasswordHasher, get_current_user
-from app.modules.auth.services.two_factor_service import TwoFactorService
+from app.modules.admin.services.two_factor_service import TwoFactorService
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.core.logging.logger import logger
 from app.core.cache.redis import _redis
