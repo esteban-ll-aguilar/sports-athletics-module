@@ -1,43 +1,46 @@
-version: '3.8'
+version: "3.9"
 
 services:
-
-  postgres:
-    image: postgres:18
-    env_file:
-      - ./athletics_fastapi/.env
+  app:
+    image: joseguaman1/users-docker:v1     # <── IMAGEN EN DOCKER HUB
+    container_name: springboot-app
+    depends_on:
+      - mariadb
     ports:
-      - "5432:5432"
+      - "8096:8096"
     environment:
-      - POSTGRES_USER=${DATABASE_USER}
-      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
-      - POSTGRES_DB=${DATABASE_NAME}
+      SPRING_APPLICATION_NAME: user
+
+      SPRING_DATASOURCE_URL: jdbc:mariadb://mariadb:3306/sportDB
+      SPRING_DATASOURCE_USERNAME: desarrollo
+      SPRING_DATASOURCE_PASSWORD: desarrollo
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:4200,http://localhost,http://localhost:8080
+      CORS_ALLOWED_METHODS: GET,POST,PUT,DELETE,OPTIONS
+      CORS_ALLOWED_HEADERS: "*"
+      CORS_ALLOW_CREDENTIALS: "true"
+
+      OTHERS_KEY: 1234567FDUCAMETB
+
+      SERVER_PORT: 8096
+
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb-db
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpass
+      MARIADB_DATABASE: sportDB
+      MARIADB_USER: desarrollo
+      MARIADB_PASSWORD: desarrollo
+    ports:
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  athletics_fastapi:
-    build:
-      context: ./athletics_fastapi
-      dockerfile: Dockerfile
-    env_file:
-      - ./athletics_fastapi/.env
-    ports:
-      - "8000:8080"
-    depends_on:
-      - postgres
-
-    command: sh -c "alembic upgrade head && uvicorn app.main:_APP --host 0.0.0.0 --port 8080"
-
-  athletics_vite_ui:
-    build:
-      context: ./athletics_vite_ui
-      dockerfile: Dockerfile
-    env_file:
-      - ./athletics_vite_ui/.env
-    ports:
-      - "5173:80"
-    depends_on:
-      - athletics_fastapi
+      - mariadb_data:/var/lib/mysql
 
 volumes:
-  postgres_data:
+  mariadb_data:

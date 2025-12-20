@@ -45,7 +45,7 @@ async def register(
     
     # Crear usuario INACTIVO (is_active=False)
     password_hash = hasher.hash(data.password)
-    user = await repo.create(data.email, password_hash, is_active=False)
+    user = await repo.create(password_hash=password_hash,user_data=data)
     await repo.session.commit()
     
     # Generar y enviar código de verificación
@@ -100,7 +100,7 @@ async def login(
     # Si tiene 2FA habilitado, retornar token temporal en el body
     if user.two_factor_enabled:
         # Crear token temporal de corta duración (5 minutos)
-        temp_token = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
+        temp_token = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
         logger.info(f"Login paso 1 exitoso (2FA requerido) para: {user.email}")
         return TwoFactorRequired(
             temp_token=temp_token,
@@ -109,8 +109,8 @@ async def login(
     
     # Login normal sin 2FA
     # Generar tokens
-    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
-    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.nombre)
+    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
+    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.username)
     
     # Decodificar para obtener JTIs y exp
     access_payload = jwtm.decode(access)

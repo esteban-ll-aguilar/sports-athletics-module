@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid, datetime
 from typing import TYPE_CHECKING
-from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.modules.auth.domain.enums import TipoEstamentoEnum, TipoIdentificacionEnum, RoleEnum, SexoEnum
 
 if TYPE_CHECKING:
     from .auth_users_sessions_model import AuthUsersSessionsModel
@@ -18,7 +18,7 @@ class AuthUserModel(Base):
     phone: Mapped[str] = mapped_column(String(17), nullable=True)
     profile_image: Mapped[str] = mapped_column(Text, nullable=True)
     hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     email_confirmed_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     
     # 2FA Fields
@@ -36,8 +36,17 @@ class AuthUserModel(Base):
     )
 
     # Common Profile Fields
-    nombre: Mapped[str] = mapped_column(String, nullable=True)
+    username: Mapped[str] = mapped_column(String, nullable=True)
+    first_name: Mapped[str] = mapped_column(String, nullable=True)
+    last_name: Mapped[str] = mapped_column(String, nullable=True)
+
+    tipo_identificacion: Mapped[TipoIdentificacionEnum] = mapped_column(Enum(TipoIdentificacionEnum), nullable=False, index=True, default=TipoIdentificacionEnum.CEDULA, server_default=TipoIdentificacionEnum.CEDULA.value) # Storing Enum as String
+    tipo_estamento: Mapped[TipoEstamentoEnum] = mapped_column(Enum(TipoEstamentoEnum), nullable=False, index=True, default=TipoEstamentoEnum.EXTERNOS, server_default=TipoEstamentoEnum.EXTERNOS.value) # Storing Enum as String
+
+    identificacion: Mapped[str] = mapped_column(String, nullable=False, index=True, unique=True)
+    direccion: Mapped[str] = mapped_column(String, nullable=True)
+
     fecha_nacimiento: Mapped[datetime.date] = mapped_column(Date, nullable=True)
-    sexo: Mapped[str] = mapped_column(String, nullable=True)
+    sexo: Mapped[SexoEnum] = mapped_column(Enum(SexoEnum), nullable=True, default=SexoEnum.M, server_default=SexoEnum.M.value)
     external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
-    role: Mapped[RoleEnum] = mapped_column(Enum(RoleEnum), nullable=True, default=RoleEnum.ATLETA, index=True, server_default=RoleEnum.ATLETA.value)
+    role: Mapped[RoleEnum] = mapped_column(Enum(RoleEnum), nullable=False, default=RoleEnum.ATLETA, index=True, server_default=RoleEnum.ATLETA.value)

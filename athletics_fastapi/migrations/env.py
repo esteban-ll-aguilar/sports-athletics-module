@@ -20,6 +20,7 @@ from app.modules.atleta.domain.models import Atleta, HistorialMedico
 from app.modules.representante.domain.models import Representante
 from app.modules.entrenador.domain.models import Entrenador, Entrenamiento, Horario, RegistroAsistencias, Asistencia
 from app.modules.competencia.domain.models import Baremo, Prueba, RegistroPruebaCompetencia, TipoDisciplina
+from app.modules.external.domain.models import ExternalTokenModel
 
 
 # Este es el objeto de configuración de Alembic 

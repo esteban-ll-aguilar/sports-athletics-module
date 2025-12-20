@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login.webp';
+import VerificationModal from '../widgets/VerificationModal';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -9,6 +10,11 @@ const LoginPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // Estados para el modal de verificación
+    const [showVerificationModal, setShowVerificationModal] = useState(false);
+    const [verificationSuccessMsg, setVerificationSuccessMsg] = useState('');
+
     const navigate = useNavigate();
 
     React.useEffect(() => {
@@ -21,20 +27,46 @@ const LoginPage = () => {
         e.preventDefault();
         setError('');
         setLoading(true);
+        setVerificationSuccessMsg('');
 
         try {
             await authService.login(email, password);
             navigate('/dashboard'); // Redirect to home/dashboard
         } catch (err) {
             console.error("Login error:", err);
-            setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+
+            // Detectar si el error es por usuario inactivo
+            if (err.detail === "Usuario inactivo, por favor verifica tu email") {
+                setShowVerificationModal(true);
+                // No seteamos error visual aquí para no confundir, el modal se abre automáticamente
+                // Opcional: setError('Por favor verifica tu correo electrónico.');
+            } else {
+                setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+            }
         } finally {
             setLoading(false);
         }
     };
 
+    const handleVerificationSuccess = (msg) => {
+        setShowVerificationModal(false);
+        setVerificationSuccessMsg(msg || 'Email verificado exitosamente. Ahora puedes iniciar sesión.');
+        // Opcional: Auto-login o pedirle que inicie sesión de nuevo
+        // Como tenemos la contraseña en el estado, podríamos intentar login automático:
+        // handleSubmit(new Event('submit')); 
+        // Pero es más seguro pedirle que haga clic en 'Iniciar Sesión' de nuevo o simplemente reintentar el submit programáticamente si se desea.
+        // Por ahora, solo mostramos el mensaje de éxito.
+    };
+
     return (
         <div className="flex h-screen w-full bg-white">
+            <VerificationModal
+                isOpen={showVerificationModal}
+                onClose={() => setShowVerificationModal(false)}
+                email={email}
+                onSuccess={handleVerificationSuccess}
+            />
+
             {/* Left Side - Image & Text */}
             <div className="hidden lg:flex w-1/2 relative bg-gray-900 text-white items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
@@ -70,6 +102,11 @@ const LoginPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {verificationSuccessMsg && (
+                            <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm text-center border border-green-200">
+                                {verificationSuccessMsg}
+                            </div>
+                        )}
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
                                 {error}

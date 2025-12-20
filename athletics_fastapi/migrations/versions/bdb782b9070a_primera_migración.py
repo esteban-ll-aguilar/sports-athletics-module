@@ -1,8 +1,8 @@
 """primera migración
 
-Revision ID: 48bb4a3d59fa
+Revision ID: bdb782b9070a
 Revises: 
-Create Date: 2025-12-02 00:01:59.769189
+Create Date: 2025-12-16 23:59:10.005744
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '48bb4a3d59fa'
+revision: str = 'bdb782b9070a'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,18 +44,27 @@ def upgrade() -> None:
     sa.Column('totp_backup_codes', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('nombre', sa.String(), nullable=True),
+    sa.Column('username', sa.String(), nullable=True),
+    sa.Column('first_name', sa.String(), nullable=True),
+    sa.Column('last_name', sa.String(), nullable=True),
+    sa.Column('tipo_identificacion', sa.Enum('PASAPORTE', 'CEDULA', 'RUC', name='tipoidentificacionenum'), server_default='CEDULA', nullable=False),
+    sa.Column('tipo_estamento', sa.Enum('ADMINISTRATIVOS', 'DOCENTES', 'ESTUDIANTES', 'TRABAJADORES', 'EXTERNOS', name='tipoestamentoenum'), server_default='EXTERNOS', nullable=False),
+    sa.Column('identificacion', sa.String(), nullable=False),
+    sa.Column('direccion', sa.String(), nullable=True),
     sa.Column('fecha_nacimiento', sa.Date(), nullable=True),
-    sa.Column('sexo', sa.String(), nullable=True),
+    sa.Column('sexo', sa.Enum('M', 'F', name='sexoenum'), server_default='M', nullable=True),
     sa.Column('external_id', sa.UUID(), nullable=False),
-    sa.Column('role', sa.String(), server_default='ATLETA', nullable=True),
+    sa.Column('role', sa.Enum('ADMINISTRADOR', 'ATLETA', 'ENTRENADOR', 'REPRESENTANTE', name='roleenum'), server_default='ATLETA', nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_auth_users_email'), 'auth_users', ['email'], unique=True)
     op.create_index(op.f('ix_auth_users_external_id'), 'auth_users', ['external_id'], unique=True)
     op.create_index(op.f('ix_auth_users_id'), 'auth_users', ['id'], unique=False)
+    op.create_index(op.f('ix_auth_users_identificacion'), 'auth_users', ['identificacion'], unique=True)
     op.create_index(op.f('ix_auth_users_is_active'), 'auth_users', ['is_active'], unique=False)
     op.create_index(op.f('ix_auth_users_role'), 'auth_users', ['role'], unique=False)
+    op.create_index(op.f('ix_auth_users_tipo_estamento'), 'auth_users', ['tipo_estamento'], unique=False)
+    op.create_index(op.f('ix_auth_users_tipo_identificacion'), 'auth_users', ['tipo_identificacion'], unique=False)
     op.create_table('baremo',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('external_id', sa.UUID(), nullable=False),
@@ -66,6 +75,17 @@ def upgrade() -> None:
     )
     op.create_index(op.f('ix_baremo_external_id'), 'baremo', ['external_id'], unique=True)
     op.create_index(op.f('ix_baremo_id'), 'baremo', ['id'], unique=False)
+    op.create_table('external_tokens',
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
+    sa.Column('token', sa.String(), nullable=False),
+    sa.Column('external_id', sa.String(), nullable=False),
+    sa.Column('token_type', sa.Enum('AUTH_TOKEN', name='externalclasstokentype'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token_type')
+    )
+    op.create_index(op.f('ix_external_tokens_id'), 'external_tokens', ['id'], unique=False)
     op.create_table('tipo_disciplina',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('external_id', sa.UUID(), nullable=False),
@@ -121,7 +141,6 @@ def upgrade() -> None:
     op.create_index(op.f('ix_prueba_id'), 'prueba', ['id'], unique=False)
     op.create_table('representante',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('estamento', sa.String(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['auth_users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -130,7 +149,6 @@ def upgrade() -> None:
     op.create_table('atleta',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('anios_experiencia', sa.Integer(), nullable=False),
-    sa.Column('estamento', sa.String(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('representante_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['representante_id'], ['representante.id'], ),
@@ -243,11 +261,16 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_tipo_disciplina_id'), table_name='tipo_disciplina')
     op.drop_index(op.f('ix_tipo_disciplina_external_id'), table_name='tipo_disciplina')
     op.drop_table('tipo_disciplina')
+    op.drop_index(op.f('ix_external_tokens_id'), table_name='external_tokens')
+    op.drop_table('external_tokens')
     op.drop_index(op.f('ix_baremo_id'), table_name='baremo')
     op.drop_index(op.f('ix_baremo_external_id'), table_name='baremo')
     op.drop_table('baremo')
+    op.drop_index(op.f('ix_auth_users_tipo_identificacion'), table_name='auth_users')
+    op.drop_index(op.f('ix_auth_users_tipo_estamento'), table_name='auth_users')
     op.drop_index(op.f('ix_auth_users_role'), table_name='auth_users')
     op.drop_index(op.f('ix_auth_users_is_active'), table_name='auth_users')
+    op.drop_index(op.f('ix_auth_users_identificacion'), table_name='auth_users')
     op.drop_index(op.f('ix_auth_users_id'), table_name='auth_users')
     op.drop_index(op.f('ix_auth_users_external_id'), table_name='auth_users')
     op.drop_index(op.f('ix_auth_users_email'), table_name='auth_users')

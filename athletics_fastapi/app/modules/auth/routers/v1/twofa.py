@@ -228,8 +228,8 @@ async def login_with_2fa(
     await redis.delete(attempts_key)
     
     # Generar tokens finales
-    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
-    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.nombre)
+    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
+    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.username)
     
     # Decodificar para obtener JTIs y exp
     access_payload = jwtm.decode(access)
@@ -333,8 +333,8 @@ async def login_with_backup_code(
     await redis.delete(attempts_key)
     
     # Generar tokens
-    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.nombre)
-    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.nombre)
+    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
+    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.username)
     
     access_payload = jwtm.decode(access)
     refresh_payload = jwtm.decode(refresh)

@@ -13,7 +13,7 @@ class AuthUser extends BaseModel {
         this.two_factor_enabled = data.two_factor_enabled ?? false;
 
         // Profile Fields
-        this.nombre = data.nombre || '';
+        this.username = data.username || '';
         this.fecha_nacimiento = data.fecha_nacimiento ? new Date(data.fecha_nacimiento) : null;
         this.sexo = data.sexo || '';
         this.role = data.role || 'ATLETA';

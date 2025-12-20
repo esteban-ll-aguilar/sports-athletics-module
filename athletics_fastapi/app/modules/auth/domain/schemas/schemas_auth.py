@@ -1,14 +1,28 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
+from datetime import date
 from uuid import UUID
-from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
 
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=4, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+    first_name: str = Field(min_length=2, max_length=50)
+    last_name: str = Field(min_length=2, max_length=50)
     
+    tipo_identificacion: TipoIdentificacionEnum = Field(default=TipoIdentificacionEnum.CEDULA)
+    identificacion: str = Field(min_length=8, max_length=128)
+    
+    tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
+
+    phone: str = Field(min_length=8, max_length=128, default="")
+    direccion: str = Field(min_length=8, max_length=128, default="")
+
+    role: RoleEnum = Field(default=RoleEnum.ATLETA)
+
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
@@ -23,12 +37,46 @@ class UserCreate(BaseModel):
             raise ValueError('La contraseña debe contener al menos un carácter especial')
         return v
 
+    @field_validator('role')
+    @classmethod
+    def validate_role(cls, v: RoleEnum) -> RoleEnum:
+        """Valida que el rol sea válido."""
+        if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
+            raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
+        return v
+
+
+class UserUpdateRequest(BaseModel):
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    tipo_identificacion: TipoIdentificacionEnum 
+    tipo_estamento: TipoEstamentoEnum
+    fecha_nacimiento: date | None = None
+    phone: str | None = None
+    direccion: str | None = None
+    sexo: SexoEnum
+    profile_image: str | None = None
+    
+
+
+
+
+
+
+class UserCreateAdmin(UserCreate):
+    @field_validator('password')
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        return v  # 🔓 sin validación
+
+
 class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
-    nombre: str | None = None
+    username: str | None = None
     profile_image: str | None = None
     
     class Config:
