@@ -1,61 +1,136 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import adminService from "../../services/adminService";
+import { Shield, Mail, UserCog } from "lucide-react";
+import EditUserModal from "./EditUserModal";
 
-const ProductsTable = () => {
+const AdminUsersTable = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getUsers();
+      console.log("Data desde del bankend",response);
+      setUsers(response.users || []);
+    } catch {
+      setError("No se pudo cargar la lista de usuarios.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <div className="relative overflow-x-auto bg-neutral-primary-soft shadow-xs rounded-base border border-default">
-            <table className="w-full text-sm text-left rtl:text-right text-body">
-                <thead className="text-sm text-body bg-neutral-secondary-medium border-b border-default-medium">
-                    <tr>
-                        <th scope="col" className="px-6 py-3 font-medium">Product name</th>
-                        <th scope="col" className="px-6 py-3 font-medium">Color</th>
-                        <th scope="col" className="px-6 py-3 font-medium">Category</th>
-                        <th scope="col" className="px-6 py-3 font-medium">Price</th>
-                        <th scope="col" className="px-6 py-3 font-medium">
-                            <span className="sr-only">Edit</span>
-                        </th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr className="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium">
-                        <th scope="row" className="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                            Apple MacBook Pro 17"
-                        </th>
-                        <td className="px-6 py-4">Silver</td>
-                        <td className="px-6 py-4">Laptop</td>
-                        <td className="px-6 py-4">$2999</td>
-                        <td className="px-6 py-4 text-right">
-                            <button className="font-medium text-fg-brand hover:underline">Edit</button>
-                        </td>
-                    </tr>
-
-                    <tr className="bg-neutral-primary-soft border-b border-default hover:bg-neutral-secondary-medium">
-                        <th scope="row" className="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                            Microsoft Surface Pro
-                        </th>
-                        <td className="px-6 py-4">White</td>
-                        <td className="px-6 py-4">Laptop PC</td>
-                        <td className="px-6 py-4">$1999</td>
-                        <td className="px-6 py-4 text-right">
-                            <button className="font-medium text-fg-brand hover:underline">Edit</button>
-                        </td>
-                    </tr>
-
-                    <tr className="bg-neutral-primary-soft hover:bg-neutral-secondary-medium">
-                        <th scope="row" className="px-6 py-4 font-medium text-heading whitespace-nowrap">
-                            Magic Mouse 2
-                        </th>
-                        <td className="px-6 py-4">Black</td>
-                        <td className="px-6 py-4">Accessories</td>
-                        <td className="px-6 py-4">$99</td>
-                        <td className="px-6 py-4 text-right">
-                            <button className="font-medium text-fg-brand hover:underline">Edit</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+      <div className="flex justify-center items-center min-h-[300px]">
+        <div className="animate-spin h-10 w-10 rounded-full border-t-2 border-b-2 border-indigo-600" />
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+        <p className="text-sm text-red-700">{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center">
+          <UserCog className="text-indigo-600 mr-2" />
+          <h2 className="text-lg font-semibold text-gray-800">
+            Usuarios del Sistema
+          </h2>
+        </div>
+
+        {/* Table */}
+        <table className="w-full table-fixed divide-y divide-gray-100">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Nombre</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Correo</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rol</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Estado</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {users.map((user) => (
+              <tr key={user.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-medium truncate">
+                  {user.username}
+                </td>
+
+                <td className="px-4 py-3 text-sm text-gray-600 truncate">
+                  <div className="flex items-center">
+                    <Mail size={14} className="mr-2 text-gray-400" />
+                    {user.email}
+                  </div>
+                </td>
+
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-800">
+                    <Shield size={12} className="mr-1" />
+                    {user.role}
+                  </span>
+                </td>
+
+                {/* Estado (visual igual al modal) */}
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium
+                      ${user.is_active
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"}`}
+                  >
+                    {user.is_active ? "Activo" : "Inactivo"}
+                  </span>
+                </td>
+
+                <td className="px-4 py-3 text-right">
+                  <button
+                    onClick={() => setEditingUser(user)}
+                    className="text-sm font-medium text-indigo-600 hover:underline"
+                  >
+                    Editar
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {users.length === 0 && (
+              <tr>
+                <td colSpan="5" className="px-4 py-6 text-center text-sm text-gray-500">
+                  No hay usuarios registrados.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {editingUser && (
+        <EditUserModal
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+          onUpdated={fetchUsers}
+        />
+      )}
+    </>
+  );
 };
 
-export default ProductsTable;
+export default AdminUsersTable;
+
+

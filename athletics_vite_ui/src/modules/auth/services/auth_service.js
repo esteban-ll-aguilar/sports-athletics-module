@@ -22,6 +22,14 @@ class AuthService {
         return await authRepository.resendVerification(email);
     }
 
+    async updateUser(userId, userData) {
+    return await authRepository.updateUser(userId, userData);
+    }
+
+    async updateRole(userId, roleData) {
+        return await authRepository.updateRole(userId, roleData);
+    }
+
     async getProfile() {
         return await authRepository.getProfile();
     }

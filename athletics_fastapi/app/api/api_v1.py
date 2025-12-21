@@ -20,7 +20,6 @@ from app.modules.external.routers.v1.api_router import api_external_router_v1
 # Enrutador principal de la versión 1 de la API
 router_api_v1 = APIRouter(prefix='/api/v1')
 router_api_v1.include_router(api_admin_router_v1)
-router_api_v1.include_router(api_admin_router_v1)
 router_api_v1.include_router(api_external_router_v1)
 
 

@@ -5,7 +5,7 @@ from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     UserCreate, UserRead, TokenPair, RefreshRequest, TwoFactorRequired, 
 )
-from app.modules.auth.dependencies import (
+from app.modules.admin.dependencies import (
     get_users_repo, get_sessions_repo, get_jwt_manager, 
     get_password_hasher, get_email_service,
     get_email_verification_service
@@ -13,8 +13,8 @@ from app.modules.auth.dependencies import (
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.email_verification_service import EmailVerificationService
+from app.modules.admin.services.auth_email_service import AuthEmailService
+from app.modules.admin.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
 from typing import Union
 from datetime import datetime, timezone

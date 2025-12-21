@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 from datetime import date
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 from uuid import UUID
 from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
 
@@ -57,13 +59,8 @@ class UserUpdateRequest(BaseModel):
     direccion: str | None = None
     sexo: SexoEnum
     profile_image: str | None = None
+
     
-
-
-
-
-
-
 class UserCreateAdmin(UserCreate):
     @field_validator('password')
     @classmethod
@@ -125,3 +122,8 @@ class MessageResponse(BaseModel):
     message: str
 
 
+class AdminUserUpdateRequest(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    profile_image: Optional[str] = None
