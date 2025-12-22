@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.modules.auth.domain.schemas import (
+from app.modules.admin.domain.schemas import (
     MessageResponse,
     EmailVerificationRequest, ResendVerificationRequest,
 )
@@ -10,8 +10,8 @@ from app.modules.auth.dependencies import (
     get_email_verification_service
 )
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.email_verification_service import EmailVerificationService
+from app.modules.admin.services.auth_email_service import AuthEmailService
+from app.modules.admin.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
 from app.modules.modules import APP_TAGS_V1
 

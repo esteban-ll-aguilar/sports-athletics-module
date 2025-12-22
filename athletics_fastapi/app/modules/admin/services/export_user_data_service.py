@@ -1,3 +1,5 @@
+# Exporta los datos de los usuarios registrados en un archivo PDF.
+
 from app.core.db.sync_session import SessionLocal
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 

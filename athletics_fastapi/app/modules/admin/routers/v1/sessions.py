@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.modules.auth.domain.schemas import (
+from app.modules.admin.domain.schemas import (
     MessageResponse,
     SessionsListResponse, SessionInfo, RevokeSessionRequest,
 )

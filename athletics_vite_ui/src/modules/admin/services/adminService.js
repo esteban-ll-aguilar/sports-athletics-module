@@ -2,7 +2,7 @@ import apiClient from '@core/api/apiClient';
 
 class AdminService {
     async getUsers(page = 1, limit = 20) {
-        const response = await apiClient.get(`/admin/users/?page=${page}&size=${limit}`);
+        const response = await apiClient.get(`/admin/users/users/?page=${page}&size=${limit}`);
         return response;
     }
 
@@ -10,6 +10,7 @@ class AdminService {
         const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
         return response;
     }
+
 }
 
 export default new AdminService();

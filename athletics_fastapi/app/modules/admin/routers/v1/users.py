@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, HTTPException
-from app.modules.auth.domain.schemas import UsersPaginatedResponse, UserRead, UserUpdateRequest, UserGet, UserProfile
+from app.modules.admin.domain.schemas import UsersPaginatedResponse, UserRead, UserUpdateRequest, UserGet, UserProfile
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse

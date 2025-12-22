@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.modules.admin.domain.schemas import (
+from app.modules.auth.domain.schemas import (
     UserCreate, UserRead, TokenPair, RefreshRequest, TwoFactorRequired, 
 )
-from app.modules.auth.dependencies import (
+from app.modules.admin.dependencies import (
     get_users_repo, get_sessions_repo, get_jwt_manager, 
     get_password_hasher, get_email_service,
     get_email_verification_service

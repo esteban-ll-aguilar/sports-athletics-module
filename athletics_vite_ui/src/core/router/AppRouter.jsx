@@ -9,6 +9,7 @@ import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout'
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
 import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
+import AdminUsersTable from '../../modules/admin/ui/pages/admin_controller_user_ui';
 
 
 const router = createBrowserRouter([
@@ -60,14 +61,27 @@ const router = createBrowserRouter([
                             },
                         ],
                     },
+                    
+                    {
+                        path: 'admin',
+                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+                        children: [
+                            {
+                                index: true,
+                                element: <AdminUsersTable />,
+                            },
+                        ],
+                    },
                     // Add other dashboard routes here
                 ],
             },
         ],
     },
+
+
     {
         path: '/profile',
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']}/>,
         children: [
             {
                 element: (
@@ -84,6 +98,8 @@ const router = createBrowserRouter([
             },
         ],
     },
+    
+    
 ]);
 
 const AppRouter = () => {

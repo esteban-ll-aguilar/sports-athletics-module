@@ -6,10 +6,10 @@ from app.core.db.database import get_session
 from app.core.jwt.jwt import JWTManager, PasswordHasher
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.password_reset_service import PasswordResetService
-from app.modules.auth.services.email_verification_service import EmailVerificationService
-from app.modules.auth.services.two_factor_service import TwoFactorService
+from app.modules.admin.services.auth_email_service import AuthEmailService
+from app.modules.admin.services.password_reset_service import PasswordResetService
+from app.modules.admin.services.email_verification_service import EmailVerificationService
+from app.modules.admin.services.two_factor_service import TwoFactorService
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.core.jwt.jwt import get_current_user
 # from app.modules.external.services import ExternalUsersApiService

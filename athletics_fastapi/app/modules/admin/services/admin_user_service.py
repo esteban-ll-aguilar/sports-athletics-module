@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.modules.admin.domain.schemas.schemas_auth import AdminUserUpdateRequest
 
 class AdminUserService:
     def __init__(self, users_repo: AuthUsersRepository):
@@ -27,3 +28,35 @@ class AdminUserService:
             "size": size,
             "pages": (total + size - 1) // size
         }
+    
+
+    # Función para que el admin pueda actualizar datos de un usuario excepto el rol
+    async def update_user_by_id(
+        self,
+        user_id: str,
+        data: AdminUserUpdateRequest
+    ):
+        user = await self.users_repo.get_by_external_id(user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado"
+            )
+
+        if data.username is not None:
+            user.username = data.username
+
+        if data.email is not None:
+            user.email = data.email
+
+        if data.is_active is not None:
+            user.is_active = data.is_active
+
+        if data.profile_image is not None:
+            user.profile_image = data.profile_image
+
+        await self.users_repo.session.commit()
+        await self.users_repo.session.refresh(user)
+
+        return user
