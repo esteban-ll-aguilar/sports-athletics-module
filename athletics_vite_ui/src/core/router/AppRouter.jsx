@@ -61,14 +61,27 @@ const router = createBrowserRouter([
                             },
                         ],
                     },
+                    
+                    {
+                        path: 'admin',
+                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+                        children: [
+                            {
+                                index: true,
+                                element: <AdminUsersTable />,
+                            },
+                        ],
+                    },
                     // Add other dashboard routes here
                 ],
             },
         ],
     },
+
+
     {
         path: '/profile',
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']}/>,
         children: [
             {
                 element: (
@@ -85,26 +98,8 @@ const router = createBrowserRouter([
             },
         ],
     },
-
-    {
-        path: '/admin',
-        element: <ProtectedRoute />,
-        children: [
-            {
-                element: (
-                    <DashboardLayout>
-                        <Outlet />
-                    </DashboardLayout>
-                ),
-                children: [
-                    {
-                        index: true,
-                        element: <AdminUsersTable/>,
-                    },
-                ],
-            },
-        ],
-    },
+    
+    
 ]);
 
 const AppRouter = () => {

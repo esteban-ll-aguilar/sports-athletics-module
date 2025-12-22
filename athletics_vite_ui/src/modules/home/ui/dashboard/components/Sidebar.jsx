@@ -126,18 +126,6 @@ const Sidebar = () => {
                         <User size={24} />
                         {isOpen && <span className="ml-3">Perfil de usuario</span>}
                     </Link>
-                      <Link
-                        to="/admin"
-                        className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200
-                            ${isActive('/admin')
-                                ? 'bg-indigo-50 text-indigo-600'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-                            ${!isOpen && 'justify-center px-2'}
-                        `}
-                    >
-                        <Users size={24} />
-                        {isOpen && <span className="ml-3">Administracion</span>}
-                    </Link>
                 </nav>
 
                 {/* User Section & Logout */}

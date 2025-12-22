@@ -9,6 +9,7 @@ const rolePermissions = {
         { path: '/dashboard/competitions', icon: Trophy, label: 'Competencias' },
         { path: '/dashboard/events', icon: Calendar, label: 'Eventos' },
         { path: '/dashboard/results', icon: Activity, label: 'Resultados' },
+        { path: '/dashboard/admin', icon: Users, label: 'Administracion' },
         
     ],
     ATLETA: [

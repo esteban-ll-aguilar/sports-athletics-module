@@ -10,6 +10,7 @@ class AdminService {
         const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
         return response;
     }
+
 }
 
 export default new AdminService();
