@@ -6,7 +6,7 @@ from app.modules.competencia.domain.schemas.baremo_schema import (
 )
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
 
-
+# Servicio para la gestión de Baremos
 class BaremoService:
 
     def __init__(self, repo: BaremoRepository):

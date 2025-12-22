@@ -1,5 +1,5 @@
 from enum import Enum
-
+# Modelo de enums para la competencia
 class PruebaType(str, Enum):
     COMPETENCIA = "COMPETENCIA"
     NORMAL = "NORMAL"

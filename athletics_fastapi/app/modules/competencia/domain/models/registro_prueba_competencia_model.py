@@ -3,6 +3,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from app.modules.atleta.domain.models.atleta_model import Atleta
+from app.modules.competencia.domain.models.prueba_model import Prueba
+
 
 class RegistroPruebaCompetencia(Base):
     __tablename__ = "registro_prueba_competencia"

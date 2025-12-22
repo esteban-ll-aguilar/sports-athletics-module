@@ -14,6 +14,7 @@ router = APIRouter(
     tags=["Baremos"]
 )
 
+# Create Baremo
 @router.post(
     "/",
     response_model=BaremoRead,
@@ -25,7 +26,7 @@ async def create_baremo(
 ):
     return await service.create(data)
 
-
+# List Baremos
 @router.get(
     "/",
     response_model=List[BaremoRead]
@@ -35,7 +36,7 @@ async def list_baremos(
 ):
     return await service.get_all()
 
-
+# Update Baremo
 @router.put(
     "/{external_id}",
     response_model=BaremoRead,

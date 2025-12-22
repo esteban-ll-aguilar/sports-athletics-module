@@ -9,7 +9,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 import uuid
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from app.modules.representante.domain.models.representante_model import Representante
+    from app.modules.atleta.domain.models.historial_medico_model import HistorialMedico
 #class modelo de la base de datos para la entidad Atleta
 class Atleta(Base):
     __tablename__ = "atleta"
@@ -30,5 +35,5 @@ class Atleta(Base):
     )
 
     # Relationship N-to-1: Atleta has one Representante
-    representante_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("representante.id"), nullable=True)
-    representante: Mapped["Representante"] = relationship("Representante", back_populates="atletas")
+   # representante_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("representante.id"), nullable=True)
+   # representante: Mapped["Representante"] = relationship("Representante", back_populates="atletas")

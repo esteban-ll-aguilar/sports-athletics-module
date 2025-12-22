@@ -4,7 +4,11 @@ from app.core.db.database import Base
 from app.modules.competencia.domain.enums.enum import PruebaType
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.modules.competencia.domain.models.tipo_disciplina_model import TipoDisciplina
+    from app.modules.competencia.domain.models.baremo_model import Baremo
 
 class Prueba(Base):
     __tablename__ = "prueba"
