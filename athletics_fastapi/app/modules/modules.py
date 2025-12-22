@@ -47,3 +47,5 @@ class APP_TAGS_V1(enum.Enum):
 
 
     V1_EXTERNAL = "External API V1"
+    # Etiqueta para endpoints relacionados con competencias
+    V1_COMPETENCIA = "Competencia"

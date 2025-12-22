@@ -1,7 +1,11 @@
-from app.modules.modules import APP_TAGS_V1
 from fastapi import APIRouter
-from app.modules.auth.routers.v1.admin.admin_routes import admin_router
+from app.modules.modules import APP_TAGS_V1
+
+from app.modules.competencia.routers.v1.baremo_router import router as baremo_router
 
 
+api_competencia_router_v1 = APIRouter(prefix="/competencia")
 
-api_auth_router_v1 = APIRouter(prefix="/example")
+api_competencia_router_v1.include_router(baremo_router,prefix="/baremos",tags=[APP_TAGS_V1.V1_COMPETENCIA.value])
+
+
