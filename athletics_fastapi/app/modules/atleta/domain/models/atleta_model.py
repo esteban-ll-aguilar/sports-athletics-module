@@ -33,7 +33,7 @@ class Atleta(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
-
+    #revisar relacion con representante
     # Relationship N-to-1: Atleta has one Representante
    # representante_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("representante.id"), nullable=True)
    # representante: Mapped["Representante"] = relationship("Representante", back_populates="atletas")

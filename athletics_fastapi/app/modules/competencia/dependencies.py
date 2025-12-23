@@ -1,3 +1,5 @@
+# app/api/dependencies.py
+
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -5,9 +7,15 @@ from app.core.db.database import get_session
 from app.core.jwt.jwt import get_current_user
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 
+# Repositorios y servicios
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
 from app.modules.competencia.services.baremo_service import BaremoService
 
+from app.modules.competencia.repositories.tipo_disciplina_repository import TipoDisciplinaRepository
+from app.modules.competencia.services.tipo_disciplina_service import TipoDisciplinaService
+
+from app.modules.competencia.repositories.prueba_repository import PruebaRepository
+from app.modules.competencia.services.prueba_service import PruebaService
 
 # ============================
 # Servicio Baremo (CRUD)
@@ -17,6 +25,26 @@ async def get_baremo_service(
 ) -> BaremoService:
     repo = BaremoRepository(session)
     return BaremoService(repo)
+
+
+# ============================
+# Servicio TipoDisciplina (CRUD)
+# ============================
+async def get_tipo_disciplina_service(
+    session: AsyncSession = Depends(get_session)
+) -> TipoDisciplinaService:
+    repo = TipoDisciplinaRepository(session)
+    return TipoDisciplinaService(repo)
+
+
+# ============================
+# Servicio Prueba (CRUD)
+# ============================
+async def get_prueba_service(
+    session: AsyncSession = Depends(get_session)
+) -> PruebaService:
+    repo = PruebaRepository(session)
+    return PruebaService(repo)
 
 
 # ============================

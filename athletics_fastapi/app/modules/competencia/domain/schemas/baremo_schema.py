@@ -3,7 +3,6 @@ from uuid import UUID
 from app.modules.competencia.domain.enums.enum import TipoClasificacion
 
 # Modelo de esquemas Pydantic para la entidad Baremo
-
 class BaremoBase(BaseModel):
     valor_baremo: float
     clasificacion: TipoClasificacion
@@ -21,6 +20,7 @@ class BaremoUpdate(BaseModel):
 
 # Modelo para la lectura de un Baremo
 class BaremoRead(BaremoBase):
+    id: int
     external_id: UUID
 
     class Config:
