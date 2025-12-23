@@ -126,6 +126,10 @@ const Sidebar = () => {
                         <User size={24} />
                         {isOpen && <span className="ml-3">Perfil de usuario</span>}
                     </Link>
+
+                    
+
+                    
                 </nav>
 
                 {/* User Section & Logout */}

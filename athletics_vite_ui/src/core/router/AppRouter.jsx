@@ -10,6 +10,11 @@ import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
 import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 import AdminUsersTable from '../../modules/admin/ui/pages/admin_controller_user_ui';
+import PruebasPage from '../../modules/competencia/ui/pages/PruebasPage';
+import BaremosPage from '../../modules/competencia/ui/pages/BaremosPage';
+import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplinaPage';
+
+
 
 
 const router = createBrowserRouter([
@@ -21,7 +26,6 @@ const router = createBrowserRouter([
                 index: true,
                 element: <HomePage />,
             },
-            // Add more routes here
             {
                 path: '*',
                 element: <Navigate to="/" replace />,
@@ -61,7 +65,6 @@ const router = createBrowserRouter([
                             },
                         ],
                     },
-                    
                     {
                         path: 'admin',
                         element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
@@ -72,13 +75,29 @@ const router = createBrowserRouter([
                             },
                         ],
                     },
-                    // Add other dashboard routes here
+                    // SECCIÓN DE PRUEBAS Y SUS HIJOS
+                    {
+                        path: 'pruebas',
+                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+                        children: [
+                            {
+                                index: true, // URL: /dashboard/pruebas
+                                element: <PruebasPage />,
+                            },
+                            {
+                                path: 'baremos', // URL: /dashboard/pruebas/baremos
+                                element: <BaremosPage />,
+                            },
+                            {
+                                path: 'disciplinas', // URL: /dashboard/pruebas/disciplinas
+                                element: <TipoDisciplinaPage />,
+                            },
+                        ],
+                    },
                 ],
             },
         ],
     },
-
-
     {
         path: '/profile',
         element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']}/>,
@@ -98,8 +117,6 @@ const router = createBrowserRouter([
             },
         ],
     },
-    
-    
 ]);
 
 const AppRouter = () => {
