@@ -31,14 +31,12 @@ async def create_baremo(
 # ----------------------
 # List Baremos (público)
 # ----------------------
-@router.get(
-    "/",
-    response_model=List[BaremoRead]
-)
+@router.get("/", response_model=List[BaremoRead])
 async def list_baremos(
+    incluir_inactivos: bool = True,
     service: BaremoService = Depends(get_baremo_service)
 ):
-    return await service.get_all()
+    return await service.get_all(incluir_inactivos)
 
 
 # ----------------------

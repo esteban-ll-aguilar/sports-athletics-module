@@ -16,8 +16,9 @@ class BaremoService:
         baremo = Baremo(**data.model_dump())
         return await self.repo.create(baremo)
 
-    async def get_all(self):
-        return await self.repo.get_all()
+    async def get_all(self, incluir_inactivos: bool = True):
+        return await self.repo.get_all(incluir_inactivos)
+
 
     async def update(self, external_id: UUID, data: BaremoUpdate) -> Baremo:
         baremo = await self.repo.get_by_external_id(external_id)

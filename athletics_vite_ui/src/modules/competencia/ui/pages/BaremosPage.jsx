@@ -13,7 +13,7 @@ const BaremosPage = () => {
     setLoading(true);
     try {
       const data = await baremoService.getAll();
-      // Obtenemos todos los datos sin filtrar para que los inactivos permanezcan visibles
+     // Obtenemos todos los datos sin filtrar para que los inactivos permanezcan visibles
       setBaremos(Array.isArray(data) ? data : data.data || []);
     } catch (err) { 
       console.error("Error al obtener baremos:", err); 
@@ -44,8 +44,7 @@ const BaremosPage = () => {
         ...baremo, 
         estado: nuevoEstado 
       });
-      
-      // Actualización local inmediata para asegurar que no desaparezca de la lista
+       // Actualización local inmediata para asegurar que no desaparezca de la lista
       setBaremos(prev => prev.map(item => 
         item.external_id === baremo.external_id 
           ? { ...item, estado: nuevoEstado } 
@@ -59,95 +58,146 @@ const BaremosPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-['Lexend'] text-[#181111]">
-      <div className="max-w-[1000px] mx-auto py-10 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900">
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         
-        {/* BOTÓN REGRESAR */}
+        {/* Breadcrumb Navigation */}
         <Link 
           to="/dashboard/pruebas" 
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-[#ec1313] font-black text-[11px] mb-8 transition-colors group uppercase tracking-widest"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
         >
-          <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back</span>
+          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+            arrow_back
+          </span>
           Volver a Gestión de Pruebas
         </Link>
 
-        {/* Encabezado */}
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <h1 className="text-4xl font-black tracking-tighter uppercase">Administración de Baremos</h1>
-            <p className="text-gray-400 font-medium">Gestiona puntuaciones y estados.</p>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+              Administración de Baremos
+            </h1>
+            <p className="text-gray-600 text-lg">Gestiona puntuaciones y clasificaciones</p>
           </div>
 
           <button 
             onClick={() => { setSelectedBaremo(null); setIsModalOpen(true); }}
-            className="flex items-center justify-center rounded-2xl h-14 px-8 bg-[#ec1313] text-white gap-3 font-black text-xs uppercase hover:scale-105 active:scale-95 transition-all shadow-xl shadow-red-100"
+            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-sm uppercase tracking-wide hover:shadow-2xl hover:shadow-red-200 hover:scale-105 active:scale-100 transition-all duration-200"
           >
-            <span className="material-symbols-outlined">add</span>
+            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+              add
+            </span>
             Añadir Baremo
           </button>
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white rounded-3xl border border-[#e6dbdb] overflow-hidden shadow-sm">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50 border-b border-[#e6dbdb]">
-              <tr>
-                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Valor</th>
-                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Clasificación</th>
-                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Estado</th>
-                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#e6dbdb]">
-              {loading ? (
-                <tr>
-                  <td colSpan="4" className="py-20 text-center text-gray-300 font-bold uppercase text-xs animate-pulse tracking-widest">Cargando Baremos...</td>
+        {/* Table Card */}
+        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Valor
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Clasificación
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
-              ) : (
-                baremos.map((b) => (
-                  <tr key={b.external_id} className={`transition-colors ${!b.estado ? 'bg-gray-50/60 opacity-70' : 'hover:bg-gray-50/40'}`}>
-                    <td className={`px-6 py-5 font-black text-xl ${!b.estado ? 'text-gray-400' : 'text-[#181111]'}`}>
-                      {b.valor_baremo}
-                    </td>
-                    <td className={`px-6 py-5 font-medium ${!b.estado ? 'text-gray-400' : 'text-[#896161]'}`}>
-                      {b.clasificacion}
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${b.estado ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                        {b.estado ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex justify-end gap-3">
-                        
-                        {/* EDITAR (Icono original - Color Azul) */}
-                        <button 
-                          onClick={() => handleOpenEdit(b)} 
-                          className="text-[#3b82f6] hover:scale-110 transition-transform"
-                          title="Editar"
-                        >
-                          <span className="material-symbols-outlined">edit</span>
-                        </button>
-
-                        {/* DESACTIVAR/ACTIVAR (Icono original - Toggle lógico) */}
-                        <button 
-                          onClick={() => toggleStatus(b)} 
-                          className={`hover:scale-110 transition-transform ${b.estado ? 'text-[#ec1313]' : 'text-green-600'}`}
-                          title={b.estado ? "Desactivar" : "Activar"}
-                        >
-                          <span className="material-symbols-outlined">
-                            {b.estado ? 'block' : 'check_circle'}
-                          </span>
-                        </button>
-                        
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan="4" className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                        <span className="text-gray-500 font-semibold">Cargando Baremos...</span>
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : baremos.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <span className="material-symbols-outlined text-6xl text-gray-300">
+                          inventory_2
+                        </span>
+                        <span className="text-gray-400 font-semibold">No hay baremos registrados</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  baremos.map((b) => (
+                    <tr 
+                      key={b.external_id} 
+                      className={`transition-all duration-200 ${
+                        !b.estado 
+                          ? 'bg-gray-50/70 opacity-60' 
+                          : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                      }`}
+                    >
+                      <td className={`px-6 py-5 font-bold text-2xl ${!b.estado ? 'text-gray-400' : 'text-gray-900'}`}>
+                        {b.valor_baremo}
+                        <span className="text-sm text-gray-400 ml-1 font-normal">pts</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center justify-center w-10 h-10 rounded-xl font-bold text-lg ${
+                          !b.estado 
+                            ? 'bg-gray-200 text-gray-400' 
+                            : 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
+                        }`}>
+                          {b.clasificacion}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-center">
+                        <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${
+                          b.estado 
+                            ? 'bg-green-100 text-green-700 ring-2 ring-green-200' 
+                            : 'bg-red-100 text-red-700 ring-2 ring-red-200'
+                        }`}>
+                          {b.estado ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleOpenEdit(b)} 
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                            title="Editar"
+                          >
+                            <span className="material-symbols-outlined">edit</span>
+                          </button>
+                          
+                          <button 
+                            onClick={() => toggleStatus(b)} 
+                            className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${
+                              b.estado 
+                                ? 'text-red-600 hover:bg-red-50' 
+                                : 'text-green-600 hover:bg-green-50'
+                            }`}
+                            title={b.estado ? "Desactivar" : "Activar"}
+                          >
+                            <span className="material-symbols-outlined">
+                              {b.estado ? 'block' : 'check_circle'}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
 
       <BaremoModal 

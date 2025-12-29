@@ -16,11 +16,15 @@ class BaremoRepository:
         await self.session.refresh(baremo)
         return baremo
     # Obtener todos los Baremos activos de la base de datos
-    async def get_all(self):
-        result = await self.session.execute(
-            select(Baremo).where(Baremo.estado == True)
-        )
+    async def get_all(self, incluir_inactivos: bool = True):
+        query = select(Baremo)
+
+        if not incluir_inactivos:
+            query = query.where(Baremo.estado == True)
+
+        result = await self.session.execute(query)
         return result.scalars().all()
+
     # Obtener un Baremo por su external_id
     async def get_by_external_id(self, external_id: UUID) -> Baremo | None:
         result = await self.session.execute(
