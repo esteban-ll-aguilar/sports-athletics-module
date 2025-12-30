@@ -12,3 +12,4 @@ class ResendVerificationRequest(BaseModel):
     """Request para reenviar código de verificación"""
     email: EmailStr
 
+# ============================================

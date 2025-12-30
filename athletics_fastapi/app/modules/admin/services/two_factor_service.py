@@ -139,3 +139,4 @@ class TwoFactorService:
         except Exception:
             return backup_codes_json
 
+
