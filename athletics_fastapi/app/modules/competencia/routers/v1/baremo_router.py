@@ -68,17 +68,3 @@ async def update_baremo(
 ):
     return await service.update(external_id, data)
 
-
-# ----------------------
-# Delete Baremo (protegido)
-# ----------------------
-@router.delete(
-    "/{external_id}"
-)
-async def delete_baremo(
-    external_id: UUID,
-    service: BaremoService = Depends(get_baremo_service),
-    current_user = Depends(get_current_admin_or_entrenador)  # Protección explícita
-):
-    await service.delete(external_id)
-    return {"detail": "Baremo eliminado"}

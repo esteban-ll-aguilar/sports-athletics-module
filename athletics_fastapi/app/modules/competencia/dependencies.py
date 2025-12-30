@@ -17,6 +17,12 @@ from app.modules.competencia.services.tipo_disciplina_service import TipoDiscipl
 from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.services.prueba_service import PruebaService
 
+from app.modules.competencia.repositories.competencia_repository import CompetenciaRepository
+from app.modules.competencia.services.competencia_service import CompetenciaService
+
+from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
+from app.modules.competencia.services.resultado_competencia_service import ResultadoCompetenciaService
+
 # ============================
 # Servicio Baremo (CRUD)
 # ============================
@@ -45,6 +51,26 @@ async def get_prueba_service(
 ) -> PruebaService:
     repo = PruebaRepository(session)
     return PruebaService(repo)
+
+
+# ============================
+# Servicio Competencia (CRUD)
+# ============================
+async def get_competencia_service(
+    session: AsyncSession = Depends(get_session)
+) -> CompetenciaService:
+    repo = CompetenciaRepository(session)
+    return CompetenciaService(repo, session)
+
+
+# ============================
+# Servicio Resultado Competencia (CRUD)
+# ============================
+async def get_resultado_competencia_service(
+    session: AsyncSession = Depends(get_session)
+) -> ResultadoCompetenciaService:
+    repo = ResultadoCompetenciaRepository(session)
+    return ResultadoCompetenciaService(repo, session)
 
 
 # ============================
