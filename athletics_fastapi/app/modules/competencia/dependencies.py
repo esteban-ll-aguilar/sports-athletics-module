@@ -60,7 +60,7 @@ async def get_competencia_service(
     session: AsyncSession = Depends(get_session)
 ) -> CompetenciaService:
     repo = CompetenciaRepository(session)
-    return CompetenciaService(repo, session)
+    return CompetenciaService(repo)
 
 
 # ============================

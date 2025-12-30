@@ -10,6 +10,7 @@ from app.modules.competencia.domain.schemas.competencia_schema import (
     CompetenciaRead,
 )
 from app.modules.competencia.dependencies import get_competencia_service
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 router = APIRouter()
 
@@ -43,6 +44,7 @@ async def obtener_competencia(
     """Obtener detalles de una competencia."""
     return await service.get_by_external_id(external_id)
 
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 @router.put("/{external_id}", response_model=CompetenciaRead)
 async def actualizar_competencia(
@@ -51,9 +53,13 @@ async def actualizar_competencia(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Actualizar una competencia."""
-    competencia = await service.get_by_external_id(external_id)
-    if competencia.entrenador_id != current_user.id and current_user.role != "ADMINISTRADOR":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso")
-    return await service.update(competencia.id, data)
+    """Actualizar una competencia (solo rol ENTRENADOR)."""
+
+    if current_user.role != RoleEnum.ENTRENADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los entrenadores pueden modificar competencias"
+        )
+
+    return await service.update(external_id, data)
 
