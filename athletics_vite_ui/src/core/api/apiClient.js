@@ -10,9 +10,7 @@ const axiosInstance = axios.create({
     },
 });
 
-// ============================
-// Request interceptor (TOKEN)
-// ============================
+
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -24,18 +22,13 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// ============================
-// Response interceptor (401)
-// ============================
+
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // 🔥 Sesión expirada
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
-
-            // 🔁 Redirección LIMPIA
             window.location.replace('/login');
         }
         return Promise.reject(error);

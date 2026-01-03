@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, User } from 'lucide-react';
 import adminService from '../../services/adminService';
 import { toast } from 'react-hot-toast';
 import { getUserEmail } from '../../../auth/utils/roleUtils';
@@ -8,236 +8,249 @@ const UserRoleManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage] = useState(20);
   const [roleChanges, setRoleChanges] = useState({});
 
   const currentUserEmail = getUserEmail();
-  const roles = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
 
-  // Fetch users from API
-  const fetchUsers = useCallback(async () => {
+  const roles = [
+    'ADMINISTRADOR',
+    'ENTRENADOR',
+    'ATLETA',
+    'REPRESENTANTE'
+  ];
+
+  const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await adminService.getUsers(currentPage, itemsPerPage);
-      console.log("Fetched users data:", data);
-      setUsers(data?.items || []);
-      setTotalPages(data?.pages || 1);
+      const response = await adminService.getUsers();
+
+      console.log('RESPUESTA RAW BACKEND:', response);
+
+      const usersArray =
+        response?.items ||
+        response?.data ||
+        response?.results ||
+        response?.users ||
+        (Array.isArray(response) ? response : []);
+
+      console.log('USUARIOS EXTRAIDOS:', usersArray);
+
+      if (!Array.isArray(usersArray)) {
+        toast.error('Formato de usuarios inválido');
+        setUsers([]);
+      } else {
+        setUsers(usersArray);
+      }
     } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Error al cargar usuarios");
+      console.error('ERROR FETCH USERS:', error);
+      toast.error('Error al cargar usuarios');
       setUsers([]);
-      setTotalPages(1);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage]);
+  };
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
-  // Handle role selection changes
-  const handleRoleChange = (userId, newRole) => {
-    setRoleChanges(prev => ({ ...prev, [userId]: newRole }));
+  // ===============================
+  // ROLE HANDLERS
+  // ===============================
+  const handleRoleChange = (userId, role) => {
+    setRoleChanges(prev => ({
+      ...prev,
+      [userId]: role
+    }));
   };
 
-  // Cancel role change for a user
   const handleCancelChange = (userId) => {
     setRoleChanges(prev => {
-      const newState = { ...prev };
-      delete newState[userId];
-      return newState;
+      const copy = { ...prev };
+      delete copy[userId];
+      return copy;
     });
   };
 
-  // Save role for a single user
   const handleSaveRole = async (userId) => {
-    const newRole = roleChanges[userId];
-    if (!newRole) return;
+    const role = roleChanges[userId];
+    if (!role) return;
 
     try {
-      const updatedUser = await adminService.updateUserRole(userId, newRole);
-      toast.success("Rol actualizado correctamente");
+      const updatedUser = await adminService.updateUserRole(userId, role);
 
-      setUsers(users.map(u => (u.id === userId ? updatedUser : u)));
+      setUsers(prev =>
+        prev.map(u => (u.id === userId ? updatedUser : u))
+      );
 
-      setRoleChanges(prev => {
-        const newState = { ...prev };
-        delete newState[userId];
-        return newState;
-      });
+      handleCancelChange(userId);
+      toast.success('Rol actualizado');
     } catch (error) {
-      console.error("Error updating role:", error);
-      toast.error("Error al actualizar el rol");
+      console.error(error);
+      toast.error('Error al actualizar rol');
     }
   };
 
-  // Save all role changes at once
   const handleSaveAll = async () => {
-    const promises = Object.entries(roleChanges).map(([userId, role]) =>
-      adminService.updateUserRole(userId, role)
-    );
-
     try {
-      await Promise.all(promises);
-      toast.success("Todos los roles actualizados");
-      fetchUsers();
+      await Promise.all(
+        Object.entries(roleChanges).map(([id, role]) =>
+          adminService.updateUserRole(id, role)
+        )
+      );
+      toast.success('Roles actualizados');
       setRoleChanges({});
+      fetchUsers();
     } catch {
-      toast.error("Error al guardar algunos cambios");
+      toast.error('Error al guardar todos');
     }
   };
 
-  // Filter users and exclude current user
-  const filteredUsers = (users || []).filter(user => {
-    const matchesSearch =
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase()));
-    const isNotCurrentUser = user.email !== currentUserEmail;
-    return matchesSearch && isNotCurrentUser;
+  // ===============================
+  // FILTER
+  // ===============================
+  const filteredUsers = users.filter(user => {
+    const matches =
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matches && user.email !== currentUserEmail;
   });
 
-  if (loading) return <div className="p-6">Cargando usuarios...</div>;
+  if (loading) {
+    return <div className="p-6">Cargando usuarios...</div>;
+  }
 
+  // ===============================
+  // RENDER
+  // ===============================
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Gestión de Roles de Usuario</h1>
-        <p className="mt-1 text-sm text-gray-500">Asigna o modifica los permisos de los usuarios en la plataforma.</p>
+    <div className="p-6 max-w-6xl mx-auto">
+
+      <h1 className="text-2xl font-bold mb-6">
+        Gestión de Roles
+      </h1>
+
+      {/* SEARCH */}
+      <div className="mb-4 relative">
+        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Buscar por email o nombre"
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="pl-10 pr-4 py-2 w-full border rounded"
+        />
       </div>
 
-      {/* Search */}
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            placeholder="Buscar usuario por nombre o email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* EMPTY STATE */}
+      {filteredUsers.length === 0 && (
+        <div className="p-6 text-center text-gray-500">
+          No hay usuarios para mostrar
         </div>
-      </div>
+      )}
 
-      {/* Users Table */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol Actual</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredUsers.map(user => (
-              <tr key={user.id} className={roleChanges[user.id] ? 'bg-red-50' : ''}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="shrink-0 h-10 w-10">
+      {/* TABLE */}
+      {filteredUsers.length > 0 && (
+        <div className="bg-white shadow rounded border">
+          <table className="min-w-full divide-y">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium">
+                  Usuario
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium">
+                  Rol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y">
+              {filteredUsers.map(user => (
+                <tr key={user.id} className={roleChanges[user.id] ? 'bg-red-50' : ''}>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
                       {user.profile_image ? (
-                        <img className="h-10 w-10 rounded-full" src={user.profile_image} alt="" />
+                        <img
+                          src={user.profile_image}
+                          alt=""
+                          className="h-10 w-10 rounded-full"
+                        />
                       ) : (
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
                           <User className="h-6 w-6 text-gray-500" />
                         </div>
                       )}
+                      <div className="ml-4">
+                        <div className="font-medium">
+                          {user.username || 'Sin nombre'}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {user.email}
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.username || 'Usuario sin nombre'}</div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <select
-                    value={roleChanges[user.id] || user.role}
-                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                  >
-                    {roles.map(role => (
-                      <option key={role} value={role}>{role}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleSaveRole(user.id)}
-                      disabled={!roleChanges[user.id]}
-                      className={`inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm ${roleChanges[user.id]
-                        ? 'text-white bg-red-600 hover:bg-red-700 focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-                        : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
-                      }`}
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <select
+                      value={roleChanges[user.id] || user.role}
+                      onChange={e => handleRoleChange(user.id, e.target.value)}
+                      className="border rounded px-3 py-2 w-full"
                     >
-                      Guardar
-                    </button>
-                    {roleChanges[user.id] && (
+                      {roles.map(role => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
                       <button
-                        onClick={() => handleCancelChange(user.id)}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        disabled={!roleChanges[user.id]}
+                        onClick={() => handleSaveRole(user.id)}
+                        className={`px-3 py-2 rounded text-white ${
+                          roleChanges[user.id]
+                            ? 'bg-red-600 hover:bg-red-700'
+                            : 'bg-gray-400 cursor-not-allowed'
+                        }`}
                       >
-                        Cancelar
+                        Guardar
                       </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
-      {/* Pagination & Save All */}
-      <div className="py-3 flex items-center justify-between border-t border-gray-200">
-        <div className="flex-1 flex justify-between sm:hidden">
-          <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Anterior
-          </button>
-          <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-            Siguiente
-          </button>
-        </div>
-
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Página <span className="font-medium">{currentPage}</span> de <span className="font-medium">{totalPages}</span>
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-              <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span className="sr-only">Anterior</span>
-                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-              </button>
-
-              {[...Array(totalPages)].map((_, i) => (
-                <button key={i} onClick={() => setCurrentPage(i + 1)} className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === i + 1 ? 'z-10 bg-red-50 border-red-500 text-red-600' : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'}`}>
-                  {i + 1}
-                </button>
+                      {roleChanges[user.id] && (
+                        <button
+                          onClick={() => handleCancelChange(user.id)}
+                          className="px-3 py-2 border rounded"
+                        >
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               ))}
-
-              <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages} className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span className="sr-only">Siguiente</span>
-                <ChevronRight className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </nav>
-
-            {Object.keys(roleChanges).length > 0 && (
-              <button onClick={handleSaveAll} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                Guardar todo
-              </button>
-            )}
-          </div>
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
+
+      {/* SAVE ALL */}
+      {Object.keys(roleChanges).length > 0 && (
+        <div className="mt-4 text-right">
+          <button
+            onClick={handleSaveAll}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Guardar todo
+          </button>
+        </div>
+      )}
     </div>
   );
 };

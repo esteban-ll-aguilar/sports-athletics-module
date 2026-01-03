@@ -1,4 +1,4 @@
-import httpx
+import httpx    
 from fastapi import HTTPException
 from app.core.config.enviroment import _SETTINGS
 from app.modules.external.domain.enums import ExternalClassTokenType

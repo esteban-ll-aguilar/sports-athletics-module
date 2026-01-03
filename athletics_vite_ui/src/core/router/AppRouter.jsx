@@ -28,15 +28,14 @@ import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
 import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
 import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
 import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
-// Perfil
+
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 // Seguridad
 import ProtectedRoute from './ProtectedRoute';
+import ResultadosPage from '../../modules/competencia/ui/pages/ResultadosPage';
+
 
 const router = createBrowserRouter([
-  /* =========================
-     🌐 PÚBLICO
-  ========================== */
   {
     path: '/',
     element: <MainLayout />,
@@ -49,12 +48,10 @@ const router = createBrowserRouter([
   { path: '/register', element: <RegisterPage /> },
   { path: '/unauthorized', element: <UnauthorizedPage /> },
 
-  /* =========================
-     🔐 DASHBOARD PROTEGIDO
-  ========================== */
+
   {
     path: '/dashboard',
-    element: <ProtectedRoute />, // solo autenticación
+    element: <ProtectedRoute />, 
     children: [
       {
         element: <DashboardLayout />,
@@ -93,6 +90,13 @@ const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
             children: [{ index: true, element: <CompetenciasPage /> }],
           },
+          // /dashboard/results
+
+          {
+            path: 'results',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'REPRESENTANTE']} />,
+            children: [{ index: true, element: <ResultadosPage /> }],
+          }
         ],
       },
     ],
