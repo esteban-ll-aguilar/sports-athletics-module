@@ -13,9 +13,10 @@ import AdminUsersTable from '../../modules/admin/ui/pages/admin_controller_user_
 import PruebasPage from '../../modules/competencia/ui/pages/PruebasPage';
 import BaremosPage from '../../modules/competencia/ui/pages/BaremosPage';
 import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplinaPage';
+import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 
 
-
+const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'USUARIO', 'ATLETA']
 
 const router = createBrowserRouter([
     {
@@ -91,6 +92,16 @@ const router = createBrowserRouter([
                             {
                                 path: 'disciplinas', // URL: /dashboard/pruebas/disciplinas
                                 element: <TipoDisciplinaPage />,
+                            },  
+                        ],
+                    },
+                    {
+                        path: 'entrenamientos',
+                        element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+                        children: [
+                            {
+                                index: true,
+                                element: <GestionEntrenamientosPage />,
                             },
                         ],
                     },
@@ -100,7 +111,7 @@ const router = createBrowserRouter([
     },
     {
         path: '/profile',
-        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']}/>,
+        element: <ProtectedRoute allowedRoles={ALLOWED_ALL_ROLES} />,
         children: [
             {
                 element: (
