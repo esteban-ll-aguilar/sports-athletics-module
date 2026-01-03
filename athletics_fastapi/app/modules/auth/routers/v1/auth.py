@@ -196,7 +196,7 @@ async def logout(
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager)
 ):
-    """
+    """f
     Cierra la sesión revocando tanto el access token como el refresh token.
     Revoca en Redis (rápido) y BD (auditoría).
     """
