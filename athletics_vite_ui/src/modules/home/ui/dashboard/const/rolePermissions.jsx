@@ -12,15 +12,16 @@ const rolePermissions = {
         { path: '/dashboard/admin', icon: Users, label: 'Administracion' },
         { path: '/dashboard/pruebas', icon: Users, label: 'Gestion de Pruebas' },
 
-        
+
     ],
     ATLETA: [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Atleta' },
-       
+
     ],
     ENTRENADOR: [
         { path: '/dashboard/results', icon: Activity, label: 'Entrenador' },
         { path: '/dashboard/pruebas', icon: Users, label: 'Gestion de Pruebas' },
+        { path: '/dashboard/entrenamientos', icon: Users, label: 'Gestion de Entrenamientos' },
     ],
     REPRESENTANTE: [
         { path: '/dashboard/results', icon: Activity, label: 'Representante' },
