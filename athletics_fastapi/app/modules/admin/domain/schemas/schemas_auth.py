@@ -72,14 +72,24 @@ class UserCreateAdmin(UserCreate):
 
 class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
-    username: str | None = None
     profile_image: str | None = None
-    
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    identificacion: str | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    phone: str | None = None
+    direccion: str | None = None
+    fecha_nacimiento: Optional[date] = None
+    sexo: Optional[SexoEnum] = None
+
     class Config:
         from_attributes = True  # Permite crear desde ORM models
+
 
 class TokenPair(BaseModel):
     access_token: str

@@ -8,8 +8,6 @@ const rolePermissions = {
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/events', icon: Calendar, label: 'Eventos' },
         { path: '/dashboard/admin', icon: Users, label: 'Administracion' },
-    
-
         
     ],
     ATLETA: [
@@ -20,7 +18,8 @@ const rolePermissions = {
         { path: '/dashboard/pruebas', icon: Users, label: 'Gestion de Pruebas' },
         { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
         { path: '/dashboard/results', icon: Activity, label: 'Resultados' },
-    
+        { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
+        
     ],
     REPRESENTANTE: [
         { path: '/dashboard/results', icon: Activity, label: 'Representante' },

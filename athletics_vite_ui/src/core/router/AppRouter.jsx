@@ -33,6 +33,7 @@ import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 // Seguridad
 import ProtectedRoute from './ProtectedRoute';
 import ResultadosPage from '../../modules/competencia/ui/pages/ResultadosPage';
+import AthletesTable from '../../modules/atleta/ui/pages/atletlas';
 
 
 const router = createBrowserRouter([
@@ -96,7 +97,18 @@ const router = createBrowserRouter([
             path: 'results',
             element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR',]} />,
             children: [{ index: true, element: <ResultadosPage /> }],
-          }
+          },
+
+          {
+          path: 'athletes',
+          element: (
+            <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />
+          ),
+          children: [
+            { index: true, element: <AthletesTable /> }
+          ],
+        },
+          
         ],
       },
     ],

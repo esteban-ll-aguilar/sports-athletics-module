@@ -45,13 +45,7 @@ class Atleta(Base):
 
     user: Mapped["AuthUserModel"] = relationship("AuthUserModel")
 
-    # 🔗 Relación 1–1 con historial médico
-    historial_medico: Mapped["HistorialMedico"] = relationship(
-        "HistorialMedico",
-        back_populates="atleta",
-        uselist=False,
-        cascade="all, delete-orphan"
-    )
+  
 
     #revisar relacion con representante
     # Relationship N-to-1: Atleta has one Representante
