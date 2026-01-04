@@ -1,12 +1,14 @@
 """Esquemas Pydantic para Atleta."""
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 
 
+# =========================
+# Usuario asociado
+# =========================
 class UserInfo(BaseModel):
-    """Información del usuario asociado al atleta."""
     id: int
     email: str
     first_name: Optional[str] = None
@@ -18,25 +20,35 @@ class UserInfo(BaseModel):
         from_attributes = True
 
 
+# =========================
+# Base Atleta
+# =========================
 class AtletaBase(BaseModel):
-    """Base schema para Atleta."""
-    anios_experiencia: int = Field(..., ge=0, le=100, description="Años de experiencia (0-100)")
-    foto_perfil: Optional[str] = Field(None, description="URL de la foto de perfil")
-
-
-class AtletaCreate(AtletaBase):
-    """Schema para crear Atleta."""
-    pass
-
-
-class AtletaUpdate(BaseModel):
-    """Schema para actualizar Atleta."""
-    anios_experiencia: Optional[int] = Field(None, ge=0, le=100)
+    anios_experiencia: int = Field(..., ge=0, le=100)
+    fecha_nacimiento: date
     foto_perfil: Optional[str] = None
 
 
+# =========================
+# Crear
+# =========================
+class AtletaCreate(AtletaBase):
+    pass
+
+
+# =========================
+# Actualizar
+# =========================
+class AtletaUpdate(BaseModel):
+    anios_experiencia: Optional[int] = Field(None, ge=0, le=100)
+    fecha_nacimiento: Optional[date] = None
+    foto_perfil: Optional[str] = None
+
+
+# =========================
+# Leer
+# =========================
 class AtletaRead(AtletaBase):
-    """Schema para leer Atleta."""
     id: int
     external_id: UUID
     user_id: int
@@ -48,6 +60,8 @@ class AtletaRead(AtletaBase):
         from_attributes = True
 
 
+# =========================
+# Detalle (igual al read)
+# =========================
 class AtletaDetail(AtletaRead):
-    """Schema detallado de Atleta."""
     pass

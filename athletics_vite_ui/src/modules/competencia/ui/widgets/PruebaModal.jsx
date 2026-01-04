@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import baremoService from "../../services/baremo_service";
+import Swal from "sweetalert2";
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     const [form, setForm] = useState({
@@ -50,6 +51,61 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
     if (!isOpen) return null;
 
+    // Manejar creación o edición
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const result = await Swal.fire({
+            title: editingData ? '¿Desea actualizar esta prueba?' : '¿Desea crear esta prueba?',
+            text: editingData
+                ? 'Se actualizará la prueba seleccionada.'
+                : 'Se creará una nueva prueba.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ec1313'
+        });
+
+        if (result.isConfirmed) {
+            onSubmit(form);
+
+            await Swal.fire({
+                icon: 'success',
+                title: editingData ? 'Prueba actualizada' : 'Prueba creada',
+                text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
+                confirmButtonColor: '#ec1313'
+            });
+
+            onClose();
+        }
+    };
+
+    // Manejar cambio de estado con alerta
+    const toggleEstado = async () => {
+        const action = form.estado ? 'desactivar' : 'activar';
+
+        const result = await Swal.fire({
+            title: `¿Desea ${action} esta prueba?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: `Sí, ${action}`,
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#ec1313'
+        });
+
+        if (result.isConfirmed) {
+            setForm({...form, estado: !form.estado});
+
+            Swal.fire({
+                icon: 'success',
+                title: `Prueba ${form.estado ? 'desactivada' : 'activada'}`,
+                text: `La prueba ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
+                confirmButtonColor: '#ec1313'
+            });
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
             <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -60,7 +116,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     </button>
                 </div>
                 
-                <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* Switch de Estado (Activar/Desactivar) */}
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                         <div>
@@ -71,7 +127,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         </div>
                         <button 
                             type="button"
-                            onClick={() => setForm({...form, estado: !form.estado})}
+                            onClick={toggleEstado}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-300'}`}
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.estado ? 'translate-x-6' : 'translate-x-1'}`} />

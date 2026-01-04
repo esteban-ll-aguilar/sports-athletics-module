@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Competencia from "../../domain/models/Competencia";
+import Swal from "sweetalert2";
 
 const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => {
   const [form, setForm] = useState(new Competencia());
@@ -10,6 +11,61 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
   }, [editingCompetencia, isOpen]);
 
   if (!isOpen) return null;
+
+  // Manejar creación o edición
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: editingCompetencia ? '¿Desea actualizar esta competencia?' : '¿Desea crear esta competencia?',
+      text: editingCompetencia
+        ? 'Se actualizará la competencia seleccionada.'
+        : 'Se creará una nueva competencia.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      onSubmit(form);
+
+      await Swal.fire({
+        icon: 'success',
+        title: editingCompetencia ? 'Competencia actualizada' : 'Competencia creada',
+        text: `La competencia ha sido ${editingCompetencia ? 'actualizada' : 'creada'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+
+      onClose();
+    }
+  };
+
+  // Manejar cambio de estado con alerta
+  const toggleEstado = async () => {
+    const action = form.estado ? 'desactivar' : 'activar';
+
+    const result = await Swal.fire({
+      title: `¿Desea ${action} esta competencia?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${action}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      setForm({...form, estado: !form.estado});
+
+      Swal.fire({
+        icon: 'success',
+        title: `Competencia ${form.estado ? 'desactivada' : 'activada'}`,
+        text: `La competencia ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -23,7 +79,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
           </button>
         </div>
         
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           
           {/* CAMPO NOMBRE */}
           <div>
@@ -41,13 +97,10 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
             />
           </div>
 
-          {/* CAMPOS FECHA Y LUGAR EN GRID */}
+          {/* CAMPOS FECHA Y LUGAR */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* CAMPO FECHA */}
             <div>
-              <label className="block text-sm font-bold mb-2 text-[#181111]">
-                Fecha del Evento *
-              </label>
+              <label className="block text-sm font-bold mb-2 text-[#181111]">Fecha del Evento *</label>
               <input
                 type="date"
                 name="fecha"
@@ -57,12 +110,8 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
                 required
               />
             </div>
-
-            {/* CAMPO LUGAR */}
             <div>
-              <label className="block text-sm font-bold mb-2 text-[#181111]">
-                Lugar *
-              </label>
+              <label className="block text-sm font-bold mb-2 text-[#181111]">Lugar *</label>
               <input
                 type="text"
                 name="lugar"
@@ -77,9 +126,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
 
           {/* CAMPO DESCRIPCIÓN */}
           <div>
-            <label className="block text-sm font-bold mb-2 text-[#181111]">
-              Descripción (Opcional)
-            </label>
+            <label className="block text-sm font-bold mb-2 text-[#181111]">Descripción (Opcional)</label>
             <textarea
               name="descripcion"
               value={form.descripcion}
@@ -101,7 +148,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
             
             <button
               type="button"
-              onClick={() => setForm({...form, estado: !form.estado})}
+              onClick={toggleEstado}
               className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
                 form.estado ? 'bg-green-500' : 'bg-gray-300'
               }`}

@@ -1,82 +1,93 @@
-"""Repositorio para Atleta."""
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from uuid import UUID
-from app.modules.atleta.domain.models.atleta_model import Atleta
+from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 
 class AtletaRepository:
-    """Repositorio para manejar operaciones CRUD de Atleta."""
+    """Repositorio para manejar 'atletas', basados en la tabla auth_users con role='ATLETA'"""
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create(self, atleta: Atleta) -> Atleta:
-        """Crear un nuevo atleta."""
+    # ----------------------
+    # Crear un atleta (opcional, si quieres duplicar en auth_users)
+    # ----------------------
+    async def create(self, atleta: AuthUserModel) -> AuthUserModel:
         self.session.add(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
         return atleta
 
-    async def get_by_id(self, id: int) -> Atleta | None:
-        """Obtener atleta por ID."""
+    # ----------------------
+    # Obtener por ID interno (primary key)
+    # ----------------------
+    async def get_by_id(self, atleta_id: int) -> AuthUserModel | None:
         result = await self.session.execute(
-            select(Atleta).where(Atleta.id == id)
-        )
-        return result.scalars().first()
-
-    async def get_by_external_id(self, external_id: UUID) -> Atleta | None:
-        """Obtener atleta por external_id."""
-        result = await self.session.execute(
-            select(Atleta).where(Atleta.external_id == external_id)
-        )
-        return result.scalars().first()
-
-    async def get_by_user_id(self, user_id: int) -> Atleta | None:
-        """Obtener atleta por user_id."""
-        result = await self.session.execute(
-            select(Atleta).where(Atleta.user_id == user_id)
-        )
-        return result.scalars().first()
-
-    async def get_all(self, skip: int = 0, limit: int = 100):
-        """Obtener todos los atletas con paginación."""
-        result = await self.session.execute(
-            select(Atleta).offset(skip).limit(limit)
-        )
-        return result.scalars().all()
-
-    async def search_by_name(self, search_term: str, skip: int = 0, limit: int = 100):
-        """Buscar atletas por nombre o apellido."""
-        result = await self.session.execute(
-            select(Atleta)
-            .join(Atleta.user)
-            .where(
-                (Atleta.user.first_name.ilike(f"%{search_term}%")) |
-                (Atleta.user.last_name.ilike(f"%{search_term}%"))
+            select(AuthUserModel).where(
+                AuthUserModel.id == atleta_id,
+                AuthUserModel.role == "ATLETA"
             )
+        )
+        return result.scalars().first()
+
+    # ----------------------
+    # Obtener por user_id (si alguna relación adicional existe)
+    # ----------------------
+    async def get_by_user_id(self, user_id: int) -> AuthUserModel | None:
+        result = await self.session.execute(
+            select(AuthUserModel).where(
+                AuthUserModel.id == user_id,  # en auth_users, id = user_id
+                AuthUserModel.role == "ATLETA"
+            )
+        )
+        return result.scalars().first()
+
+    # ----------------------
+    # Obtener por external_id (UUID)
+    # ----------------------
+    async def get_by_external_id(self, external_id: UUID) -> AuthUserModel | None:
+        result = await self.session.execute(
+            select(AuthUserModel).where(
+                AuthUserModel.external_id == external_id,
+                AuthUserModel.role == "ATLETA"
+            )
+        )
+        return result.scalars().first()
+
+    # ----------------------
+    # Obtener todos los atletas (con paginación)
+    # ----------------------
+    async def get_all(self, skip: int = 0, limit: int = 100) -> list[AuthUserModel]:
+        result = await self.session.execute(
+            select(AuthUserModel)
+            .where(AuthUserModel.role == "ATLETA")
             .offset(skip)
             .limit(limit)
         )
         return result.scalars().all()
 
-    async def update(self, atleta: Atleta) -> Atleta:
-        """Actualizar un atleta."""
+    # ----------------------
+    # Actualizar atleta
+    # ----------------------
+    async def update(self, atleta: AuthUserModel) -> AuthUserModel:
         await self.session.merge(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
         return atleta
 
-    async def delete(self, id: int) -> bool:
-        """Eliminar un atleta."""
-        atleta = await self.get_by_id(id)
-        if atleta:
-            await self.session.delete(atleta)
-            await self.session.commit()
-            return True
-        return False
+    # ----------------------
+    # Eliminar atleta (opcional)
+    # ----------------------
+    async def delete(self, atleta: AuthUserModel) -> None:
+        await self.session.delete(atleta)
+        await self.session.commit()
 
+    # ----------------------
+    # Contar atletas
+    # ----------------------
     async def count(self) -> int:
-        """Contar total de atletas."""
-        result = await self.session.execute(select(func.count(Atleta.id)))
+        result = await self.session.execute(
+            select(func.count(AuthUserModel.id)).where(AuthUserModel.role == "ATLETA")
+        )
         return result.scalar() or 0

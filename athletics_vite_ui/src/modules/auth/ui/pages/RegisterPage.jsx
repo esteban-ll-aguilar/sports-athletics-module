@@ -18,7 +18,9 @@ const RegisterPage = () => {
         tipo_estamento: 'EXTERNOS',
         role: 'ATLETA',
         phone: '',
-        direccion: ''
+        direccion: '',
+        fecha_nacimiento: '',
+        sexo: 'M',
     });
 
     const [error, setError] = useState('');
@@ -119,6 +121,9 @@ const RegisterPage = () => {
             const dataToSend = { ...rest };
             if (phone && phone.trim() !== '') dataToSend.phone = phone;
             if (direccion && direccion.trim() !== '') dataToSend.direccion = direccion;
+
+            // 🔹 Aquí puedes ver toda la data que se enviará
+            console.log("Data enviada al backend:", dataToSend);
 
             await authService.register(dataToSend);
             navigate('/login');
@@ -261,6 +266,36 @@ const RegisterPage = () => {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Fecha de nacimiento
+                                </label>
+                                <input
+                                    type="date"
+                                    name="fecha_nacimiento"
+                                    value={formData.fecha_nacimiento}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Sexo
+                                </label>
+                                <select
+                                    name="sexo"
+                                    value={formData.sexo}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                >
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                            </div>
+                        </div>
+ 
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Datos de Cuenta</h3>

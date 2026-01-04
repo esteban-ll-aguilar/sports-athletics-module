@@ -5,6 +5,12 @@ from uuid import UUID
 from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
 
 
+from pydantic import BaseModel, EmailStr, Field, field_validator
+import re
+from datetime import date
+from uuid import UUID
+from app.modules.auth.domain.enums import RoleEnum, SexoEnum, TipoEstamentoEnum, TipoIdentificacionEnum
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=4, max_length=50)
     email: EmailStr
@@ -12,10 +18,10 @@ class UserCreate(BaseModel):
 
     first_name: str = Field(min_length=2, max_length=50)
     last_name: str = Field(min_length=2, max_length=50)
-    
+
     tipo_identificacion: TipoIdentificacionEnum = Field(default=TipoIdentificacionEnum.CEDULA)
     identificacion: str = Field(min_length=8, max_length=128)
-    
+
     tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
 
     phone: str = Field(min_length=8, max_length=128, default="")
@@ -23,10 +29,11 @@ class UserCreate(BaseModel):
 
     role: RoleEnum = Field(default=RoleEnum.ATLETA)
 
+
+
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
-        """Valida que la contraseña sea fuerte."""
         if not re.search(r'[A-Z]', v):
             raise ValueError('La contraseña debe contener al menos una letra mayúscula')
         if not re.search(r'[a-z]', v):
@@ -40,7 +47,6 @@ class UserCreate(BaseModel):
     @field_validator('role')
     @classmethod
     def validate_role(cls, v: RoleEnum) -> RoleEnum:
-        """Valida que el rol sea válido."""
         if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
             raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
         return v
@@ -59,20 +65,14 @@ class UserUpdateRequest(BaseModel):
     profile_image: str | None = None
     
 
-
-
-
-
-
 class UserCreateAdmin(UserCreate):
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
-        return v  # 🔓 sin validación
-
+        return v  
 
 class UserRead(BaseModel):
-    external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
+    external_id: UUID = Field(serialization_alias="id")  
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
@@ -80,7 +80,7 @@ class UserRead(BaseModel):
     profile_image: str | None = None
     
     class Config:
-        from_attributes = True  # Permite crear desde ORM models
+        from_attributes = True  
 
 class TokenPair(BaseModel):
     access_token: str

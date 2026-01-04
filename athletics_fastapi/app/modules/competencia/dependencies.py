@@ -22,6 +22,7 @@ from app.modules.competencia.services.competencia_service import CompetenciaServ
 
 from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
 from app.modules.competencia.services.resultado_competencia_service import ResultadoCompetenciaService
+from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 
 # ============================
 # Servicio Baremo (CRUD)
@@ -69,8 +70,16 @@ async def get_competencia_service(
 async def get_resultado_competencia_service(
     session: AsyncSession = Depends(get_session)
 ) -> ResultadoCompetenciaService:
-    repo = ResultadoCompetenciaRepository(session)
-    return ResultadoCompetenciaService(repo, session)
+    resultado_repo = ResultadoCompetenciaRepository(session)
+    competencia_repo = CompetenciaRepository(session)
+    atleta_repo = AtletaRepository(session)
+    prueba_repo = PruebaRepository(session)
+    return ResultadoCompetenciaService(
+        resultado_repo,
+        competencia_repo,
+        atleta_repo,
+        prueba_repo
+    )
 
 
 # ============================

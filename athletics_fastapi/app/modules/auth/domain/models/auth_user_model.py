@@ -20,6 +20,7 @@ class AuthUserModel(Base):
     hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     email_confirmed_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+   
     
     # 2FA Fields
     totp_secret: Mapped[str] = mapped_column(String(32), nullable=True)  # Secret para TOTP

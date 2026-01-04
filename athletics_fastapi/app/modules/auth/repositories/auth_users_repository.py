@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import Table, select, update, func
-from typing import Optional
+from typing import Optional, List, Tuple
 import random, string
-from typing import List, Tuple
+from datetime import datetime, date
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.schemas.schemas_auth import UserCreate, UserCreateAdmin, UserUpdateRequest
 from app.modules.external.services import ExternalUsersApiService
@@ -42,10 +42,11 @@ class AuthUsersRepository:
         except (ValueError, TypeError):
             return None
 
-    async def create(self,password_hash: str, user_data: UserCreate | UserCreateAdmin) -> AuthUserModel:
+    async def create(self, password_hash: str, user_data: UserCreate | UserCreateAdmin) -> AuthUserModel:
         """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
         service = await get_external_users_service(self.session)
 
+        # Sincronización con sistema externo
         user_search = await service.search_user_by_dni(user_data.identificacion)
         if user_search.status != 200:
             external_user = await service.create_user(
@@ -58,10 +59,11 @@ class AuthUsersRepository:
                     direction=user_data.direccion,
                     phono=user_data.phone,
                     email=user_data.email,
-                    password=user_data.password
+                    password=user_data.password,
+                    fecha_nacimiento=user_data.fecha_nacimiento,
+                    sexo=user_data.sexo,
                 )
             )
-        
         else:
             external_user = await service.update_user(
                 user=UserExternalUpdateRequest(
@@ -75,15 +77,24 @@ class AuthUsersRepository:
                 )
             )
 
+        # Convertir fecha_nacimiento a date si viene como string
+        fecha_nac: Optional[date] = None
+        if user_data.fecha_nacimiento:
+            if isinstance(user_data.fecha_nacimiento, str):
+                fecha_nac = datetime.strptime(user_data.fecha_nacimiento, "%Y-%m-%d").date()
+            elif isinstance(user_data.fecha_nacimiento, date):
+                fecha_nac = user_data.fecha_nacimiento
+
         user = AuthUserModel(
             hashed_password=password_hash,
-            **user_data.model_dump(exclude={"password"}))
-        
+        **user_data.model_dump(exclude={"password", "fecha_nacimiento", "sexo"}),
+            fecha_nacimiento=fecha_nac,
+            sexo=user_data.sexo
+        )
+
         self.session.add(user)
         await self.session.flush()
         return user
-
-   
 
     async def activate_user(self, email: str) -> bool:
         """Activa un usuario después de verificar el email."""
@@ -112,7 +123,6 @@ class AuthUsersRepository:
         return False
 
     async def _generate_code(length: int = 6) -> str:
-        # Letras mayúsculas (y dígitos por robustez)
         alphabet = string.ascii_uppercase
         return "".join(random.choices(alphabet, k=length))
     
@@ -124,21 +134,12 @@ class AuthUsersRepository:
         return None
 
     async def get_users_paginated(self, page: int = 1, page_size: int = 10) -> Tuple[int, List[AuthUserModel]]:
-        """
-        Retorna usuarios paginados y total de usuarios.
-        """
-        # Calcular offset
         offset = (page - 1) * page_size
-
-        # Query principal
         query = select(AuthUserModel).offset(offset).limit(page_size)
         result = await self.session.execute(query)
         users = result.scalars().all()
-
-        # Contar total de usuarios (más eficiente sería con COUNT, pero funciona)
         total_result = await self.session.execute(select(AuthUserModel))
         total = len(total_result.scalars().all())
-
         return total, users
 
     async def update_user(self, user_id: int, user_data: UserUpdateRequest):
@@ -157,12 +158,20 @@ class AuthUsersRepository:
                 )
             )
 
+            # Convertir fecha_nacimiento a date si viene como string
+            fecha_nac: Optional[date] = None
+            if user_data.fecha_nacimiento:
+                if isinstance(user_data.fecha_nacimiento, str):
+                    fecha_nac = datetime.strptime(user_data.fecha_nacimiento, "%Y-%m-%d").date()
+                elif isinstance(user_data.fecha_nacimiento, date):
+                    fecha_nac = user_data.fecha_nacimiento
+
             user.username = user_data.username
             user.first_name = user_data.first_name
             user.last_name = user_data.last_name
             user.tipo_identificacion = user_data.tipo_identificacion
             user.tipo_estamento = user_data.tipo_estamento
-            user.fecha_nacimiento = user_data.fecha_nacimiento
+            user.fecha_nacimiento = fecha_nac
             user.phone = user_data.phone
             user.direccion = user_data.direccion
             user.sexo = user_data.sexo
