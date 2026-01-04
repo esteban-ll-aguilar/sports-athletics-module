@@ -19,4 +19,4 @@ class Entrenamiento(Base):
 
     # Relationships
     entrenador: Mapped["Entrenador"] = relationship("Entrenador", back_populates="entrenamientos")
-    horarios: Mapped[List["Horario"]] = relationship("Horario", back_populates="entrenamiento")
+    horarios: Mapped[List["Horario"]] = relationship("Horario", back_populates="entrenamiento", cascade="all, delete-orphan")

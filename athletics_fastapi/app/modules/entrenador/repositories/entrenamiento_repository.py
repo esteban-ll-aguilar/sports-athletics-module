@@ -14,8 +14,11 @@ class EntrenamientoRepository:
         return entrenamiento
 
     async def get_all_by_entrenador(self, entrenador_id: int) -> List[Entrenamiento]:
+        from sqlalchemy.orm import selectinload
         result = await self.session.execute(
-            select(Entrenamiento).where(Entrenamiento.entrenador_id == entrenador_id)
+            select(Entrenamiento)
+            .where(Entrenamiento.entrenador_id == entrenador_id)
+            .options(selectinload(Entrenamiento.horarios))
         )
         return result.scalars().all()
 
@@ -26,11 +29,14 @@ class EntrenamientoRepository:
         return result.scalars().first()
     
     async def get_by_id_and_entrenador(self, entrenamiento_id: int, entrenador_id: int) -> Optional[Entrenamiento]:
+        from sqlalchemy.orm import selectinload
         result = await self.session.execute(
-            select(Entrenamiento).where(
+            select(Entrenamiento)
+            .where(
                 Entrenamiento.id == entrenamiento_id,
                 Entrenamiento.entrenador_id == entrenador_id
             )
+            .options(selectinload(Entrenamiento.horarios))
         )
         return result.scalars().first()
 

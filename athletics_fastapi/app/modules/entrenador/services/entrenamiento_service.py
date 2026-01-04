@@ -9,10 +9,21 @@ class EntrenamientoService:
         self.repository = repository
 
     async def create_entrenamiento(self, schema: EntrenamientoCreate, entrenador_id: int) -> Entrenamiento:
+        entrenamiento_data = schema.model_dump(exclude={'horarios'})
+        horarios_data = schema.horarios or []
+
+        from app.modules.entrenador.domain.models.horario_model import Horario
+        
         entrenamiento = Entrenamiento(
-            **schema.model_dump(),
+            **entrenamiento_data,
             entrenador_id=entrenador_id
         )
+        
+        # Create nested Horario objects
+        for h_data in horarios_data:
+            horario = Horario(**h_data.model_dump())
+            entrenamiento.horarios.append(horario)
+            
         return await self.repository.create(entrenamiento)
 
     async def get_mis_entrenamientos(self, entrenador_id: int) -> List[Entrenamiento]:
@@ -28,8 +39,18 @@ class EntrenamientoService:
         entrenamiento = await self.get_entrenamiento_detalle(entrenamiento_id, entrenador_id)
         
         update_data = schema.model_dump(exclude_unset=True)
+        horarios_data = update_data.pop('horarios', None)
+
         for key, value in update_data.items():
             setattr(entrenamiento, key, value)
+            
+        if horarios_data is not None:
+             # Clear existing schedules and replace with new ones (Full Update strategy)
+            # Efficient strategy: delete all old ones and re-create. 
+            # Note: repository.update should handle cascade if configured, but let's manual helper
+            # Or better: let SQLAlchemy handle list replacement if cascade='all, delete-orphan' is set on relationship
+            from app.modules.entrenador.domain.models.horario_model import Horario
+            entrenamiento.horarios = [Horario(**h.model_dump()) if hasattr(h, 'model_dump') else Horario(**h) for h in horarios_data] # Adapting to receive dicts or objects
             
         return await self.repository.update(entrenamiento)
 

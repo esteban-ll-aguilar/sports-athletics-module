@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
 import { getUserRole, getUserEmail, getUserName } from '../../../../auth/utils/roleUtils';
-import rolePermissions from '../const/rolePermissions';
+import rolePermissions from '../../../../../core/router/const/rolePermissions';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);

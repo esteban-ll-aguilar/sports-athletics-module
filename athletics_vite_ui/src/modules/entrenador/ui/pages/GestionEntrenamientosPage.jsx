@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
+import HorarioManager from '../components/HorarioManager';
 
 const GestionEntrenamientosPage = () => {
     const [entrenamientos, setEntrenamientos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showHorarioModal, setShowHorarioModal] = useState(false);
     const [selectedEntrenamiento, setSelectedEntrenamiento] = useState(null);
 
     const loadEntrenamientos = async () => {
@@ -36,6 +38,11 @@ const GestionEntrenamientosPage = () => {
         setShowModal(true);
     };
 
+    const handleHorarios = (entrenamiento) => {
+        setSelectedEntrenamiento(entrenamiento);
+        setShowHorarioModal(true);
+    };
+
     const handleDelete = async (id) => {
         if (!window.confirm('¿Estás seguro de eliminar este entrenamiento?')) return;
         try {
@@ -50,8 +57,6 @@ const GestionEntrenamientosPage = () => {
 
     const handleSave = () => {
         loadEntrenamientos();
-        // El modal se cierra desde el componente hijo o podemos mantener el estado sincronizado
-        // En este caso el form llama a onClose
     };
 
     return (
@@ -139,6 +144,13 @@ const GestionEntrenamientosPage = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <button
+                                                        onClick={() => handleHorarios(ent)}
+                                                        className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group"
+                                                        title="Gestionar Horarios"
+                                                    >
+                                                        <span className="material-symbols-outlined group-hover:text-amber-600">schedule</span>
+                                                    </button>
+                                                    <button
                                                         onClick={() => handleEdit(ent)}
                                                         className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         title="Editar"
@@ -167,6 +179,15 @@ const GestionEntrenamientosPage = () => {
                     onClose={() => setShowModal(false)}
                     entrenamientoToEdit={selectedEntrenamiento}
                     onSave={handleSave}
+                />
+
+                <HorarioManager
+                    show={showHorarioModal}
+                    onClose={() => {
+                        setShowHorarioModal(false);
+                        loadEntrenamientos();
+                    }}
+                    entrenamiento={selectedEntrenamiento}
                 />
             </div>
         </div>

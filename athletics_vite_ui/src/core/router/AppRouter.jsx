@@ -14,6 +14,7 @@ import PruebasPage from '../../modules/competencia/ui/pages/PruebasPage';
 import BaremosPage from '../../modules/competencia/ui/pages/BaremosPage';
 import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplinaPage';
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
+import HorarioManager from '../../modules/entrenador/ui/components/HorarioManager';
 
 
 const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'USUARIO', 'ATLETA']
@@ -92,7 +93,7 @@ const router = createBrowserRouter([
                             {
                                 path: 'disciplinas', // URL: /dashboard/pruebas/disciplinas
                                 element: <TipoDisciplinaPage />,
-                            },  
+                            },
                         ],
                     },
                     {
