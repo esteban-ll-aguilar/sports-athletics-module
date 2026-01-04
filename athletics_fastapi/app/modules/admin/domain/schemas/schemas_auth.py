@@ -54,12 +54,14 @@ class UserUpdateRequest(BaseModel):
     username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    tipo_identificacion: TipoIdentificacionEnum 
-    tipo_estamento: TipoEstamentoEnum
+
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    sexo: SexoEnum | None = None
+
     fecha_nacimiento: date | None = None
     phone: str | None = None
     direccion: str | None = None
-    sexo: SexoEnum
     profile_image: str | None = None
 
 
