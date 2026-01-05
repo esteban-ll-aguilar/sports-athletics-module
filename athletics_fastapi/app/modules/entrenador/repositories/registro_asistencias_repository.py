@@ -12,14 +12,31 @@ class RegistroAsistenciasRepository:
         self.session.add(registro)
         await self.session.commit()
         await self.session.refresh(registro)
-        return registro
+        
+        # Reload with relationships to satisfy Pydantic schema
+        from sqlalchemy.orm import selectinload
+        try:
+             result = await self.session.execute(
+                select(RegistroAsistencias)
+                .where(RegistroAsistencias.id == registro.id)
+                .options(
+                    selectinload(RegistroAsistencias.atleta).selectinload(Atleta.user),
+                    selectinload(RegistroAsistencias.asistencias)
+                )
+             )
+             return result.scalars().first()
+        except:
+             return registro
 
     async def get_by_horario(self, horario_id: int) -> List[RegistroAsistencias]:
         from sqlalchemy.orm import selectinload
         result = await self.session.execute(
             select(RegistroAsistencias)
             .where(RegistroAsistencias.horario_id == horario_id)
-            .options(selectinload(RegistroAsistencias.atleta).selectinload(Atleta.user))
+            .options(
+                selectinload(RegistroAsistencias.atleta).selectinload(Atleta.user),
+                selectinload(RegistroAsistencias.asistencias)
+            )
         )
         return result.scalars().all()
 

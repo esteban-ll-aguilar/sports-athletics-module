@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import AsistenciaService from '../../services/AsistenciaService';
 import AtletaService from '../../../atleta/services/AtletaService';
+import AsistenciaHistoryModal from '../components/AsistenciaHistoryModal';
 
 const GestionAsistenciaPage = () => {
     const { id } = useParams();
@@ -20,6 +21,10 @@ const GestionAsistenciaPage = () => {
     const [isEnrollmentLoading, setIsEnrollmentLoading] = useState(false);
 
     const [loading, setLoading] = useState(true);
+
+    // Modal State
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
+    const [selectedHistoryAthlete, setSelectedHistoryAthlete] = useState(null);
 
     // Initial Load
     useEffect(() => {
@@ -38,8 +43,7 @@ const GestionAsistenciaPage = () => {
 
                 // Pre-load athletes for dropdown
                 const atletas = await AtletaService.getAll();
-                console.log("Atletas cargados en Page:", atletas);
-                setAtletasDisponibles(Array.isArray(atletas) ? atletas : []);
+                setAtletasDisponibles(Array.isArray(atletas) ? atletas : []); // Keep robust checking
             } catch (error) {
                 console.error(error);
                 toast.error("Error al cargar datos del entrenamiento");
@@ -85,30 +89,54 @@ const GestionAsistenciaPage = () => {
             e.target.reset();
             loadInscritos(selectedHorario.id);
         } catch (error) {
-            console.error(error);
-            toast.error("Error al inscribir atleta");
+            console.error("Error completo inscripción:", error);
+            let msg = "Error al inscribir atleta";
+
+            if (error.response && error.response.data && error.response.data.detail) {
+                msg = error.response.data.detail;
+                // If detail is array (validation error), take the first message
+                if (Array.isArray(msg)) {
+                    msg = msg.map(e => e.msg).join(', ');
+                }
+            } else if (error.message) {
+                msg = error.message;
+            }
+
+            toast.error(String(msg));
         }
     };
 
     const handleMarcarAsistencia = async (registroId) => {
         try {
-            // Check if already assisting today? (Ideally backend check or UI disables it, 
-            // for MVP just sending 'now')
             const now = new Date();
             const timeString = now.toTimeString().split(' ')[0]; // HH:MM:SS
+            const dateString = now.toISOString().split('T')[0];
 
             await AsistenciaService.registrarAsistencia({
                 registro_asistencias_id: registroId,
-                fecha_asistencia: now.toISOString().split('T')[0],
+                fecha_asistencia: dateString,
                 hora_llegada: timeString,
                 descripcion: "Asistencia registrada desde panel"
             });
             toast.success("Asistencia registrada para hoy");
-            // Optionally refresh or mark UI
+            // Reload data to update UI (show green status)
+            loadInscritos(selectedHorario.id);
         } catch (error) {
             console.error(error);
             toast.error("Error al registrar asistencia");
         }
+    };
+
+    const openHistory = (registro) => {
+        setSelectedHistoryAthlete(registro);
+        setHistoryModalOpen(true);
+    };
+
+    // Helper to check if attended today
+    const hasAttendedToday = (asistencias) => {
+        if (!asistencias || asistencias.length === 0) return false;
+        const today = new Date().toISOString().split('T')[0];
+        return asistencias.some(a => a.fecha_asistencia === today);
     };
 
     if (loading) {
@@ -122,15 +150,17 @@ const GestionAsistenciaPage = () => {
             <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
-                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                    <button onClick={() => navigate('/dashboard/entrenamientos')} className="mb-4 text-gray-500 hover:text-gray-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        Volver
-                    </button>
-                    <h1 className="text-3xl font-bold text-gray-900">{entrenamiento.tipo_entrenamiento}</h1>
-                    <p className="text-gray-500 mt-2">{entrenamiento.descripcion}</p>
-                    <div className="mt-4 inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
-                        <span className="material-symbols-outlined text-sm">calendar_month</span>
+                <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <button onClick={() => navigate('/dashboard/entrenamientos')} className="mb-4 text-gray-500 hover:text-gray-900 flex items-center gap-2">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                            Volver
+                        </button>
+                        <h1 className="text-3xl font-bold text-gray-900">{entrenamiento.tipo_entrenamiento}</h1>
+                        <p className="text-gray-500 mt-2">{entrenamiento.descripcion}</p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl text-sm font-semibold border border-blue-100">
+                        <span className="material-symbols-outlined text-xl">calendar_month</span>
                         {entrenamiento.fecha_entrenamiento}
                     </div>
                 </div>
@@ -139,20 +169,20 @@ const GestionAsistenciaPage = () => {
 
                     {/* Sidebar: Horarios */}
                     <div className="lg:col-span-1 space-y-4">
-                        <h2 className="text-xl font-bold text-gray-800 px-2">Horarios</h2>
+                        <h2 className="text-xl font-bold text-gray-800 px-2 lg:mb-6">Horarios</h2>
                         <div className="flex flex-col gap-3">
                             {horarios.length === 0 && <p className="text-gray-400 px-2">No hay horarios definidos.</p>}
                             {horarios.map(h => (
                                 <button
                                     key={h.id}
                                     onClick={() => setSelectedHorario(h)}
-                                    className={`p-4 rounded-2xl text-left transition-all duration-200 border ${selectedHorario?.id === h.id
+                                    className={`p-4 rounded-2xl text-left transition-all duration-200 border relative overflow-hidden group ${selectedHorario?.id === h.id
                                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 border-blue-600 scale-105'
                                         : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                                         }`}
                                 >
-                                    <div className="font-bold text-lg">{h.name || "Sin nombre"}</div>
-                                    <div className="flex items-center gap-2 text-sm mt-1 opacity-90">
+                                    <div className="font-bold text-lg relative z-10">{h.name || "Sin nombre"}</div>
+                                    <div className={`flex items-center gap-2 text-sm mt-1 relative z-10 ${selectedHorario?.id === h.id ? 'opacity-90' : 'text-gray-400'}`}>
                                         <span className="material-symbols-outlined text-sm">schedule</span>
                                         {h.hora_inicio} - {h.hora_fin}
                                     </div>
@@ -164,17 +194,20 @@ const GestionAsistenciaPage = () => {
                     {/* Main Content: Enrollment & Attendance */}
                     <div className="lg:col-span-3">
                         {selectedHorario ? (
-                            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px] flex flex-col">
+                                <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50/50">
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-900">Gestión de Asistencia</h2>
-                                        <p className="text-sm text-gray-500">Horario: {selectedHorario.hora_inicio} - {selectedHorario.hora_fin}</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                            <p className="text-sm text-gray-500 font-medium">Horario Activo: {selectedHorario.hora_inicio} - {selectedHorario.hora_fin}</p>
+                                        </div>
                                     </div>
-                                    <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+                                    <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100 w-full sm:w-auto">
                                         <form onSubmit={handleInscribir} className="flex gap-2">
                                             <select
                                                 name="atletaId"
-                                                className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 outline-none"
+                                                className="bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 outline-none"
                                                 required
                                             >
                                                 <option value="">Seleccionar Atleta...</option>
@@ -186,7 +219,7 @@ const GestionAsistenciaPage = () => {
                                             </select>
                                             <button
                                                 type="submit"
-                                                className="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
+                                                className="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors whitespace-nowrap"
                                             >
                                                 + Inscribir
                                             </button>
@@ -195,44 +228,84 @@ const GestionAsistenciaPage = () => {
                                 </div>
 
                                 {/* Table */}
-                                <div className="overflow-x-auto">
+                                <div className="overflow-x-auto flex-1">
                                     <table className="w-full text-left">
-                                        <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-bold">
+                                        <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold tracking-wider">
                                             <tr>
                                                 <th className="px-6 py-4">Atleta</th>
-                                                <th className="px-6 py-4">Status</th>
-                                                <th className="px-6 py-4 text-center">Acciones</th>
+                                                <th className="px-6 py-4 text-center">Estado Hoy</th>
+                                                <th className="px-6 py-4 text-end">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
                                             {isEnrollmentLoading ? (
-                                                <tr><td colSpan="3" className="p-8 text-center text-gray-400">Cargando atletas...</td></tr>
+                                                <tr><td colSpan="3" className="p-12 text-center text-gray-400">
+                                                    <span className="material-symbols-outlined animate-spin text-3xl mb-2">refresh</span>
+                                                    <p>Cargando información...</p>
+                                                </td></tr>
                                             ) : inscritos.length === 0 ? (
-                                                <tr><td colSpan="3" className="p-8 text-center text-gray-400">No hay atletas inscritos en este horario.</td></tr>
+                                                <tr><td colSpan="3" className="p-12 text-center text-gray-400">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="material-symbols-outlined text-4xl mb-2 text-gray-300">group_off</span>
+                                                        <p>No hay atletas inscritos en este horario.</p>
+                                                    </div>
+                                                </td></tr>
                                             ) : (
-                                                inscritos.map(registro => (
-                                                    <tr key={registro.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4">
-                                                            <div className="font-semibold text-gray-900">
-                                                                {registro.atleta?.user?.first_name} {registro.atleta?.user?.last_name}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">{registro.atleta?.user?.email}</div>
-                                                        </td>
-                                                        <td className="px-6 py-4">
-                                                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Inscrito</span>
-                                                        </td>
-                                                        <td className="px-6 py-4 text-center">
-                                                            <button
-                                                                onClick={() => handleMarcarAsistencia(registro.id)}
-                                                                className="group relative inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-green-500 hover:text-green-600 transition-all shadow-sm"
-                                                                title="Marcar Asistencia Hoy"
-                                                            >
-                                                                <span className="material-symbols-outlined text-gray-400 group-hover:text-green-500 transition-colors">check_circle</span>
-                                                                <span className="text-sm font-semibold text-gray-600 group-hover:text-green-600">Presente</span>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))
+                                                inscritos.map(registro => {
+                                                    const attended = hasAttendedToday(registro.asistencias);
+                                                    return (
+                                                        <tr key={registro.id} className="hover:bg-gray-50/50 transition-colors">
+                                                            <td className="px-6 py-4">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                                                        {registro.atleta?.user?.first_name?.charAt(0) || "A"}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-semibold text-gray-900">
+                                                                            {registro.atleta?.user?.first_name} {registro.atleta?.user?.last_name}
+                                                                        </div>
+                                                                        <div className="text-xs text-gray-500 font-medium">{registro.atleta?.user?.identificacion}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                {attended ? (
+                                                                    <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 shadow-sm">
+                                                                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                                                                        Asistió
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
+                                                                        <span className="material-symbols-outlined text-sm">pending</span>
+                                                                        Pendiente
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <div className="flex items-center justify-end gap-2">
+                                                                    <button
+                                                                        onClick={() => openHistory(registro)}
+                                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                                        title="Ver Historial"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">visibility</span>
+                                                                    </button>
+
+                                                                    {!attended && (
+                                                                        <button
+                                                                            onClick={() => handleMarcarAsistencia(registro.id)}
+                                                                            className="group relative inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:border-green-500 hover:text-green-600 hover:shadow-md transition-all shadow-sm"
+                                                                            title="Marcar Asistencia Hoy"
+                                                                        >
+                                                                            <span className="material-symbols-outlined text-gray-400 group-hover:text-green-500 transition-colors">check</span>
+                                                                            <span className="text-sm font-semibold text-gray-600 group-hover:text-green-600">Presente</span>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
                                             )}
                                         </tbody>
                                     </table>
@@ -241,12 +314,22 @@ const GestionAsistenciaPage = () => {
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-gray-400 p-10 bg-white rounded-3xl border border-gray-100 border-dashed">
                                 <span className="material-symbols-outlined text-6xl mb-4 text-gray-200">schedule</span>
-                                <p>Selecciona un horario para gestionar la asistencia</p>
+                                <p className="text-lg font-medium">Selecciona un horario</p>
+                                <p className="text-sm">para gestionar la asistencia de los atletas</p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* History Modal */}
+            <AsistenciaHistoryModal
+                isOpen={historyModalOpen}
+                onClose={() => setHistoryModalOpen(false)}
+                atletaName={selectedHistoryAthlete ? `${selectedHistoryAthlete.atleta?.user?.first_name} ${selectedHistoryAthlete.atleta?.user?.last_name}` : ''}
+                asistencias={selectedHistoryAthlete?.asistencias || []}
+            />
+
         </div>
     );
 };
