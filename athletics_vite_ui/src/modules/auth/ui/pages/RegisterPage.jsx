@@ -18,7 +18,9 @@ const RegisterPage = () => {
         tipo_estamento: 'EXTERNOS',
         role: 'ATLETA',
         phone: '',
-        direccion: ''
+        direccion: '',
+        fecha_nacimiento: '',
+        sexo: 'M',
     });
 
     const [error, setError] = useState('');
@@ -27,9 +29,33 @@ const RegisterPage = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        // Validación especial para identificación: solo números
+        if (name === 'identificacion') {
+            // Remover cualquier carácter que no sea número
+            const numericValue = value.replace(/[^0-9]/g, '');
+            setFormData({
+                ...formData,
+                [name]: numericValue
+            });
+            return;
+        }
+
+        // Validación especial para teléfono: solo números y símbolos permitidos (+, -, paréntesis, espacios)
+        if (name === 'phone') {
+            const phoneValue = value.replace(/[^0-9+\-() ]/g, '');
+            setFormData({
+                ...formData,
+                [name]: phoneValue
+            });
+            return;
+        }
+
+        // Para el resto de campos, actualización normal
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
     };
 
@@ -46,11 +72,20 @@ const RegisterPage = () => {
         if (formData.username.length < 4) return 'El nombre de usuario debe tener al menos 4 caracteres.';
         if (formData.first_name.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
         if (formData.last_name.length < 2) return 'El apellido debe tener al menos 2 caracteres.';
+
+        // Validación de identificación: debe ser numérica
+        if (!/^\d+$/.test(formData.identificacion)) {
+            return 'La identificación debe contener solo números.';
+        }
         if (formData.identificacion.length < 8) return 'La identificación debe tener al menos 8 caracteres.';
 
         // Optional fields validation if provided
-        if (formData.phone && formData.phone.length < 10 || formData.phone.length > 14) return 'El teléfono debe tener al menos 10 caracteres.';
-        if (formData.direccion && formData.direccion.length < 8 || formData.direccion.length > 40) return 'La dirección debe tener al menos 8 caracteres.';
+        if (formData.phone && (formData.phone.length < 10 || formData.phone.length > 14)) {
+            return 'El teléfono debe tener entre 10 y 14 caracteres.';
+        }
+        if (formData.direccion && (formData.direccion.length < 8 || formData.direccion.length > 40)) {
+            return 'La dirección debe tener entre 8 y 40 caracteres.';
+        }
 
         return null;
     };
@@ -86,6 +121,9 @@ const RegisterPage = () => {
             const dataToSend = { ...rest };
             if (phone && phone.trim() !== '') dataToSend.phone = phone;
             if (direccion && direccion.trim() !== '') dataToSend.direccion = direccion;
+
+            // 🔹 Aquí puedes ver toda la data que se enviará
+            console.log("Data enviada al backend:", dataToSend);
 
             await authService.register(dataToSend);
             navigate('/login');
@@ -149,41 +187,115 @@ const RegisterPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                                    <input name="first_name" required value={formData.first_name} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Nombre" />
+                                    <input
+                                        name="first_name"
+                                        required
+                                        value={formData.first_name}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        placeholder="Nombre"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                                    <input name="last_name" required value={formData.last_name} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Apellido" />
+                                    <input
+                                        name="last_name"
+                                        required
+                                        value={formData.last_name}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        placeholder="Apellido"
+                                    />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Tipo ID</label>
-                                    <select name="tipo_identificacion" value={formData.tipo_identificacion} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
+                                    <select
+                                        name="tipo_identificacion"
+                                        value={formData.tipo_identificacion}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                    >
                                         <option value="CEDULA">Cédula</option>
                                         <option value="PASAPORTE">Pasaporte</option>
                                         <option value="RUC">RUC</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Identificación</label>
-                                    <input name="identificacion" required value={formData.identificacion} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Número ID" />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Identificación
+                                        <span className="text-xs text-gray-500 ml-1">(solo números)</span>
+                                    </label>
+                                    <input
+                                        name="identificacion"
+                                        required
+                                        value={formData.identificacion}
+                                        onChange={handleChange}
+                                        pattern="\d*"
+                                        inputMode="numeric"
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        placeholder="0123456789"
+                                    />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                                    <input name="phone" value={formData.phone} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="0999999999" />
+                                    <input
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        inputMode="tel"
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        placeholder="0999999999"
+                                    />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                                    <input name="direccion" value={formData.direccion} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Tu dirección" />
+                                    <input
+                                        name="direccion"
+                                        value={formData.direccion}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        placeholder="Tu dirección"
+                                    />
                                 </div>
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Fecha de nacimiento
+                                </label>
+                                <input
+                                    type="date"
+                                    name="fecha_nacimiento"
+                                    value={formData.fecha_nacimiento}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Sexo
+                                </label>
+                                <select
+                                    name="sexo"
+                                    value={formData.sexo}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                >
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                            </div>
+                        </div>
+ 
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Datos de Cuenta</h3>
@@ -191,7 +303,12 @@ const RegisterPage = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Estamento</label>
-                                    <select name="tipo_estamento" value={formData.tipo_estamento} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
+                                    <select
+                                        name="tipo_estamento"
+                                        value={formData.tipo_estamento}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                    >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
                                         <option value="DOCENTES">Docente</option>
@@ -200,7 +317,12 @@ const RegisterPage = () => {
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Soy un..</label>
-                                    <select name="role" value={formData.role} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
+                                    <select
+                                        name="role"
+                                        value={formData.role}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                    >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
                                     </select>
@@ -209,12 +331,27 @@ const RegisterPage = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
-                                <input name="username" required value={formData.username} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Nombre de usuario" />
+                                <input
+                                    name="username"
+                                    required
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                    placeholder="Nombre de usuario"
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                                <input type="email" name="email" required value={formData.email} onChange={handleChange} className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="correo@ejemplo.com" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                    placeholder="correo@ejemplo.com"
+                                />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,11 +367,20 @@ const RegisterPage = () => {
                                             className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pr-10"
                                             placeholder="********"
                                         />
-                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                        >
                                             {showPassword ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                                </svg>
                                             ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
                                             )}
                                         </button>
                                     </div>
@@ -251,11 +397,20 @@ const RegisterPage = () => {
                                             className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pr-10"
                                             placeholder="********"
                                         />
-                                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                        >
                                             {showConfirmPassword ? (
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                                </svg>
                                             ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
                                             )}
                                         </button>
                                     </div>

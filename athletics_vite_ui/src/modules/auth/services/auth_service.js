@@ -1,6 +1,7 @@
 import authRepository from '../repositories/auth_repository';
 
 class AuthService {
+
     async login(email, password) {
         const data = await authRepository.login(email, password);
         if (data.access_token) {
@@ -23,7 +24,7 @@ class AuthService {
     }
 
     async updateUser(userId, userData) {
-    return await authRepository.updateUser(userId, userData);
+        return await authRepository.updateUser(userId, userData);
     }
 
     async updateRole(userId, roleData) {
@@ -41,11 +42,26 @@ class AuthService {
     logout() {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        // Optional: Call backend logout endpoint if needed
     }
 
     isAuthenticated() {
-        return !!localStorage.getItem('access_token');
+        const token = localStorage.getItem('access_token');
+        if (!token) return false;
+
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const isExpired = payload.exp * 1000 < Date.now();
+
+            if (isExpired) {
+                this.logout();
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            this.logout();
+            return false;
+        }
     }
 
     getToken() {

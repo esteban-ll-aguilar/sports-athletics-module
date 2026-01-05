@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
     },
 });
 
-// Request interceptor for adding auth token
+
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('access_token');
@@ -22,15 +22,14 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling errors
+
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle specific error codes (e.g., 401 for logout)
-        if (error.response && error.response.status === 401) {
+        if (error.response?.status === 401) {
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
-            window.location.href = '/login';
+            window.location.replace('/login');
         }
         return Promise.reject(error);
     }

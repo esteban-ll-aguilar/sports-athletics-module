@@ -35,4 +35,5 @@ class AuthEmailService(EmailProvider):
             "Por favor ingresa este código para activar tu cuenta."
         )
         self._send_email(to_email, subject, body)
+# ============================================
     

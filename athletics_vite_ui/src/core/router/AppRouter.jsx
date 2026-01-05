@@ -1,164 +1,167 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet,
+} from 'react-router-dom';
+
+// Layouts
 import MainLayout from '@shared/components/MainLayout';
+import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
+
+// Páginas públicas
 import HomePage from '@modules/home/ui/pages/HomePage';
 import LoginPage from '@modules/auth/ui/pages/LoginPage';
 import RegisterPage from '@modules/auth/ui/pages/RegisterPage';
+import UnauthorizedPage from '@modules/auth/ui/pages/UnauthorizedPage';
 import PasswordResetPage from '@modules/auth/ui/pages/PasswordResetPage';
+
+// Proteccion
 import ProtectedRoute from './ProtectedRoute';
-import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
+
+// Dashboard pages
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
+
+// Admin
 import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
-import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
-import AdminUsersTable from '../../modules/admin/ui/pages/admin_controller_user_ui';
-import PruebasPage from '../../modules/competencia/ui/pages/PruebasPage';
-import BaremosPage from '../../modules/competencia/ui/pages/BaremosPage';
-import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplinaPage';
+import AdminUsersTable from '@modules/admin/ui/pages/admin_controller_user_ui';
+
+// Competencia
+import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
+import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
+import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
+import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
+import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
+
+// Atleta
+import AthletesTable from '@modules/atleta/ui/pages/atletlas';
+
+// Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
-import HorarioManager from '../../modules/entrenador/ui/components/HorarioManager';
-import RegisterAthletePage from '../../modules/representante/ui/pages/RegisterAthletePage';
-import MisAtletasPage from '../../modules/representante/ui/pages/MisAtletasPage';
 
+// Representante
+import RegisterAthletePage from '@modules/representante/ui/pages/RegisterAthletePage';
+import MisAtletasPage from '@modules/representante/ui/pages/MisAtletasPage';
 
-const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE']
+// Profile
+import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
+
+const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
 
 const router = createBrowserRouter([
-    {
-        path: '/',
-        element: <MainLayout />,
+  // Public Routes
+  {
+    path: '/',
+    element: <MainLayout />,
+    children: [
+      { index: true, element: <HomePage /> },
+    ],
+  },
+  { path: '/login', element: <LoginPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/forgot-password', element: <PasswordResetPage /> },
+  { path: '/unauthorized', element: <UnauthorizedPage /> },
+
+  // Dashboard Routes
+  {
+    path: '/dashboard',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <DashboardLayout />,
         children: [
-            {
-                index: true,
-                element: <HomePage />,
-            },
-            {
-                path: '*',
-                element: <Navigate to="/" replace />,
-            },
+          // /dashboard
+          { index: true, element: <DashboardPage /> },
+
+          // --- ADMIN ROUTES ---
+          {
+            path: 'users',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+            children: [{ index: true, element: <UserRoleManagementPage /> }],
+          },
+          {
+            path: 'admin',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
+            children: [{ index: true, element: <AdminUsersTable /> }],
+          },
+
+          // --- COMPETENCIA / PRUEBAS ROUTES ---
+          {
+            path: 'pruebas',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            children: [
+              { index: true, element: <PruebasPage /> },
+              { path: 'baremos', element: <BaremosPage /> },
+              { path: 'disciplinas', element: <TipoDisciplinaPage /> },
+            ],
+          },
+          {
+            path: 'competitions',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            children: [{ index: true, element: <CompetenciasPage /> }],
+          },
+          {
+            path: 'results',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            children: [{ index: true, element: <ResultadosPage /> }],
+          },
+
+          // --- ATLETA ROUTES ---
+          {
+            path: 'athletes',
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            children: [
+              { index: true, element: <AthletesTable /> }
+            ],
+          },
+
+          // --- ENTRENADOR ROUTES ---
+          {
+            path: 'entrenamientos',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [
+              { index: true, element: <GestionEntrenamientosPage /> },
+              { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
+            ],
+          },
+
+          // --- REPRESENTANTE ROUTES ---
+          {
+            path: 'representante',
+            element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
+            children: [
+              { path: 'mis-atletas', element: <MisAtletasPage /> },
+              { path: 'register-athlete', element: <RegisterAthletePage /> }
+            ]
+          }
+
         ],
-    },
-    {
-        path: '/login',
-        element: <LoginPage />,
-    },
-    {
-        path: '/register',
-        element: <RegisterPage />,
-    },
-    {
-        path: '/forgot-password',
-        element: <PasswordResetPage />,
-    },
-    {
-        path: '/dashboard',
-        element: <ProtectedRoute />,
-        children: [
-            {
-                element: (
-                    <DashboardLayout>
-                        <Outlet />
-                    </DashboardLayout>
-                ),
-                children: [
-                    {
-                        index: true,
-                        element: <DashboardPage />,
-                    },
-                    {
-                        path: 'users',
-                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
-                        children: [
-                            {
-                                index: true,
-                                element: <UserRoleManagementPage />,
-                            },
-                        ],
-                    },
-                    {
-                        path: 'admin',
-                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR']} />,
-                        children: [
-                            {
-                                index: true,
-                                element: <AdminUsersTable />,
-                            },
-                        ],
-                    },
-                    // SECCIÓN DE PRUEBAS Y SUS HIJOS
-                    {
-                        path: 'pruebas',
-                        element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
-                        children: [
-                            {
-                                index: true, // URL: /dashboard/pruebas
-                                element: <PruebasPage />,
-                            },
-                            {
-                                path: 'baremos', // URL: /dashboard/pruebas/baremos
-                                element: <BaremosPage />,
-                            },
-                            {
-                                path: 'disciplinas', // URL: /dashboard/pruebas/disciplinas
-                                element: <TipoDisciplinaPage />,
-                            },
-                        ],
-                    },
-                    {
-                        path: 'entrenamientos',
-                        element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
-                        children: [
-                            {
-                                index: true,
-                                element: <GestionEntrenamientosPage />,
-                            },
-                            {
-                                path: ':id/asistencia',
-                                element: <GestionAsistenciaPage />,
-                            },
-                        ],
-                    },
-                    {
-                        path: 'representante',
-                        element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
-                        children: [
-                            {
-                                path: 'mis-atletas',
-                                element: <MisAtletasPage />
-                            },
-                            {
-                                path: 'register-athlete',
-                                element: <RegisterAthletePage />
-                            }
-                        ]
-                    },
-                ],
-            },
-        ],
-    },
-    {
-        path: '/profile',
-        element: <ProtectedRoute allowedRoles={ALLOWED_ALL_ROLES} />,
-        children: [
-            {
-                element: (
-                    <DashboardLayout>
-                        <Outlet />
-                    </DashboardLayout>
-                ),
-                children: [
-                    {
-                        index: true,
-                        element: <ProfilePage />,
-                    },
-                ],
-            },
-        ],
-    },
+      },
+    ],
+  },
+
+  /* =========================
+     👤 PERFIL
+  ========================== */
+  {
+    path: '/profile',
+    element: <ProtectedRoute allowedRoles={ALLOWED_ALL_ROLES} />,
+    children: [
+      {
+        element: <DashboardLayout />,
+        children: [{ index: true, element: <ProfilePage /> }],
+      },
+    ],
+  },
+
+  /* =========================
+     🚫 FALLBACK
+  ========================== */
+  { path: '*', element: <Navigate to="/" replace /> },
 ]);
 
-const AppRouter = () => {
-    return <RouterProvider router={router} />;
-};
+const AppRouter = () => <RouterProvider router={router} />;
 
 export default AppRouter;

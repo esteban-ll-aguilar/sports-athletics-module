@@ -1,30 +1,35 @@
-
-"""Modelo de datos para el historial médico de un atleta.
-    Se define la estructura de la tabla historial_medico en la base de datos
-    y sus relaciones con otros modelos.
-
-"""
-
-from sqlalchemy import Integer, String, Boolean, Date, Float, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.db.database import Base
+from uuid import uuid4
+from sqlalchemy import Column, Integer, Float, String, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-import uuid
-from typing import Optional
-# Modelo de la base de datos para el historial médico de un atleta
+from sqlalchemy.orm import relationship
+
+from app.core.db.database import Base
+
+
 class HistorialMedico(Base):
     __tablename__ = "historial_medico"
-    # Definición de columnas de la tabla historial_medico
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
-    external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
-    talla: Mapped[float] = mapped_column(Float)
-    peso: Mapped[float] = mapped_column(Float)
-    imc: Mapped[float] = mapped_column(Float)
-    alergias: Mapped[str] = mapped_column(String, nullable=True)
-    enfermedades_hereditarias: Mapped[str] = mapped_column(String, nullable=True)
-    enfermedades: Mapped[str] = mapped_column(String, nullable=True)
 
-    # Foreign Key to Atleta
-    atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("atleta.id"), unique=True)
-    
-    atleta: Mapped["Atleta"] = relationship("Atleta", back_populates="historial_medico")
+    id = Column(Integer, primary_key=True, index=True)
+    external_id = Column(UUID(as_uuid=True), default=uuid4, unique=True, index=True)
+
+    talla = Column(Float, nullable=False)
+    peso = Column(Float, nullable=False)
+    imc = Column(Float, nullable=False)
+
+    alergias = Column(String, nullable=True)
+    enfermedades_hereditarias = Column(String, nullable=True)
+    enfermedades = Column(String, nullable=True)
+
+    # 🔥 AQUÍ ESTABA EL ERROR
+    auth_user_id = Column(
+        Integer,
+        ForeignKey("auth_users.id", ondelete="CASCADE"),  # ✅ nombre correcto
+        unique=True,
+        nullable=False
+    )
+
+    user = relationship(
+        "AuthUserModel",
+        back_populates="historial_medico",
+        uselist=False
+    )

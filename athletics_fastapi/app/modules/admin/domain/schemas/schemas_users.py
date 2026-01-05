@@ -1,14 +1,24 @@
 from pydantic import BaseModel
-from typing import List
-from .schemas_auth import UserRead
+from typing import Optional, List
 from uuid import UUID
-from app.modules.auth.domain.enums import TipoEstamentoEnum, TipoIdentificacionEnum, SexoEnum, RoleEnum
 from datetime import date
+
+from app.modules.auth.domain.enums import (
+    TipoEstamentoEnum,
+    TipoIdentificacionEnum,
+    SexoEnum,
+    RoleEnum,
+)
+
+from .schemas_auth import UserRead
+
+
 class UsersPaginatedResponse(BaseModel):
     total: int
     page: int
     page_size: int
-    users: list[UserRead]
+    users: List[UserRead]
+
 
 class UserGet(BaseModel):
     external_id: UUID
@@ -19,17 +29,16 @@ class UserProfile(BaseModel):
     first_name: str
     last_name: str
     email: str
-    phone: str
+    phone: Optional[str] = None
 
-    tipo_identificacion: TipoIdentificacionEnum
-    identificacion: str
-    tipo_estamento: TipoEstamentoEnum
-    sexo: SexoEnum
-    fecha_nacimiento: date
-    direccion: str
+    tipo_identificacion: Optional[TipoIdentificacionEnum] = None
+    identificacion: Optional[str] = None
+    tipo_estamento: Optional[TipoEstamentoEnum] = None
+    sexo: Optional[SexoEnum] = None
+    fecha_nacimiento: Optional[date] = None
+    direccion: Optional[str] = None
+
     role: RoleEnum
-    
+
     class Config:
         from_attributes = True
-    
-    

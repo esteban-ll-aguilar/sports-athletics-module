@@ -1,18 +1,7 @@
-/**
- * DashboardLayout Component
- * -------------------------
- * Este componente define la estructura principal del panel (dashboard).
- * Incluye un Sidebar fijo y una sección principal donde se renderizan
- * las rutas hijas mediante <Outlet /> de React Router.
- *
- * Estructura:
- *  - Sidebar: componente lateral de navegación.
- *  - Main: área donde se cargan las vistas según la ruta seleccionada.
- */
-
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { Outlet } from 'react-router-dom';
+import { checkSession } from '@core/utils/authGuard';
 
 const DashboardLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -32,11 +21,10 @@ const DashboardLayout = () => {
                     min-h-screen
                 `}
             >
-                <Outlet/>
+                <Outlet />
             </main>
         </div>
     );
 };
 
 export default DashboardLayout;
-

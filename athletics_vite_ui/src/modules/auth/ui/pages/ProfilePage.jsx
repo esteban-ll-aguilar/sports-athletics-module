@@ -1,27 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera } from 'lucide-react';
 import authService from '../../services/auth_service';
+import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
 
 const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState(null);
     const [error, setError] = useState(null);
+    const [isHistorialModalOpen, setIsHistorialModalOpen] = useState(false);
 
     const [formData, setFormData] = useState({
         username: '',
         first_name: '',
         last_name: '',
-        email: '', // Readonly
+        email: '',
         phone: '',
         direccion: '',
         fecha_nacimiento: '',
         tipo_identificacion: '',
-        identificacion: '', // Readonly (usually)
+        identificacion: '',
         tipo_estamento: '',
         sexo: '',
-        role: '', // Readonly
-        profile_image: ''
+        role: '',
+        profile_image: '',
+        user_external_id: '',          // 🔹 External ID del usuario
+        historial_external_id: null    // 🔹 External ID del historial (si existe)
     });
 
     useEffect(() => {
@@ -32,10 +36,8 @@ const ProfilePage = () => {
         try {
             setLoading(true);
             const response = await authService.getProfile();
-            // Backend returns { data: UserObject, message: ..., status: ... }
             if (response.data) {
                 const user = response.data;
-                // Map backend data to form state
                 setFormData({
                     username: user.username || '',
                     first_name: user.first_name || '',
@@ -43,14 +45,15 @@ const ProfilePage = () => {
                     email: user.email || '',
                     phone: user.phone || '',
                     direccion: user.direccion || '',
-                    // Date might need formatting if it comes as full ISO string, assuming YYYY-MM-DD from backend or similar
                     fecha_nacimiento: user.fecha_nacimiento || '',
                     tipo_identificacion: user.tipo_identificacion || '',
                     identificacion: user.identificacion || '',
                     tipo_estamento: user.tipo_estamento || '',
                     sexo: user.sexo || '',
                     role: user.role || '',
-                    profile_image: user.profile_image || ''
+                    profile_image: user.profile_image || '',
+                    user_external_id: user.external_id || '', // 🔹
+                    historial_external_id: user.historial?.external_id || null // 🔹
                 });
             }
         } catch (err) {
@@ -73,14 +76,13 @@ const ProfilePage = () => {
         setMessage(null);
 
         try {
-            // Filter out readonly fields that are not in UserUpdateRequest
             const updatePayload = {
                 username: formData.username,
                 first_name: formData.first_name,
                 last_name: formData.last_name,
                 tipo_identificacion: formData.tipo_identificacion,
                 tipo_estamento: formData.tipo_estamento,
-                fecha_nacimiento: formData.fecha_nacimiento, // Ensure YYYY-MM-DD
+                fecha_nacimiento: formData.fecha_nacimiento,
                 phone: formData.phone,
                 direccion: formData.direccion,
                 sexo: formData.sexo,
@@ -89,11 +91,9 @@ const ProfilePage = () => {
 
             await authService.updateProfile(updatePayload);
             setMessage('Perfil actualizado exitosamente.');
-            // Refresh data to ensure sync
             await fetchProfile();
         } catch (err) {
             console.error(err);
-            // Handle array of errors or single string
             const errorMsg = err.detail || err.message || 'Error al actualizar el perfil.';
             setError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
         } finally {
@@ -349,35 +349,52 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Actions */}
-                <div className="mt-8 flex justify-end">
-                    <button
-                        type="submit"
-                        disabled={submitting}
-                        className={`
-                            inline-flex items-center px-6 py-3 border border-transparent rounded-lg shadow-sm text-base font-medium text-white 
-                            ${submitting ? 'bg-indigo-400 cursor-wait' : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'}
-                            transition-all duration-200
-                        `}
-                    >
-                        {submitting ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Guardando...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 -ml-1 h-5 w-5" />
-                                Guardar Cambios
-                            </>
-                        )}
-                    </button>
-                </div>
-            </form>
-        </div>
-    );
+        <div className="mt-8 flex justify-end gap-4">
+
+            {formData.role === 'ATLETA' && (
+                <>
+            {/* Botón para añadir / editar historial */}
+            <button
+                type="button"
+                onClick={() => setIsHistorialModalOpen(true)}
+                className="inline-flex items-center px-6 py-3 border border-indigo-600 rounded-lg text-indigo-600 bg-white hover:bg-indigo-50 transition"
+            >
+                <Shield className="mr-2 h-5 w-5" />
+                Añadir historial médico
+            </button>
+
+        </>
+    )}
+
+    {/* Guardar cambios del perfil */}
+    <button
+        type="submit"
+        disabled={submitting}
+        className={`inline-flex items-center px-6 py-3 rounded-lg text-white ${
+            submitting
+                ? 'bg-indigo-400'
+                : 'bg-indigo-600 hover:bg-indigo-700'
+        }`}
+    >
+        <Save className="mr-2 h-5 w-5" />
+        Guardar Cambios
+    </button>
+</div>
+
+
+        </form>
+        {isHistorialModalOpen && (
+            <HistorialMedicoModal
+                isOpen={isHistorialModalOpen}
+                onClose={() => setIsHistorialModalOpen(false)}
+                atletaId={formData.identificacion}
+            />
+        )}
+
+    </div>
+    
+);
+
 };
 
 export default ProfilePage;

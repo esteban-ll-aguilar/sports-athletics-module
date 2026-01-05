@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Baremo from "../../domain/models/Baremo";
+import Swal from "sweetalert2";
 
 const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
   const [form, setForm] = useState(new Baremo());
@@ -11,6 +12,61 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
 
   if (!isOpen) return null;
 
+  // Manejar creación o edición
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: editingBaremo ? '¿Desea actualizar este Baremo?' : '¿Desea crear este Baremo?',
+      text: editingBaremo
+        ? 'Se actualizará el Baremo seleccionado.'
+        : 'Se creará un nuevo Baremo.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      onSubmit(form);
+
+      await Swal.fire({
+        icon: 'success',
+        title: editingBaremo ? 'Baremo actualizado' : 'Baremo creado',
+        text: `El Baremo ha sido ${editingBaremo ? 'actualizado' : 'creado'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+
+      onClose();
+    }
+  };
+
+  // Manejar cambio de estado con alerta
+  const toggleEstado = async () => {
+    const action = form.estado ? 'desactivar' : 'activar';
+
+    const result = await Swal.fire({
+      title: `¿Desea ${action} este Baremo?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${action}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      setForm({...form, estado: !form.estado});
+
+      Swal.fire({
+        icon: 'success',
+        title: `Baremo ${form.estado ? 'desactivado' : 'activado'}`,
+        text: `El Baremo ha sido ${form.estado ? 'desactivado' : 'activado'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
@@ -21,7 +77,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
           </button>
         </div>
         
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* CAMPO VALOR PUNTOS */}
           <div>
             <label className="block text-sm font-bold mb-2 text-[#181111]">Valor (Puntos)</label>
@@ -64,7 +120,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             
             <button
               type="button"
-              onClick={() => setForm({...form, estado: !form.estado})}
+              onClick={toggleEstado}
               className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
                 form.estado ? 'bg-green-500' : 'bg-gray-300'
               }`}

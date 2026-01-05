@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import TipoDisciplina from "../../domain/models/TipoDisciplina";
+import Swal from "sweetalert2";
 
 const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
   const [form, setForm] = useState(new TipoDisciplina());
@@ -14,6 +15,61 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
   if (!isOpen) return null;
 
+  // Manejar creación o edición
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const result = await Swal.fire({
+      title: editingData ? '¿Desea actualizar esta disciplina?' : '¿Desea crear esta disciplina?',
+      text: editingData
+        ? 'Se actualizará la disciplina seleccionada.'
+        : 'Se creará una nueva disciplina.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      onSubmit(form);
+
+      await Swal.fire({
+        icon: 'success',
+        title: editingData ? 'Disciplina actualizada' : 'Disciplina creada',
+        text: `La disciplina ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+
+      onClose();
+    }
+  };
+
+  // Manejar cambio de estado con alerta
+  const toggleEstado = async () => {
+    const action = form.estado ? 'desactivar' : 'activar';
+
+    const result = await Swal.fire({
+      title: `¿Desea ${action} esta disciplina?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, ${action}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ec1313'
+    });
+
+    if (result.isConfirmed) {
+      setForm({...form, estado: !form.estado});
+
+      Swal.fire({
+        icon: 'success',
+        title: `Disciplina ${form.estado ? 'desactivada' : 'activada'}`,
+        text: `La disciplina ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
+        confirmButtonColor: '#ec1313'
+      });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -26,7 +82,7 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
           </button>
         </div>
         
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* CAMPO NOMBRE */}
           <div>
             <label className="block text-sm font-bold mb-2 text-[#181111]">Nombre</label>
@@ -54,7 +110,7 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             />
           </div>
 
-          {/* CONTROL DE ESTADO TIPO TOGGLE (TOUCH FRIENDLY) */}
+          {/* TOGGLE DE ESTADO */}
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
             <div className="flex flex-col">
               <span className="text-sm font-bold text-[#181111]">Estado de Disciplina</span>
@@ -65,7 +121,7 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             
             <button
               type="button"
-              onClick={() => setForm({...form, estado: !form.estado})}
+              onClick={toggleEstado}
               className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${
                 form.estado ? 'bg-green-500' : 'bg-gray-300'
               }`}

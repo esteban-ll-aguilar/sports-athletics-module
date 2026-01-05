@@ -1,10 +1,9 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 from datetime import date
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 from uuid import UUID
-from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
+from typing import Optional
+from app.modules.auth.domain.enums import RoleEnum, SexoEnum, TipoEstamentoEnum, TipoIdentificacionEnum
 
 
 class UserCreate(BaseModel):
@@ -22,6 +21,9 @@ class UserCreate(BaseModel):
 
     phone: str = Field(min_length=8, max_length=128, default="")
     direccion: str = Field(min_length=8, max_length=128, default="")
+
+    fecha_nacimiento: Optional[date] = None  
+    sexo: Optional[SexoEnum] = SexoEnum.M     
 
     role: RoleEnum = Field(default=RoleEnum.ATLETA)
 
@@ -52,15 +54,17 @@ class UserUpdateRequest(BaseModel):
     username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    tipo_identificacion: TipoIdentificacionEnum 
-    tipo_estamento: TipoEstamentoEnum
+
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    sexo: SexoEnum | None = None
+
     fecha_nacimiento: date | None = None
     phone: str | None = None
     direccion: str | None = None
-    sexo: SexoEnum
     profile_image: str | None = None
 
-    
+
 class UserCreateAdmin(UserCreate):
     @field_validator('password')
     @classmethod
@@ -70,14 +74,24 @@ class UserCreateAdmin(UserCreate):
 
 class UserRead(BaseModel):
     external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
-    username: str | None = None
     profile_image: str | None = None
-    
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    identificacion: str | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    phone: str | None = None
+    direccion: str | None = None
+    fecha_nacimiento: Optional[date] = None
+    sexo: Optional[SexoEnum] = None
+
     class Config:
         from_attributes = True  # Permite crear desde ORM models
+
 
 class TokenPair(BaseModel):
     access_token: str

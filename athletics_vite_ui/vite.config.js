@@ -13,6 +13,7 @@ export default defineConfig({
       '@core': '/src/core',
       '@modules': '/src/modules',
       '@shared': '/src/shared',
+
     },
   },
 })

@@ -66,6 +66,7 @@ async def set_password_reset_code(email: str, code: str, ttl_seconds: int = 600)
     """
     Guarda el código de reseteo en Redis con TTL. Clave: pwd_reset:{email_lower}
     """
+
     r = get_redis()
     key = f"pwd_reset:{email.strip().lower()}"
     await r.setex(key, ttl_seconds, code)

@@ -16,9 +16,7 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     }
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-        console.warn(`Role mismatch: User has '${userRole}', but required one of ${JSON.stringify(allowedRoles)}`);
-        // Redirect to dashboard or unauthorized page if role is not allowed
-        return <Navigate to="/dashboard" replace />;
+        return <Navigate to="/unauthorized" replace />;
     }
 
     return <Outlet />;
