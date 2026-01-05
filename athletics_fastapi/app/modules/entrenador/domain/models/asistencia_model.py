@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Date, Time
+from sqlalchemy import Integer, String, Date, Time, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from sqlalchemy.dialects.postgresql import UUID
@@ -14,5 +14,8 @@ class Asistencia(Base):
     hora_llegada: Mapped[Time] = mapped_column(Time)
     descripcion: Mapped[str] = mapped_column(String)
 
+    # FK
+    registro_asistencias_id: Mapped[int] = mapped_column(Integer, ForeignKey("registro_asistencias.id"))
+
     # Relationships
-    registros_asistencias: Mapped[List["RegistroAsistencias"]] = relationship("RegistroAsistencias", back_populates="asistencia")
+    registro_asistencias: Mapped["RegistroAsistencias"] = relationship("RegistroAsistencias", back_populates="asistencias")

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 import uuid
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, List
 
 
 if TYPE_CHECKING:
@@ -37,3 +37,9 @@ class Atleta(Base):
     # Relationship N-to-1: Atleta has one Representante
    # representante_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("representante.id"), nullable=True)
    # representante: Mapped["Representante"] = relationship("Representante", back_populates="atletas")
+
+    registros_asistencias: Mapped[List["RegistroAsistencias"]] = relationship(
+        "RegistroAsistencias", 
+        back_populates="atleta",
+        cascade="all, delete-orphan" 
+    )

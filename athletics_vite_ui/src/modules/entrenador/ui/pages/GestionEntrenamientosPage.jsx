@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
@@ -10,6 +11,8 @@ const GestionEntrenamientosPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showHorarioModal, setShowHorarioModal] = useState(false);
     const [selectedEntrenamiento, setSelectedEntrenamiento] = useState(null);
+
+    const navigate = useNavigate();
 
     const loadEntrenamientos = async () => {
         setIsLoading(true);
@@ -39,8 +42,7 @@ const GestionEntrenamientosPage = () => {
     };
 
     const handleHorarios = (entrenamiento) => {
-        setSelectedEntrenamiento(entrenamiento);
-        setShowHorarioModal(true);
+        navigate(`/dashboard/entrenamientos/${entrenamiento.id}/asistencia`);
     };
 
     const handleDelete = async (id) => {

@@ -14,6 +14,7 @@ import PruebasPage from '../../modules/competencia/ui/pages/PruebasPage';
 import BaremosPage from '../../modules/competencia/ui/pages/BaremosPage';
 import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplinaPage';
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
+import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
 import HorarioManager from '../../modules/entrenador/ui/components/HorarioManager';
 
 
@@ -103,6 +104,10 @@ const router = createBrowserRouter([
                             {
                                 index: true,
                                 element: <GestionEntrenamientosPage />,
+                            },
+                            {
+                                path: ':id/asistencia',
+                                element: <GestionAsistenciaPage />,
                             },
                         ],
                     },

@@ -8,11 +8,15 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     const isAuthenticated = authService.isAuthenticated();
     const userRole = getUserRole();
 
+    console.log("ProtectedRoute Debug:", { isAuthenticated, userRole, allowedRoles });
+
     if (!isAuthenticated) {
+        console.warn("User not authenticated, redirecting to login");
         return <Navigate to="/login" replace />;
     }
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+        console.warn(`Role mismatch: User has '${userRole}', but required one of ${JSON.stringify(allowedRoles)}`);
         // Redirect to dashboard or unauthorized page if role is not allowed
         return <Navigate to="/dashboard" replace />;
     }

@@ -29,5 +29,8 @@ router_api_v1.include_router(api_external_router_v1)
 router_api_v1.include_router(api_competencia_router_v1)
 router_api_v1.include_router(api_entrenador_router_v1)
 
+import app.modules.atleta.routers.v1.api_router as atleta_mod
+router_api_v1.include_router(atleta_mod.api_auth_router_v1)
+
 
 

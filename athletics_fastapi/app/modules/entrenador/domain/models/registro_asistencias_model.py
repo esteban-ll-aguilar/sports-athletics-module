@@ -1,4 +1,5 @@
 from sqlalchemy import Integer, ForeignKey
+from typing import List
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from sqlalchemy.dialects.postgresql import UUID
@@ -13,9 +14,8 @@ class RegistroAsistencias(Base):
     # FKs
     horario_id: Mapped[int] = mapped_column(Integer, ForeignKey("horario.id"))
     atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("atleta.id"))
-    asistencia_id: Mapped[int] = mapped_column(Integer, ForeignKey("asistencia.id"))
 
     # Relationships
     horario: Mapped["Horario"] = relationship("Horario", back_populates="registros_asistencias")
     atleta: Mapped["Atleta"] = relationship("Atleta")
-    asistencia: Mapped["Asistencia"] = relationship("Asistencia", back_populates="registros_asistencias")
+    asistencias: Mapped[List["Asistencia"]] = relationship("Asistencia", back_populates="registro_asistencias", cascade="all, delete-orphan")
