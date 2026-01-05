@@ -168,7 +168,8 @@ const AthletesTable = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+    <div className="ml-0 md:ml-64 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+
       {/* Header */}
       <div className="px-6 py-4 border-b flex items-center justify-between">
         <div className="flex items-center space-x-2">
