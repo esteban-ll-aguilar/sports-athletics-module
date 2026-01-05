@@ -11,7 +11,7 @@ class PasswordResetService:
         self.expiry_seconds = 300  # 5 minutos
         self.max_attempts = 3
 
-    def generate_reset_code(self, length: int = 8) -> str:
+    def generate_reset_code(self, length: int = 6) -> str:
         """Genera un código de reset aleatorio usando secrets (más seguro que random)."""
         alphabet = string.ascii_uppercase + string.digits
         return "".join(secrets.choice(alphabet) for _ in range(length))

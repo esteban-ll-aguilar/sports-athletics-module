@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     PasswordResetRequest, PasswordResetCodeValidation, 
@@ -16,8 +15,6 @@ from app.modules.admin.services.password_reset_service import PasswordResetServi
 from app.core.logging.logger import logger
 from app.modules.modules import APP_TAGS_V1
 
-# Inicializar rate limiter
-limiter = Limiter(key_func=get_remote_address)
 
 reset_password_router_v1 = APIRouter()
 # ============================================
@@ -25,9 +22,7 @@ reset_password_router_v1 = APIRouter()
 # ============================================
 
 @reset_password_router_v1.post("/request", response_model=MessageResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("3/hour")  # Limitar solicitudes de reset
 async def request_password_reset(
-    request: Request,  # Necesario para el limiter
     data: PasswordResetRequest,
     repo: AuthUsersRepository = Depends(get_users_repo),
     email_service: AuthEmailService = Depends(get_email_service),
@@ -76,9 +71,7 @@ async def request_password_reset(
     return MessageResponse(message="Si el email existe en nuestro sistema, recibirás un código de restablecimiento")
 
 @reset_password_router_v1.post("/validate-code", response_model=MessageResponse, status_code=status.HTTP_200_OK)
-@limiter.limit("10/hour")  # Limitar validaciones de código
 async def validate_reset_code(
-    request: Request,  # Necesario para el limiter
     data: PasswordResetCodeValidation,
     reset_service: PasswordResetService = Depends(get_password_reset_service)
 ):

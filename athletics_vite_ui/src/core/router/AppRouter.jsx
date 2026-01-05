@@ -4,6 +4,7 @@ import MainLayout from '@shared/components/MainLayout';
 import HomePage from '@modules/home/ui/pages/HomePage';
 import LoginPage from '@modules/auth/ui/pages/LoginPage';
 import RegisterPage from '@modules/auth/ui/pages/RegisterPage';
+import PasswordResetPage from '@modules/auth/ui/pages/PasswordResetPage';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
     {
         path: '/register',
         element: <RegisterPage />,
+    },
+    {
+        path: '/forgot-password',
+        element: <PasswordResetPage />,
     },
     {
         path: '/dashboard',

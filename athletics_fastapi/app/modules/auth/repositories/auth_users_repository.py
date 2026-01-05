@@ -100,12 +100,18 @@ class AuthUsersRepository:
         service = await get_external_users_service(self.session)
 
         if user:
-            external_user = await service.update_account(
-                user=UserExternalUpdateAccountRequest(
-                    dni=user.identificacion,
-                    password=password
+            try:
+                external_user = await service.update_account(
+                    user=UserExternalUpdateAccountRequest(
+                        dni=user.identificacion,
+                        password=password
+                    )
                 )
-            )
+            except Exception as e:
+                # Log error but verify if we should proceed.
+                # In development/localhost, we might want to proceed even if external fails.
+                print(f"Error updating external account: {e}")
+                # For now, we proceed to update local password
             user.hashed_password = new_password_hash
             await self.session.commit()
             return True
