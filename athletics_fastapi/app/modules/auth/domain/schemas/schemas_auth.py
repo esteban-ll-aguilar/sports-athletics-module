@@ -18,8 +18,8 @@ class UserCreate(BaseModel):
     
     tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
 
-    phone: str = Field(min_length=8, max_length=128, default="")
-    direccion: str = Field(min_length=8, max_length=128, default="")
+    phone: str = Field(min_length=0, max_length=128, default="")
+    direccion: str = Field(min_length=0, max_length=128, default="")
 
     role: RoleEnum = Field(default=RoleEnum.ATLETA)
 

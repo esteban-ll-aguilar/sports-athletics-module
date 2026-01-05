@@ -17,9 +17,11 @@ import TipoDisciplinaPage from '../../modules/competencia/ui/pages/TipoDisciplin
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
 import HorarioManager from '../../modules/entrenador/ui/components/HorarioManager';
+import RegisterAthletePage from '../../modules/representante/ui/pages/RegisterAthletePage';
+import MisAtletasPage from '../../modules/representante/ui/pages/MisAtletasPage';
 
 
-const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'USUARIO', 'ATLETA']
+const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE']
 
 const router = createBrowserRouter([
     {
@@ -115,6 +117,20 @@ const router = createBrowserRouter([
                                 element: <GestionAsistenciaPage />,
                             },
                         ],
+                    },
+                    {
+                        path: 'representante',
+                        element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
+                        children: [
+                            {
+                                path: 'mis-atletas',
+                                element: <MisAtletasPage />
+                            },
+                            {
+                                path: 'register-athlete',
+                                element: <RegisterAthletePage />
+                            }
+                        ]
                     },
                 ],
             },

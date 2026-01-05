@@ -26,7 +26,7 @@ const rolePermissions = {
 
     ],
     REPRESENTANTE: [
-        { path: '/dashboard/results', icon: Activity, label: 'Representante' },
+        { path: '/dashboard/representante/mis-atletas', icon: Activity, label: 'Mis Atletas' },
     ]
 }
 
