@@ -34,6 +34,7 @@ import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 import ProtectedRoute from './ProtectedRoute';
 import ResultadosPage from '../../modules/competencia/ui/pages/ResultadosPage';
 import AthletesTable from '../../modules/atleta/ui/pages/atletlas';
+import CompetenciaPage from '../../modules/competencia/ui/pages/CompetenciaPage';
 
 
 const router = createBrowserRouter([
@@ -82,7 +83,8 @@ const router = createBrowserRouter([
               { index: true, element: <PruebasPage /> },
               { path: 'baremos', element: <BaremosPage /> },
               { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-            ],
+              {path: 'competencias', element: <CompetenciasPage /> },
+        ],
           },
 
           // /dashboard/competitions
