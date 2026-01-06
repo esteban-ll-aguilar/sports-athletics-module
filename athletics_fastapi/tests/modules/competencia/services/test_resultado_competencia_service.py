@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Servicio de Resultados de Competencia.
+Verifica la lógica de negocio para registrar y consultar resultados de los atletas en competencias.
+"""
 import pytest
 from uuid import uuid4, UUID
 from types import SimpleNamespace
@@ -20,6 +24,10 @@ from app.modules.competencia.domain.schemas.competencia_schema import (
 
 @pytest.mark.asyncio
 async def test_create_resultado_ok():
+    """
+    Verifica la creación exitosa de un resultado de competencia.
+    Mockea los repositorios de competencia, atleta y prueba para asegurar validaciones.
+    """
     repo = Mock()
     repo.create = AsyncMock()
 
@@ -62,6 +70,9 @@ async def test_create_resultado_ok():
 
 @pytest.mark.asyncio
 async def test_create_resultado_competencia_not_found():
+    """
+    Verifica que falle si la competencia asociada no existe.
+    """
     repo = Mock()
     competencia_repo = Mock()
     atleta_repo = Mock()
@@ -98,6 +109,9 @@ async def test_create_resultado_competencia_not_found():
 
 @pytest.mark.asyncio
 async def test_get_by_external_id_ok():
+    """
+    Verifica la obtención de un resultado por ID externo.
+    """
     repo = Mock()
     resultado = SimpleNamespace(external_id=uuid4())
     repo.get_by_external_id = AsyncMock(return_value=resultado)
@@ -114,6 +128,9 @@ async def test_get_by_external_id_ok():
 
 @pytest.mark.asyncio
 async def test_get_by_external_id_not_found():
+    """
+    Verifica el error 404 al buscar un resultado inexistente.
+    """
     repo = Mock()
     repo.get_by_external_id = AsyncMock(return_value=None)
 
@@ -134,6 +151,9 @@ async def test_get_by_external_id_not_found():
 
 @pytest.mark.asyncio
 async def test_get_by_competencia_external_id_ok():
+    """
+    Verifica la obtención de resultados asociados a una competencia específica.
+    """
     repo = Mock()
     competencia_repo = Mock()
 
@@ -154,6 +174,9 @@ async def test_get_by_competencia_external_id_ok():
 
 @pytest.mark.asyncio
 async def test_get_by_competencia_external_id_not_found():
+    """
+    Verifica que falle si la competencia no existe.
+    """
     repo = Mock()
     competencia_repo = Mock()
     competencia_repo.get_by_external_id = AsyncMock(return_value=None)
@@ -175,6 +198,9 @@ async def test_get_by_competencia_external_id_not_found():
 
 @pytest.mark.asyncio
 async def test_update_resultado_ok():
+    """
+    Verifica la actualización de un resultado existente.
+    """
     repo = Mock()
     resultado = SimpleNamespace(resultado=10.5)
 
@@ -199,6 +225,9 @@ async def test_update_resultado_ok():
 
 @pytest.mark.asyncio
 async def test_count():
+    """
+    Verifica el conteo de resultados.
+    """
     repo = Mock()
     repo.count = AsyncMock(return_value=5)
 

@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Servicio de Competencias.
+Prueba la lógica de negocio para crear, buscar y actualizar competencias.
+"""
 import pytest
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
@@ -17,6 +21,9 @@ from app.modules.competencia.domain.schemas.competencia_schema import (
 
 @pytest.mark.asyncio
 async def test_create_competencia_ok():
+    """
+    Verifica que se llame al repositorio para crear una competencia.
+    """
     repo = Mock()
     repo.create = AsyncMock()
 
@@ -49,6 +56,9 @@ async def test_create_competencia_ok():
 
 @pytest.mark.asyncio
 async def test_get_by_id_ok():
+    """
+    Verifica la recuperación de una competencia por ID numérico.
+    """
     repo = Mock()
     repo.get_by_id = AsyncMock(return_value=SimpleNamespace(id=1))
 
@@ -62,6 +72,9 @@ async def test_get_by_id_ok():
 
 @pytest.mark.asyncio
 async def test_get_by_id_not_found():
+    """
+    Verifica el error 404 si no se encuentra la competencia por ID.
+    """
     repo = Mock()
     repo.get_by_id = AsyncMock(return_value=None)
 
@@ -80,6 +93,9 @@ async def test_get_by_id_not_found():
 
 @pytest.mark.asyncio
 async def test_get_by_external_id_ok():
+    """
+    Verifica la recuperación de una competencia por External ID (UUID).
+    """
     external_id = uuid4()
 
     repo = Mock()
@@ -97,6 +113,9 @@ async def test_get_by_external_id_ok():
 
 @pytest.mark.asyncio
 async def test_get_by_external_id_not_found():
+    """
+    Verifica el error 404 si no se encuentra la competencia por External ID.
+    """
     external_id = uuid4()
 
     repo = Mock()
@@ -117,6 +136,9 @@ async def test_get_by_external_id_not_found():
 
 @pytest.mark.asyncio
 async def test_get_all():
+    """
+    Verifica que se pasen los filtros correctamente al repositorio al listar.
+    """
     repo = Mock()
     repo.get_all = AsyncMock(return_value=[])
 
@@ -137,6 +159,9 @@ async def test_get_all():
 
 @pytest.mark.asyncio
 async def test_update_competencia_ok():
+    """
+    Verifica la actualización de una competencia.
+    """
     external_id = uuid4()
 
     competencia = SimpleNamespace(
@@ -161,6 +186,9 @@ async def test_update_competencia_ok():
 
 @pytest.mark.asyncio
 async def test_update_competencia_not_found():
+    """
+    Verifica el error 404 al intentar actualizar una competencia inexistente.
+    """
     external_id = uuid4()
 
     repo = Mock()
@@ -182,6 +210,9 @@ async def test_update_competencia_not_found():
 
 @pytest.mark.asyncio
 async def test_count():
+    """
+    Verifica el conteo de competencias.
+    """
     repo = Mock()
     repo.count = AsyncMock(return_value=3)
 

@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Servicio de Baremos.
+Prueba la lógica de negocio asociada a la gestión de Baremos.
+"""
 import pytest
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
@@ -13,6 +17,9 @@ from app.modules.competencia.domain.schemas.baremo_schema import (
 
 @pytest.mark.asyncio
 async def test_create_baremo_ok():
+    """
+    Verifica que se llame correctamente al repositorio al crear un baremo.
+    """
     repo = Mock()
     repo.create = AsyncMock()
 
@@ -41,6 +48,9 @@ async def test_create_baremo_ok():
 
 @pytest.mark.asyncio
 async def test_update_baremo_ok():
+    """
+    Verifica que se pueda actualizar un baremo existente.
+    """
     external_id = uuid4()
 
     baremo = SimpleNamespace(
@@ -65,6 +75,9 @@ async def test_update_baremo_ok():
 
 @pytest.mark.asyncio
 async def test_update_baremo_not_found():
+    """
+    Verifica que se lance un error 404 si se intenta actualizar un baremo inexistente.
+    """
     repo = Mock()
     repo.get_by_external_id = AsyncMock(return_value=None)
 

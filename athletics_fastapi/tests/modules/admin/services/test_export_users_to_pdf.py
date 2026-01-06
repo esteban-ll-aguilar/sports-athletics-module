@@ -1,3 +1,8 @@
+"""
+Módulo de Pruebas para la Exportación de Usuarios a PDF.
+Verifica que la funcionalidad de reporte en PDF mockea correctamente
+la base de datos y utiliza reportlab (canvas) para generar el archivo.
+"""
 import sys
 from unittest.mock import MagicMock, patch
 import pytest
@@ -23,6 +28,9 @@ from app.modules.admin.services.export_user_data_service import (
 
 
 def test_export_users_to_pdf_ok():
+    """
+    Verifica que la exportación se ejecute cuando hay usuarios.
+    """
     # ---- Usuarios mock ----
     user1 = MagicMock(id=1, email="user1@test.com", role="ADMIN")
     user2 = MagicMock(id=2, email="user2@test.com", role="USER")
@@ -51,6 +59,10 @@ def test_export_users_to_pdf_ok():
 
 
 def test_export_users_to_pdf_no_users(capsys):
+    """
+    Verifica el comportamiento cuando no hay usuarios para exportar.
+    Debe imprimir un mensaje y no fallar.
+    """
     # ---- Mock DB sin usuarios ----
     mock_db = MagicMock()
     mock_db.query.return_value.all.return_value = []

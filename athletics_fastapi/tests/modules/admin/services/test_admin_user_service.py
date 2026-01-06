@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Servicio de Administración de Usuarios.
+Verifica la lógica de negocio para gestionar roles y datos de usuarios desde la administración.
+"""
 import pytest
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
@@ -15,6 +19,9 @@ from app.modules.admin.domain.schemas.schemas_auth import AdminUserUpdateRequest
 # ---------------------------------
 @pytest.fixture
 def users_repo():
+    """
+    Mock del repositorio de usuarios.
+    """
     repo = MagicMock()
     repo.get_by_external_id = AsyncMock()
     repo.get_all = AsyncMock()
@@ -30,6 +37,9 @@ def users_repo():
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_update_user_role_ok(users_repo):
+    """
+    Verifica que se pueda actualizar el rol de un usuario correctamente.
+    """
     service = AdminUserService(users_repo)
 
     user = MagicMock()
@@ -49,6 +59,9 @@ async def test_update_user_role_ok(users_repo):
 
 @pytest.mark.asyncio
 async def test_update_user_role_user_not_found(users_repo):
+    """
+    Verifica que se lance una excepción 404 si el usuario no existe.
+    """
     service = AdminUserService(users_repo)
 
     users_repo.get_by_external_id.return_value = None
@@ -68,6 +81,9 @@ async def test_update_user_role_user_not_found(users_repo):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_get_all_users_ok(users_repo):
+    """
+    Verifica que se recuperen todos los usuarios de forma paginada.
+    """
     service = AdminUserService(users_repo)
 
     users = [MagicMock(), MagicMock()]
@@ -88,6 +104,9 @@ async def test_get_all_users_ok(users_repo):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_update_user_by_id_ok(users_repo):
+    """
+    Verifica la actualización de datos básicos de un usuario por su ID.
+    """
     service = AdminUserService(users_repo)
 
     user = MagicMock()
@@ -119,6 +138,9 @@ async def test_update_user_by_id_ok(users_repo):
 
 @pytest.mark.asyncio
 async def test_update_user_by_id_not_found(users_repo):
+    """
+    Verifica que falle al intentar actualizar un usuario inexistente.
+    """
     service = AdminUserService(users_repo)
 
     users_repo.get_by_external_id.return_value = None

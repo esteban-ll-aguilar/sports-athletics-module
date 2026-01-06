@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Repositorio de Competencias.
+Prueba las operaciones de persistencia en base de datos para competencias.
+"""
 import pytest
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,6 +19,9 @@ from app.modules.competencia.domain.models.competencia_model import Competencia
 # ---------------------------------
 @pytest.fixture
 def async_session():
+    """
+    Mock de AsyncSession de SQLAlchemy.
+    """
     session = MagicMock(spec=AsyncSession)
     session.execute = AsyncMock()
     session.commit = AsyncMock()
@@ -26,6 +33,9 @@ def async_session():
 
 @pytest.fixture
 def repository(async_session):
+    """
+    Fixture del repositorio inyectando la sesión mockeada.
+    """
     return CompetenciaRepository(async_session)
 
 
@@ -34,6 +44,10 @@ def repository(async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_create_competencia(repository, async_session):
+    """
+    Verifica la creación exitosa de una competencia.
+    Mockea el constructor de Competencia para verificar la instanciación.
+    """
     data = {
         "nombre": "Competencia Test",
         "estado": True,
@@ -61,6 +75,9 @@ async def test_create_competencia(repository, async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_get_by_id_ok(repository, async_session):
+    """
+    Verifica la recuperación de una competencia por ID numérico.
+    """
     competencia = MagicMock(spec=Competencia)
 
     result_mock = MagicMock()
@@ -74,6 +91,9 @@ async def test_get_by_id_ok(repository, async_session):
 
 @pytest.mark.asyncio
 async def test_get_by_id_not_found(repository, async_session):
+    """
+    Verifica que retorne None si la competencia no existe (por ID).
+    """
     result_mock = MagicMock()
     result_mock.scalars.return_value.first.return_value = None
     async_session.execute.return_value = result_mock
@@ -88,6 +108,9 @@ async def test_get_by_id_not_found(repository, async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_get_by_external_id_ok(repository, async_session):
+    """
+    Verifica la recuperación de una competencia por External ID (UUID).
+    """
     competencia = MagicMock(spec=Competencia)
 
     result_mock = MagicMock()
@@ -104,6 +127,9 @@ async def test_get_by_external_id_ok(repository, async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_get_all(repository, async_session):
+    """
+    Verifica la obtención de todas las competencias.
+    """
     competencias = [
         MagicMock(spec=Competencia),
         MagicMock(spec=Competencia),
@@ -120,6 +146,9 @@ async def test_get_all(repository, async_session):
 
 @pytest.mark.asyncio
 async def test_get_all_filtered(repository, async_session):
+    """
+    Verifica que se apliquen filtros (ej. inactivos, entrenador_id) al obtener competencias.
+    """
     competencias = [MagicMock(spec=Competencia)]
 
     result_mock = MagicMock()
@@ -139,6 +168,9 @@ async def test_get_all_filtered(repository, async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_update_competencia(repository, async_session):
+    """
+    Verifica la actualización de los campos de una competencia.
+    """
     competencia = MagicMock(spec=Competencia)
 
     changes = {
@@ -160,6 +192,9 @@ async def test_update_competencia(repository, async_session):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_delete_ok(repository, async_session):
+    """
+    Verifica la eliminación exitosa de una competencia.
+    """
     competencia = MagicMock(spec=Competencia)
     repository.get_by_id = AsyncMock(return_value=competencia)
 
@@ -172,6 +207,9 @@ async def test_delete_ok(repository, async_session):
 
 @pytest.mark.asyncio
 async def test_delete_not_found(repository):
+    """
+    Verifica que devuelva False si se intenta eliminar una competencia inexistente.
+    """
     repository.get_by_id = AsyncMock(return_value=None)
 
     result = await repository.delete(999)
@@ -184,6 +222,9 @@ async def test_delete_not_found(repository):
 # ---------------------------------
 @pytest.mark.asyncio
 async def test_count(repository, async_session):
+    """
+    Verifica el conteo total de competencias.
+    """
     result_mock = MagicMock()
     result_mock.scalar.return_value = 3
     async_session.execute.return_value = result_mock

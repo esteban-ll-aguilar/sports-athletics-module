@@ -1,3 +1,7 @@
+"""
+Módulo de Pruebas para el Servicio de Historial Médico.
+Valida la lógica de negocio para crear, leer y actualizar el historial médico de los atletas.
+"""
 import pytest
 from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
@@ -21,6 +25,9 @@ from app.modules.auth.domain.enums import RoleEnum
 # -------------------------------
 @pytest.fixture
 def db():
+    """
+    Mock de la sesión de base de datos asíncrona.
+    """
     session = AsyncMock()
     session.add = MagicMock()
     session.commit = AsyncMock()
@@ -33,6 +40,9 @@ def db():
 # -------------------------------
 @pytest.mark.asyncio
 async def test_create_historial_ok(db):
+    """
+    Verifica la creación exitosa de un historial médico.
+    """
     service = HistorialMedicoService(db)
 
     user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
@@ -62,6 +72,9 @@ async def test_create_historial_ok(db):
 
 @pytest.mark.asyncio
 async def test_create_historial_user_not_atleta(db):
+    """
+    Verifica que falle si el usuario no tiene rol de Atleta.
+    """
     service = HistorialMedicoService(db)
 
     db.execute.return_value = MagicMock(
@@ -85,6 +98,9 @@ async def test_create_historial_user_not_atleta(db):
 
 @pytest.mark.asyncio
 async def test_create_historial_already_exists(db):
+    """
+    Verifica que no se duplique el historial para un mismo usuario.
+    """
     service = HistorialMedicoService(db)
 
     user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
@@ -113,6 +129,9 @@ async def test_create_historial_already_exists(db):
 # -------------------------------
 @pytest.mark.asyncio
 async def test_get_historial_ok(db):
+    """
+    Verifica la obtención de historial por su ID externo.
+    """
     service = HistorialMedicoService(db)
 
     historial = HistorialMedico(external_id=uuid4())
@@ -128,6 +147,9 @@ async def test_get_historial_ok(db):
 
 @pytest.mark.asyncio
 async def test_get_historial_not_found(db):
+    """
+    Verifica el error 404 cuando el historial no existe.
+    """
     service = HistorialMedicoService(db)
 
     db.execute.return_value = MagicMock(
@@ -145,6 +167,9 @@ async def test_get_historial_not_found(db):
 # -------------------------------
 @pytest.mark.asyncio
 async def test_get_by_user_ok(db):
+    """
+    Verifica la obtención de historial usando el ID del usuario (atleta).
+    """
     service = HistorialMedicoService(db)
 
     historial = HistorialMedico(auth_user_id=1)
@@ -160,6 +185,9 @@ async def test_get_by_user_ok(db):
 
 @pytest.mark.asyncio
 async def test_get_by_user_not_found(db):
+    """
+    Verifica el error si no se encuentra historial para el usuario.
+    """
     service = HistorialMedicoService(db)
 
     db.execute.return_value = MagicMock(
@@ -175,6 +203,9 @@ async def test_get_by_user_not_found(db):
 # -------------------------------
 @pytest.mark.asyncio
 async def test_get_all_historiales(db):
+    """
+    Verifica que se recuperen todos los historiales.
+    """
     service = HistorialMedicoService(db)
 
     historiales = [HistorialMedico(), HistorialMedico()]
@@ -193,6 +224,9 @@ async def test_get_all_historiales(db):
 # -------------------------------
 @pytest.mark.asyncio
 async def test_update_historial_ok(db):
+    """
+    Verifica la actualización de un historial existente.
+    """
     service = HistorialMedicoService(db)
 
     historial = HistorialMedico(

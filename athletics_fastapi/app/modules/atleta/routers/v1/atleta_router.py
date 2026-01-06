@@ -37,7 +37,7 @@ async def create_atleta(
     data: AtletaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: AtletaService = Depends(get_atleta_service),
-):
+): 
     return await service.create(data, current_user.id)
 
 
