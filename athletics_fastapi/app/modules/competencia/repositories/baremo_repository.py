@@ -10,7 +10,15 @@ class BaremoRepository:
         self.session = session
 
     # Crear un nuevo Baremo en la base de datos
-    async def create(self, baremo: Baremo) -> Baremo:
+    async def create(self, baremo: Baremo | dict) -> Baremo:
+        # Accept either a Baremo instance or a dict payload. The repo is
+        # responsible for constructing the ORM object so service-level
+        # tests can mock this method without importing all models.
+        if isinstance(baremo, dict):
+            # Construct the ORM model here (this may trigger mapper
+            # configuration when running with a real DB/session)
+            baremo = Baremo(**baremo)
+
         self.session.add(baremo)
         await self.session.commit()
         await self.session.refresh(baremo)

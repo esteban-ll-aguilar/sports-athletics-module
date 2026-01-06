@@ -79,8 +79,7 @@ class UserRead(BaseModel):
     username: str | None = None
     profile_image: str | None = None
     
-    class Config:
-        from_attributes = True  
+    model_config = ConfigDict(from_attributes=True)
 
 class TokenPair(BaseModel):
     access_token: str

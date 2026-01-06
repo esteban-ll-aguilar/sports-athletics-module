@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 from datetime import date, datetime
 from typing import Optional, List
@@ -31,8 +31,7 @@ class CompetenciaRead(CompetenciaBase):
     fecha_creacion: datetime
     fecha_actualizacion: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # -----------------------------
 # Resultado Competencia Schemas
@@ -76,5 +75,4 @@ class ResultadoCompetenciaRead(ResultadoCompetenciaBase):
     fecha_creacion: datetime
     fecha_actualizacion: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

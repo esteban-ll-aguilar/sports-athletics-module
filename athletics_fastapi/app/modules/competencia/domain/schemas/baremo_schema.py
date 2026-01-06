@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from app.modules.competencia.domain.enums.enum import TipoClasificacion
 
@@ -23,5 +23,4 @@ class BaremoRead(BaremoBase):
     id: int
     external_id: UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

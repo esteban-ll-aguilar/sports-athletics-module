@@ -89,8 +89,7 @@ class UserRead(BaseModel):
     fecha_nacimiento: Optional[date] = None
     sexo: Optional[SexoEnum] = None
 
-    class Config:
-        from_attributes = True  # Permite crear desde ORM models
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenPair(BaseModel):

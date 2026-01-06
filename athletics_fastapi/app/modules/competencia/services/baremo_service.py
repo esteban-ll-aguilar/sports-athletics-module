@@ -13,8 +13,10 @@ class BaremoService:
         self.repo = repo
 
     async def create(self, data: BaremoCreate) -> Baremo:
-        baremo = Baremo(**data.model_dump())
-        return await self.repo.create(baremo)
+        # Delegate model construction to the repository so unit tests can
+        # mock the repository without triggering SQLAlchemy mapper
+        # configuration during service-level unit tests.
+        return await self.repo.create(data.model_dump())
 
     async def get_all(self, incluir_inactivos: bool = True):
         return await self.repo.get_all(incluir_inactivos)
