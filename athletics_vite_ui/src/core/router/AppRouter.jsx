@@ -35,6 +35,7 @@ import ProtectedRoute from './ProtectedRoute';
 import ResultadosPage from '../../modules/competencia/ui/pages/ResultadosPage';
 import AthletesTable from '../../modules/atleta/ui/pages/atletlas';
 import CompetenciaPage from '../../modules/competencia/ui/pages/CompetenciaPage';
+import RegistroPruebaCompetenciaPage from '../../modules/competencia/ui/pages/RegistroPrueba';
 
 
 const router = createBrowserRouter([
@@ -77,13 +78,13 @@ const router = createBrowserRouter([
 
           // /dashboard/pruebas
           {
-            path: 'pruebas',
+            path: 'registro-pruebas',
             element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
             children: [
-              { index: true, element: <PruebasPage /> },
+              { index: true, element: <RegistroPruebaCompetenciaPage /> },
               { path: 'baremos', element: <BaremosPage /> },
               { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-              {path: 'competencias', element: <CompetenciasPage /> },
+              {path: 'pruebas', element: <PruebasPage /> },
         ],
           },
 

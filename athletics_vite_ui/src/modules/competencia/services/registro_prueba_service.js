@@ -1,5 +1,5 @@
 import registroPruebaCompetenciaRepository 
-    from "../repositories/registro_prueba_competencia_repository";
+    from "../../competencia/repositories/registro_prueba_repository";
 
 const registroPruebaCompetenciaService = {
 
