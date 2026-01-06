@@ -65,6 +65,20 @@ class CompetenciaRepository {
             throw error.response ? error.response.data : error;
         }
     }
+    // DELETE /api/v1/competencia/competencias/{external_id}
+    async delete(externalId) {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await axios.delete(`${API_URL}/${externalId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw error.response ? error.response.data : error;
+        }
+    }
 }
 
 export default new CompetenciaRepository();

@@ -114,7 +114,7 @@ const LoginPage = () => {
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                                 Correo Electrónico
                             </label>
                             <div className="relative">
@@ -124,6 +124,7 @@ const LoginPage = () => {
                                     </svg>
                                 </div>
                                 <input
+                                    id="email"
                                     type="email"
                                     required
                                     className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm"
@@ -135,7 +136,7 @@ const LoginPage = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                                 Contraseña
                             </label>
                             <div className="relative">
@@ -145,6 +146,7 @@ const LoginPage = () => {
                                     </svg>
                                 </div>
                                 <input
+                                    id="password"
                                     type={showPassword ? "text" : "password"}
                                     required
                                     className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm"

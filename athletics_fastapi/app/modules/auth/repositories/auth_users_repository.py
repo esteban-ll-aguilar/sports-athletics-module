@@ -60,8 +60,6 @@ class AuthUsersRepository:
                     phono=user_data.phone,
                     email=user_data.email,
                     password=user_data.password,
-                    fecha_nacimiento=user_data.fecha_nacimiento,
-                    sexo=user_data.sexo,
                 )
             )
         else:
