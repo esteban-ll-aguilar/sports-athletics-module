@@ -71,16 +71,28 @@ class UserCreateAdmin(UserCreate):
     def validate_password_strength(cls, v: str) -> str:
         return v  
 
-class UserRead(BaseModel):
-    external_id: UUID = Field(serialization_alias="id")  
+class UserReadFull(BaseModel):
+    id: int
+    external_id: UUID
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
     username: str | None = None
     profile_image: str | None = None
-    
-    class Config:
-        from_attributes = True  
+    tipo_identificacion: TipoIdentificacionEnum
+    identificacion: str
+    tipo_estamento: TipoEstamentoEnum
+    phone: str | None = None
+    direccion: str | None = None
+    fecha_nacimiento: date | None = None
+    sexo: SexoEnum | None = None
+
+    model_config = {
+        "from_attributes": True  # <--- Esto permite usar from_orm()
+    }
+
+
+
 
 class TokenPair(BaseModel):
     access_token: str

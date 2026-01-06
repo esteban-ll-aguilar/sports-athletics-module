@@ -31,6 +31,7 @@ class PruebaUpdate(BaseModel):
 
 # Leer Prueba
 class PruebaRead(PruebaBase):
+    id: int
     external_id: UUID
 
     class Config:

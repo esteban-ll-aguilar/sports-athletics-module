@@ -4,13 +4,14 @@ from app.modules.auth.repositories.auth_users_repository import AuthUsersReposit
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse
 from app.modules.auth.domain.models import AuthUserModel
+from app.modules.auth.domain.schemas.schemas_auth import UserReadFull
 
 users_router_v1 = APIRouter()
 
 @users_router_v1.get(
     "/users",
     response_model=UsersPaginatedResponse,
-    status_code=status.HTTP_200_OK,
+    status_code=200,
     summary="Lista paginada de usuarios",
 )
 async def list_users(
@@ -19,7 +20,7 @@ async def list_users(
     repo: AuthUsersRepository = Depends(get_users_repo)
 ):
     total, users = await repo.get_users_paginated(page=page, page_size=page_size)
-    users_data = [UserRead.from_orm(user) for user in users]
+    users_data = [UserReadFull.from_orm(user) for user in users]  # ⚡ usa el schema completo
     return UsersPaginatedResponse(
         total=total,
         page=page,

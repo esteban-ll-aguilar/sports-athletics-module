@@ -136,9 +136,12 @@ class AuthUsersRepository:
         query = select(AuthUserModel).offset(offset).limit(page_size)
         result = await self.session.execute(query)
         users = result.scalars().all()
-        total_result = await self.session.execute(select(AuthUserModel))
-        total = len(total_result.scalars().all())
+
+        # Total más eficiente
+        total = await self.count()
+
         return total, users
+
 
     async def update_user(self, user_id: int, user_data: UserUpdateRequest):
         user = await self.get_by_id(user_id)
