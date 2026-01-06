@@ -17,6 +17,10 @@ const competenciaService = {
 
     async update(externalId, data) {
         return await competenciaRepository.update(externalId, data);
+    },
+
+    async delete(externalId) {
+        return await competenciaRepository.delete(externalId);
     }
 };
 
