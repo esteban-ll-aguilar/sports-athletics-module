@@ -13,10 +13,7 @@ from app.modules.atleta.domain.schemas.historial_medico_schema import (
 )
 from app.modules.atleta.services.historial_medico_service import HistorialMedicoService
 
-router = APIRouter(
-    prefix="/historial-medico",
-    tags=["Historial Médico"]
-)
+router = APIRouter()
 
 
 @router.post("/", response_model=HistorialMedicoRead, status_code=status.HTTP_201_CREATED)

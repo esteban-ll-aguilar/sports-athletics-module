@@ -12,9 +12,9 @@ class TipoDisciplinaCreate(TipoDisciplinaBase):
     pass
 
 class TipoDisciplinaUpdate(BaseModel):
-    nombre: Optional[str]
-    descripcion: Optional[str]
-    estado: Optional[bool]
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    estado: Optional[bool] = None
 
 class TipoDisciplinaOut(TipoDisciplinaBase):
     id: int
