@@ -70,31 +70,46 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     Verifica que un administrador pueda cambiar el rol de un usuario.
     """
     from app.main import _APP
-    
-    mock_user_updated = MagicMock()
-    mock_user_updated.id = "user_123"
-    mock_user_updated.email = "test@test.com"
-    mock_user_updated.username = "testuser" # Posible campo faltante
-    mock_user_updated.role.name = "ENTRENADOR"
-    mock_user_updated.is_active = True
-    from datetime import datetime
     from uuid import uuid4
-    mock_user_updated.created_at = datetime.now()
-    mock_user_updated.updated_at = datetime.now()
-    mock_user_updated.role = RoleEnum.ENTRENADOR
+    from datetime import date
+
+    # Mock de usuario completo para UserReadFull
+    mock_user_updated = MagicMock()
+    mock_user_updated.id = 1
     mock_user_updated.external_id = uuid4()
+    mock_user_updated.email = "test@test.com"
+    mock_user_updated.username = "testuser"
+    mock_user_updated.is_active = True
+    mock_user_updated.role = RoleEnum.ENTRENADOR
+    mock_user_updated.tipo_identificacion = "CEDULA"
+    mock_user_updated.identificacion = "1234567890"
+    mock_user_updated.tipo_estamento = "EXTERNOS"
+    mock_user_updated.phone = None
+    mock_user_updated.direccion = None
+    mock_user_updated.fecha_nacimiento = date(1990, 1, 1)
+    mock_user_updated.sexo = None
     mock_user_updated.profile_image = None
-    # Asegurar que el response model pueda leer el enum correctamente o su valor
-    # En esquemas de auth/admin suele ser role: RoleEnum
-    
+
+    # Mock del servicio
     mock_admin_service.update_user_role.return_value = mock_user_updated
-    
+
+    # Overrides
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
 
-    response = await client.put("/api/v1/admin/users/user_123/role", json={"role": "ENTRENADOR"})
-    
+    # Request al endpoint
+    response = await client.put(
+        "/api/v1/admin/users/user_123/role",
+        json={"role": "ENTRENADOR"}
+    )
+
+    # Limpiar overrides
     _APP.dependency_overrides = {}
-    
+
+    # Assertions
     assert response.status_code == 200
-    assert response.json()["role"] == "ENTRENADOR"
+    data = response.json()
+    assert data["role"] == "ENTRENADOR"
+    assert data["username"] == "testuser"
+    assert data["email"] == "test@test.com"
+
