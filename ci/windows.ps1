@@ -115,7 +115,12 @@ Write-Host "`n[3/5] Ejecutando Tests Unitarios..." -ForegroundColor Cyan
 function Run-Test {
     param ($Path, $Name)
     Write-Host " -> Ejecutando Test: $Name ($Path)..." -NoNewline
-    $Output = pytest $Path -v 2>&1
+    
+    # Usamos cmd /c para ejecutar pytest y redirigir stderr a stdout A NIVEL DE CMD.
+    # Esto evita que PowerShell interprete los warnings en stderr como errores "NativeCommandError"
+    # cuando $ErrorActionPreference = "Stop".
+    $Output = cmd /c "pytest $Path -v 2>&1"
+    
     if ($LASTEXITCODE -eq 0) {
         Write-Host " [OK]" -ForegroundColor Green
     } else {
