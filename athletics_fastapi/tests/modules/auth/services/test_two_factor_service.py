@@ -1,7 +1,7 @@
 import pytest
 from urllib.parse import unquote
 
-from app.modules.admin.services.two_factor_service import TwoFactorService
+from app.modules.auth.services.two_factor_service import TwoFactorService
 
 
 # ---------------------------------

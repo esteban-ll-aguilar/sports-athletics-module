@@ -52,7 +52,7 @@ async def test_admin_list_users(client: AsyncClient, mock_admin_service):
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
     
-    response = await client.get("/api/v1/admin/users/")
+    response = await client.get("/api/v1/auth/users/")
     
     # Limpieza
     _APP.dependency_overrides = {}
@@ -66,22 +66,36 @@ async def test_admin_list_users(client: AsyncClient, mock_admin_service):
 @pytest.mark.asyncio
 async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     """
-    Prueba la actualización de roles (/api/v1/admin/users/{id}/role).
+    Prueba la actualización de roles (/api/v1/auth/users/{id}/role).
     Verifica que un administrador pueda cambiar el rol de un usuario.
     """
     from app.main import _APP
     
-    mock_user_updated = MagicMock()
-    mock_user_updated.id = "user_123"
-    mock_user_updated.email = "test@test.com"
-    mock_user_updated.username = "testuser" # Posible campo faltante
-    mock_user_updated.role.name = "ENTRENADOR"
-    mock_user_updated.is_active = True
-    from datetime import datetime
+    from datetime import datetime, date
     from uuid import uuid4
+    from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
+    from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
+
+    mock_user_updated = MagicMock()
+    mock_user_updated.id = 1
+    mock_user_updated.email = "test@test.com"
+    mock_user_updated.username = "testuser"
+    mock_user_updated.role = RoleEnum.ENTRENADOR
+    mock_user_updated.is_active = True
+    
+    # Campos adicionales requeridos por UserRead
+    mock_user_updated.first_name = "Test"
+    mock_user_updated.last_name = "User"
+    mock_user_updated.tipo_identificacion = TipoIdentificacionEnum.CEDULA
+    mock_user_updated.identificacion = "1101101101"
+    mock_user_updated.tipo_estamento = TipoEstamentoEnum.ESTUDIANTES
+    mock_user_updated.phone = "0999999999"
+    mock_user_updated.direccion = "Direccion Mock"
+    mock_user_updated.fecha_nacimiento = date(2000, 1, 1)
+    mock_user_updated.sexo = "M" 
+
     mock_user_updated.created_at = datetime.now()
     mock_user_updated.updated_at = datetime.now()
-    mock_user_updated.role = RoleEnum.ENTRENADOR
     mock_user_updated.external_id = uuid4()
     mock_user_updated.profile_image = None
     # Asegurar que el response model pueda leer el enum correctamente o su valor
@@ -92,7 +106,7 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
 
-    response = await client.put("/api/v1/admin/users/user_123/role", json={"role": "ENTRENADOR"})
+    response = await client.put("/api/v1/auth/users/user_123/role", json={"role": "ENTRENADOR"})
     
     _APP.dependency_overrides = {}
     

@@ -5,7 +5,11 @@ from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.core.jwt.jwt import get_current_user
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.modules.entrenador.repositories.entrenador_repository import EntrenadorRepository
+from app.modules.entrenador.repositories.entrenamiento_repository import EntrenamientoRepository
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+from app.modules.entrenador.repositories.horario_repository import HorarioRepository
+from app.modules.entrenador.services.horario_service import HorarioService
+
 
 async def get_entrenador_repo(session: AsyncSession = Depends(get_session)) -> EntrenadorRepository:
     return EntrenadorRepository(session)
@@ -38,3 +42,16 @@ async def get_current_entrenador(
         entrenador = await entrenador_repo.create(new_entrenador)
 
     return entrenador
+
+async def get_entrenamiento_repo(session: AsyncSession = Depends(get_session)) -> EntrenamientoRepository:
+    return EntrenamientoRepository(session)
+
+
+async def get_horario_repo(session: AsyncSession = Depends(get_session)) -> HorarioRepository:
+    return HorarioRepository(session)
+
+async def get_horario_service(
+    repo: HorarioRepository = Depends(get_horario_repo),
+    entrenamiento_repo: EntrenamientoRepository = Depends(get_entrenamiento_repo)
+) -> HorarioService:
+    return HorarioService(repo, entrenamiento_repo)

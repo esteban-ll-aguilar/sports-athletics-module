@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from app.modules.admin.services.password_reset_service import PasswordResetService
+from app.modules.auth.services.password_reset_service import PasswordResetService
 
 
 # ------------------------------------------------------------------
@@ -35,7 +35,7 @@ def service(redis_mock):
 
 def test_generate_reset_code_length(service):
     code = service.generate_reset_code()
-    assert len(code) == 8
+    assert len(code) == 6
     assert code.isalnum()
 
 

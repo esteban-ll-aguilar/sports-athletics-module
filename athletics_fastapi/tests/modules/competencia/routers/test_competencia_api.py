@@ -101,3 +101,59 @@ async def test_get_competencia_by_id(client: AsyncClient, mock_competencia_servi
     
     assert response.status_code == 200
     assert response.json()["nombre"] == "Comp Found"
+
+@pytest.mark.asyncio
+async def test_update_competencia(client: AsyncClient, mock_competencia_service):
+    """
+    Prueba la actualización de una competencia.
+    """
+    from app.main import _APP
+    
+    comp_id = uuid4()
+    mock_response = MagicMock()
+    mock_response.external_id = comp_id
+    mock_response.nombre = "Comp Updated"
+    mock_response.fecha = datetime.now().date()
+    mock_response.lugar = "Lugar Updated"
+    mock_response.descripcion = "Desc Updated"
+    mock_response.organizador = "Org Updated"
+    mock_response.estado = True
+    
+    mock_competencia_service.update.return_value = mock_response
+
+    _APP.dependency_overrides[get_competencia_service] = lambda: mock_competencia_service
+    _APP.dependency_overrides[get_current_user] = override_get_current_entrenador
+    
+    payload = {
+        "nombre": "Comp Updated",
+        "lugar": "Lugar Updated"
+    }
+
+    response = await client.put(f"/api/v1/competencia/competencias/{comp_id}", json=payload)
+    
+    _APP.dependency_overrides = {}
+    
+    assert response.status_code == 200
+    assert response.json()["nombre"] == "Comp Updated"
+    mock_competencia_service.update.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_delete_competencia(client: AsyncClient, mock_competencia_service):
+    """
+    Prueba la eliminación de una competencia.
+    """
+    from app.main import _APP
+    
+    comp_id = uuid4()
+    mock_competencia_service.delete.return_value = True
+
+    _APP.dependency_overrides[get_competencia_service] = lambda: mock_competencia_service
+    _APP.dependency_overrides[get_current_user] = override_get_current_entrenador
+    
+    response = await client.delete(f"/api/v1/competencia/competencias/{comp_id}")
+    
+    _APP.dependency_overrides = {}
+    
+    assert response.status_code == 204
+    mock_competencia_service.delete.assert_called_once_with(comp_id)

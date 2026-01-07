@@ -1,9 +1,0 @@
-checking athletes for email: esteban.leon@unl.edu.ec
-User Found: ID=1 - Email=esteban.leon@unl.edu.ec - Role=RoleEnum.REPRESENTANTE
-Representante ID: 2
-Found 1 athletes linked to Representante 2:
- - Atleta ID: 3, User ID: 6, Rep ID: 2
---- All Athletes in DB ---
- - Atleta ID: 1, User ID: 2, Rep ID: None
- - Atleta ID: 2, User ID: 6, Rep ID: None
- - Atleta ID: 3, User ID: 6, Rep ID: 2

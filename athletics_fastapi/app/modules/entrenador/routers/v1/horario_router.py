@@ -7,17 +7,12 @@ from app.modules.entrenador.domain.schemas.horario_schema import HorarioResponse
 from app.modules.entrenador.services.horario_service import HorarioService
 from app.modules.entrenador.repositories.horario_repository import HorarioRepository
 from app.modules.entrenador.repositories.entrenamiento_repository import EntrenamientoRepository
-from app.modules.entrenador.dependencies import get_current_entrenador
+from app.modules.entrenador.dependencies import get_current_entrenador, get_horario_service
 
 router = APIRouter(
     prefix="/horarios",
     tags=["Entrenador - Horarios"]
 )
-
-async def get_horario_service(session: AsyncSession = Depends(get_session)) -> HorarioService:
-    repo = HorarioRepository(session)
-    ent_repo = EntrenamientoRepository(session)
-    return HorarioService(repo, ent_repo)
 
 @router.post("/entrenamiento/{entrenamiento_id}", response_model=HorarioResponse, status_code=status.HTTP_201_CREATED)
 async def create_horario(
