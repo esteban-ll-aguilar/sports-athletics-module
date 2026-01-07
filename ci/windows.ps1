@@ -25,6 +25,15 @@ pip install -r requirements.txt
 Write-Host "Comenzando Tests..."
 
 #Incluir la ruta de los tests
+Write-Host "Iniciando tests de registro..."
+pytest .\tests\modules\auth\routers\test_register_flow.py
+Write-Host "Iniciando tests de reseteo de contraseña..."
+pytest .\tests\modules\auth\services\test_password_reset_service.py
+
+
+Write-Host "Levantar Docker compose..."
+docker-compose up -d
+
 
 
 

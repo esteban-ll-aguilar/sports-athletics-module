@@ -43,6 +43,10 @@ async def register(
         logger.warning(f"Intento de registro con email duplicado: {data.email}")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email ya registrado")
     
+    if await repo.get_by_username(data.username):
+        logger.warning(f"Intento de registro con username duplicado: {data.username}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username ya registrado")
+    
     # Crear usuario INACTIVO (is_active=False)
     password_hash = hasher.hash(data.password)
     user = await repo.create(password_hash=password_hash,user_data=data)

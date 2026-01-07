@@ -17,6 +17,11 @@ class AuthUsersRepository:
     async def get_by_email(self, email: str) -> AuthUserModel | None:
         res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.email == email))
         return res.scalar_one_or_none()
+    
+    async def get_by_username(self, username: str) -> AuthUserModel | None:
+        """Obtiene un usuario por su nombre de usuario."""
+        res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.username == username))
+        return res.scalar_one_or_none()
 
     async def get_all(self, skip: int = 0, limit: int = 20) -> list[AuthUserModel]:
         res = await self.session.execute(select(AuthUserModel).offset(skip).limit(limit))

@@ -2,6 +2,25 @@ version: "3.9"
 
 services:
   # ============================================
+  # Inicialización de Spring Boot
+  # ============================================
+  init-springboot:
+    image: curlimages/curl:latest
+    container_name: springboot-init
+    depends_on:
+      - springboot-app
+    command: >
+      sh -c "
+        echo 'Esperando a que Spring Boot esté listo...';
+        until curl -f http://springboot-app:8096/actuator/health 2>/dev/null || curl -f http://springboot-app:8096/ 2>/dev/null; do
+          sleep 2;
+        done;
+        echo 'Spring Boot está listo. Creando usuario por defecto...';
+        curl -X GET http://springboot-app:8096/api/config/create;
+        echo 'Usuario creado exitosamente';
+      "
+    restart: "no"
+  # ============================================
   # API Principal (Python/FastAPI)
   # ============================================
   api:

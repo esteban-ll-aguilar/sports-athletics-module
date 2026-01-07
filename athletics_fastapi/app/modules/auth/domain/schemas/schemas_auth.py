@@ -48,6 +48,54 @@ class UserCreate(BaseModel):
         if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
             raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
         return v
+    
+    @field_validator('identificacion')
+    @classmethod
+    def validate_identification(cls, v: str, info) -> str:
+        """Valida la cédula ecuatoriana."""
+        if info.data.get('tipo_identificacion') == TipoIdentificacionEnum.CEDULA:
+            if len(v) != 10 or not v.isdigit():
+                raise ValueError('La cédula debe tener 10 dígitos numéricos')
+            
+            # Algoritmo de validación de cédula ecuatoriana
+            import math
+            try:
+                # Primeros 2 dígitos: Provincia (0-24)
+                provincia = int(v[0:2])
+                if provincia < 0 or provincia > 24:
+                     raise ValueError('Cédula inválida (código de provincia incorrecto)')
+                
+                # Tercer dígito: Menor a 6 (personas naturales)
+                tercer_digito = int(v[2])
+                if tercer_digito >= 6:
+                     # Podría ser RUC o jurídica, pero aquí validamos Cédula natural
+                     # Si se aceptan RUCs, la lógica cambia. Asumimos solo Cédula personal por ahora.
+                     pass 
+
+                multiplicador = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+                ced_array = [int(c) for c in v[0:9]]
+                ultimo_digito = int(v[9])
+                resultado = []
+                
+                for i, j in zip(ced_array, multiplicador):
+                    producto = i * j
+                    if producto < 10:
+                        resultado.append(producto)
+                    else:
+                        resultado.append(producto - 9)
+                
+                suma = sum(resultado)
+                digito_verificador_calculado = int(math.ceil(suma / 10.0) * 10) - suma
+                
+                if ultimo_digito != digito_verificador_calculado:
+                    raise ValueError('Cédula inválida (dígito verificador incorrecto)')
+                    
+            except ValueError as e:
+                raise e
+            except Exception:
+                raise ValueError('Error procesando validación de cédula')
+                
+        return v
 
 
 class UserUpdateRequest(BaseModel):

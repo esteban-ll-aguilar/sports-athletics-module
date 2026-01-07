@@ -91,3 +91,6 @@ async def get_current_admin_user(current_user = Depends(get_current_user)):
             detail="No tienes permisos de administrador"
         )
     return current_user
+
+
+
