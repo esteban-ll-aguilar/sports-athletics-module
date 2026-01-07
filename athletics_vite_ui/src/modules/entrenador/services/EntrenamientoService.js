@@ -4,7 +4,7 @@ const ENDPOINT = '/entrenador/entrenamientos';
 
 const EntrenamientoService = {
     getAll: async () => {
-        return await ApiClient.get(ENDPOINT);
+        return await ApiClient.get(ENDPOINT + '/');
     },
 
     getById: async (id) => {
@@ -12,7 +12,7 @@ const EntrenamientoService = {
     },
 
     create: async (data) => {
-        return await ApiClient.post(ENDPOINT, data);
+        return await ApiClient.post(ENDPOINT + '/', data);
     },
 
     update: async (id, data) => {

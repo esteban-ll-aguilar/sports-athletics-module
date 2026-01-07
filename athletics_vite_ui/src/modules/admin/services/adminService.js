@@ -11,6 +11,16 @@ class AdminService {
         return response;
     }
 
+    async getJwtRotationInfo() {
+        const response = await apiClient.get('/admin/jwt/rotation-info');
+        return response;
+    }
+
+    async rotateJwtSecret() {
+        const response = await apiClient.post('/admin/jwt/rotate-secret');
+        return response;
+    }
+
 }
 
 export default new AdminService();

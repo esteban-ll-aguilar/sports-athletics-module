@@ -28,7 +28,7 @@ router_api_v1.include_router(api_external_router_v1)
 router_api_v1.include_router(api_competencia_router_v1)
 router_api_v1.include_router(api_entrenador_router_v1)
 router_api_v1.include_router(api_atleta_router_v1)
-router_api_v1.include_router(api_representante_router_v1, prefix="/representante")
+router_api_v1.include_router(api_representante_router_v1)
 
 
 

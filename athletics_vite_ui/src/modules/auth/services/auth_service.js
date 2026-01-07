@@ -39,9 +39,62 @@ class AuthService {
         return await authRepository.updateProfile(userData);
     }
 
-    logout() {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+    // New methods delegating to repository
+    async refreshToken() {
+        return await authRepository.refreshToken();
+    }
+
+    async getSessions() {
+        return await authRepository.getSessions();
+    }
+
+    async revokeSession(sessionId) {
+        return await authRepository.revokeSession(sessionId);
+    }
+
+    async revokeAllSessions() {
+        return await authRepository.revokeAllSessions();
+    }
+
+    async enable2FA() {
+        return await authRepository.enable2FA();
+    }
+
+    async verify2FA(code) {
+        return await authRepository.verify2FA(code);
+    }
+
+    async disable2FA() {
+        return await authRepository.disable2FA();
+    }
+
+    async login2FA(email, code) {
+        const data = await authRepository.login2FA(email, code);
+        if (data.access_token) {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+        return data;
+    }
+
+    async loginBackup(email, code) {
+        const data = await authRepository.loginBackup(email, code);
+        if (data.access_token) {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+        return data;
+    }
+
+    async logout() {
+        try {
+            await authRepository.logout();
+        } catch (error) {
+            console.error("Logout failed", error);
+        } finally {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+        }
     }
 
     isAuthenticated() {
