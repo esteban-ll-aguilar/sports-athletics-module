@@ -1,0 +1,37 @@
+from uuid import UUID
+from fastapi import HTTPException, status
+from app.modules.competencia.domain.models.baremo_model import Baremo
+from app.modules.competencia.domain.schemas.baremo_schema import (
+    BaremoCreate, BaremoUpdate
+)
+from app.modules.competencia.repositories.baremo_repository import BaremoRepository
+
+# Servicio para la gestión de Baremos
+class BaremoService:
+
+    def __init__(self, repo: BaremoRepository):
+        self.repo = repo
+
+    async def create(self, data: BaremoCreate) -> Baremo:
+        # Delegate model construction to the repository so unit tests can
+        # mock the repository without triggering SQLAlchemy mapper
+        # configuration during service-level unit tests.
+        return await self.repo.create(data.model_dump())
+
+    async def get_all(self, incluir_inactivos: bool = True):
+        return await self.repo.get_all(incluir_inactivos)
+
+
+    async def update(self, external_id: UUID, data: BaremoUpdate) -> Baremo:
+        baremo = await self.repo.get_by_external_id(external_id)
+
+        if not baremo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Baremo no encontrado"
+            )
+
+        for field, value in data.model_dump(exclude_unset=True).items():
+            setattr(baremo, field, value)
+
+        return await self.repo.update(baremo)
