@@ -20,6 +20,26 @@ services:
         echo 'Usuario creado exitosamente';
       "
     restart: "no"
+
+  init-fastapi:
+    image: athletics_fastapi:latest
+    container_name: fastapi-init
+    depends_on:
+      - api
+    command: >
+      sh -c "
+        echo 'Esperando a que FastAPI esté listo...';
+        echo 'Iniciando alembic...';
+        alembic upgrade head;
+        echo 'Alembic iniciado exitosamente';
+      "
+    restart: "no"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://postgres:123456@postgres:5432/BaseDeDatos
+
   # ============================================
   # API Principal (Python/FastAPI)
   # ============================================
@@ -27,6 +47,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: athletics_fastapi:latest
     container_name: fastapi-app
     depends_on:
       - postgres
