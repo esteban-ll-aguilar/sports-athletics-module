@@ -136,6 +136,7 @@ Run-Test "tests/modules/auth/services/test_password_reset_service.py" "Recuperac
 Run-Test "tests/modules/atleta/services/test_historial_medico_service.py" "Historial Medico"
 Run-Test "tests/modules/competencia/services/test_resultado_competencia_service.py" "Resultado de Competencia"
 Run-Test "tests/modules/competencia/repositories/test_baremo_repository.py" "Baremo"
+Run-Test "tests/modules/admin/services/test_admin_user_service.py" "Administrador"
 
 Write-Host " -> ¡TODOS LOS TESTS PASARON!" -ForegroundColor Green
 
