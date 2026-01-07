@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 import uuid
 
@@ -12,13 +12,12 @@ class TipoDisciplinaCreate(TipoDisciplinaBase):
     pass
 
 class TipoDisciplinaUpdate(BaseModel):
-    nombre: Optional[str]
-    descripcion: Optional[str]
-    estado: Optional[bool]
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    estado: Optional[bool] = None
 
 class TipoDisciplinaOut(TipoDisciplinaBase):
     id: int
     external_id: uuid.UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

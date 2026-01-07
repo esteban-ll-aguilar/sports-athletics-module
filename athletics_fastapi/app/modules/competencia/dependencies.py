@@ -1,5 +1,3 @@
-# app/api/dependencies.py
-
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,26 +5,13 @@ from app.core.db.database import get_session
 from app.core.jwt.jwt import get_current_user
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 
-# Repositorios y servicios
+# ============================
+# BAREMO
+# ============================
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
 from app.modules.competencia.services.baremo_service import BaremoService
 
-from app.modules.competencia.repositories.tipo_disciplina_repository import TipoDisciplinaRepository
-from app.modules.competencia.services.tipo_disciplina_service import TipoDisciplinaService
 
-from app.modules.competencia.repositories.prueba_repository import PruebaRepository
-from app.modules.competencia.services.prueba_service import PruebaService
-
-from app.modules.competencia.repositories.competencia_repository import CompetenciaRepository
-from app.modules.competencia.services.competencia_service import CompetenciaService
-
-from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
-from app.modules.competencia.services.resultado_competencia_service import ResultadoCompetenciaService
-from app.modules.atleta.repositories.atleta_repository import AtletaRepository
-
-# ============================
-# Servicio Baremo (CRUD)
-# ============================
 async def get_baremo_service(
     session: AsyncSession = Depends(get_session)
 ) -> BaremoService:
@@ -35,8 +20,16 @@ async def get_baremo_service(
 
 
 # ============================
-# Servicio TipoDisciplina (CRUD)
+# TIPO DISCIPLINA
 # ============================
+from app.modules.competencia.repositories.tipo_disciplina_repository import (
+    TipoDisciplinaRepository
+)
+from app.modules.competencia.services.tipo_disciplina_service import (
+    TipoDisciplinaService
+)
+
+
 async def get_tipo_disciplina_service(
     session: AsyncSession = Depends(get_session)
 ) -> TipoDisciplinaService:
@@ -45,8 +38,12 @@ async def get_tipo_disciplina_service(
 
 
 # ============================
-# Servicio Prueba (CRUD)
+# PRUEBA
 # ============================
+from app.modules.competencia.repositories.prueba_repository import PruebaRepository
+from app.modules.competencia.services.prueba_service import PruebaService
+
+
 async def get_prueba_service(
     session: AsyncSession = Depends(get_session)
 ) -> PruebaService:
@@ -55,8 +52,16 @@ async def get_prueba_service(
 
 
 # ============================
-# Servicio Competencia (CRUD)
+# COMPETENCIA
 # ============================
+from app.modules.competencia.repositories.competencia_repository import (
+    CompetenciaRepository
+)
+from app.modules.competencia.services.competencia_service import (
+    CompetenciaService
+)
+
+
 async def get_competencia_service(
     session: AsyncSession = Depends(get_session)
 ) -> CompetenciaService:
@@ -65,8 +70,17 @@ async def get_competencia_service(
 
 
 # ============================
-# Servicio Resultado Competencia (CRUD)
+# RESULTADO COMPETENCIA
 # ============================
+from app.modules.competencia.repositories.resultado_competencia_repository import (
+    ResultadoCompetenciaRepository
+)
+from app.modules.competencia.services.resultado_competencia_service import (
+    ResultadoCompetenciaService
+)
+from app.modules.atleta.repositories.atleta_repository import AtletaRepository
+
+
 async def get_resultado_competencia_service(
     session: AsyncSession = Depends(get_session)
 ) -> ResultadoCompetenciaService:
@@ -74,6 +88,7 @@ async def get_resultado_competencia_service(
     competencia_repo = CompetenciaRepository(session)
     atleta_repo = AtletaRepository(session)
     prueba_repo = PruebaRepository(session)
+
     return ResultadoCompetenciaService(
         resultado_repo,
         competencia_repo,
@@ -83,10 +98,28 @@ async def get_resultado_competencia_service(
 
 
 # ============================
-# Seguridad: Admin o Entrenador
+# REGISTRO PRUEBA COMPETENCIA
+# ============================
+from app.modules.competencia.repositories.registro_prueba_competencia_repository import (
+    RegistroPruebaCompetenciaRepository
+)
+from app.modules.competencia.services.registro_prueba_competencia_service import (
+    RegistroPruebaCompetenciaService
+)
+
+
+async def get_registro_prueba_competencia_service(
+    session: AsyncSession = Depends(get_session)
+) -> RegistroPruebaCompetenciaService:
+    repo = RegistroPruebaCompetenciaRepository(session)
+    return RegistroPruebaCompetenciaService(repo)
+
+
+# ============================
+# SEGURIDAD
 # ============================
 async def get_current_admin_or_entrenador(
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user)
 ):
     if current_user.role not in (
         RoleEnum.ADMINISTRADOR,

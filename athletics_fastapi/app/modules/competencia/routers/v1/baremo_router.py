@@ -8,10 +8,7 @@ from app.modules.competencia.domain.schemas.baremo_schema import (
 from app.modules.competencia.services.baremo_service import BaremoService
 from app.modules.competencia.dependencies import get_baremo_service, get_current_admin_or_entrenador
 
-router = APIRouter(
-    prefix="/baremos",
-    tags=["Baremos"]
-)
+router = APIRouter()
 
 # ----------------------
 # Create Baremo (protegido)

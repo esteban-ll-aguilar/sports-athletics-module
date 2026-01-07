@@ -6,10 +6,7 @@ from ...domain.schemas.prueba_schema import PruebaCreate, PruebaUpdate, PruebaRe
 from ...services.prueba_service import PruebaService
 from ...dependencies import get_prueba_service, get_current_admin_or_entrenador
 
-router = APIRouter(
-    prefix="/pruebas",
-    tags=["Pruebas"]
-)
+router = APIRouter()
 
 @router.post(
     "/",

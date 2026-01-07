@@ -92,3 +92,8 @@ class AuthUserModel(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
+
+    registros_prueba = relationship(
+    "RegistroPruebaCompetencia",
+    back_populates="auth_user"
+    )

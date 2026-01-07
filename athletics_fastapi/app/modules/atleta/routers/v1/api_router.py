@@ -15,5 +15,6 @@ api_atleta_router_v1.include_router(atleta_router)
 # Router de historial médico
 api_atleta_router_v1.include_router(
     historial_router,
-    prefix="/historial-medico"
+    prefix="/historial-medico",
+    tags=[APP_TAGS_V1.V1_ATLETA.value]
 )

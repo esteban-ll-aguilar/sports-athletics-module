@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 from typing import Optional
 
@@ -31,5 +31,4 @@ class HistorialMedicoRead(HistorialMedicoBase):
     external_id: UUID
     auth_user_id: int
 
-    class Config:
-        from_attributes = True  # Pydantic v2
+    model_config = ConfigDict(from_attributes=True)

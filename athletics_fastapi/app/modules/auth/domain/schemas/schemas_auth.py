@@ -1,15 +1,10 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 import re
 from datetime import date
 from uuid import UUID
-from app.modules.auth.domain.enums import RoleEnum, SexoEnum,TipoEstamentoEnum, TipoIdentificacionEnum
-
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
-import re
-from datetime import date
-from uuid import UUID
+from typing import Optional
 from app.modules.auth.domain.enums import RoleEnum, SexoEnum, TipoEstamentoEnum, TipoIdentificacionEnum
+
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=4, max_length=50)
@@ -18,22 +13,24 @@ class UserCreate(BaseModel):
 
     first_name: str = Field(min_length=2, max_length=50)
     last_name: str = Field(min_length=2, max_length=50)
-
+    
     tipo_identificacion: TipoIdentificacionEnum = Field(default=TipoIdentificacionEnum.CEDULA)
     identificacion: str = Field(min_length=8, max_length=128)
-
+    
     tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
 
-    phone: str = Field(min_length=0, max_length=128, default="")
-    direccion: str = Field(min_length=0, max_length=128, default="")
+    phone: str = Field(min_length=8, max_length=128, default="")
+    direccion: str = Field(min_length=8, max_length=128, default="")
+
+    fecha_nacimiento: Optional[date] = None  
+    sexo: Optional[SexoEnum] = SexoEnum.M     
 
     role: RoleEnum = Field(default=RoleEnum.ATLETA)
-
-
 
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
+        """Valida que la contraseña sea fuerte."""
         if not re.search(r'[A-Z]', v):
             raise ValueError('La contraseña debe contener al menos una letra mayúscula')
         if not re.search(r'[a-z]', v):
@@ -47,6 +44,7 @@ class UserCreate(BaseModel):
     @field_validator('role')
     @classmethod
     def validate_role(cls, v: RoleEnum) -> RoleEnum:
+        """Valida que el rol sea válido."""
         if v not in [RoleEnum.REPRESENTANTE, RoleEnum.ATLETA]:
             raise ValueError('El rol debe ser REPRESENTANTE o ATLETA')
         return v
@@ -56,31 +54,43 @@ class UserUpdateRequest(BaseModel):
     username: str | None = None
     first_name: str | None = None
     last_name: str | None = None
-    tipo_identificacion: TipoIdentificacionEnum 
-    tipo_estamento: TipoEstamentoEnum
+
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    sexo: SexoEnum | None = None
+
     fecha_nacimiento: date | None = None
     phone: str | None = None
     direccion: str | None = None
-    sexo: SexoEnum
     profile_image: str | None = None
-    
+
 
 class UserCreateAdmin(UserCreate):
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
-        return v  
+        return v  # 🔓 sin validación
+
 
 class UserRead(BaseModel):
-    external_id: UUID = Field(serialization_alias="id")  
+    external_id: UUID = Field(serialization_alias="id")  # UUID se convierte automáticamente a string en JSON
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     email: EmailStr
     is_active: bool
     role: RoleEnum | None = None
-    username: str | None = None
     profile_image: str | None = None
-    
-    class Config:
-        from_attributes = True  
+    tipo_identificacion: TipoIdentificacionEnum | None = None
+    identificacion: str | None = None
+    tipo_estamento: TipoEstamentoEnum | None = None
+    phone: str | None = None
+    direccion: str | None = None
+    fecha_nacimiento: Optional[date] = None
+    sexo: Optional[SexoEnum] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TokenPair(BaseModel):
     access_token: str
@@ -125,3 +135,8 @@ class MessageResponse(BaseModel):
     message: str
 
 
+class AdminUserUpdateRequest(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = None
+    profile_image: Optional[str] = None

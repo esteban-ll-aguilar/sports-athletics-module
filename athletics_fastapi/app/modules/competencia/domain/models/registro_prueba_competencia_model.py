@@ -1,25 +1,52 @@
 from sqlalchemy import Integer, Float, Date, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from app.core.db.database import Base
 from sqlalchemy.dialects.postgresql import UUID
+from app.core.db.database import Base
 import uuid
-from app.modules.atleta.domain.models.atleta_model import Atleta
+from typing import TYPE_CHECKING
+
 from app.modules.competencia.domain.models.prueba_model import Prueba
+
+# 👇 SOLO para tipado (evita import circular)
+if TYPE_CHECKING:
+    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 
 class RegistroPruebaCompetencia(Base):
     __tablename__ = "registro_prueba_competencia"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
-    external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True
+    )
+
+    external_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        unique=True,
+        index=True,
+        default=uuid.uuid4
+    )
+
     id_entrenador: Mapped[int] = mapped_column(Integer)
     valor: Mapped[float] = mapped_column(Float)
     fecha_registro: Mapped[Date] = mapped_column(Date)
 
-    # FKs
-    prueba_id: Mapped[int] = mapped_column(Integer, ForeignKey("prueba.id"))
-    atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("atleta.id"))
+    # 🔗 Foreign Keys
+    prueba_id: Mapped[int] = mapped_column(
+        ForeignKey("prueba.id"),
+        nullable=False
+    )
 
-    # Relationships
+    auth_user_id: Mapped[int] = mapped_column(
+        ForeignKey("auth_users.id"),
+        nullable=False
+    )
+
+    # 🔗 Relationships
     prueba: Mapped["Prueba"] = relationship("Prueba")
-    atleta: Mapped["Atleta"] = relationship("Atleta")
+
+    auth_user: Mapped["AuthUserModel"] = relationship(
+        "AuthUserModel"
+    )

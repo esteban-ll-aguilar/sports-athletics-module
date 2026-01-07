@@ -37,6 +37,8 @@ class Atleta(Base):
         Date,
         nullable=False
     )
+    
+    foto_perfil: Mapped[str] = mapped_column(nullable=True)
 
     # 🔗 Relación con usuario
     user_id: Mapped[int] = mapped_column(
