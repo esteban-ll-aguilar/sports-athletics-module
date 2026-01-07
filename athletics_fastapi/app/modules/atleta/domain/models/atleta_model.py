@@ -35,7 +35,7 @@ class Atleta(Base):
     
     fecha_nacimiento: Mapped[date] = mapped_column(
         Date,
-        nullable=False
+        nullable=True
     )
     
     foto_perfil: Mapped[str] = mapped_column(nullable=True)

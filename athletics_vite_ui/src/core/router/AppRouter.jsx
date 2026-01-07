@@ -48,10 +48,7 @@ import MisAtletasPage from '@modules/representante/ui/pages/MisAtletasPage';
 // Profile
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 // Seguridad
-import ProtectedRoute from './ProtectedRoute';
-import ResultadosPage from '../../modules/competencia/ui/pages/ResultadosPage';
-import AthletesTable from '../../modules/atleta/ui/pages/atletlas';
-import CompetenciaPage from '../../modules/competencia/ui/pages/CompetenciaPage';
+// Seguridad
 
 const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
 
@@ -100,8 +97,8 @@ const router = createBrowserRouter([
               { index: true, element: <PruebasPage /> },
               { path: 'baremos', element: <BaremosPage /> },
               { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-              {path: 'competencias', element: <CompetenciasPage /> },
-        ],
+              { path: 'competencias', element: <CompetenciasPage /> },
+            ],
           },
           {
             path: 'competitions',

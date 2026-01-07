@@ -1,68 +1,68 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from uuid import UUID
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from typing import List
+from typing import List, Optional
+from sqlalchemy.orm import selectinload
+
 from app.modules.atleta.domain.models.atleta_model import Atleta
 
 class AtletaRepository:
-    """Repositorio para manejar 'atletas', basados en la tabla auth_users con role='ATLETA'"""
+    """Repositorio para manejar la entidad 'Atleta'"""
 
     def __init__(self, session: AsyncSession):
         self.session = session
 
     # ----------------------
-    # Crear un atleta (opcional, si quieres duplicar en auth_users)
+    # Crear un atleta
     # ----------------------
-    async def create(self, atleta: AuthUserModel) -> AuthUserModel:
+    async def create(self, atleta: Atleta) -> Atleta:
         self.session.add(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
+        # Load user for response consistency if needed, though usually just ID is enough
+        # await self.session.refresh(atleta, attribute_names=['user']) 
         return atleta
 
     # ----------------------
-    # Obtener por ID interno (primary key)
+    # Obtener por ID (primary key de tabla atleta)
     # ----------------------
-    async def get_by_id(self, atleta_id: int) -> AuthUserModel | None:
+    async def get_by_id(self, atleta_id: int) -> Optional[Atleta]:
         result = await self.session.execute(
-            select(AuthUserModel).where(
-                AuthUserModel.id == atleta_id,
-                AuthUserModel.role == "ATLETA"
-            )
+            select(Atleta)
+            .where(Atleta.id == atleta_id)
+            .options(selectinload(Atleta.user))
         )
         return result.scalars().first()
 
     # ----------------------
-    # Obtener por user_id (si alguna relación adicional existe)
+    # Obtener por user_id (FK a auth_users)
     # ----------------------
-    async def get_by_user_id(self, user_id: int) -> AuthUserModel | None:
+    async def get_by_user_id(self, user_id: int) -> Optional[Atleta]:
         result = await self.session.execute(
-            select(AuthUserModel).where(
-                AuthUserModel.id == user_id,  # en auth_users, id = user_id
-                AuthUserModel.role == "ATLETA"
-            )
+            select(Atleta)
+            .where(Atleta.user_id == user_id)
+            .options(selectinload(Atleta.user))
         )
         return result.scalars().first()
 
     # ----------------------
     # Obtener por external_id (UUID)
     # ----------------------
-    async def get_by_external_id(self, external_id: UUID) -> AuthUserModel | None:
+    async def get_by_external_id(self, external_id: UUID) -> Optional[Atleta]:
         result = await self.session.execute(
-            select(AuthUserModel).where(
-                AuthUserModel.external_id == external_id,
-                AuthUserModel.role == "ATLETA"
-            )
+            select(Atleta)
+            .where(Atleta.external_id == external_id)
+            .options(selectinload(Atleta.user))
         )
         return result.scalars().first()
 
     # ----------------------
     # Obtener todos los atletas (con paginación)
     # ----------------------
-    async def get_all(self, skip: int = 0, limit: int = 100) -> list[AuthUserModel]:
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[Atleta]:
         result = await self.session.execute(
-            select(AuthUserModel)
-            .where(AuthUserModel.role == "ATLETA")
+            select(Atleta)
+            .options(selectinload(Atleta.user))
             .offset(skip)
             .limit(limit)
         )
@@ -71,16 +71,16 @@ class AtletaRepository:
     # ----------------------
     # Actualizar atleta
     # ----------------------
-    async def update(self, atleta: AuthUserModel) -> AuthUserModel:
-        await self.session.merge(atleta)
+    async def update(self, atleta: Atleta) -> Atleta:
+        self.session.add(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
         return atleta
 
     # ----------------------
-    # Eliminar atleta (opcional)
+    # Eliminar atleta
     # ----------------------
-    async def delete(self, atleta: AuthUserModel) -> None:
+    async def delete(self, atleta: Atleta) -> None:
         await self.session.delete(atleta)
         await self.session.commit()
 
@@ -89,13 +89,11 @@ class AtletaRepository:
     # ----------------------
     async def count(self) -> int:
         result = await self.session.execute(
-            select(func.count(AuthUserModel.id)).where(AuthUserModel.role == "ATLETA")
+            select(func.count(Atleta.id))
         )
         return result.scalar() or 0
 
-    async  def get_by_representante_id(self, representante_id: int) -> List[Atleta]:
-        # Eager load user to get name, etc.
-        from sqlalchemy.orm import selectinload
+    async def get_by_representante_id(self, representante_id: int) -> List[Atleta]:
         result = await self.session.execute(
             select(Atleta)
             .where(Atleta.representante_id == representante_id)

@@ -126,8 +126,9 @@ class AuthRepository {
     // Refresh Token
     async refreshToken() {
         try {
-            const token = localStorage.getItem('access_token'); // Or refresh token depending on backend implementation
-            const response = await axios.post(`${API_URL}/auth/refresh`, {}, {
+            const token = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            const response = await axios.post(`${API_URL}/auth/refresh`, { refresh_token: refreshToken }, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -142,7 +143,8 @@ class AuthRepository {
     async logout() {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/logout`, {}, {
+            const refreshToken = localStorage.getItem('refresh_token');
+            const response = await axios.post(`${API_URL}/auth/logout`, { refresh_token: refreshToken }, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

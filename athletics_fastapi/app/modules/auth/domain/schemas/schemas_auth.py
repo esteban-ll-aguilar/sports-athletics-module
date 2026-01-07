@@ -19,8 +19,8 @@ class UserCreate(BaseModel):
     
     tipo_estamento: TipoEstamentoEnum = Field(default=TipoEstamentoEnum.EXTERNOS)
 
-    phone: str = Field(min_length=8, max_length=128, default="")
-    direccion: str = Field(min_length=8, max_length=128, default="")
+    phone: Optional[str] = Field(default=None, max_length=128, min_length=10)
+    direccion: Optional[str] = Field(default=None, max_length=128, min_length=10)
 
     fecha_nacimiento: Optional[date] = None  
     sexo: Optional[SexoEnum] = SexoEnum.M     

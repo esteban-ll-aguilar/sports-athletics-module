@@ -52,7 +52,7 @@ class AtletaRead(AtletaBase):
     external_id: UUID
     user_id: int
     user: UserInfo
-    fecha_creacion: datetime
+    fecha_creacion: Optional[datetime] = None
     fecha_actualizacion: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)

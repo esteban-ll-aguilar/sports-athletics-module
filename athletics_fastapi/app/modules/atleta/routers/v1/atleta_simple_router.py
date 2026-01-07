@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.database import get_session
 from app.modules.atleta.services.atleta_service import AtletaService
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
+from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_current_user
 
 router = APIRouter(
@@ -12,8 +13,9 @@ router = APIRouter(
 )
 
 async def get_atleta_service(session: AsyncSession = Depends(get_session)) -> AtletaService:
-    repo = AtletaRepository(session)
-    return AtletaService(repo)
+    atleta_repo = AtletaRepository(session)
+    auth_repo = AuthUsersRepository(session)
+    return AtletaService(atleta_repo, auth_repo)
 
 from app.modules.atleta.domain.schemas.atleta_simple_schema import AtletaSimpleResponse
 
@@ -25,4 +27,4 @@ async def list_atletas(
     """
     Lista todos los atletas registrados.
     """
-    return await service.get_all_atletas()
+    return await service.get_all()
