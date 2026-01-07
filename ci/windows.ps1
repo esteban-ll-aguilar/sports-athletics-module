@@ -35,13 +35,33 @@ if (-not (Test-Path $BackendDir)) {
 # -------------------------------------------------------------------------
 Write-Host "`n[1/5] Verificando Prerrequisitos..." -ForegroundColor Cyan
 
-# Verificar Python
+# Verificar Python 3.12
+$Global:PyCmd = "python" # Default fallback
 try {
-    $pyVersion = python --version 2>&1
-    Write-Host " -> $pyVersion detectado." -ForegroundColor Green
+    # Primero intentamos con el launcher especificamente la 3.12
+    $pyCheck = py -3.12 --version 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $Global:PyCmd = "py -3.12"
+        Write-Host " -> Python 3.12 detectado via Launcher ($pyCheck)." -ForegroundColor Green
+    } else {
+        throw "Launcher no encontro 3.12"
+    }
 } catch {
-    Write-Error "CRITICO: Python no esta instalado o no esta en el PATH."
-    exit 1
+    # Si falla, miramos si 'python' es la 3.12
+    try {
+        $pyCheck = python --version 2>&1
+        if ($pyCheck -match "3.12") {
+            $Global:PyCmd = "python"
+            Write-Host " -> Python 3.12 detectado en PATH ($pyCheck)." -ForegroundColor Green
+        } else {
+            Write-Error "CRITICO: Se requiere Python 3.12. Se detecto $pyCheck pero necesitamos 3.12."
+            Write-Host "Instala Python 3.12 o usa el flag '-0' en 'py' para verificar tus versiones."
+            exit 1
+        }
+    } catch {
+        Write-Error "CRITICO: No se encontro Python 3.12 instalado."
+        exit 1
+    }
 }
 
 # Verificar Docker
@@ -61,13 +81,9 @@ Set-Location -Path $BackendDir
 
 # Crear Venv si no existe
 if (-not (Test-Path "venv")) {
-    Write-Host " -> Creando entorno virtual (venv)..."
-    # Intentar con 'py -3.12' o 'python'
-    try {
-        py -V:3.12 -m venv venv
-    } catch {
-        python -m venv venv
-    }
+    Write-Host " -> Creando entorno virtual (venv) con $Global:PyCmd ..."
+    # Ejecutar comando como scriptblock porque PyCmd puede tener espacios (ej: "py -3.12")
+    Invoke-Expression "$Global:PyCmd -m venv venv"
 } else {
     Write-Host " -> Entorno virtual ya existe."
 }
@@ -114,7 +130,7 @@ Run-Test "tests/modules/auth/routers/test_register_flow.py" "Registro de Usuario
 Run-Test "tests/modules/auth/services/test_password_reset_service.py" "Recuperacion de Contrasena"
 Run-Test "tests/modules/atleta/services/test_historial_medico_service.py" "Historial Medico"
 Run-Test "tests/modules/competencia/services/test_resultado_competencia_service.py" "Resultado de Competencia"
-
+Run-Test "tests/modules/competencia/repositories/test_baremo_repository.py" "Baremo"
 
 Write-Host " -> ¡TODOS LOS TESTS PASARON!" -ForegroundColor Green
 
@@ -149,13 +165,25 @@ Write-Host " -> Esperando unos segundos para que la BD inicie..."
 Start-Sleep -Seconds 5
 
 try {
-    # Aseguramos que alembic use la variables de entorno correctas o el .env
-    # Si la DB está en localhost:5432 (expuesta por docker), esto funcionará
-    alembic upgrade head
-    Write-Host " -> Migraciones aplicadas con exito." -ForegroundColor Green
+    # Ejecutamos las migraciones dentro del contenedor 'init-fastapi' que ya tiene las variables de entorno
+    Write-Host " -> Ejecutando migraciones via Docker (init-fastapi)..."
+    
+    # Usamos docker-compose run para levantar temporalmente el servicio de inicializacion
+    # Nota: Si el servicio ya corrio en el 'up -d' anterior, esto asegura que corra de nuevo las migraciones
+    # O simplemente revisamos logs si 'init-fastapi' ya lo hizo al inicio.
+    
+    # Opcion A: Ejecutar explicitamente
+    docker-compose -f $ComposeFile run --rm init-fastapi
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host " -> Migraciones aplicadas con exito." -ForegroundColor Green
+    } else {
+        throw "El contenedor de migraciones fallo."
+    }
+
 } catch {
-    Write-Error "ERROR: Fallo 'alembic upgrade head'. Verifica que la BD este arriba."
-    # No salimos con error critico aqui, el deploy ya está hecho, solo falló la migración
+    Write-Error "ERROR: Fallo la aplicacion de migraciones via Docker."
+    # No salimos con error critico aqui, el deploy ya este hecho, solo fallo la migracion
 }
 
 Write-Host "`n==========================================" -ForegroundColor Green
