@@ -6,7 +6,6 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
-from datetime import datetime
 
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain.models import AuthUserModel
@@ -39,8 +38,9 @@ async def test_create_historial_medico(client: AsyncClient):
         mock_response.external_id = uuid4()
         mock_response.user_id = uuid4()
         mock_response.tipo_sangre = "O+"
-        mock_response.alergias = "N/A"
-        # ... otros campos
+        mock_response.alergias = "Ninguna" # Ensure this is a valid Enum value
+        mock_response.enfermedades = "Ninguna"
+        mock_response.enfermedades_hereditarias = "Ninguna"
         
         mock_response.talla = 1.75
         mock_response.peso = 70.0
@@ -48,9 +48,7 @@ async def test_create_historial_medico(client: AsyncClient):
         mock_response.id = 1
         mock_response.auth_user_id = 10
         mock_response.external_id = uuid4()
-        mock_response.enfermedades = "Ninguna"
-        mock_response.enfermedades_hereditarias = "Ninguna"
-        
+
         mock_service_instance.create = AsyncMock(return_value=mock_response)
         
         _APP.dependency_overrides[get_current_user] = override_get_current_atleta
@@ -59,7 +57,7 @@ async def test_create_historial_medico(client: AsyncClient):
             "talla": 1.75,
             "peso": 70.0,
             "imc": 22.8,
-            "alergias": "N/A",
+            "alergias": "Ninguna",
             "enfermedades": "Ninguna",
             "enfermedades_hereditarias": "Ninguna"
         })
@@ -69,6 +67,7 @@ async def test_create_historial_medico(client: AsyncClient):
         assert response.status_code == 201
         data = response.json()
         assert data["talla"] == 1.75
+        assert data["alergias"] == "Ninguna"
 
 @pytest.mark.asyncio
 async def test_get_my_historial(client: AsyncClient):
@@ -88,9 +87,9 @@ async def test_get_my_historial(client: AsyncClient):
         mock_response.talla = 1.75
         mock_response.peso = 70.0
         mock_response.imc = 22.8
-        mock_response.alergias = "A+"
-        mock_response.enfermedades = None
-        mock_response.enfermedades_hereditarias = None
+        mock_response.alergias = "Penicilina"
+        mock_response.enfermedades = "Ninguna"
+        mock_response.enfermedades_hereditarias = "Ninguna"
         
         mock_service_instance.get_by_user = AsyncMock(return_value=mock_response)
         
@@ -101,4 +100,4 @@ async def test_get_my_historial(client: AsyncClient):
         _APP.dependency_overrides = {}
         
         assert response.status_code == 200
-        assert response.json()["alergias"] == "A+"
+        assert response.json()["alergias"] == "Penicilina"

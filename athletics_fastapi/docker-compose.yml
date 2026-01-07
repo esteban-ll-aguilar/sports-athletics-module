@@ -87,13 +87,13 @@ services:
       EMAIL_HOST: smtp.gmail.com
       EMAIL_PORT: 587
       EMAIL_USE_TLS: "true"
-      EMAIL_HOST_USER: example@gmail.com
-      EMAIL_HOST_PASSWORD: example_password
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
 
       # API de usuarios (microservicio Spring Boot)
       USERS_API_URL: http://springboot-app:8096
-      USERS_API_EMAIL: admin@example.com
-      USERS_API_PASSWORD: admin_password
+      USERS_API_EMAIL: ${USERS_API_EMAIL}
+      USERS_API_PASSWORD: ${USERS_API_PASSWORD}
 
   # ============================================
   # Microservicio de Usuarios (Spring Boot)

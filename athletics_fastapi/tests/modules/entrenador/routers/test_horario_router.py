@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 from datetime import datetime, time
 
-from app.modules.entrenador.dependencies import get_horario_service
+from app.modules.entrenador.dependencies import get_horario_service, get_current_entrenador
 from app.modules.entrenador.services.horario_service import HorarioService
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
@@ -16,15 +16,16 @@ from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 @pytest.fixture
 def mock_horario_service():
-    service = AsyncMock(spec=HorarioService)
+    # Use standard AsyncMock without spec for better compatibility immediately
+    service = AsyncMock()
     return service
 
-async def override_get_current_entrenador():
-    user = MagicMock(spec=AuthUserModel)
-    user.id = 1
-    user.email = "entrenador@test.com"
-    user.role = RoleEnum.ENTRENADOR
-    return user
+# Mock para get_current_entrenador directamente, evitando DB
+async def override_get_current_entrenador_dependency():
+    mock_entrenador = MagicMock()
+    mock_entrenador.id = 1
+    mock_entrenador.usuario_id = 1
+    return mock_entrenador
 
 @pytest.mark.asyncio
 async def test_create_horario(client: AsyncClient, mock_horario_service):
@@ -41,12 +42,13 @@ async def test_create_horario(client: AsyncClient, mock_horario_service):
     mock_resp.name = "Entrenamiento Matutino"
     mock_resp.hora_inicio = time(8, 0)
     mock_resp.hora_fin = time(10, 0)
-    mock_resp.entrenamiento_id = 1 # ID numerico
+    mock_resp.entrenamiento_id = 1 
 
     mock_horario_service.create_horario.return_value = mock_resp
 
     _APP.dependency_overrides[get_horario_service] = lambda: mock_horario_service
-    _APP.dependency_overrides[get_current_user] = override_get_current_entrenador
+    # Override DIRECTO de la dependencia de entrenador
+    _APP.dependency_overrides[get_current_entrenador] = override_get_current_entrenador_dependency
 
     payload = {
         "name": "Entrenamiento Matutino",
@@ -83,7 +85,7 @@ async def test_get_horarios_by_entrenamiento(client: AsyncClient, mock_horario_s
     mock_horario_service.get_horarios_by_entrenamiento.return_value = [h1]
 
     _APP.dependency_overrides[get_horario_service] = lambda: mock_horario_service
-    _APP.dependency_overrides[get_current_user] = override_get_current_entrenador
+    _APP.dependency_overrides[get_current_entrenador] = override_get_current_entrenador_dependency
 
     entrenamiento_id = 1
     response = await client.get(f"/api/v1/entrenador/horarios/entrenamiento/{entrenamiento_id}")
@@ -106,7 +108,7 @@ async def test_delete_horario(client: AsyncClient, mock_horario_service):
     mock_horario_service.delete_horario.return_value = True
 
     _APP.dependency_overrides[get_horario_service] = lambda: mock_horario_service
-    _APP.dependency_overrides[get_current_user] = override_get_current_entrenador
+    _APP.dependency_overrides[get_current_entrenador] = override_get_current_entrenador_dependency
 
     response = await client.delete(f"/api/v1/entrenador/horarios/{h_id}")
     
@@ -114,3 +116,5 @@ async def test_delete_horario(client: AsyncClient, mock_horario_service):
     
     assert response.status_code == 204
     mock_horario_service.delete_horario.assert_called_once()
+
+
