@@ -24,8 +24,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el resto del código fuente
 COPY . .
 
+# Copiar scripts de inicialización y dar permisos
+COPY check_db.py .
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
 # Exponer el puerto
 EXPOSE 8080
 
-# Comando para iniciar la aplicación
+# Usar entrypoint para inicialización (DB check + migraciones)
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Comando por defecto para iniciar la aplicación
 CMD ["uvicorn", "app.main:_APP", "--host", "0.0.0.0", "--port", "8080"]
