@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
 
-const API_URL = `${Settings.API_URL}/api/v1/competencia/tipo-disciplina/tipo-disciplina`;
+const API_URL = `${Settings.API_URL}/api/v1/competencia/tipo-disciplina`;
 
 class TipoDisciplinaRepository {
     async getAll() {

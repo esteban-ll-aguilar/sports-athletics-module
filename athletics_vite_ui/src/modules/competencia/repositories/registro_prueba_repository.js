@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
 
-const API_URL = `${Settings.API_URL}/api/v1/competencia/registro-pruebas/registro-pruebas`;
+const API_URL = `${Settings.API_URL}/api/v1/competencia/registro-pruebas`;
 
 class RegistroPruebaCompetenciaRepository {
 

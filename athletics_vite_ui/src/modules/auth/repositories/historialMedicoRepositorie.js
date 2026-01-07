@@ -18,7 +18,7 @@ class HistorialMedicoRepository {
     async createHistorial(data) {
         try {
             const response = await axios.post(
-                `${API_URL}/atleta/historial-medico/historial-medico/`,
+                `${API_URL}/atleta/historial-medico/`,
                 data,
                 { headers: this.getAuthHeaders() }
             );
@@ -32,7 +32,7 @@ class HistorialMedicoRepository {
     async getAllHistoriales() {
         try {
             const response = await axios.get(
-                `${API_URL}/atleta/historial-medico/historial-medico/`,
+                `${API_URL}/atleta/historial-medico/`,
                 { headers: this.getAuthHeaders() }
             );
             return response.data;
@@ -45,7 +45,7 @@ class HistorialMedicoRepository {
     async getMyHistorial() {
         try {
             const response = await axios.get(
-                `${API_URL}/atleta/historial-medico/historial-medico/me`,
+                `${API_URL}/atleta/historial-medico/me`,
                 { headers: this.getAuthHeaders() }
             );
             return response.data;
@@ -58,7 +58,7 @@ class HistorialMedicoRepository {
     async getHistorialByExternalId(externalId) {
         try {
             const response = await axios.get(
-                `${API_URL}/atleta/historial-medico/historial-medico/${externalId}`,
+                `${API_URL}/atleta/historial-medico/${externalId}`,
                 { headers: this.getAuthHeaders() }
             );
             return response.data;
@@ -71,7 +71,7 @@ class HistorialMedicoRepository {
     async updateHistorial(externalId, data) {
         try {
             const response = await axios.put(
-                `${API_URL}/atleta/historial-medico/historial-medico/${externalId}`,
+                `${API_URL}/atleta/historial-medico/${externalId}`,
                 data,
                 { headers: this.getAuthHeaders() }
             );

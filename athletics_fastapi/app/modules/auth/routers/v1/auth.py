@@ -26,7 +26,7 @@ limiter = Limiter(key_func=get_remote_address)
 auth_router_v1 = APIRouter()
 
 @auth_router_v1.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-@limiter.limit("3/hour")  # Limitar a 3 registros por hora por IP
+@limiter.limit("10/minute")  # Limitar a 10 registros por minuto por IP
 async def register(
     request: Request,  # Necesario para el limiter
     data: UserCreate,

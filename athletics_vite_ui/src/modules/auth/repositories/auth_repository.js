@@ -11,7 +11,7 @@ class AuthRepository {
             formData.append('username', email);
             formData.append('password', password);
 
-            const response = await axios.post(`${API_URL}/admin/login`, formData, {
+            const response = await axios.post(`${API_URL}/auth/login`, formData, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
@@ -24,7 +24,7 @@ class AuthRepository {
 
     async register(userData) {
         try {
-            const response = await axios.post(`${API_URL}/admin/register`, userData, {
+            const response = await axios.post(`${API_URL}/auth/register`, userData, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -37,7 +37,7 @@ class AuthRepository {
 
     async verifyEmail(email, code) {
         try {
-            const response = await axios.post(`${API_URL}/admin/email/verify`, { email, code }, {
+            const response = await axios.post(`${API_URL}/auth/email/verify`, { email, code }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -50,7 +50,7 @@ class AuthRepository {
 
     async resendVerification(email) {
         try {
-            const response = await axios.post(`${API_URL}/admin/email/resend-verification`, { email }, {
+            const response = await axios.post(`${API_URL}/auth/email/resend-verification`, { email }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -64,7 +64,7 @@ class AuthRepository {
     async getProfile() {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}/admin/users/user`, {
+            const response = await axios.get(`${API_URL}/auth/users/user`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -78,7 +78,7 @@ class AuthRepository {
     async updateProfile(userData) {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/admin/users/user`, userData, {
+            const response = await axios.put(`${API_URL}/auth/users/user`, userData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -91,10 +91,10 @@ class AuthRepository {
     }
 
     //  Funcion para actualizar el rol de un usuario por un administrador
-    async updateRole (userId, roleData) {
+    async updateRole(userId, roleData) {
         try {
-            const token = localStorage.getItem('access_token'); 
-            const response = await axios.put(`${API_URL}/admin/users/${userId}/role`, roleData, {
+            const token = localStorage.getItem('access_token');
+            const response = await axios.put(`${API_URL}/auth/users/${userId}/role`, roleData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -103,15 +103,15 @@ class AuthRepository {
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
-        }   
+        }
     }
 
 
     // Funcion para que un administrador pueda actualizar los datos de un usuario sin el rol
     async updateUser(userId, userData) {
         try {
-            const token = localStorage.getItem('access_token'); 
-            const response = await axios.put(`${API_URL}/admin/users/${userId}`, userData, {
+            const token = localStorage.getItem('access_token');
+            const response = await axios.put(`${API_URL}/auth/users/${userId}`, userData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -120,10 +120,10 @@ class AuthRepository {
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
-        }   
+        }
     }
 
-   
+
 
 
 }

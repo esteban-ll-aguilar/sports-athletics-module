@@ -10,7 +10,7 @@ from app.core.logging.logger import logger
 from pydantic import BaseModel
 
 
-admin_router = APIRouter(prefix="/admin")
+admin_router = APIRouter()
 
 
 class RotationInfoResponse(BaseModel):
