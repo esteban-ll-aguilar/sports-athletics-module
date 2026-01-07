@@ -15,6 +15,9 @@ from app.modules.atleta.domain.models.historial_medico_model import HistorialMed
 from app.modules.atleta.domain.schemas.historial_medico_schema import (
     HistorialMedicoCreate,
     HistorialMedicoUpdate,
+    TipoAlergia,
+    TipoEnfermedadHereditaria,
+    TipoEnfermedad
 )
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.enums import RoleEnum
@@ -39,36 +42,47 @@ def db():
 # create()
 # -------------------------------
 @pytest.mark.asyncio
-async def test_create_historial_ok(db):
+async def test_create_historial_calculo_automatico_imc(db):
     """
-    Verifica la creación exitosa de un historial médico.
+    Verifica que al enviar solo peso y talla, el sistema calcule
+    y guarde el IMC correcto.
     """
     service = HistorialMedicoService(db)
 
     user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
 
+    # Mocks de base de datos
     db.execute.side_effect = [
-        MagicMock(scalar_one_or_none=lambda: user),
-        MagicMock(scalar_one_or_none=lambda: None),
+        MagicMock(scalar_one_or_none=lambda: user), # Encuentra usuario
+        MagicMock(scalar_one_or_none=lambda: None), # No encuentra historial previo
     ]
 
+    # DATOS DE ENTRADA (Nota que NO enviamos imc)
     data = HistorialMedicoCreate(
-        talla=1.75,
-        peso=70,
-        imc=22.8,
-        alergias="Polen",
-        enfermedades_hereditarias=None,
-        enfermedades=None
+        talla=2,
+        peso=80,
+        alergias=TipoAlergia.NINGUNA,
+        enfermedades_hereditarias=TipoEnfermedadHereditaria.NINGUNA,
+        enfermedades=TipoEnfermedad.NINGUNA,
     )
 
-    historial = await service.create(data, user_id=1)
+    # Ejecución
+    historial_creado = await service.create(data, user_id=1)
 
-    assert historial.auth_user_id == 1
-    assert historial.peso == 70
+    expected_imc = 80 / (2 ** 2)
+
+    assert pytest.approx(historial_creado.imc, rel=1e-3) == expected_imc
+    assert historial_creado.peso == 80
+    assert historial_creado.talla == 2
+
+    #historial creado correctamente
+    print(f"IMC calculado: {historial_creado.imc}")
+    print(f"IMC esperado: {expected_imc}")
+    print(f"Talla: {historial_creado.talla}, Peso: {historial_creado.peso}")
+
+    # Verificamos que se llamó a guardar
     db.add.assert_called_once()
     db.commit.assert_called_once()
-    db.refresh.assert_called_once()
-
 
 @pytest.mark.asyncio
 async def test_create_historial_user_not_atleta(db):

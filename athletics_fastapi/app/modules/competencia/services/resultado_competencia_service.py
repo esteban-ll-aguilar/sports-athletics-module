@@ -1,4 +1,5 @@
 from uuid import UUID
+from enum import Enum
 from fastapi import HTTPException, status
 from datetime import date
 from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
@@ -11,6 +12,10 @@ from app.modules.competencia.repositories.competencia_repository import Competen
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 
+class UnidadMedida(str, Enum):
+    SEGUNDOS = "SEGUNDOS"
+    METROS = "METROS"
+    PUNTOS = "PUNTOS"
 
 class ResultadoCompetenciaService:
     """Servicio para manejar la lógica de negocio de Resultado Competencia usando external_id."""
