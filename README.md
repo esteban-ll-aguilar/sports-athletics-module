@@ -2,6 +2,9 @@
 
 Este proyecto es una plataforma para la gestión de deportes y atletismo, construida con **FastAPI** (Backend) y **React/Vite** (Frontend).
 
+Al Ejecutar todo el script ir a localhost:8080 para ver la documentacion de la API.
+
+
 ## 📋 Prerrequisitos
 
 Para ejecutar este proyecto, asegúrate de tener instalado:
