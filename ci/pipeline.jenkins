@@ -1,0 +1,85 @@
+pipeline {
+    agent any
+
+    environment {
+        SUPERUSER_PASSWORD = 'xxxxxxx'
+        APP_DIR = 'athletics_fastapi'
+    }
+    
+    parameters { 
+        string(name: 'EMAIL_HOST_USER', defaultValue: 'create.send.mails@gmail.com', description: 'Correo Electronico a enviar') 
+        string(name: 'EMAIL_HOST_PASSWORD', defaultValue: 'teor olgp ntty ssxu', description: 'Contrasenia del correo') 
+        string(name: 'USERS_API_EMAIL', defaultValue: 'admin@admin.com', description: 'API Key para la aplicación') 
+        string(name: 'USERS_API_PASSWORD', defaultValue: '12345678', description: 'API Key para la aplicación') 
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'auxiliar',
+                    url: 'https://github.com/esteban-ll-aguilar/sports-athletics-module'
+            }
+        }
+        
+
+        // stage('Change Branch') {
+        //     steps {
+        //         // Cambia a otra rama después de clonar
+        //         sh 'git checkout auxiliar'
+        //     }
+        // }
+        stage('Copy variables') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh '''
+                    cp .env.sample .env
+                    '''
+                }
+            }
+        }
+        stage('Set Environment Variables') { 
+            steps { 
+                script { 
+                    // Puedes cargar parámetros como variables de entorno 
+                    env.EMAIL_HOST_USER =     params.EMAIL_HOST_USER 
+                    env.EMAIL_HOST_PASSWORD = params.EMAIL_HOST_PASSWORD 
+                    env.USERS_API_EMAIL =     params.USERS_API_EMAIL 
+                    env.USERS_API_PASSWORD =  params.USERS_API_PASSWORD 
+                } 
+            } 
+        }
+        // CAMBIAR A PYTHON3 dependiendo de la version de python que se use python3.12 etc
+        stage('Create an Run Enviroment') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh '''
+                    python3 -m venv venv;
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+                    '''
+                }
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh '''
+                    . venv/bin/activate
+                    pytest tests -v
+                    '''
+                }
+            }
+        }
+
+        stage('Build and Deploy') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh '''
+                    echo $SUPERUSER_PASSWORD | su -c "docker-compose up --build -d"
+                    '''
+                }
+            }
+        }
+    }
+}
