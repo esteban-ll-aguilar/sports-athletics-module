@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import registroPruebaCompetenciaService 
-    from "../../services/registro_prueba_competencia_service";
+    from "../../services/registro_prueba_service";
 import pruebaService from "../../services/prueba_service";
 import RegistroPruebaCompetenciaModal 
-    from "../../components/modals/RegistroPruebaCompetenciaModal";
+    from "../../widgets/RegistroPruebaModal";
 
 const RegistroPruebaCompetenciaPage = () => {
     const [registros, setRegistros] = useState([]);

@@ -51,12 +51,16 @@ async def test_create_resultado_ok():
     )
 
     data = ResultadoCompetenciaCreate(
+        # IDs externos (UUIDs)
         competencia_id=uuid4(),
         atleta_id=uuid4(),
         prueba_id=uuid4(),
+        
+
+        # Datos del resultado
         resultado=10.5,
         unidad_medida="SEGUNDOS",
-        posicion_final="1",      # ✅ STRING (CORRECCIÓN)
+        posicion_final="1",    
         puesto_obtenido=1,
         observaciones="Buen resultado",
         estado=True,

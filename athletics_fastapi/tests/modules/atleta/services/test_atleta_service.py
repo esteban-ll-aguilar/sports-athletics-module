@@ -1,7 +1,7 @@
-"""
-Pruebas Unitarias para AtletaService.
-Verifica la lógica de negocio para la gestión de atletas.
-"""
+
+#ruebas Unitarias para AtletaService.
+#erifica la lógica de negocio para la gestión de atletas.
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import date

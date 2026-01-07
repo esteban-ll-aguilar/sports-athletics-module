@@ -18,7 +18,7 @@ class HistorialMedicoService:
         self.db = db
 
     async def create(self, data: HistorialMedicoCreate, user_id: int) -> HistorialMedico:
-
+    
         result = await self.db.execute(
             select(AuthUserModel).where(
                 AuthUserModel.id == user_id,
@@ -44,10 +44,11 @@ class HistorialMedicoService:
                 detail="El usuario ya tiene historial médico"
             )
 
+
         historial = HistorialMedico(
             talla=data.talla,
             peso=data.peso,
-            imc=data.imc,
+            imc= data.peso / (data.talla ** 2),
             alergias=data.alergias,
             enfermedades_hereditarias=data.enfermedades_hereditarias,
             enfermedades=data.enfermedades,
