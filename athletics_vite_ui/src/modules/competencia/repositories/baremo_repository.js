@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
 
-const API_URL = `${Settings.API_URL}/api/v1/competencia/baremos/baremos`;
+const API_URL = `${Settings.API_URL}/api/v1/competencia/baremos`;
 
 class BaremoRepository {
     // GET /api/v1/competencia/baremos/baremos/

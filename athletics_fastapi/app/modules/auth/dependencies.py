@@ -1,3 +1,14 @@
+"""
+
+Dependencias para el módulo de administración
+Se importan las dependencias necesarias para los servicios de usuario administrador
+
+"""
+
+from fastapi import Depends
+from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
+from app.modules.auth.services.admin_user_service import AdminUserService
+
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.cache.redis import get_redis
@@ -6,17 +17,23 @@ from app.core.db.database import get_session
 from app.core.jwt.jwt import JWTManager, PasswordHasher
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
-from app.modules.admin.services.auth_email_service import AuthEmailService
-from app.modules.admin.services.password_reset_service import PasswordResetService
-from app.modules.admin.services.email_verification_service import EmailVerificationService
-from app.modules.admin.services.two_factor_service import TwoFactorService
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.core.jwt.jwt import get_current_user
-# from app.modules.external.services import ExternalUsersApiService
-# from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
+from app.modules.auth.services.auth_email_service import AuthEmailService
+from app.modules.auth.services.password_reset_service import PasswordResetService
+from app.modules.auth.services.email_verification_service import EmailVerificationService
+from app.modules.auth.services.two_factor_service import TwoFactorService
+
 
 async def get_users_repo(session: AsyncSession = Depends(get_session)) -> AuthUsersRepository:
     return AuthUsersRepository(session)
+
+# Dependencia para obtener el servicio de usuario administrador
+def get_admin_user_service(
+    users_repo: AuthUsersRepository = Depends(get_users_repo) 
+) -> AdminUserService:
+    return AdminUserService(users_repo)
+
 
 async def get_sessions_repo(session: AsyncSession = Depends(get_session)) -> SessionsRepository:
     return SessionsRepository(session)
@@ -49,6 +66,7 @@ async def set_password_reset_code(email: str, code: str, ttl_seconds: int = 600)
     """
     Guarda el código de reseteo en Redis con TTL. Clave: pwd_reset:{email_lower}
     """
+
     r = get_redis()
     key = f"pwd_reset:{email.strip().lower()}"
     await r.setex(key, ttl_seconds, code)
@@ -73,3 +91,6 @@ async def get_current_admin_user(current_user = Depends(get_current_user)):
             detail="No tienes permisos de administrador"
         )
     return current_user
+
+
+

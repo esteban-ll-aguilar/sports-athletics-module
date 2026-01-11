@@ -22,7 +22,7 @@ sys.modules["app.core.db.sync_session"] = mock_sync_session
 # AHORA SÍ SE PUEDE IMPORTAR EL SERVICE SIN EXPLOTAR SETTINGS
 # -------------------------------------------------------------------
 
-from app.modules.admin.services.export_user_data_service import (
+from app.modules.auth.services.export_user_data_service import (
     export_users_to_pdf,
 )
 
@@ -46,7 +46,7 @@ def test_export_users_to_pdf_ok():
     mock_canvas = MagicMock()
 
     with patch(
-        "app.modules.admin.services.export_user_data_service.canvas.Canvas",
+        "app.modules.auth.services.export_user_data_service.canvas.Canvas",
         return_value=mock_canvas,
     ):
         export_users_to_pdf("test.pdf")

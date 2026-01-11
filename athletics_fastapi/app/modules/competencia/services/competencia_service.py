@@ -56,3 +56,7 @@ class CompetenciaService:
 
     async def count(self) -> int:
         return await self.repo.count()
+
+    async def delete(self, external_id: UUID) -> None:
+        competencia = await self.get_by_external_id(external_id)
+        await self.repo.delete(competencia)

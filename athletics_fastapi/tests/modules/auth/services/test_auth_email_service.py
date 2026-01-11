@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 
-from app.modules.admin.services.auth_email_service import AuthEmailService
+from app.modules.auth.services.auth_email_service import AuthEmailService
 
 
 # -----------------------------------

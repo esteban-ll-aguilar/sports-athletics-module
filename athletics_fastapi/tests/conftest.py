@@ -1,6 +1,9 @@
 import pytest
 import pytest_asyncio
+<<<<<<< HEAD
 import asyncio
+=======
+>>>>>>> 8e34e0afa0d691e5ab8656e07bab33c110cdb74f
 import sys
 import os
 from typing import AsyncGenerator
@@ -8,6 +11,7 @@ from httpx import AsyncClient, ASGITransport
 from app.main import _APP
 from app.core.db.database import _db
 
+<<<<<<< HEAD
 # Asegurar imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -20,6 +24,10 @@ def event_loop():
 
 # ✅ CLIENTE ASYNC CORRECTO
 @pytest_asyncio.fixture(scope="function")
+=======
+# Fixture para el cliente HTTP asincrono
+@pytest_asyncio.fixture(loop_scope="function", scope="function")
+>>>>>>> 8e34e0afa0d691e5ab8656e07bab33c110cdb74f
 async def client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         transport=ASGITransport(app=_APP),
@@ -27,9 +35,23 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
     ) as c:
         yield c
 
+<<<<<<< HEAD
 # DB session
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
     session_factory = _db.get_session_factory()
     async with session_factory() as session:
         yield session
+=======
+# Fixture para la sesion de base de datos
+@pytest_asyncio.fixture(loop_scope="function", scope="function")
+async def db_session():
+    """
+    Proporciona una sesión de base de datos para cada test (función).
+    Permite transacciones aisladas si se habilita el rollback.
+    """
+    session_factory = _db.get_session_factory()
+    async with session_factory() as session:
+        yield session
+
+>>>>>>> 8e34e0afa0d691e5ab8656e07bab33c110cdb74f

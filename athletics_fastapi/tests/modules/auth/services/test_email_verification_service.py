@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from app.modules.admin.services.email_verification_service import EmailVerificationService
+from app.modules.auth.services.email_verification_service import EmailVerificationService
 
 
 # ---------------------------------

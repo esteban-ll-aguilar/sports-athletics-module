@@ -15,19 +15,17 @@ import {
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
 import { getUserRole, getUserEmail, getUserName } from '../../../../auth/utils/roleUtils';
-import rolePermissions from '../const/rolePermissions';
+import rolePermissions from '../../../../../core/router/const/rolePermissions';
 
-const Sidebar = () => {
-    const [isOpen, setIsOpen] = useState(true);
+const Sidebar = ({ isOpen, toggleSidebar }) => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
 
-    const toggleSidebar = () => setIsOpen(!isOpen);
     const toggleMobileSidebar = () => setIsMobileOpen(!isMobileOpen);
 
-    const handleLogout = () => {
-        authService.logout();
+    const handleLogout = async () => {
+        await authService.logout();
         navigate('/login');
     };
 
@@ -127,9 +125,9 @@ const Sidebar = () => {
                         {isOpen && <span className="ml-3">Perfil de usuario</span>}
                     </Link>
 
-                    
 
-                    
+
+
                 </nav>
 
                 {/* User Section & Logout */}

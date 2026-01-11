@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import HTTPException
 
-from app.modules.admin.services.admin_user_service import AdminUserService
+from app.modules.auth.services.admin_user_service import AdminUserService
 
 from app.modules.auth.domain.enums.role_enum import RoleEnum
-from app.modules.admin.domain.schemas.schemas_auth import AdminUserUpdateRequest
+from app.modules.auth.domain.schemas.schemas_auth import AdminUserUpdateRequest
 
 
 # ---------------------------------

@@ -15,35 +15,35 @@ api_competencia_router_v1 = APIRouter(prefix="/competencia")
 api_competencia_router_v1.include_router(
     competencia_router,
     prefix="/competencias",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencias"]
 )
 
 api_competencia_router_v1.include_router(
     resultado_competencia_router,
     prefix="/resultados",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencia - Resultados"]
 )
 
 api_competencia_router_v1.include_router(
     baremo_router,
     prefix="/baremos",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencia - Baremos"]
 )
 
 api_competencia_router_v1.include_router(
     tipo_disciplina_router,
     prefix="/tipo-disciplina",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencia - TipoDisciplina"]
 )
 
 api_competencia_router_v1.include_router(
     prueba_router,
     prefix="/pruebas",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencia - Pruebas"]
 )
 
 api_competencia_router_v1.include_router(
     registro_prueba_competencia_router,
     prefix="/registro-pruebas",
-    tags=[APP_TAGS_V1.V1_COMPETENCIA.value]
+    tags=["Competencia - Registro Prueba Competencia"]
 )

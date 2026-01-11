@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo
 from app.main import _APP
-from app.modules.admin.domain.schemas import UserRead
+from app.modules.auth.domain.schemas import UserRead
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 from datetime import datetime

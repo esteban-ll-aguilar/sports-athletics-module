@@ -9,10 +9,10 @@ if __name__ == '__main__':
     from app.core.logging.logger import logger
     logger.info("Starting application...")
     logger.info(f"Listening on http://{_SETTINGS.application_host}:{_SETTINGS.application_port}")
-    logger.info("Application started successfully.")
     
     app_import = "app.main:_APP"
     try:
+        logger.info("Application started successfully.")
         uvicorn.run(
             app_import, 
             host=_SETTINGS.application_host, 
@@ -28,3 +28,5 @@ if __name__ == '__main__':
             port=_SETTINGS.application_port, 
             reload=False
         )
+    
+    

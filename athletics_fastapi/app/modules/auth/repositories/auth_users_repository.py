@@ -17,6 +17,11 @@ class AuthUsersRepository:
     async def get_by_email(self, email: str) -> AuthUserModel | None:
         res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.email == email))
         return res.scalar_one_or_none()
+    
+    async def get_by_username(self, username: str) -> AuthUserModel | None:
+        """Obtiene un usuario por su nombre de usuario."""
+        res = await self.session.execute(select(AuthUserModel).where(AuthUserModel.username == username))
+        return res.scalar_one_or_none()
 
     async def get_all(self, skip: int = 0, limit: int = 20) -> list[AuthUserModel]:
         res = await self.session.execute(select(AuthUserModel).offset(skip).limit(limit))
@@ -46,34 +51,45 @@ class AuthUsersRepository:
         """Crea un nuevo usuario. Por defecto inactivo hasta verificar email."""
         service = await get_external_users_service(self.session)
 
-        # Sincronización con sistema externo
-        user_search = await service.search_user_by_dni(user_data.identificacion)
-        if user_search.status != 200:
-            external_user = await service.create_user(
-                user=UserExternalCreateRequest(
-                    identification=user_data.identificacion,
-                    first_name=user_data.first_name,
-                    last_name=user_data.last_name,
-                    type_identification=user_data.tipo_identificacion,
-                    type_stament=user_data.tipo_estamento,
-                    direction=user_data.direccion,
-                    phono=user_data.phone,
-                    email=user_data.email,
-                    password=user_data.password,
+        try:
+            # Sincronización con sistema externo
+            user_search = await service.search_user_by_dni(user_data.identificacion)
+            if user_search.status != 200:
+                external_user = await service.create_user(
+                    user=UserExternalCreateRequest(
+                        identification=user_data.identificacion,
+                        first_name=user_data.first_name,
+                        last_name=user_data.last_name,
+                        type_identification=user_data.tipo_identificacion,
+                        type_stament=user_data.tipo_estamento,
+                        direction=user_data.direccion,
+                        phono=user_data.phone,
+                        email=user_data.email,
+                        password=user_data.password,
+                        fecha_nacimiento=user_data.fecha_nacimiento,
+                        sexo=user_data.sexo,
+                    )
                 )
-            )
-        else:
-            external_user = await service.update_user(
-                user=UserExternalUpdateRequest(
-                    dni=user_data.identificacion,
-                    first_name=user_data.first_name,
-                    last_name=user_data.last_name,
-                    type_identification=user_data.tipo_identificacion,
-                    type_stament=user_data.tipo_estamento,
-                    direction=user_data.direccion,
-                    phono=user_data.phone,
+            
+            else:
+                external_user = await service.update_user(
+                    user=UserExternalUpdateRequest(
+                        dni=user_data.identificacion,
+                        first_name=user_data.first_name,
+                        last_name=user_data.last_name,
+                        type_identification=user_data.tipo_identificacion,
+                        type_stament=user_data.tipo_estamento,
+                        direction=user_data.direccion,
+                        phono=user_data.phone,
+                    )
                 )
-            )
+        except Exception as e:
+            # En entorno local o si falla la API externa, permitimos la creación local
+            # Logueamos el error pero no detenemos el flujo
+            from app.core.logging.logger import logger
+            logger.error(f"Error connecting to external API: {e}") 
+            # Podríamos setear un flag o external_id dummy si fuera necesario, 
+            # pero el modelo permite que external_id sea nulo o generado (si es UUID default).
 
         # Convertir fecha_nacimiento a date si viene como string
         fecha_nac: Optional[date] = None
@@ -85,13 +101,22 @@ class AuthUsersRepository:
 
         user = AuthUserModel(
             hashed_password=password_hash,
-        **user_data.model_dump(exclude={"password", "fecha_nacimiento", "sexo"}),
+            **user_data.model_dump(exclude={"password", "fecha_nacimiento", "sexo"}),
             fecha_nacimiento=fecha_nac,
             sexo=user_data.sexo
         )
 
         self.session.add(user)
         await self.session.flush()
+        
+        # Auto-create role specific entries
+        from app.modules.auth.domain.enums import RoleEnum
+        if user.role == RoleEnum.REPRESENTANTE:
+             from app.modules.representante.domain.models.representante_model import Representante
+             new_representante = Representante(user_id=user.id)
+             self.session.add(new_representante)
+             await self.session.flush()
+             
         return user
 
     async def activate_user(self, email: str) -> bool:
@@ -107,14 +132,20 @@ class AuthUsersRepository:
         """Actualiza la contraseña de un usuario por email. Retorna True si se actualizó."""
         user = await self.get_by_email(email)
         service = await get_external_users_service(self.session)
-
         if user:
-            external_user = await service.update_account(
-                user=UserExternalUpdateAccountRequest(
-                    dni=user.identificacion,
-                    password=password
+            try:
+                external_user = await service.update_account(
+                    user=UserExternalUpdateAccountRequest(
+                        dni=user.identificacion,
+                        password=password
+                    )
                 )
-            )
+            except Exception as e:
+                # Log error but verify if we should proceed.
+                # In development/localhost, we might want to proceed even if external fails.
+                print(f"Error updating external account: {e}")
+                # For now, we proceed to update local password
+                
             user.hashed_password = new_password_hash
             await self.session.commit()
             return True

@@ -12,23 +12,23 @@ Descripción:
 """
 # Importaciones de FastAPI y los submódulos de rutas
 from fastapi import APIRouter
-from app.modules.auth.routers.v1.admin.admin_routes import admin_router
-
-
-
+from app.modules.auth.routers.v1.api_router import api_auth_router_v1
 from app.modules.admin.routers.v1.api_router import api_admin_router_v1
 from app.modules.external.routers.v1.api_router import api_external_router_v1
 from app.modules.competencia.routers.v1.api_router import api_competencia_router_v1
 from app.modules.atleta.routers.v1.api_router import api_atleta_router_v1
+from app.modules.representante.routers.v1.api_router import api_representante_router_v1
 from app.modules.auth.routers.v1.api_router import api_auth_router_v1
-
+from app.modules.entrenador.routers.v1.api_router import api_entrenador_router_v1
 # Enrutador principal de la versión 1 de la API
 router_api_v1 = APIRouter(prefix='/api/v1')
 router_api_v1.include_router(api_auth_router_v1)
 router_api_v1.include_router(api_admin_router_v1)
 router_api_v1.include_router(api_external_router_v1)
 router_api_v1.include_router(api_competencia_router_v1)
+router_api_v1.include_router(api_entrenador_router_v1)
 router_api_v1.include_router(api_atleta_router_v1)
+router_api_v1.include_router(api_representante_router_v1)
 
 
 

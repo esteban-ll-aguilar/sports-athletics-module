@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.modules.admin.domain.schemas import (
+from app.modules.auth.domain.schemas import (
     UserCreate, UserRead, TokenPair, RefreshRequest, TwoFactorRequired, 
 )
 from app.modules.auth.dependencies import (
@@ -13,8 +13,8 @@ from app.modules.auth.dependencies import (
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
-from app.modules.admin.services.auth_email_service import AuthEmailService
-from app.modules.admin.services.email_verification_service import EmailVerificationService
+from app.modules.auth.services.auth_email_service import AuthEmailService
+from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
 from typing import Union
 from datetime import datetime, timezone
@@ -26,7 +26,7 @@ limiter = Limiter(key_func=get_remote_address)
 auth_router_v1 = APIRouter()
 
 @auth_router_v1.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-@limiter.limit("3/hour")  # Limitar a 3 registros por hora por IP
+@limiter.limit("10/minute")  # Limitar a 10 registros por minuto por IP
 async def register(
     request: Request,  # Necesario para el limiter
     data: UserCreate,
@@ -42,6 +42,10 @@ async def register(
     if await repo.get_by_email(data.email):
         logger.warning(f"Intento de registro con email duplicado: {data.email}")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email ya registrado")
+    
+    if await repo.get_by_username(data.username):
+        logger.warning(f"Intento de registro con username duplicado: {data.username}")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username ya registrado")
     
     # Crear usuario INACTIVO (is_active=False)
     password_hash = hasher.hash(data.password)

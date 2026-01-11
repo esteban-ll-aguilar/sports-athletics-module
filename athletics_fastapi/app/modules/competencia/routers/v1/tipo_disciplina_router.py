@@ -10,10 +10,7 @@ from ...domain.schemas.tipo_disciplina_schema import (
 from ...services.tipo_disciplina_service import TipoDisciplinaService
 from ...dependencies import get_tipo_disciplina_service, get_current_admin_or_entrenador
 
-router = APIRouter(
-    prefix="/tipo-disciplina",
-    tags=["TipoDisciplina"]
-)
+router = APIRouter()
 
 @router.post(
     "/",

@@ -63,3 +63,19 @@ async def actualizar_competencia(
 
     return await service.update(external_id, data)
 
+    return await service.update(external_id, data)
+
+
+@router.delete("/{external_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar_competencia(
+    external_id: UUID,
+    current_user: AuthUserModel = Depends(get_current_user),
+    service: CompetenciaService = Depends(get_competencia_service),
+):
+    """Eliminar una competencia (solo rol ENTRENADOR)."""
+    if current_user.role != RoleEnum.ENTRENADOR:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los entrenadores pueden eliminar competencias"
+        )
+    await service.delete(external_id)

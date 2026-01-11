@@ -16,10 +16,7 @@ from app.modules.competencia.dependencies import (
     get_registro_prueba_competencia_service
 )
 
-router = APIRouter(
-    prefix="/registro-pruebas",
-    tags=["Registro Prueba Competencia"]
-)
+router = APIRouter()
 
 # ----------------------------------
 # CREATE
