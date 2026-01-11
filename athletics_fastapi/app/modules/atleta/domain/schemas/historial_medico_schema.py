@@ -38,8 +38,6 @@ class TipoEnfermedad(str, Enum):
     OTRA = "Otra"
 
 
-
-
 class HistorialMedicoBase(BaseModel):
     talla: float = Field(..., description="Talla en metros")
     peso: float = Field(..., description="Peso en kg")

@@ -1,104 +1,104 @@
 """
 Módulo de Pruebas para Endpoints de Atleta.
-Se enfoca en funcionalidades específicas del rol Atleta, como el historial médico.
+Pruebas del historial médico del atleta.
 """
 import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
-from datetime import datetime
 
 from app.modules.auth.dependencies import get_current_user
-from app.modules.auth.domain.models import AuthUserModel
-from app.modules.auth.domain.enums import RoleEnum
 
+
+# ======================================================
+# OVERRIDE: USUARIO AUTENTICADO (ATLETA)
+# ======================================================
 async def override_get_current_atleta():
-    """
-    Simula un usuario autenticado con rol de Atleta.
-    """
-    user = MagicMock(spec=AuthUserModel)
-    user.id = uuid4()
-    user.email = "atleta@test.com"
-    user.role = RoleEnum.ATLETA
+    user = MagicMock()
+    user.id = 1
     return user
 
+
+# ======================================================
+# TEST: CREAR HISTORIAL MÉDICO
+# ======================================================
 @pytest.mark.asyncio
 async def test_create_historial_medico(client: AsyncClient):
-    """
-    Prueba la creación del historial médico (/api/v1/atleta/historial-medico/).
-    Verifica que se llame al servicio correctamente y se devuelva el objeto creado.
-    Mockea el servicio `HistorialMedicoService` usando `patch`.
-    """
     from app.main import _APP
-    
-    # Mock del servicio dentro del router
-    with patch("app.modules.atleta.routers.v1.historial_medico_router.HistorialMedicoService") as MockServiceClass:
-        mock_service_instance = MockServiceClass.return_value
-        
-        mock_response = MagicMock()
-        mock_response.external_id = uuid4()
-        mock_response.user_id = uuid4()
-        mock_response.tipo_sangre = "O+"
-        mock_response.alergias = "N/A"
-        # ... otros campos
-        
-        mock_response.talla = 1.75
-        mock_response.peso = 70.0
-        mock_response.imc = 22.8
-        mock_response.id = 1
-        mock_response.auth_user_id = 10
-        mock_response.external_id = uuid4()
-        mock_response.enfermedades = "Ninguna"
-        mock_response.enfermedades_hereditarias = "Ninguna"
-        
-        mock_service_instance.create = AsyncMock(return_value=mock_response)
-        
-        _APP.dependency_overrides[get_current_user] = override_get_current_atleta
-        
-        response = await client.post("/api/v1/atleta/historial-medico/", json={
+
+    with patch(
+        "app.modules.atleta.routers.v1.historial_medico_router.HistorialMedicoService"
+    ) as MockServiceClass:
+
+        mock_service = MockServiceClass.return_value
+
+        # 🔥 RESPUESTA COMO DICT (FastAPI la serializa sin error)
+        mock_service.create = AsyncMock(return_value={
+            "external_id": str(uuid4()),
             "talla": 1.75,
             "peso": 70.0,
-            "imc": 22.8,
+            "imc": 22.86,
             "alergias": "N/A",
             "enfermedades": "Ninguna",
-            "enfermedades_hereditarias": "Ninguna"
+            "enfermedades_hereditarias": "Ninguna",
         })
-        
-        _APP.dependency_overrides = {}
-        
-        assert response.status_code == 201
-        data = response.json()
-        assert data["talla"] == 1.75
 
+        _APP.dependency_overrides[get_current_user] = override_get_current_atleta
+
+        # ❌ NO se envía IMC (el backend lo calcula)
+        response = await client.post(
+            "/api/v1/atleta/historial-medico/",
+            json={
+                "talla": 1.75,
+                "peso": 70.0,
+                "alergias": "N/A",
+                "enfermedades": "Ninguna",
+                "enfermedades_hereditarias": "Ninguna"
+            }
+        )
+
+        _APP.dependency_overrides = {}
+
+        assert response.status_code == 201
+        body = response.json()
+        assert body["talla"] == 1.75
+        assert body["peso"] == 70.0
+        assert body["imc"] > 0
+        assert body["alergias"] == "N/A"
+
+
+# ======================================================
+# TEST: OBTENER MI HISTORIAL MÉDICO
+# ======================================================
 @pytest.mark.asyncio
 async def test_get_my_historial(client: AsyncClient):
-    """
-    Prueba la obtención del historial médico propio (/api/v1/atleta/historial-medico/me).
-    Verifica que el servicio reciba la solicitud para el usuario autenticado.
-    """
     from app.main import _APP
-    
-    with patch("app.modules.atleta.routers.v1.historial_medico_router.HistorialMedicoService") as MockServiceClass:
-        mock_service_instance = MockServiceClass.return_value
-        
-        mock_response = MagicMock()
-        mock_response.id = 1
-        mock_response.external_id = uuid4()
-        mock_response.auth_user_id = 10
-        mock_response.talla = 1.75
-        mock_response.peso = 70.0
-        mock_response.imc = 22.8
-        mock_response.alergias = "A+"
-        mock_response.enfermedades = None
-        mock_response.enfermedades_hereditarias = None
-        
-        mock_service_instance.get_by_user = AsyncMock(return_value=mock_response)
-        
+
+    with patch(
+        "app.modules.atleta.routers.v1.historial_medico_router.HistorialMedicoService"
+    ) as MockServiceClass:
+
+        mock_service = MockServiceClass.return_value
+
+        # 🔥 RESPUESTA COMO DICT
+        mock_service.get_by_user = AsyncMock(return_value={
+            "external_id": str(uuid4()),
+            "talla": 1.75,
+            "peso": 70.0,
+            "imc": 22.86,
+            "alergias": "A+",
+            "enfermedades": None,
+            "enfermedades_hereditarias": None,
+        })
+
         _APP.dependency_overrides[get_current_user] = override_get_current_atleta
-        
+
         response = await client.get("/api/v1/atleta/historial-medico/me")
-        
+
         _APP.dependency_overrides = {}
-        
+
         assert response.status_code == 200
-        assert response.json()["alergias"] == "A+"
+        body = response.json()
+        assert body["alergias"] == "A+"
+        assert body["talla"] == 1.75
+        assert body["peso"] == 70.0
