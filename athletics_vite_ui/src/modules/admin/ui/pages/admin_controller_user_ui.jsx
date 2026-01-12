@@ -18,39 +18,46 @@ const AdminUsersTable = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [roleFilter]);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await adminService.getUsers();
-      setUsers(response.users || []);
+      console.log('🔵 [ADMIN CONTROLLER] Iniciando petición de usuarios con rol:', roleFilter || 'Todos');
+      const response = await adminService.getUsers(1, 20, roleFilter);
+
+      console.log('🔵 [ADMIN CONTROLLER] RESPUESTA RAW:', response);
+
+      const usersData = response.items || response.users || [];
+      setUsers(usersData);
     } catch (err) {
+      console.error('🔴 [ADMIN CONTROLLER] ERROR:', err);
       setError("No se pudo cargar la lista de usuarios.");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🎯 Usuarios filtrados
+  // 🎯 Usuarios filtrados (solo búsqueda y estado en frontend, rol en backend)
   const filteredUsers = useMemo(() => {
-    return users.filter((user) => {
+    console.log('🔵 [ADMIN CONTROLLER] Filtrando usuarios en frontend. Total:', users.length);
+    const filtered = users.filter((user) => {
       const matchesSearch =
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesRole = roleFilter ? user.role === roleFilter : true;
+        user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === ""
           ? true
           : statusFilter === "activo"
-          ? user.is_active
-          : !user.is_active;
+            ? user.is_active
+            : !user.is_active;
 
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [users, searchTerm, roleFilter, statusFilter]);
+    console.log('🔵 [ADMIN CONTROLLER] Usuarios después del filtro:', filtered.length);
+    return filtered;
+  }, [users, searchTerm, statusFilter]);
 
   // 📄 Exportar PDF (Vite compatible)
   const exportPDF = () => {
@@ -98,7 +105,7 @@ const AdminUsersTable = () => {
 
   return (
     <>
-      <div className="ml-0 md:ml-64 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
 
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -197,11 +204,10 @@ const AdminUsersTable = () => {
 
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                      user.is_active
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${user.is_active
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                      }`}
                   >
                     {user.is_active ? "Activo" : "Inactivo"}
                   </span>

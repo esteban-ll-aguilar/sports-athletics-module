@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import resultadoCompetenciaService from "../../services/resultado_competencia_service";
 import competenciaService from "../../services/competencia_service";
+import AtletaService from "../../../atleta/services/AtletaService";
+import PruebaRepository from "../../services/prueba_service";
 import ResultadoModal from "../widgets/ResultadoModal";
 
 const ResultadosPage = () => {
@@ -39,9 +41,8 @@ const ResultadosPage = () => {
   // TODO: Implementar servicios de atletas y pruebas
   const fetchAtletas = async () => {
     try {
-      // const data = await atletaService.getAll();
-      // setAtletas(Array.isArray(data) ? data : data.data || []);
-      setAtletas([]); // Placeholder
+      const response = await AtletaService.getAthletes(1, 200);
+      setAtletas(response.items || []);
     } catch (err) {
       console.error("Error al obtener atletas:", err);
     }
@@ -49,9 +50,8 @@ const ResultadosPage = () => {
 
   const fetchPruebas = async () => {
     try {
-      // const data = await pruebaService.getAll();
-      // setPruebas(Array.isArray(data) ? data : data.data || []);
-      setPruebas([]); // Placeholder
+      const data = await PruebaRepository.getAll();
+      setPruebas(data || []);
     } catch (err) {
       console.error("Error al obtener pruebas:", err);
     }
@@ -101,14 +101,14 @@ const ResultadosPage = () => {
 
   // Obtener nombre del atleta
   const getAtletaNombre = (atletaId) => {
-    const atleta = atletas.find(a => a.id === atletaId);
-    return atleta ? `${atleta.nombres} ${atleta.apellidos}` : `Atleta ID: ${atletaId}`;
+    const atleta = atletas.find(a => a.id === atletaId || a.external_id === atletaId);
+    return atleta ? `${atleta.first_name || atleta.username} ${atleta.last_name || ""}` : `Atleta: ${atletaId}`;
   };
 
   // Obtener nombre de la prueba
   const getPruebaNombre = (pruebaId) => {
-    const prueba = pruebas.find(p => p.id === pruebaId);
-    return prueba ? prueba.nombre : `Prueba ID: ${pruebaId}`;
+    const prueba = pruebas.find(p => p.id === pruebaId || p.external_id === pruebaId);
+    return prueba ? `${prueba.siglas} - ${prueba.tipo_prueba}` : `Prueba: ${pruebaId}`;
   };
 
   // Obtener emoji según posición
@@ -130,12 +130,12 @@ const ResultadosPage = () => {
 
   // Filtrar resultados
   const filteredResultados = resultados.filter(res => {
-    const matchSearch = 
+    const matchSearch =
       getAtletaNombre(res.atleta_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
       getCompetenciaNombre(res.competencia_id).toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchCompetencia = !filterCompetencia || res.competencia_id === parseInt(filterCompetencia);
-    
+
     return matchSearch && matchCompetencia;
   });
 
@@ -144,8 +144,8 @@ const ResultadosPage = () => {
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
-        <Link 
-          to="/dashboard/competencias" 
+        <Link
+          to="/dashboard/competencias"
           className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
         >
           <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
@@ -271,8 +271,8 @@ const ResultadosPage = () => {
                           leaderboard
                         </span>
                         <span className="text-gray-400 font-semibold">
-                          {searchTerm || filterCompetencia 
-                            ? 'No se encontraron resultados' 
+                          {searchTerm || filterCompetencia
+                            ? 'No se encontraron resultados'
                             : 'No hay resultados registrados'}
                         </span>
                       </div>

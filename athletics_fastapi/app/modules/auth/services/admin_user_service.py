@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.domain.enums.role_enum import RoleEnum
@@ -17,17 +18,9 @@ class AdminUserService:
         await self.users_repo.session.commit()
         return user
 
-    async def get_all_users(self, page: int = 1, size: int = 20):
+    async def get_all_users(self, page: int = 1, size: int = 20, role: Optional[RoleEnum] = None):
         # skip calculation is handled inside get_paginated by page/size
-        users, total = await self.users_repo.get_paginated(page=page, size=size)
-        # Note: repo returns (users, total) tuple now based on my fix above? 
-        # Wait, the original get_paginated returned (users, total).
-        # AdminUserService expected get_all to return just users?
-        # Line 23 calls count().
-        # Let's see original AdminUserService.
-        # users = await self.users_repo.get_all(...)
-        # total = await self.users_repo.count()
-        # My updated get_paginated returns (users, total).
+        users, total = await self.users_repo.get_paginated(page=page, size=size, role=role)
         
         return {
             "items": users,

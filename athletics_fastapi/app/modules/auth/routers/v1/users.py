@@ -1,17 +1,24 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, status, HTTPException
 from uuid import UUID
+import math
 
 from app.modules.auth.domain.schemas import (
     PaginatedUsers,
+    PaginatedUsersWithRelations,
     UserCreateSchema,
     UserUpdateSchema,
-    UserResponseSchema
+    UserResponseSchema,
+    UserWithRelationsSchema
 )
 
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse
-from app.modules.auth.domain.models import AuthUserModel
+from app.modules.auth.domain.models import AuthUserModel, UserModel
+from app.modules.auth.domain.enums.role_enum import RoleEnum
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 
 users_router_v1 = APIRouter()
@@ -46,7 +53,7 @@ async def create_user(
 # ======================================================
 
 @users_router_v1.get(
-    "/users",
+    "/list",
     response_model=PaginatedUsers,
     status_code=status.HTTP_200_OK,
     summary="Lista paginada de usuarios"
@@ -54,19 +61,25 @@ async def create_user(
 async def list_users(
     page: int = 1,
     page_size: int = 10,
+    role: Optional[RoleEnum] = None,
     repo: AuthUsersRepository = Depends(get_users_repo),
+    _: AuthUserModel = Depends(get_current_user)
 ):
-    total, users = await repo.get_users_paginated(
+    users, total = await repo.get_paginated(
         page=page,
-        page_size=page_size
+        size=page_size,
+        role=role
     )
 
-    return PaginatedUsers(
+    pages = math.ceil(total / page_size)
+
+    return PaginatedUsersWithRelations(
         total=total,
         page=page,
-        page_size=page_size,
+        size=page_size,
+        pages=pages,
         items=[
-            UserResponseSchema.model_validate(
+            UserWithRelationsSchema.model_validate(
                 user,
                 from_attributes=True
             )
@@ -111,18 +124,33 @@ async def get_user_by_external_id(
 # ======================================================
 
 @users_router_v1.put(
-    "/users/{external_id}",
+    "/{user_id}",
     response_model=BaseResponse,
     status_code=status.HTTP_200_OK,
-    summary="Actualizar usuario por external_id"
+    summary="Actualizar usuario por external_id o ID interno"
 )
-async def update_user_by_external_id(
-    external_id: UUID,
+async def update_user_by_id(
+    user_id: str,
     user_data: UserUpdateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
-    _: AuthUserModel = Depends(get_current_user),
+    current_user: AuthUserModel = Depends(get_current_user),
 ):
-    user = await repo.get_by_external_id(external_id)
+    # Intentar buscar por external_id (UUID)
+    user = None
+    try:
+        val_uuid = UUID(user_id)
+        user = await repo.get_by_external_id(val_uuid)
+    except (ValueError, TypeError):
+        pass
+
+    # Si no se encontró por UUID, intentar por ID interno (solo si es numérico)
+    if not user and user_id.isdigit():
+        result = await repo.db.execute(
+            select(UserModel)
+            .where(UserModel.id == int(user_id))
+            .options(selectinload(UserModel.auth))
+        )
+        user = result.scalar_one_or_none()
 
     if not user:
         raise HTTPException(
@@ -130,18 +158,86 @@ async def update_user_by_external_id(
             detail="Usuario no encontrado"
         )
 
-    await repo.update_user(
-        user_id=user.id,
+    from app.core.logging.logger import logger
+    
+    # 🔒 Autorización: El usuario puede editarse a sí mismo, o ser Administrador, o Entrenador editando Atleta
+    is_self = current_user.profile.id == user.id
+    
+    # Usamos .value para asegurar comparación de strings si son Enums
+    current_role = current_user.profile.role.value if hasattr(current_user.profile.role, "value") else current_user.profile.role
+    target_role = user.role.value if hasattr(user.role, "value") else user.role
+    
+    is_admin = (current_role == RoleEnum.ADMINISTRADOR.value)
+    is_coach_editing_athlete = (current_role == RoleEnum.ENTRENADOR.value and target_role == RoleEnum.ATLETA.value)
+    
+    logger.info(f"🔐 [AUTH DEBUG] Update attempt: CurrentUser(id={current_user.profile.id}, role={current_role}) -> TargetUser(id={user.id}, role={target_role})")
+    logger.info(f"🔐 [AUTH DEBUG] Checks: self={is_self}, admin={is_admin}, coach_on_athlete={is_coach_editing_athlete}")
+
+    if not (is_self or is_admin or is_coach_editing_athlete):
+         logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
+         raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para editar este usuario"
+        )
+
+    updated_user = await repo.update(
+        user=user,
         user_data=user_data
     )
 
-    updated_user = await repo.get_by_id(user.id)
+    return BaseResponse(
+        data=UserResponseSchema.model_validate(updated_user).model_dump(),
+        message="Usuario actualizado correctamente",
+        status=status.HTTP_200_OK
+    )
+
+
+# ======================================================
+# GET CURRENT USER (ME)
+# ======================================================
+
+@users_router_v1.get(
+    "/me",
+    response_model=BaseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtener perfil del usuario actual"
+)
+async def get_current_user_profile(
+    current_user: AuthUserModel = Depends(get_current_user),
+):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Perfil de usuario no encontrado"
+        )
 
     return BaseResponse(
         data=UserResponseSchema.model_validate(
-            updated_user,
+            current_user.profile,
             from_attributes=True
         ).model_dump(),
-        message="Usuario actualizado exitosamente",
+        message="Perfil obtenido exitosamente",
+        status=status.HTTP_200_OK
+    )
+
+@users_router_v1.put(
+    "/me",
+    response_model=BaseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar perfil del usuario actual"
+)
+async def update_current_user_profile(
+    user_data: UserUpdateSchema,
+    repo: AuthUsersRepository = Depends(get_users_repo),
+    current_user: AuthUserModel = Depends(get_current_user),
+):
+    if not current_user.profile:
+         raise HTTPException(status_code=404, detail="Perfil no encontrado")
+
+    updated = await repo.update(current_user.profile, user_data)
+    
+    return BaseResponse(
+        data=UserResponseSchema.model_validate(updated, from_attributes=True).model_dump(),
+        message="Perfil actualizado exitosamente",
         status=status.HTTP_200_OK
     )

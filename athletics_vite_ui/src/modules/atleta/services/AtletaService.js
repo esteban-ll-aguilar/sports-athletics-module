@@ -5,6 +5,12 @@ const AtletaService = {
         const response = await ApiClient.get('/atleta/');
         console.log("AtletaService.getAll response:", response);
         return response;
+    },
+
+    getAthletes: async (page = 1, limit = 20) => {
+        const response = await ApiClient.get(`/auth/users/list?page=${page}&size=${limit}&role=ATLETA`);
+        console.log("AtletaService.getAthletes response:", response);
+        return response;
     }
 };
 

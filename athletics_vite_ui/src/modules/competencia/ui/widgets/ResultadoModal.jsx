@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ResultadoCompetencia from "../../domain/models/ResultadoCompetencia";
 import PruebaRepository from "../../services/prueba_service";
+import AtletaService from "../../../atleta/services/AtletaService";
 import AdminService from "../../../admin/services/adminService";
 import resultadoCompetenciaService from "../../services/resultado_competencia_service";
 import Swal from "sweetalert2";
@@ -44,11 +45,11 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     setLoading(true);
 
     Promise.all([
-      AdminService.getUsers(1, 100).catch(() => ({ users: [] })),
+      AtletaService.getAthletes(1, 100).catch(() => ({ items: [] })),
       PruebaRepository.getAll().catch(() => [])
     ])
-      .then(([usersResponse, pruebasResponse]) => {
-        const atletasData = (usersResponse.users || []).filter(u => u.role === "ATLETA");
+      .then(([response, pruebasResponse]) => {
+        const atletasData = response.items || [];
         setAtletas(atletasData);
         setPruebas(pruebasResponse || []);
       })
@@ -69,9 +70,9 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
 
       const inicializado = {
         external_id: editingResultado.external_id,
-        atleta_id: atletaObj?.id ?? "",
+        atleta_id: atletaObj?.external_id ?? "",
         atleta: atletaObj,
-        prueba_id: (pruebaObj?.id ?? pruebaObj?.external_id) ?? "",
+        prueba_id: pruebaObj?.external_id ?? "",
         prueba: pruebaObj,
         competencia_id: competenciaObj?.external_id ?? "",
         competencia: competenciaObj,
@@ -173,15 +174,15 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <select
               value={form.atleta_id}
               onChange={e => {
-                const selected = atletas.find(a => a.id === e.target.value);
-                setForm({ ...form, atleta_id: selected?.id ?? "", atleta: selected ?? null });
+                const selected = atletas.find(a => a.atleta?.external_id === e.target.value);
+                setForm({ ...form, atleta_id: selected?.atleta?.external_id ?? "", atleta: selected ?? null });
               }}
               className="w-full border border-gray-200 rounded-md px-2 py-1"
               required
             >
               <option value="">Seleccione un atleta</option>
               {atletas.map(a => (
-                <option key={a.id} value={a.id}>{a.username} ({a.email})</option>
+                <option key={a.atleta?.external_id} value={a.atleta?.external_id}>{a.first_name || a.username} {a.last_name || ""} ({a.email})</option>
               ))}
             </select>
           </div>
@@ -192,15 +193,15 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <select
               value={form.prueba_id}
               onChange={e => {
-                const selected = pruebas.find(p => (p.id ?? p.external_id) === e.target.value);
-                setForm({ ...form, prueba_id: selected?.id ?? selected?.external_id ?? "", prueba: selected ?? null });
+                const selected = pruebas.find(p => p.external_id === e.target.value);
+                setForm({ ...form, prueba_id: selected?.external_id ?? "", prueba: selected ?? null });
               }}
               className="w-full border border-gray-200 rounded-md px-2 py-1"
               required
             >
               <option value="">Seleccione una prueba</option>
               {pruebas.map(p => (
-                <option key={p.id ?? p.external_id} value={p.id ?? p.external_id}>{p.siglas} - {p.tipo_prueba}</option>
+                <option key={p.external_id} value={p.external_id}>{p.siglas} - {p.tipo_prueba}</option>
               ))}
             </select>
           </div>

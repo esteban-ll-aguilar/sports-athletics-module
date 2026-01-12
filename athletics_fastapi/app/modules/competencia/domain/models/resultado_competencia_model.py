@@ -11,7 +11,7 @@ from enum import Enum as PyEnum
 if TYPE_CHECKING:
     from app.modules.competencia.domain.models.competencia_model import Competencia
     from app.modules.competencia.domain.models.prueba_model import Prueba
-    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+    from app.modules.auth.domain.models.user_model import UserModel
 
 
 class TipoPosicion(str, PyEnum):
@@ -37,9 +37,9 @@ class ResultadoCompetencia(Base):
     
     # FKs
     competencia_id: Mapped[int] = mapped_column(Integer, ForeignKey("competencia.id"), nullable=False)
-    atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("auth_users.id"), nullable=False)  # <-- CORREGIDO
+    atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)  # <-- CORREGIDO
     prueba_id: Mapped[int] = mapped_column(Integer, ForeignKey("prueba.id"), nullable=False)
-    entrenador_id: Mapped[int] = mapped_column(Integer, ForeignKey("auth_users.id"), nullable=False)
+    entrenador_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Datos de resultado
     resultado: Mapped[float] = mapped_column(Float, nullable=False)
@@ -62,6 +62,6 @@ class ResultadoCompetencia(Base):
     
     # Relationships
     competencia: Mapped["Competencia"] = relationship("Competencia", back_populates="resultados")
-    atleta: Mapped["AuthUserModel"] = relationship("AuthUserModel", foreign_keys=[atleta_id])
+    atleta: Mapped["UserModel"] = relationship("UserModel", foreign_keys=[atleta_id])
     prueba: Mapped["Prueba"] = relationship("Prueba")
-    entrenador: Mapped["AuthUserModel"] = relationship("AuthUserModel", foreign_keys=[entrenador_id])
+    entrenador: Mapped["UserModel"] = relationship("UserModel", foreign_keys=[entrenador_id])

@@ -1,12 +1,12 @@
 from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from datetime import datetime
 import uuid
 
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
-# ✅ SOLO SCHEMAS QUE EXISTEN
 from app.modules.auth.domain.schemas.schemas_users import (
     UserCreateSchema,
     UserUpdateSchema,
@@ -170,18 +170,35 @@ class AuthUsersRepository:
         external_repo = ExternalUsersApiRepository(self.db)
         external_service = ExternalUsersApiService(external_repo)
 
-        # Actualizar datos externos
-        await external_service.update_user(
-            user.external_id,
-            UserExternalUpdateRequest(
-                username=user_data.username,
-                first_name=user_data.first_name,
-                last_name=user_data.last_name,
+        # Actualizar datos externos (Opcional, no bloquear si falla el servicio externo)
+        try:
+            from app.modules.external.domain.schemas.users_api_schemas import UserExternalUpdateRequest
+            await external_service.update_user(
+                UserExternalUpdateRequest(
+                    dni=user.identificacion,
+                    first_name=user_data.first_name or user.first_name,
+                    last_name=user_data.last_name or user.last_name,
+                    type_identification=user.tipo_identificacion.value,
+                    type_stament=user.tipo_estamento.value,
+                    direction=user_data.direccion or user.direccion or "N/A",
+                    phono=user_data.phone or user.phone or "N/A"
+                )
             )
-        )
+        except Exception as e:
+            logger.warning(f"⚠️ Error actualizando usuario en servicio externo: {e}")
 
-        for field, value in user_data.model_dump(exclude_unset=True).items():
-            setattr(user, field, value)
+        data_dict = user_data.model_dump(exclude_unset=True)
+        
+        # Manejar campos de AuthUserModel (proxied)
+        if "email" in data_dict:
+            user.auth.email = data_dict.pop("email")
+        if "is_active" in data_dict:
+            user.auth.is_active = data_dict.pop("is_active")
+            
+        # Actualizar UserModel con los campos restantes
+        for field, value in data_dict.items():
+            if hasattr(user, field):
+                setattr(user, field, value)
 
         # Si user_data tuviera email, habría que actualizar user.auth.email, pero
         # UserUpdateSchema parece ser solo de perfil (username, names, phone...).
@@ -238,20 +255,31 @@ class AuthUsersRepository:
         self,
         page: int = 1,
         size: int = 10,
+        role: Optional[RoleEnum] = None,
     ) -> Tuple[List[UserModel], int]:
 
         offset = (page - 1) * size
 
-        total_result = await self.db.execute(
-            select(func.count(UserModel.id))
+        # Query base para contar
+        count_query = select(func.count(UserModel.id))
+        
+        # Query base para datos
+        data_query = select(UserModel).options(
+            selectinload(UserModel.auth),
+            selectinload(UserModel.atleta),
+            selectinload(UserModel.entrenador),
+            selectinload(UserModel.representante)
         )
+
+        if role:
+            count_query = count_query.where(UserModel.role == role)
+            data_query = data_query.where(UserModel.role == role)
+
+        total_result = await self.db.execute(count_query)
         total = total_result.scalar_one()
 
         result = await self.db.execute(
-            select(UserModel)
-            .join(UserModel.auth)
-            .offset(offset)
-            .limit(size)
+            data_query.offset(offset).limit(size)
         )
 
         users = result.scalars().all()

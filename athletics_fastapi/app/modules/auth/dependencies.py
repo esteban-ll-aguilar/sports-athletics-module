@@ -85,11 +85,23 @@ async def delete_password_reset_code(email: str) -> None:
 
 #obteniendo el usuario actual y verificando si es admin
 async def get_current_admin_user(current_user = Depends(get_current_user)):
-    if current_user.role != RoleEnum.ADMINISTRADOR:
+    from app.core.logging.logger import logger
+    logger.info(f"🔍 [AUTH DEBUG] Checking admin permissions for user: {current_user.email}")
+    if not current_user.profile:
+        logger.warning(f"⚠️ [AUTH DEBUG] User {current_user.email} has no profile")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario sin perfil configurado"
+        )
+    
+    logger.info(f"🔍 [AUTH DEBUG] User role: {current_user.profile.role}")
+    if current_user.profile.role != RoleEnum.ADMINISTRADOR:
+        logger.warning(f"⚠️ [AUTH DEBUG] User {current_user.email} is NOT an admin. Role found: {current_user.profile.role}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos de administrador"
         )
+    logger.info(f"✅ [AUTH DEBUG] User {current_user.email} authorized as admin")
     return current_user
 
 

@@ -8,7 +8,7 @@ import datetime
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+    from app.modules.auth.domain.models.user_model import UserModel
     from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
 
 
@@ -24,8 +24,8 @@ class Competencia(Base):
     estado: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
     
     # Relación con el entrenador que registra la competencia
-    entrenador_id: Mapped[int] = mapped_column(Integer, ForeignKey("auth_users.id"), nullable=False)
-    entrenador: Mapped["AuthUserModel"] = relationship("AuthUserModel")
+    entrenador_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    entrenador: Mapped["UserModel"] = relationship("UserModel")
     
     # Timestamps
     fecha_creacion: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.datetime.utcnow)

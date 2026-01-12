@@ -9,6 +9,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from redis.exceptions import RedisError
 
 from app.core.config.enviroment import _SETTINGS
@@ -184,7 +185,9 @@ async def get_current_user(
 
     # ⚠️ user_id se guarda como string → convertir a int
     result = await session.execute(
-        select(AuthUserModel).where(AuthUserModel.id == int(user_id))
+        select(AuthUserModel)
+        .where(AuthUserModel.id == int(user_id))
+        .options(selectinload(AuthUserModel.profile))
     )
     user = result.scalar_one_or_none()
 

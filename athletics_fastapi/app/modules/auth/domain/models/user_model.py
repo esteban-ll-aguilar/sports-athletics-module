@@ -97,3 +97,11 @@ class UserModel(Base):
         uselist=False,
         cascade="all, delete-orphan"
     )
+
+    @property
+    def email(self) -> Optional[str]:
+        return self.auth.email if self.auth else None
+
+    @property
+    def is_active(self) -> bool:
+        return self.auth.is_active if self.auth else False

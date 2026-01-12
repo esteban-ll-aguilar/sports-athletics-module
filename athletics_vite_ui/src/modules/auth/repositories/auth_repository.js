@@ -64,7 +64,7 @@ class AuthRepository {
     async getProfile() {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}/auth/users/user`, {
+            const response = await axios.get(`${API_URL}/auth/users/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -78,7 +78,7 @@ class AuthRepository {
     async updateProfile(userData) {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/auth/users/user`, userData, {
+            const response = await axios.put(`${API_URL}/auth/users/me`, userData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json'

@@ -22,9 +22,13 @@ const UserRoleManagementPage = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      console.log('🔵 [ADMIN] Iniciando petición de usuarios...');
       const response = await adminService.getUsers();
 
-      console.log('RESPUESTA RAW BACKEND:', response);
+      console.log('🔵 [ADMIN] RESPUESTA RAW BACKEND:', response);
+      console.log('🔵 [ADMIN] response.items:', response?.items);
+      console.log('🔵 [ADMIN] Tipo de response:', typeof response);
+      console.log('🔵 [ADMIN] Es array response?:', Array.isArray(response));
 
       const usersArray =
         response?.items ||
@@ -33,20 +37,26 @@ const UserRoleManagementPage = () => {
         response?.users ||
         (Array.isArray(response) ? response : []);
 
-      console.log('USUARIOS EXTRAIDOS:', usersArray);
+      console.log('🔵 [ADMIN] USUARIOS EXTRAIDOS:', usersArray);
+      console.log('🔵 [ADMIN] Cantidad de usuarios:', usersArray?.length);
+      console.log('🔵 [ADMIN] Es array usersArray?:', Array.isArray(usersArray));
 
       if (!Array.isArray(usersArray)) {
+        console.error('🔴 [ADMIN] ERROR: usersArray no es un array!');
         toast.error('Formato de usuarios inválido');
         setUsers([]);
       } else {
+        console.log('🟢 [ADMIN] Estableciendo usuarios en el estado:', usersArray);
         setUsers(usersArray);
       }
     } catch (error) {
-      console.error('ERROR FETCH USERS:', error);
+      console.error('🔴 [ADMIN] ERROR FETCH USERS:', error);
+      console.error('🔴 [ADMIN] Error details:', error.message, error.stack);
       toast.error('Error al cargar usuarios');
       setUsers([]);
     } finally {
       setLoading(false);
+      console.log('🔵 [ADMIN] fetchUsers completado');
     }
   };
 
@@ -114,8 +124,12 @@ const UserRoleManagementPage = () => {
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matches && user.email !== currentUserEmail;
+    return matches;
   });
+
+  console.log('🔵 [ADMIN] Users en estado:', users);
+  console.log('🔵 [ADMIN] Usuarios filtrados:', filteredUsers);
+  console.log('🔵 [ADMIN] searchTerm:', searchTerm);
 
   if (loading) {
     return <div className="p-6">Cargando usuarios...</div>;
@@ -214,11 +228,10 @@ const UserRoleManagementPage = () => {
                       <button
                         disabled={!roleChanges[user.id]}
                         onClick={() => handleSaveRole(user.id)}
-                        className={`px-3 py-2 rounded text-white ${
-                          roleChanges[user.id]
-                            ? 'bg-red-600 hover:bg-red-700'
-                            : 'bg-gray-400 cursor-not-allowed'
-                        }`}
+                        className={`px-3 py-2 rounded text-white ${roleChanges[user.id]
+                          ? 'bg-red-600 hover:bg-red-700'
+                          : 'bg-gray-400 cursor-not-allowed'
+                          }`}
                       >
                         Guardar
                       </button>

@@ -1,4 +1,4 @@
-from app.modules.auth.domain.schemas.pagination_schema import PaginatedUsers
+from app.modules.auth.domain.schemas.pagination_schema import PaginatedUsers, PaginatedUsersWithRelations
 from app.modules.auth.domain.schemas.user_role_schema import UserRoleUpdate
 
 from app.modules.auth.domain.schemas.schemas_two_factor import (
@@ -91,5 +91,6 @@ __all__ = [
 
     # Pagination / Roles
     "PaginatedUsers",
+    "PaginatedUsersWithRelations",
     "UserRoleUpdate",
 ]

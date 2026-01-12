@@ -3,9 +3,9 @@ import BaseModel from '@core/models/BaseModel';
 class ResultadoCompetencia extends BaseModel {
     constructor(data = {}) {
         super(data);
-        this.competencia_id = data.competencia_id ?? null;
-        this.atleta_id = data.atleta_id ?? null;
-        this.prueba_id = data.prueba_id ?? null;
+        this.competencia_id = data.competencia_id ?? "";
+        this.atleta_id = data.atleta_id ?? "";
+        this.prueba_id = data.prueba_id ?? "";
         this.resultado = data.resultado ?? "";
         this.unidad_medida = data.unidad_medida ?? 'm';
         this.posicion_final = data.posicion_final ?? 'participante';

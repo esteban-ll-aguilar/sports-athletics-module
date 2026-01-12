@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import adminService from "../../../admin/services/adminService";
+import AtletaService from "../../services/AtletaService";
 import { Mail, FileText, User, UserPlus } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,14 +25,13 @@ const AthletesTable = () => {
   const fetchAthletes = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Cargando usuarios desde el backend...");
-      const response = await adminService.getUsers();
+      console.log("🔄 Cargando atletas desde el backend...");
+      const response = await AtletaService.getAthletes();
 
-      console.log("📦 Datos crudos recibidos:", response.users);
+      console.log("📦 Datos recibidos de AtletaService:", response);
 
-      const athletes = (response.users || []).filter(
-        (user) => user.role === "ATLETA"
-      );
+      // El backend ahora filtra por rol y devuelve PaginatedUsers
+      const athletes = response.items || [];
 
       console.log("🏃‍♂️ Atletas filtrados:", athletes);
 
@@ -49,7 +48,7 @@ const AthletesTable = () => {
         direccion: u.direccion || "",
         is_active: u.is_active ?? true,
         id: u.id,
-        role: u.role || "",
+        role: u.role || "ATLETA",
       }));
 
       console.log("✅ Atletas sanitizados para tabla:", sanitizedAthletes);
@@ -83,8 +82,8 @@ const AthletesTable = () => {
         statusFilter === ""
           ? true
           : statusFilter === "activo"
-          ? user.is_active
-          : !user.is_active;
+            ? user.is_active
+            : !user.is_active;
 
       return matchesSearch && matchesStatus;
     });
@@ -168,7 +167,7 @@ const AthletesTable = () => {
   }
 
   return (
-    <div className="ml-0 md:ml-64 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
 
       {/* Header */}
       <div className="px-6 py-4 border-b flex items-center justify-between">
@@ -251,11 +250,10 @@ const AthletesTable = () => {
               <td className="px-4 py-3">{user.direccion}</td>
               <td className="px-4 py-3">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    user.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs ${user.is_active
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700"
+                    }`}
                 >
                   {user.is_active ? "Activo" : "Inactivo"}
                 </span>

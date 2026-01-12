@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from uuid import UUID
 import datetime
@@ -56,13 +56,19 @@ class UserCreateSchema(UserBaseSchema):
 
 class UserUpdateSchema(BaseModel):
     username: Optional[str] = None
+    email: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone: Optional[str] = None
     profile_image: Optional[str] = None
     direccion: Optional[str] = None
+    tipo_identificacion: Optional[TipoIdentificacionEnum] = None
+    identificacion: Optional[str] = None
+    tipo_estamento: Optional[TipoEstamentoEnum] = None
     fecha_nacimiento: Optional[datetime.date] = None
     sexo: Optional[SexoEnum] = None
+    is_active: Optional[bool] = None
+    role: Optional[RoleEnum] = None
 
 # ======================================================
 # RESPONSE
@@ -72,9 +78,10 @@ class UserResponseSchema(UserBaseSchema):
     id: int
     external_id: UUID
     auth_user_id: int
+    email: Optional[str] = None
+    is_active: Optional[bool] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ======================================================
 # SIMPLE
@@ -87,8 +94,7 @@ class UserSimpleSchema(BaseModel):
     last_name: Optional[str] = None
     role: RoleEnum
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ======================================================
 # RELATIONS (MINIMAL)
@@ -98,24 +104,21 @@ class AtletaSimpleSchema(BaseModel):
     external_id: UUID
     categoria: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EntrenadorSimpleSchema(BaseModel):
     external_id: UUID
     especialidad: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RepresentanteSimpleSchema(BaseModel):
     external_id: UUID
     parentesco: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ======================================================
 # USER WITH RELATIONS
@@ -135,5 +138,4 @@ class UserAuthSchema(BaseModel):
     external_id: UUID
     role: RoleEnum
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

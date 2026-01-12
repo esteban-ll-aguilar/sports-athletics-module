@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, status
 from app.modules.auth.dependencies import get_current_admin_user
 from app.modules.auth.dependencies import get_admin_user_service
@@ -5,6 +6,7 @@ from app.modules.auth.services.admin_user_service import AdminUserService
 from app.modules.auth.domain.schemas import UserRoleUpdate, PaginatedUsers
 from app.modules.auth.domain.schemas import UserResponseSchema
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.modules.auth.domain.schemas.schemas_auth import AdminUserUpdateRequest
 
 user_management_router_v1 = APIRouter()
@@ -14,6 +16,7 @@ user_management_router_v1 = APIRouter()
 async def list_users(
     page: int = 1,
     size: int = 20,
+    role: Optional[RoleEnum] = None,
     service: AdminUserService = Depends(get_admin_user_service),
     current_admin: AuthUserModel = Depends(get_current_admin_user)
 ):
@@ -21,7 +24,7 @@ async def list_users(
     Lista todos los usuarios con paginación.
     Solo accesible por administradores.
     """
-    return await service.get_all_users(page=page, size=size)
+    return await service.get_all_users(page=page, size=size, role=role)
 
 @user_management_router_v1.put("/{user_id}/role", response_model=UserResponseSchema)
 async def update_user_role(
@@ -39,18 +42,4 @@ async def update_user_role(
 
 
 
-# Ruta para que el admin pueda actualizar datos de un usuario excepto el rol
-@user_management_router_v1.put("/{user_id}", response_model=UserResponseSchema)
-async def update_user(
-    user_id: str,
-    data: AdminUserUpdateRequest,
-    service: AdminUserService = Depends(get_admin_user_service),
-    current_admin: AuthUserModel = Depends(get_current_admin_user)
-):
-    """
-    Actualiza los datos de un usuario excepto el rol.
-    Solo accesible por administradores.
-    """
-    updated_user = await service.update_user_by_id(user_id, data)
-    return UserResponseSchema.model_validate(updated_user)
 

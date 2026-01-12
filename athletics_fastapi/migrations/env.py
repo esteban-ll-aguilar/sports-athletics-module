@@ -15,11 +15,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
-from app.modules.auth.domain.models import AuthUserModel, AuthUsersSessionsModel,user_model
+from app.modules.auth.domain.models import AuthUserModel, AuthUsersSessionsModel, UserModel
 from app.modules.atleta.domain.models import Atleta, HistorialMedico
 from app.modules.representante.domain.models import Representante
 from app.modules.entrenador.domain.models import Entrenador, Entrenamiento, Horario, RegistroAsistencias, Asistencia
-from app.modules.competencia.domain.models import Baremo, Prueba, RegistroPruebaCompetencia, TipoDisciplina
+from app.modules.competencia.domain.models import Baremo, Prueba, RegistroPruebaCompetencia, TipoDisciplina, Competencia, ResultadoCompetencia
 from app.modules.external.domain.models import ExternalTokenModel
 
 
