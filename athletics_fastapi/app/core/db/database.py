@@ -8,14 +8,12 @@ from sqlalchemy.orm import DeclarativeBase
 #Clase base para los modelos de la base de datos
 class Base(DeclarativeBase):
     pass
-
 #Clase que gestiona la conexión a la base de datos y la creación de sesiones
 # Implementa el patrón singleton para asegurar una única instancia
 class DatabaseBase:
     _instance = None
     _engine: AsyncEngine | None = None
     _session_factory: async_sessionmaker[AsyncSession] | None = None
-
 
     #metodo para implementar el patrón singleton
     #si ya existe una instancia, devuelve esa instancia, si no, crea una nueva

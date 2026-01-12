@@ -10,7 +10,7 @@ from app.modules.atleta.domain.models.historial_medico_model import HistorialMed
 
 async def fix_representante(email: str):
     print(f"Fixing representative for email: {email}")
-    
+
     # Initialize DB engine
     engine = _db.get_engine()
     

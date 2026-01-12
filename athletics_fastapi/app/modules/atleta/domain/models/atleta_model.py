@@ -1,29 +1,26 @@
-"""Modelo de datos para el atleta.
-    Se define la estructura de la tabla atleta en la base de datos
-    y sus relaciones con otros modelos.
-    Además, se utiliza UUID para el identificador externo del atleta.
-
 """
+Modelo de datos para el atleta.
+"""
+
 from datetime import date
 from sqlalchemy import Date, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-# Import Representante to ensure visibility for SQLAlchemy relationship
-from app.modules.representante.domain.models.representante_model import Representante 
 import uuid
 from typing import Optional, TYPE_CHECKING, List
 from uuid import UUID
 
 if TYPE_CHECKING:
+    from app.modules.auth.domain.models.user_model import UserModel
+    from app.modules.representante.domain.models.representante_model import Representante
     from app.modules.atleta.domain.models.historial_medico_model import HistorialMedico
+    from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
+
 
 class Atleta(Base):
     __tablename__ = "atleta"
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     external_id: Mapped[UUID] = mapped_column(
         default=uuid.uuid4,
@@ -32,32 +29,43 @@ class Atleta(Base):
     )
 
     anios_experiencia: Mapped[int] = mapped_column(Integer, nullable=False)
-    
-    fecha_nacimiento: Mapped[date] = mapped_column(
-        Date,
-        nullable=True
-    )
-    
-    foto_perfil: Mapped[str] = mapped_column(nullable=True)
 
-    # 🔗 Relación con usuario
+    # 🔗 User (1–1)
     user_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("auth_users.id"),
-        nullable=False
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True
     )
 
-    user: Mapped["AuthUserModel"] = relationship("AuthUserModel")
+    user: Mapped["UserModel"] = relationship(
+        "UserModel",
+        back_populates="atleta"
+    )
 
-  
+    # 🔗 Representante (N–1)
+    representante_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey("representante.id"),
+        nullable=True
+    )
 
-    #revisar relacion con representante
-    # Relationship N-to-1: Atleta has one Representante
-    representante_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("representante.id"), nullable=True)
-    representante: Mapped["Representante"] = relationship("Representante", back_populates="atletas")
+    representante: Mapped["Representante"] = relationship(
+        "Representante",
+        back_populates="atletas"
+    )
 
+    # 🔗 Asistencias (1–N)
     registros_asistencias: Mapped[List["RegistroAsistencias"]] = relationship(
-        "RegistroAsistencias", 
+        "RegistroAsistencias",
         back_populates="atleta",
-        cascade="all, delete-orphan" 
+        cascade="all, delete-orphan"
+    )
+
+    # 🔗 Historial médico (1–1)
+    historial_medico: Mapped[Optional["HistorialMedico"]] = relationship(
+        "HistorialMedico",
+        back_populates="atleta",
+        uselist=False,
+        cascade="all, delete-orphan"
     )

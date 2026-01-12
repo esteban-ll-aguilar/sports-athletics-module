@@ -8,8 +8,8 @@ def run_migration(command):
     """Ejecuta un comando de alembic."""
     try:
         print(f"🔄 Ejecutando: alembic {' '.join(command)}")
-        print("-" * 60)
         
+        print("-" * 60)
         # Cambiar al directorio del script
         script_dir = Path(__file__).parent
         os.chdir(script_dir)

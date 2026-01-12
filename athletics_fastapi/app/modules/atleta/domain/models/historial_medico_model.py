@@ -20,10 +20,9 @@ class HistorialMedico(Base):
     enfermedades_hereditarias = Column(String, nullable=True)
     enfermedades = Column(String, nullable=True)
 
-    # 🔥 AQUÍ ESTABA EL ERROR
     auth_user_id = Column(
         Integer,
-        ForeignKey("auth_users.id", ondelete="CASCADE"),  # ✅ nombre correcto
+        ForeignKey("auth_users.id", ondelete="CASCADE"),  
         unique=True,
         nullable=False
     )
