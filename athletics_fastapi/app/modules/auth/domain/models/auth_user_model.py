@@ -63,5 +63,6 @@ class AuthUserModel(Base):
     profile: Mapped["UserModel"] = relationship( # type: ignore
         back_populates="auth",
         uselist=False,
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        foreign_keys="[UserModel.auth_user_id]"
     )

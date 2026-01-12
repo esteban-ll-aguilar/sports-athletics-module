@@ -20,15 +20,15 @@ class HistorialMedico(Base):
     enfermedades_hereditarias = Column(String, nullable=True)
     enfermedades = Column(String, nullable=True)
 
-    auth_user_id = Column(
+    atleta_id = Column(
         Integer,
-        ForeignKey("auth_users.id", ondelete="CASCADE"),  
+        ForeignKey("atleta.id", ondelete="CASCADE"),  
         unique=True,
         nullable=False
     )
 
-    user = relationship(
-        "AuthUserModel",
+    atleta = relationship(
+        "Atleta",
         back_populates="historial_medico",
         uselist=False
     )

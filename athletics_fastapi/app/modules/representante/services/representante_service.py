@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
-from app.modules.auth.domain.schemas.schemas_auth import UserCreate, RoleEnum
+from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema
+from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
 from app.modules.representante.domain.models.representante_model import Representante
@@ -19,7 +20,7 @@ class RepresentanteService:
         result = await self.session.execute(select(Representante).where(Representante.user_id == user_id))
         return result.scalars().one_or_none()
 
-    async def register_child_athlete(self, representante_user_id: int, child_data: UserCreate) -> Atleta:
+    async def register_child_athlete(self, representante_user_id: int, child_data: UserCreateSchema) -> Atleta:
         """
         Registra un nuevo usuario como Atleta y lo vincula al Representante actual.
         """
@@ -39,23 +40,51 @@ class RepresentanteService:
         pwd_hash = self.hasher.hash(child_data.password)
         
         try:
+            # users_repo.create now expects UserCreateSchema, which child_data IS.
+            # And it returns UserModel.
             new_user = await self.users_repo.create(password_hash=pwd_hash, user_data=child_data)
         except Exception as e:
             # Handle potential duplicate email/dni errors from repo
             if "already exists" in str(e) or "duplicate key" in str(e):
                  raise HTTPException(status_code=400, detail="El usuario ya existe (Email o Identificación)")
             raise e
-
-        # 4. Crear Atleta vinculado
-        new_atleta = Atleta(
-            user_id=new_user.id,
-            representante_id=representante.id,
-            anios_experiencia=0 # Inicializar en 0 o pedir en formulario
-        )
-
-        created_atleta = await self.atleta_repo.create(new_atleta)
         
-        return created_atleta
+        # 4. Crear Atleta vinculado
+        # NOTE: AuthUsersRepository.create ALREADY creates the role entity (Atleta) if role=ATLETA and atleta_data is present.
+        # But RepresentanteService wants to link it to the representative (representante_id).
+        # The current AuthUsersRepository.create does NOT handle representante_id.
+        # So we likely need to UPDATE the created Atleta or create it manually here if the repo didn't create it.
+        # However, UserCreateSchema has atleta_data optional. 
+        # If child_data has atleta_data, repo creates Atleta.
+        # If we rely on repo to create Atleta, we need a way to pass representative_id or set it after.
+        # The repo implementation:
+        # if user_data.role == RoleEnum.ATLETA and user_data.atleta_data:
+        #    atleta = Atleta(user_id=..., anios_experiencia=...)
+        #    db.add(atleta)
+        # It does NOT set representante_id.
+        
+        # FIX: We should fetch the created Atleta (via user_id) and update its representante_id.
+        # Or, if repo didn't create it (e.g. no atleta_data), create it here.
+        # Let's assume repo logic runs first.
+        
+        # We need to find the Atleta associated with new_user.id
+        existing_atleta = await self.atleta_repo.get_by_user_id(new_user.id)
+        
+        if existing_atleta:
+             existing_atleta.representante_id = representante.id
+             self.session.add(existing_atleta)
+             await self.session.commit()
+             await self.session.refresh(existing_atleta)
+             return existing_atleta
+        else:
+             # If repo didn't create it (maybe no atleta_data?), create it.
+             new_atleta = Atleta(
+                user_id=new_user.id,
+                representante_id=representante.id,
+                anios_experiencia=0 
+             )
+             created_atleta = await self.atleta_repo.create(new_atleta)
+             return created_atleta
 
     async def get_representante_athletes(self, representante_user_id: int) -> list[Atleta]:
         """

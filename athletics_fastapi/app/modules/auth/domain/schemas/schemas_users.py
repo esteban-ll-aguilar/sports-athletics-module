@@ -1,43 +1,139 @@
-from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Optional
 from uuid import UUID
-from datetime import date
+import datetime
 
 from app.modules.auth.domain.enums import (
     TipoEstamentoEnum,
     TipoIdentificacionEnum,
-    SexoEnum,
     RoleEnum,
+    SexoEnum
 )
 
-from .schemas_auth import UserRead
+# ======================================================
+# BASE
+# ======================================================
 
-
-class UsersPaginatedResponse(BaseModel):
-    total: int
-    page: int
-    page_size: int
-    users: List[UserRead]
-
-
-class UserGet(BaseModel):
-    external_id: UUID
-
-
-class UserProfile(BaseModel):
-    username: str
-    first_name: str
-    last_name: str
-    email: str
-    phone: Optional[str] = None
-
-    tipo_identificacion: Optional[TipoIdentificacionEnum] = None
-    identificacion: Optional[str] = None
-    tipo_estamento: Optional[TipoEstamentoEnum] = None
-    sexo: Optional[SexoEnum] = None
-    fecha_nacimiento: Optional[date] = None
+class UserBaseSchema(BaseModel):
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = Field(None, max_length=17)
+    profile_image: Optional[str] = None
     direccion: Optional[str] = None
 
+    tipo_identificacion: TipoIdentificacionEnum
+    identificacion: str = Field(..., min_length=5, max_length=20)
+
+    tipo_estamento: TipoEstamentoEnum
+
+    fecha_nacimiento: Optional[datetime.date] = None
+    sexo: Optional[SexoEnum] = None
+    role: RoleEnum = RoleEnum.ATLETA
+
+# ======================================================
+# CREATE
+# ======================================================
+
+from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate
+from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
+
+# ======================================================
+# CREATE
+# ======================================================
+
+class UserCreateSchema(UserBaseSchema):
+    email: str # Should be EmailStr but str for now to match other patterns if any
+    password: str
+    
+    # Optional role-specific data
+    atleta_data: Optional[AtletaCreate] = None
+    entrenador_data: Optional[EntrenadorCreate] = None
+
+# ======================================================
+# UPDATE
+# ======================================================
+
+class UserUpdateSchema(BaseModel):
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    profile_image: Optional[str] = None
+    direccion: Optional[str] = None
+    fecha_nacimiento: Optional[datetime.date] = None
+    sexo: Optional[SexoEnum] = None
+
+# ======================================================
+# RESPONSE
+# ======================================================
+
+class UserResponseSchema(UserBaseSchema):
+    id: int
+    external_id: UUID
+    auth_user_id: int
+
+    class Config:
+        from_attributes = True
+
+# ======================================================
+# SIMPLE
+# ======================================================
+
+class UserSimpleSchema(BaseModel):
+    external_id: UUID
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     role: RoleEnum
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
+
+# ======================================================
+# RELATIONS (MINIMAL)
+# ======================================================
+
+class AtletaSimpleSchema(BaseModel):
+    external_id: UUID
+    categoria: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class EntrenadorSimpleSchema(BaseModel):
+    external_id: UUID
+    especialidad: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class RepresentanteSimpleSchema(BaseModel):
+    external_id: UUID
+    parentesco: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+# ======================================================
+# USER WITH RELATIONS
+# ======================================================
+
+class UserWithRelationsSchema(UserResponseSchema):
+    atleta: Optional[AtletaSimpleSchema] = None
+    entrenador: Optional[EntrenadorSimpleSchema] = None
+    representante: Optional[RepresentanteSimpleSchema] = None
+
+# ======================================================
+# AUTH CONTEXT
+# ======================================================
+
+class UserAuthSchema(BaseModel):
+    id: int
+    external_id: UUID
+    role: RoleEnum
+
+    class Config:
+        from_attributes = True

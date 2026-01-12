@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Date, Enum, Integer
+from sqlalchemy import String, Date, Enum, Integer, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 from typing import Optional, TYPE_CHECKING
@@ -26,6 +26,7 @@ class UserModel(Base):
 
     auth_user_id: Mapped[int] = mapped_column(
         Integer,
+        ForeignKey("auth_users.id"),
         nullable=False,
         unique=True,
         index=True

@@ -146,3 +146,37 @@ class SessionsRepository:
         )
         return result.rowcount > 0
 
+    async def create_or_update_session(
+        self,
+        user_id: uuid.UUID,
+        access_jti: str,
+        refresh_jti: str,
+        expires_at: datetime
+    ) -> AuthUsersSessionsModel:
+        """
+        Crea una nueva sesión o actualiza la última activa si existe.
+        """
+        # Buscar sesión activa más reciente
+        existing_session = await self.get_latest_active_session(user_id)
+        
+        if existing_session:
+            # Actualizar
+            existing_session.access_token = access_jti
+            existing_session.refresh_token = refresh_jti
+            existing_session.expires_at = expires_at
+            # El ORM trackea cambios, solo necesitamos flush/commit
+            self.session.add(existing_session)
+        else:
+            # Crear nueva
+            existing_session = AuthUsersSessionsModel(
+                user_id=user_id,
+                access_token=access_jti,
+                refresh_token=refresh_jti,
+                status=True,
+                expires_at=expires_at
+            )
+            self.session.add(existing_session)
+            
+        await self.session.commit()
+        return existing_session
+

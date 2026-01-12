@@ -18,9 +18,17 @@ class AdminUserService:
         return user
 
     async def get_all_users(self, page: int = 1, size: int = 20):
-        skip = (page - 1) * size
-        users = await self.users_repo.get_all(skip=skip, limit=size)
-        total = await self.users_repo.count()
+        # skip calculation is handled inside get_paginated by page/size
+        users, total = await self.users_repo.get_paginated(page=page, size=size)
+        # Note: repo returns (users, total) tuple now based on my fix above? 
+        # Wait, the original get_paginated returned (users, total).
+        # AdminUserService expected get_all to return just users?
+        # Line 23 calls count().
+        # Let's see original AdminUserService.
+        # users = await self.users_repo.get_all(...)
+        # total = await self.users_repo.count()
+        # My updated get_paginated returns (users, total).
+        
         return {
             "items": users,
             "total": total,
@@ -48,10 +56,10 @@ class AdminUserService:
             user.username = data.username
 
         if data.email is not None:
-            user.email = data.email
+            user.auth.email = data.email
 
         if data.is_active is not None:
-            user.is_active = data.is_active
+            user.auth.is_active = data.is_active
 
         if data.profile_image is not None:
             user.profile_image = data.profile_image

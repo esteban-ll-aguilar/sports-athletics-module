@@ -3,8 +3,8 @@ from app.modules.auth.dependencies import get_current_admin_user
 from app.modules.auth.dependencies import get_admin_user_service
 from app.modules.auth.services.admin_user_service import AdminUserService
 from app.modules.auth.domain.schemas import UserRoleUpdate, PaginatedUsers
+from app.modules.auth.domain.schemas import UserResponseSchema
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.schemas import UserRead
 from app.modules.auth.domain.schemas.schemas_auth import AdminUserUpdateRequest
 
 user_management_router_v1 = APIRouter()
@@ -23,7 +23,7 @@ async def list_users(
     """
     return await service.get_all_users(page=page, size=size)
 
-@user_management_router_v1.put("/{user_id}/role", response_model=UserRead)
+@user_management_router_v1.put("/{user_id}/role", response_model=UserResponseSchema)
 async def update_user_role(
     user_id: str,
     role_data: UserRoleUpdate,
@@ -35,12 +35,12 @@ async def update_user_role(
     Solo accesible por administradores.
     """
     updated_user = await service.update_user_role(user_id, role_data.role)
-    return UserRead.model_validate(updated_user)
+    return UserResponseSchema.model_validate(updated_user)
 
 
 
 # Ruta para que el admin pueda actualizar datos de un usuario excepto el rol
-@user_management_router_v1.put("/{user_id}", response_model=UserRead)
+@user_management_router_v1.put("/{user_id}", response_model=UserResponseSchema)
 async def update_user(
     user_id: str,
     data: AdminUserUpdateRequest,
@@ -52,5 +52,5 @@ async def update_user(
     Solo accesible por administradores.
     """
     updated_user = await service.update_user_by_id(user_id, data)
-    return UserRead.model_validate(updated_user)
+    return UserResponseSchema.model_validate(updated_user)
 

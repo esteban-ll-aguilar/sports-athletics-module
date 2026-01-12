@@ -24,8 +24,6 @@ class UserInfo(BaseModel):
 # =========================
 class AtletaBase(BaseModel):
     anios_experiencia: int = Field(..., ge=0, le=100)
-    fecha_nacimiento: date
-    foto_perfil: Optional[str] = None
 
 
 # =========================
@@ -40,8 +38,6 @@ class AtletaCreate(AtletaBase):
 # =========================
 class AtletaUpdate(BaseModel):
     anios_experiencia: Optional[int] = Field(None, ge=0, le=100)
-    fecha_nacimiento: Optional[date] = None
-    foto_perfil: Optional[str] = None
 
 
 # =========================

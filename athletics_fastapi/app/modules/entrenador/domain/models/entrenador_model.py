@@ -4,7 +4,7 @@ from app.core.db.database import Base
 from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+    from app.modules.auth.domain.models.user_model import UserModel
     from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
 
 
@@ -18,15 +18,16 @@ class Entrenador(Base):
     is_pasante: Mapped[bool] = mapped_column(Boolean, default=False)
     anios_experiencia: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # 🔗 Relación con AuthUser
+    # 🔗 Relación con User
     user_id: Mapped[int] = mapped_column(
         Integer,
-        ForeignKey("auth_users.id"),
-        nullable=False
+        ForeignKey("users.id"),
+        nullable=False,
+        unique=True
     )
 
-    user: Mapped["AuthUserModel"] = relationship(
-        "AuthUserModel",
+    user: Mapped["UserModel"] = relationship(
+        "UserModel",
         back_populates="entrenador"
     )
 
