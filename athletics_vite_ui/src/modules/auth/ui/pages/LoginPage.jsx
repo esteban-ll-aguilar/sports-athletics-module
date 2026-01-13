@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
-import loginImage from '@assets/images/auth/login.webp';
+import loginImage from '@assets/images/auth/login2.webp';
 import VerificationModal from '../widgets/VerificationModal';
 
 const LoginPage = () => {
@@ -59,7 +59,8 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="flex h-screen w-full bg-white">
+        //fondo degradado//
+        <div className="flex h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
             <VerificationModal
                 isOpen={showVerificationModal}
                 onClose={() => setShowVerificationModal(false)}
@@ -68,8 +69,8 @@ const LoginPage = () => {
             />
 
             {/* Left Side - Image & Text */}
-            <div className="hidden lg:flex w-1/2 relative bg-gray-900 text-white items-center justify-center overflow-hidden">
-                <div className="absolute inset-0 z-0">
+            <div className="hidden lg:flex w-1/2 relative text-white items-center justify-center overflow-hidden bg-[#242223]">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
                     {/* Placeholder for the image from the design. Using a generic athletic image for now. */}
                     <img
                         src={loginImage}
@@ -80,25 +81,30 @@ const LoginPage = () => {
                 </div>
 
                 <div className="relative z-10 p-12 text-center max-w-lg">
-                    <h1 className="text-4xl font-bold mb-4">Alcanza tu máximo potencial</h1>
-                    <p className="text-lg text-gray-200">
+                    <h1 className="text-4xl font-extrabold mb-4 tracking-wide">
+                        Alcanza tu máximo potencial
+                    </h1>
+                    <p className="text-lg text-gray-300">
                         Gestiona tus entrenamientos, sigue tu progreso y conéctate con tu equipo.
                     </p>
+
                 </div>
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16">
-                <div className="w-full max-w-md">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-[#212121] to-[#242223]">
+                <div className="w-full max-w-md bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
                     <div className="text-center mb-8">
-                        <div className="mx-auto w-12 h-12 bg-red-600 rounded-full flex items-center justify-center mb-4 text-white">
+                        <div className="mx-auto w-14 h-14 bg-gradient-to-br from-[#b30c25] to-[#362022] rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
                             {/* Simple Icon */}
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-gray-900">Inicia Sesión en tu Cuenta</h2>
+                        <h2 className="text-2xl font-bold text-white">
+                            Inicia Sesión en tu Cuenta
+                        </h2>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -114,7 +120,7 @@ const LoginPage = () => {
                         )}
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
                                 Correo Electrónico
                             </label>
                             <div className="relative">
@@ -127,7 +133,12 @@ const LoginPage = () => {
                                     id="email"
                                     type="email"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm"
+                                    className="block w-full pl-10 pr-3 py-2.5 
+                                    bg-[#212121] text-white 
+                                    border border-[#332122] rounded-lg
+                                    placeholder-gray-400
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm "
                                     placeholder="Ingresa tu correo electrónico"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -136,7 +147,7 @@ const LoginPage = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
                                 Contraseña
                             </label>
                             <div className="relative">
@@ -174,22 +185,26 @@ const LoginPage = () => {
                         </div>
 
                         <div className="flex items-center justify-end">
-                            <Link to="/forgot-password" className="text-sm font-medium text-red-600 hover:text-red-500">
+                            <Link to="/forgot-password" className="text-sm font-medium text-[#b30c25] hover:text-red-400 transition"
+                            >
                                 ¿Olvidaste tu contraseña?
                             </Link>
+
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                            focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
                         >
+
                             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                         </button>
 
                         <div className="text-center mt-4">
-                            <span className="text-sm text-gray-600">¿No tienes cuenta? </span>
-                            <Link to="/register" className="text-sm font-medium text-red-600 hover:text-red-500">
+                            <span className="text-sm text-gray-400">¿No tienes cuenta? </span>
+                            <Link to= "/register" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                 Regístrate aquí
                             </Link>
                         </div>
