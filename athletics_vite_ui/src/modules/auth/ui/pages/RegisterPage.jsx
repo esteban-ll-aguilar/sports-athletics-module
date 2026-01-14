@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
-import loginImage from '@assets/images/auth/login.webp';
+import loginImage from '@assets/images/auth/login2.webp';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -146,7 +146,7 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="flex min-h-screen w-full bg-white">
+<div className="flex min-h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
             {/* Left Side - Image */}
             <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
                 <div className="absolute inset-0 z-0">
@@ -167,10 +167,10 @@ const RegisterPage = () => {
 
             {/* Right Side - Form */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto">
-                <div className="w-full max-w-lg">
+<div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900">Crear Cuenta</h2>
-                        <p className="text-gray-500 mt-2">Ingresa tus datos para registrarte</p>
+                        <h2 className="text-2xl font-bold text-white">Crear Cuenta</h2>
+                        <p className="text-gray-400 mt-2">Ingresa tus datos para registrarte</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -182,41 +182,61 @@ const RegisterPage = () => {
 
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Datos Personales</h3>
+                            <h3 className="text-lg font-semibold text-gray-100 border-b pb-2">Datos Personales</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
                                     <input
                                         name="first_name"
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                         placeholder="Nombre"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
                                     <input
                                         name="last_name"
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
-                                        placeholder="Apellido"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                        placeholder="Apellido"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo ID</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
                                     <select
                                         name="tipo_identificacion"
                                         value={formData.tipo_identificacion}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     >
                                         <option value="CEDULA">Cédula</option>
                                         <option value="PASAPORTE">Pasaporte</option>
@@ -224,7 +244,7 @@ const RegisterPage = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">
                                         Identificación
                                         <span className="text-xs text-gray-500 ml-1">(solo números)</span>
                                     </label>
@@ -235,31 +255,52 @@ const RegisterPage = () => {
                                         onChange={handleChange}
                                         pattern="\d*"
                                         inputMode="numeric"
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
-                                        placeholder="0123456789"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                    placeholder="0123456789"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
                                     <input
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
                                         inputMode="tel"
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  
+"
                                         placeholder="0999999999"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
                                     <input
                                         name="direccion"
                                         value={formData.direccion}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                         placeholder="Tu dirección"
                                     />
                                 </div>
@@ -268,7 +309,7 @@ const RegisterPage = () => {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
                                     Fecha de nacimiento
                                 </label>
                                 <input
@@ -276,19 +317,33 @@ const RegisterPage = () => {
                                     name="fecha_nacimiento"
                                     value={formData.fecha_nacimiento}
                                     onChange={handleChange}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-400 mb-1">
                                     Sexo
                                 </label>
                                 <select
                                     name="sexo"
                                     value={formData.sexo}
                                     onChange={handleChange}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                 >
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -298,16 +353,23 @@ const RegisterPage = () => {
  
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">Datos de Cuenta</h3>
+                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Estamento</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
                                     <select
                                         name="tipo_estamento"
                                         value={formData.tipo_estamento}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
@@ -316,12 +378,19 @@ const RegisterPage = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Soy un..</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
                                     <select
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
@@ -330,33 +399,47 @@ const RegisterPage = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
                                 <input
                                     name="username"
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     placeholder="Nombre de usuario"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
                                 <input
                                     type="email"
                                     name="email"
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     placeholder="correo@ejemplo.com"
                                 />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
                                     <div className="relative">
                                         <input
                                             type={showPassword ? "text" : "password"}
@@ -364,7 +447,14 @@ const RegisterPage = () => {
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pr-10"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                             placeholder="********"
                                         />
                                         <button
@@ -386,7 +476,7 @@ const RegisterPage = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
                                     <div className="relative">
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
@@ -394,7 +484,14 @@ const RegisterPage = () => {
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pr-10"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                             placeholder="********"
                                         />
                                         <button
@@ -416,21 +513,30 @@ const RegisterPage = () => {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                            <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
                         </div>
 
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors mt-6"
+className="
+  w-full py-3 px-4 rounded-lg
+  text-sm font-semibold text-white
+  bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+  hover:brightness-110
+  focus:ring-2 focus:ring-[#b30c25]
+  disabled:opacity-50
+  transition-all duration-300 shadow-lg
+  mt-6
+"
                         >
                             {loading ? 'Registrando...' : 'Registrarse'}
                         </button>
 
                         <div className="text-center mt-4">
-                            <span className="text-sm text-gray-600">¿Ya tienes cuenta? </span>
-                            <Link to="/login" className="text-sm font-medium text-red-600 hover:text-red-500">
+                            <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
+                            <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                 Inicia Sesión
                             </Link>
                         </div>

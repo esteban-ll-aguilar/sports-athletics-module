@@ -81,16 +81,16 @@ const PasswordResetPage = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 font-['Outfit']">
-            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-xl border border-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#242223] via-[#212121] to-black px-4 sm:px-6 lg:px-8 font-['Outfit']">
+            <div className="max-w-md w-full space-y-8 bg-[#242223] p-10 rounded-3xl shadow-2xl border border-[#332122]">
 
                 {/* Header */}
                 <div className="text-center">
-                    <div className="mx-auto h-16 w-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                        <span className="material-symbols-outlined text-3xl text-red-600">lock_reset</span>
+                    <div className="mx-auto h-16 w-16 bg-gradient-to-br from-[#b30c25] to-[#362022] rounded-full flex items-center justify-center mb-4 shadow-lg">
+                        <span className="material-symbols-outlined text-3xl text-white">lock_reset</span>
                     </div>
-                    <h2 className="text-3xl font-bold text-gray-900">Recuperar Contraseña</h2>
-                    <p className="mt-2 text-sm text-gray-500">
+                    <h2 className="text-3xl font-bold text-white">Recuperar Contraseña</h2>
+                    <p className="mt-3 text-gray-500 hover:text-gray-500 transition">
                         {step === 1 && "Ingresa tu correo para recibir un código de verificación."}
                         {step === 2 && `Ingresa el código enviado a ${email}`}
                         {step === 3 && "Crea una nueva contraseña segura."}
@@ -104,7 +104,7 @@ const PasswordResetPage = () => {
                     {step === 1 && (
                         <form onSubmit={handleRequestCode} className="space-y-6">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-400">
                                     Correo Electrónico
                                 </label>
                                 <div className="mt-1 relative rounded-md shadow-sm">
@@ -115,7 +115,14 @@ const PasswordResetPage = () => {
                                         type="email"
                                         id="email"
                                         required
-                                        className="focus:ring-red-500 focus:border-red-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-xl py-3"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                         placeholder="ejemplo@correo.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
@@ -125,7 +132,14 @@ const PasswordResetPage = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all shadow-md hover:shadow-lg disabled:opacity-70"
+                                className="
+  w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white
+  bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+  hover:brightness-110
+  focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+  disabled:opacity-70
+  transition-all duration-300 shadow-lg
+"
                             >
                                 {loading ? (
                                     <span className="flex items-center gap-2">
@@ -139,8 +153,7 @@ const PasswordResetPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => setStep(2)}
-                                    className="text-sm font-medium text-red-600 hover:text-red-500 hover:underline"
-                                >
+                                    className="text-sm font-medium text-[#b30c25] hover:text-red-300 transition"                                >
                                     ¿Ya tienes un código? Ingrésalo aquí
                                 </button>
                             </div>
@@ -151,7 +164,7 @@ const PasswordResetPage = () => {
                     {step === 2 && (
                         <form onSubmit={handleValidateCode} className="space-y-6">
                             <div>
-                                <label htmlFor="email_verify" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="email_verify" className="block text-sm font-medium text-gray-400 mb-1">
                                     Confirmar Correo Electrónico
                                 </label>
                                 <div className="mt-1 relative rounded-md shadow-sm">
@@ -159,8 +172,14 @@ const PasswordResetPage = () => {
                                         type="email"
                                         id="email_verify"
                                         required
-                                        className="focus:ring-red-500 focus:border-red-500 block w-full sm:text-sm border-gray-300 rounded-xl py-3 px-4"
-                                        placeholder="ejemplo@correo.com"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                        placeholder="ejemplo@correo.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                     />
@@ -168,7 +187,7 @@ const PasswordResetPage = () => {
                             </div>
 
                             <div>
-                                <label htmlFor="code" className="block text-sm font-medium text-gray-700">
+                                <label htmlFor="code" className="block text-sm font-medium text-gray-400 mb-1">
                                     Código de Verificación
                                 </label>
                                 <div className="mt-1 relative rounded-md shadow-sm">
@@ -177,18 +196,24 @@ const PasswordResetPage = () => {
                                         id="code"
                                         required
                                         maxLength={6}
-                                        className="text-center tracking-[0.3em] font-mono text-lg focus:ring-red-500 focus:border-red-500 block w-full sm:text-lg border-gray-300 rounded-xl py-3 uppercase"
-                                        placeholder="ABC123"
+                                        className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                        placeholder="ABC123"
                                         value={code}
                                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                                     />
                                 </div>
-                                <p className="mt-2 text-xs text-center text-gray-500">
+                                <p className="mt-2 text-xs text-center text-gray-300">
                                     ¿No recibiste el código?{" "}
                                     <button
                                         type="button"
                                         onClick={() => { setStep(1); }}
-                                        className="font-medium text-red-600 hover:text-red-500"
+                                        className="font-medium text-red-600 hover:text-red-400"
                                     >
                                         Solicitar uno nuevo
                                     </button>
@@ -197,8 +222,14 @@ const PasswordResetPage = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all shadow-md hover:shadow-lg disabled:opacity-70"
-                            >
+                                className="
+  w-full flex justify-center py-3 px-4 rounded-xl text-sm font-semibold text-white
+  bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+  hover:brightness-110
+  focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+  disabled:opacity-70
+  transition-all duration-300 shadow-lg
+">
                                 {loading ? (
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
@@ -241,8 +272,10 @@ const PasswordResetPage = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all shadow-md hover:shadow-lg disabled:opacity-70"
+                                className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                            focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
                             >
+
                                 {loading ? (
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
@@ -254,7 +287,7 @@ const PasswordResetPage = () => {
                     )}
 
                     <div className="flex items-center justify-center mt-4">
-                        <Link to="/login" className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors">
+                        <Link to="/login" className="flex items-center text-sm font-medium text-gray-300 hover:text-gray-400 transition-colors">
                             <span className="material-symbols-outlined text-lg mr-1">arrow_back</span>
                             Volver al inicio de sesión
                         </Link>

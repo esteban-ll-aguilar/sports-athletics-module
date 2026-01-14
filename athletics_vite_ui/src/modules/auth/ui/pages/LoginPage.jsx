@@ -133,12 +133,14 @@ const LoginPage = () => {
                                     id="email"
                                     type="email"
                                     required
-                                    className="block w-full pl-10 pr-3 py-2.5 
-                                    bg-[#212121] text-white 
-                                    border border-[#332122] rounded-lg
-                                    placeholder-gray-400
-                                    focus:ring-[#b30c25] focus:border-[#b30c25]
-                                    sm:text-sm "
+                                      className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                     placeholder="Ingresa tu correo electrónico"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -160,8 +162,14 @@ const LoginPage = () => {
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     required
-                                    className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400 sm:text-sm"
-                                    placeholder="Ingresa tu contraseña"
+  className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                    placeholder="Ingresa tu contraseña"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
