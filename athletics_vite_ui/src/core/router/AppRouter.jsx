@@ -43,8 +43,10 @@ import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntre
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
 
 // Representante
+// Representante
 import RegisterAthletePage from '@modules/representante/ui/pages/RegisterAthletePage';
 import MisAtletasPage from '@modules/representante/ui/pages/MisAtletasPage';
+import DetalleAtletaPage from '@modules/representante/ui/pages/DetalleAtletaPage';
 
 // Profile
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
@@ -137,7 +139,8 @@ const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
             children: [
               { path: 'mis-atletas', element: <MisAtletasPage /> },
-              { path: 'register-athlete', element: <RegisterAthletePage /> }
+              { path: 'register-athlete', element: <RegisterAthletePage /> },
+              { path: 'atleta/:id', element: <DetalleAtletaPage /> }
             ]
           },
 

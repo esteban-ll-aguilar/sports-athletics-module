@@ -84,10 +84,15 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                             </div>
-                            {/* Actions Footer if needed */}
-                            {/* <div className="bg-gray-50 px-5 py-3 flex justify-end">
-                               <button className="text-sm text-gray-600 hover:text-red-600 font-medium">Ver detalles</button>
-                           </div> */}
+                            <div className="bg-gray-50 px-5 py-3 flex justify-end gap-2">
+                                <button
+                                    onClick={() => navigate(`/dashboard/representante/atleta/${atleta.id}`)}
+                                    className="text-sm text-gray-600 hover:text-red-600 font-medium flex items-center gap-1"
+                                >
+                                    <span className="material-symbols-outlined text-base">monitoring</span>
+                                    Ver Rendimiento
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>

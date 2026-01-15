@@ -30,3 +30,25 @@ async def get_my_athletes(
     Lista los atletas asociados al representante autenticado.
     """
     return await service.get_representante_athletes(current_user.id)
+    
+@representante_router.get("/athletes/{atleta_id}/historial")
+async def get_athlete_historial(
+    atleta_id: int,
+    current_user: AuthUserModel = Depends(get_current_user),
+    service: RepresentanteService = Depends(get_representante_service)
+):
+    """
+    Obtiene el historial de un atleta representado específico.
+    """
+    return await service.get_athlete_historial(current_user.id, atleta_id)
+
+@representante_router.get("/athletes/{atleta_id}/estadisticas")
+async def get_athlete_stats(
+    atleta_id: int,
+    current_user: AuthUserModel = Depends(get_current_user),
+    service: RepresentanteService = Depends(get_representante_service)
+):
+    """
+    Obtiene las estadísticas de un atleta representado específico.
+    """
+    return await service.get_athlete_stats(current_user.id, atleta_id)

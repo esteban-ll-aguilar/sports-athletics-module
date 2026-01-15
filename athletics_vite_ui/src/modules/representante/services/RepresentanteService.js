@@ -6,6 +6,12 @@ const RepresentanteService = {
     },
     getMyAthletes: async () => {
         return await ApiClient.get('/representante/athletes');
+    },
+    getAtletaHistorial: async (atletaId) => {
+        return await ApiClient.get(`/representante/athletes/${atletaId}/historial`);
+    },
+    getAtletaEstadisticas: async (atletaId) => {
+        return await ApiClient.get(`/representante/athletes/${atletaId}/estadisticas`);
     }
 };
 

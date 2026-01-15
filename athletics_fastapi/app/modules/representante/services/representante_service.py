@@ -7,6 +7,7 @@ from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
 from app.modules.representante.domain.models.representante_model import Representante
+from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
 from sqlalchemy import select
 
 class RepresentanteService:
@@ -14,6 +15,7 @@ class RepresentanteService:
         self.session = session
         self.users_repo = AuthUsersRepository(session)
         self.atleta_repo = AtletaRepository(session)
+        self.resultado_repo = ResultadoCompetenciaRepository(session)
         self.hasher = PasswordHasher()
 
     async def get_representante_by_user_id(self, user_id: int) -> Representante | None:
@@ -95,3 +97,49 @@ class RepresentanteService:
             return [] # O raise error 403
             
         return await self.atleta_repo.get_by_representante_id(representante.id)
+
+    async def _validate_relation(self, representante_user_id: int, atleta_id: int):
+        """Valida que el atleta pertenezca al representante."""
+        representante = await self.get_representante_by_user_id(representante_user_id)
+        if not representante:
+            raise HTTPException(status_code=403, detail="No eres un representante válido")
+            
+        atleta = await self.atleta_repo.get_by_id(atleta_id)
+        if not atleta:
+            raise HTTPException(status_code=404, detail="Atleta no encontrado")
+            
+        if atleta.representante_id != representante.id:
+            raise HTTPException(status_code=403, detail="No tienes permiso sobre este atleta")
+            
+        # Retorna el atleta para usar datos si es necesario (ej: user_id)
+        return atleta
+
+    async def get_athlete_historial(self, representante_user_id: int, atleta_id: int):
+        """Obtiene historial de un atleta representado."""
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        # Usamos atleta.user_id porque los resultados están ligados al user_id
+        return await self.resultado_repo.get_by_atleta(atleta.user_id)
+
+    async def get_athlete_stats(self, representante_user_id: int, atleta_id: int):
+        """Obtiene estadísticas de un atleta representado."""
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        resultados = await self.resultado_repo.get_by_atleta(atleta.user_id)
+        
+        # Logica duplicada de AtletaService (se podría refactorizar en un helper o mixin)
+        total_competencias = len(resultados)
+        medallas = {"oro": 0, "plata": 0, "bronce": 0}
+        
+        for res in resultados:
+            pos = str(res.posicion_final).lower()
+            if "primero" in pos or res.puesto_obtenido == 1:
+                medallas["oro"] += 1
+            elif "segundo" in pos or res.puesto_obtenido == 2:
+                medallas["plata"] += 1
+            elif "tercero" in pos or res.puesto_obtenido == 3:
+                medallas["bronce"] += 1
+                
+        return {
+            "total_competencias": total_competencias,
+            "medallas": medallas,
+            "experiencia": atleta.anios_experiencia
+        }
