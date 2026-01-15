@@ -11,6 +11,16 @@ const AtletaService = {
         const response = await ApiClient.get(`/auth/users/list?page=${page}&size=${limit}&role=ATLETA`);
         console.log("AtletaService.getAthletes response:", response);
         return response;
+    },
+
+    getHistorial: async () => {
+        const response = await ApiClient.get('/atleta/historial');
+        return response;
+    },
+
+    getEstadisticas: async () => {
+        const response = await ApiClient.get('/atleta/estadisticas');
+        return response;
     }
 };
 

@@ -36,6 +36,7 @@ import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
 
 // Atleta
 import AthletesTable from '@modules/atleta/ui/pages/atletlas';
+import DashboardAtletaPage from '@modules/atleta/ui/pages/DashboardAtletaPage';
 
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
@@ -138,7 +139,14 @@ const router = createBrowserRouter([
               { path: 'mis-atletas', element: <MisAtletasPage /> },
               { path: 'register-athlete', element: <RegisterAthletePage /> }
             ]
-          }
+          },
+
+          // --- ATLETA DASHBOARD (HU-020) ---
+          {
+            path: 'atleta',
+            element: <ProtectedRoute allowedRoles={['ATLETA']} />,
+            children: [{ index: true, element: <DashboardAtletaPage /> }],
+          },
 
         ],
       },
