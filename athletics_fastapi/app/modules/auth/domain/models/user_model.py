@@ -108,3 +108,7 @@ class UserModel(Base):
     @property
     def is_active(self) -> bool:
         return self.auth.is_active if self.auth else False
+
+    @property
+    def two_factor_enabled(self) -> bool:
+        return self.auth.two_factor_enabled if self.auth else False

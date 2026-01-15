@@ -230,12 +230,12 @@ class AuthRepository {
         }
     }
 
-    async disable2FA() {
+    async disable2FA(password, code) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/2fa/disable`, {}, {
+            const response = await axios.post(`${API_URL}/auth/2fa/disable`, { password, code }, {
                 headers: {
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+                    'Content-Type': 'application/json'
                 }
             });
             return response.data;
@@ -244,16 +244,10 @@ class AuthRepository {
         }
     }
 
-    async login2FA(email, code) { // Assuming email might be needed or handled via temp token. If just code, adjust. Based on "Login with 2Fa", usually needs context.
+    async login2FA(email, code, temp_token) {
         try {
-            const formData = new FormData();
-            formData.append('username', email); // Assuming flow requires identifying user again or uses a temp token from first step
-            formData.append('otp', code); // Standard 2FA login often sends 'otp' or 'code'
-
-            // NOTE: The prompt says /api/v1/auth/2fa/login.
-            // Often this endpoint expects { email, code } json or form data.
-            // I will use JSON as it's cleaner for this specific endpoint unless form-data is strictly required like main login.
-            const response = await axios.post(`${API_URL}/auth/2fa/login`, { email, code }, {
+            // Note: Backend expects Login2FARequest { email, code, temp_token }
+            const response = await axios.post(`${API_URL}/auth/2fa/login`, { email, code, temp_token }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -264,9 +258,10 @@ class AuthRepository {
         }
     }
 
-    async loginBackup(email, backupCode) {
+    async loginBackup(email, backupCode, temp_token) {
         try {
-            const response = await axios.post(`${API_URL}/auth/2fa/login-backup`, { email, code: backupCode }, {
+            // Note: Backend expects LoginBackupCodeRequest { email, backup_code, temp_token }
+            const response = await axios.post(`${API_URL}/auth/2fa/login-backup`, { email, backup_code: backupCode, temp_token }, {
                 headers: {
                     'Content-Type': 'application/json'
                 }

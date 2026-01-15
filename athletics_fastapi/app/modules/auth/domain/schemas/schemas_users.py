@@ -82,6 +82,7 @@ class UserResponseSchema(UserBaseSchema):
     auth_user_id: int
     email: Optional[str] = None
     is_active: Optional[bool] = None
+    two_factor_enabled: Optional[bool] = False
 
     model_config = ConfigDict(from_attributes=True)
 

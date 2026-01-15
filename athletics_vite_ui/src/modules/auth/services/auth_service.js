@@ -64,12 +64,12 @@ class AuthService {
         return await authRepository.verify2FA(code);
     }
 
-    async disable2FA() {
-        return await authRepository.disable2FA();
+    async disable2FA(password, code) {
+        return await authRepository.disable2FA(password, code);
     }
 
-    async login2FA(email, code) {
-        const data = await authRepository.login2FA(email, code);
+    async login2FA(email, code, temp_token) {
+        const data = await authRepository.login2FA(email, code, temp_token);
         if (data.access_token) {
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('refresh_token', data.refresh_token);
@@ -77,8 +77,8 @@ class AuthService {
         return data;
     }
 
-    async loginBackup(email, code) {
-        const data = await authRepository.loginBackup(email, code);
+    async loginBackup(email, code, temp_token) {
+        const data = await authRepository.loginBackup(email, code, temp_token);
         if (data.access_token) {
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('refresh_token', data.refresh_token);

@@ -155,9 +155,11 @@ class AuthUsersRepository:
     # =====================================================
     # GET BY ID
     # =====================================================
-    async def get_by_id(self, user_id: uuid.UUID) -> Optional[AuthUserModel]:
+    async def get_by_id(self, user_id: int) -> Optional[AuthUserModel]:
         result = await self.db.execute(
-            select(AuthUserModel).where(AuthUserModel.id == user_id)
+            select(AuthUserModel)
+            .where(AuthUserModel.id == user_id)
+            .options(selectinload(AuthUserModel.profile))
         )
         return result.scalar_one_or_none()
 
