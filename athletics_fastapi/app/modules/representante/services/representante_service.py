@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
-from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema
+from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserUpdateSchema
 from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
@@ -16,7 +16,39 @@ class RepresentanteService:
         self.users_repo = AuthUsersRepository(session)
         self.atleta_repo = AtletaRepository(session)
         self.resultado_repo = ResultadoCompetenciaRepository(session)
+        self.resultado_repo = ResultadoCompetenciaRepository(session)
         self.hasher = PasswordHasher()
+        
+    async def update_child_athlete(self, representante_user_id: int, atleta_id: int, update_data: UserUpdateSchema) -> Atleta:
+        """
+        Actualiza los datos de un atleta (hijo) vinculado al representante.
+        """
+        # 1. Validar relación
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        
+        # 2. Obtener el User object del atleta para actualizar sus datos de perfil
+        user_profile = await self.users_repo.get_by_id_profile(atleta.user_id) # Need a method to get profile model directly or use the loaded one
+        # Actually AtletaRepository loads user, but it might be detached or we want the repo logic.
+        # But AuthUsersRepository.update takes UserModel.
+        
+        if not user_profile:
+             # Should be loaded by validate_relation if we eagerly load user there, 
+             # but validate_relation returns Atleta.
+             # Let's fetch it or use atleta.user
+             user_profile = atleta.user
+             
+        # 3. Actualizar datos de Usuario (Nombre, ID, etc.)
+        updated_user = await self.users_repo.update(user_profile, update_data)
+        
+        # 4. Actualizar datos específicos de Atleta (anios_experiencia)
+        if update_data.atleta_data:
+            atleta.anios_experiencia = update_data.atleta_data.anios_experiencia
+            # Persist changes to Atleta
+            self.session.add(atleta)
+            await self.session.commit()
+            await self.session.refresh(atleta)
+            
+        return atleta
 
     async def get_representante_by_user_id(self, user_id: int) -> Representante | None:
         result = await self.session.execute(select(Representante).where(Representante.user_id == user_id))

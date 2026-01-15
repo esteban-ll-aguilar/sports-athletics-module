@@ -142,6 +142,17 @@ class AuthUsersRepository:
         return user_profile
 
     # =====================================================
+    # GET BY ID PROFILE
+    # =====================================================
+    async def get_by_id_profile(self, user_id: int) -> Optional[UserModel]:
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.id == user_id)
+            .options(selectinload(UserModel.auth))
+        )
+        return result.scalars().first()
+
+    # =====================================================
     # GET BY ID
     # =====================================================
     async def get_by_id(self, user_id: uuid.UUID) -> Optional[AuthUserModel]:
