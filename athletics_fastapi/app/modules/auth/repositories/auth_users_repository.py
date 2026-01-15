@@ -16,6 +16,7 @@ from app.modules.auth.domain.models.user_model import UserModel
 from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+from app.modules.representante.domain.models.representante_model import Representante
 from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate
 from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
 
@@ -123,6 +124,12 @@ class AuthUsersRepository:
                 is_pasante=user_data.entrenador_data.is_pasante
             )
             self.db.add(entrenador)
+        
+        elif user_data.role == RoleEnum.REPRESENTANTE:
+            representante = Representante(
+                user_id=user_profile.id
+            )
+            self.db.add(representante)
 
         # Commit final lo hace el llamador o aquí si queremos asegurar atomicidad completa del repo method
         # El código original hacía commit, así que lo mantenemos.
@@ -135,11 +142,24 @@ class AuthUsersRepository:
         return user_profile
 
     # =====================================================
+    # GET BY ID PROFILE
+    # =====================================================
+    async def get_by_id_profile(self, user_id: int) -> Optional[UserModel]:
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.id == user_id)
+            .options(selectinload(UserModel.auth))
+        )
+        return result.scalars().first()
+
+    # =====================================================
     # GET BY ID
     # =====================================================
-    async def get_by_id(self, user_id: uuid.UUID) -> Optional[AuthUserModel]:
+    async def get_by_id(self, user_id: int) -> Optional[AuthUserModel]:
         result = await self.db.execute(
-            select(AuthUserModel).where(AuthUserModel.id == user_id)
+            select(AuthUserModel)
+            .where(AuthUserModel.id == user_id)
+            .options(selectinload(AuthUserModel.profile))
         )
         return result.scalar_one_or_none()
 

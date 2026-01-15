@@ -1,14 +1,16 @@
-from sqlalchemy import Integer, Float, Date, ForeignKey
+from sqlalchemy import Integer, Boolean, ForeignKey, UUID as PG_UUID, text, Float, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid
 from typing import TYPE_CHECKING
+from enum import Enum as PyEnum
 
-from app.modules.competencia.domain.models.prueba_model import Prueba
 
 # 👇 SOLO para tipado (evita import circular)
 if TYPE_CHECKING:
+    from app.modules.competencia.domain.models.competencia_model import Competencia
+    from app.modules.competencia.domain.models.prueba_model import Prueba
     from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 
@@ -23,10 +25,12 @@ class RegistroPruebaCompetencia(Base):
     )
 
     external_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        default=uuid.uuid4,
         unique=True,
         index=True,
-        default=uuid.uuid4
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
+
     )
 
     id_entrenador: Mapped[int] = mapped_column(Integer)

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera } from 'lucide-react';
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
+import TwoFactorSettings from '../widgets/TwoFactorSettings';
 
 const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
@@ -349,51 +350,53 @@ const ProfilePage = () => {
                 </div>
 
                 {/* Actions */}
-        <div className="mt-8 flex justify-end gap-4">
+                <div className="mt-8 flex justify-end gap-4">
 
-            {formData.role === 'ATLETA' && (
-                <>
-            {/* Botón para añadir / editar historial */}
-            <button
-                type="button"
-                onClick={() => setIsHistorialModalOpen(true)}
-                className="inline-flex items-center px-6 py-3 border border-indigo-600 rounded-lg text-indigo-600 bg-white hover:bg-indigo-50 transition"
-            >
-                <Shield className="mr-2 h-5 w-5" />
-                Añadir historial médico
-            </button>
+                    {formData.role === 'ATLETA' && (
+                        <>
+                            {/* Botón para añadir / editar historial */}
+                            <button
+                                type="button"
+                                onClick={() => setIsHistorialModalOpen(true)}
+                                className="inline-flex items-center px-6 py-3 border border-indigo-600 rounded-lg text-indigo-600 bg-white hover:bg-indigo-50 transition"
+                            >
+                                <Shield className="mr-2 h-5 w-5" />
+                                Añadir historial médico
+                            </button>
 
-        </>
-    )}
+                        </>
+                    )}
 
-    {/* Guardar cambios del perfil */}
-    <button
-        type="submit"
-        disabled={submitting}
-        className={`inline-flex items-center px-6 py-3 rounded-lg text-white ${
-            submitting
-                ? 'bg-indigo-400'
-                : 'bg-indigo-600 hover:bg-indigo-700'
-        }`}
-    >
-        <Save className="mr-2 h-5 w-5" />
-        Guardar Cambios
-    </button>
-</div>
+                    {/* Guardar cambios del perfil */}
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`inline-flex items-center px-6 py-3 rounded-lg text-white ${submitting
+                                ? 'bg-indigo-400'
+                                : 'bg-indigo-600 hover:bg-indigo-700'
+                            }`}
+                    >
+                        <Save className="mr-2 h-5 w-5" />
+                        Guardar Cambios
+                    </button>
+                </div>
 
 
-        </form>
-        {isHistorialModalOpen && (
-            <HistorialMedicoModal
-                isOpen={isHistorialModalOpen}
-                onClose={() => setIsHistorialModalOpen(false)}
-                atletaId={formData.identificacion}
-            />
-        )}
+            </form>
 
-    </div>
-    
-);
+            <TwoFactorSettings />
+
+            {isHistorialModalOpen && (
+                <HistorialMedicoModal
+                    isOpen={isHistorialModalOpen}
+                    onClose={() => setIsHistorialModalOpen(false)}
+                    atletaId={formData.identificacion}
+                />
+            )}
+
+        </div>
+
+    );
 
 };
 

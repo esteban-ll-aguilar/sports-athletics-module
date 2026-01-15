@@ -36,14 +36,17 @@ import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
 
 // Atleta
 import AthletesTable from '@modules/atleta/ui/pages/atletlas';
+import DashboardAtletaPage from '@modules/atleta/ui/pages/DashboardAtletaPage';
 
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
 
 // Representante
+// Representante
 import RegisterAthletePage from '@modules/representante/ui/pages/RegisterAthletePage';
 import MisAtletasPage from '@modules/representante/ui/pages/MisAtletasPage';
+import DetalleAtletaPage from '@modules/representante/ui/pages/DetalleAtletaPage';
 
 // Profile
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
@@ -136,9 +139,17 @@ const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
             children: [
               { path: 'mis-atletas', element: <MisAtletasPage /> },
-              { path: 'register-athlete', element: <RegisterAthletePage /> }
+              { path: 'register-athlete', element: <RegisterAthletePage /> },
+              { path: 'atleta/:id', element: <DetalleAtletaPage /> }
             ]
-          }
+          },
+
+          // --- ATLETA DASHBOARD (HU-020) ---
+          {
+            path: 'atleta',
+            element: <ProtectedRoute allowedRoles={['ATLETA']} />,
+            children: [{ index: true, element: <DashboardAtletaPage /> }],
+          },
 
         ],
       },

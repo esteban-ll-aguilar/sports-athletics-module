@@ -60,7 +60,7 @@ async def enable_2fa(
     # Guardar secret y códigos hasheados en el usuario (pero no activar aún)
     current_user.totp_secret = secret
     current_user.totp_backup_codes = hashed_backup_codes
-    await repo.session.commit()
+    await repo.db.commit()
     
     logger.info(f"2FA setup iniciado para usuario: {current_user.email}")
     
@@ -107,7 +107,7 @@ async def verify_and_activate_2fa(
     
     # Activar 2FA
     current_user.two_factor_enabled = True
-    await repo.session.commit()
+    await repo.db.commit()
     
     logger.info(f"2FA activado exitosamente para usuario: {current_user.email}")
     
@@ -154,7 +154,7 @@ async def disable_2fa(
     current_user.two_factor_enabled = False
     current_user.totp_secret = None
     current_user.totp_backup_codes = None
-    await repo.session.commit()
+    await repo.db.commit()
     
     logger.warning(f"2FA deshabilitado para usuario: {current_user.email}")
     
@@ -200,7 +200,7 @@ async def login_with_2fa(
         )
     
     # Obtener usuario
-    user = await repo.get_by_id(user_id)
+    user = await repo.get_by_id(int(user_id))
     
     # PROTECCIÓN CONTRA TIMING ATTACKS:
     # Siempre verificar código (incluso si el usuario no existe o email no coincide)
@@ -228,8 +228,8 @@ async def login_with_2fa(
     await redis.delete(attempts_key)
     
     # Generar tokens finales
-    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
-    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.username)
+    access = jwtm.create_access_token(str(user.id), user.profile.role.name, user.email, user.profile.username)
+    refresh = jwtm.create_refresh_token(str(user.id), user.profile.role.name, user.email, user.profile.username)
     
     # Decodificar para obtener JTIs y exp
     access_payload = jwtm.decode(access)
@@ -260,7 +260,7 @@ async def login_with_2fa(
             expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc)
         )
     
-    await repo.session.commit()
+    await repo.db.commit()
     
     logger.info(f"Login 2FA exitoso para usuario: {user.email}")
     return TokenPair(access_token=access, refresh_token=refresh)
@@ -303,7 +303,7 @@ async def login_with_backup_code(
         )
     
     # Obtener usuario
-    user = await repo.get_by_id(user_id)
+    user = await repo.get_by_id(int(user_id))
     
     # PROTECCIÓN CONTRA TIMING ATTACKS
     if not user or not user.is_active or user.email != data.email or not user.two_factor_enabled or not user.totp_backup_codes:
@@ -327,14 +327,14 @@ async def login_with_backup_code(
     
     # Login exitoso - eliminar código usado
     user.totp_backup_codes = twofa_service.remove_used_backup_code(user.totp_backup_codes, data.backup_code)
-    await repo.session.commit()
+    await repo.db.commit()
     
     # Limpiar contador de intentos
     await redis.delete(attempts_key)
     
     # Generar tokens
-    access = jwtm.create_access_token(str(user.id), user.role.name, user.email, user.username)
-    refresh = jwtm.create_refresh_token(str(user.id), user.role.name, user.email, user.username)
+    access = jwtm.create_access_token(str(user.id), user.profile.role.name, user.email, user.profile.username)
+    refresh = jwtm.create_refresh_token(str(user.id), user.profile.role.name, user.email, user.profile.username)
     
     access_payload = jwtm.decode(access)
     refresh_payload = jwtm.decode(refresh)
@@ -359,7 +359,7 @@ async def login_with_backup_code(
             refresh_jti=refresh_payload["jti"],
             expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc)
         )
-    await repo.session.commit()
+    await repo.db.commit()
     
     logger.warning(f"Login con backup code exitoso para: {user.email} (código consumido)")
     return TokenPair(access_token=access, refresh_token=refresh)

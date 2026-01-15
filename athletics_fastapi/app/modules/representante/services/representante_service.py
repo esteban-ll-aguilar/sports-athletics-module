@@ -2,11 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
-from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema
+from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserUpdateSchema
 from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
 from app.modules.representante.domain.models.representante_model import Representante
+from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
 from sqlalchemy import select
 
 class RepresentanteService:
@@ -14,7 +15,40 @@ class RepresentanteService:
         self.session = session
         self.users_repo = AuthUsersRepository(session)
         self.atleta_repo = AtletaRepository(session)
+        self.resultado_repo = ResultadoCompetenciaRepository(session)
+        self.resultado_repo = ResultadoCompetenciaRepository(session)
         self.hasher = PasswordHasher()
+        
+    async def update_child_athlete(self, representante_user_id: int, atleta_id: int, update_data: UserUpdateSchema) -> Atleta:
+        """
+        Actualiza los datos de un atleta (hijo) vinculado al representante.
+        """
+        # 1. Validar relación
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        
+        # 2. Obtener el User object del atleta para actualizar sus datos de perfil
+        user_profile = await self.users_repo.get_by_id_profile(atleta.user_id) # Need a method to get profile model directly or use the loaded one
+        # Actually AtletaRepository loads user, but it might be detached or we want the repo logic.
+        # But AuthUsersRepository.update takes UserModel.
+        
+        if not user_profile:
+             # Should be loaded by validate_relation if we eagerly load user there, 
+             # but validate_relation returns Atleta.
+             # Let's fetch it or use atleta.user
+             user_profile = atleta.user
+             
+        # 3. Actualizar datos de Usuario (Nombre, ID, etc.)
+        updated_user = await self.users_repo.update(user_profile, update_data)
+        
+        # 4. Actualizar datos específicos de Atleta (anios_experiencia)
+        if update_data.atleta_data:
+            atleta.anios_experiencia = update_data.atleta_data.anios_experiencia
+            # Persist changes to Atleta
+            self.session.add(atleta)
+            await self.session.commit()
+            await self.session.refresh(atleta)
+            
+        return atleta
 
     async def get_representante_by_user_id(self, user_id: int) -> Representante | None:
         result = await self.session.execute(select(Representante).where(Representante.user_id == user_id))
@@ -95,3 +129,49 @@ class RepresentanteService:
             return [] # O raise error 403
             
         return await self.atleta_repo.get_by_representante_id(representante.id)
+
+    async def _validate_relation(self, representante_user_id: int, atleta_id: int):
+        """Valida que el atleta pertenezca al representante."""
+        representante = await self.get_representante_by_user_id(representante_user_id)
+        if not representante:
+            raise HTTPException(status_code=403, detail="No eres un representante válido")
+            
+        atleta = await self.atleta_repo.get_by_id(atleta_id)
+        if not atleta:
+            raise HTTPException(status_code=404, detail="Atleta no encontrado")
+            
+        if atleta.representante_id != representante.id:
+            raise HTTPException(status_code=403, detail="No tienes permiso sobre este atleta")
+            
+        # Retorna el atleta para usar datos si es necesario (ej: user_id)
+        return atleta
+
+    async def get_athlete_historial(self, representante_user_id: int, atleta_id: int):
+        """Obtiene historial de un atleta representado."""
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        # Usamos atleta.user_id porque los resultados están ligados al user_id
+        return await self.resultado_repo.get_by_atleta(atleta.user_id)
+
+    async def get_athlete_stats(self, representante_user_id: int, atleta_id: int):
+        """Obtiene estadísticas de un atleta representado."""
+        atleta = await self._validate_relation(representante_user_id, atleta_id)
+        resultados = await self.resultado_repo.get_by_atleta(atleta.user_id)
+        
+        # Logica duplicada de AtletaService (se podría refactorizar en un helper o mixin)
+        total_competencias = len(resultados)
+        medallas = {"oro": 0, "plata": 0, "bronce": 0}
+        
+        for res in resultados:
+            pos = str(res.posicion_final).lower()
+            if "primero" in pos or res.puesto_obtenido == 1:
+                medallas["oro"] += 1
+            elif "segundo" in pos or res.puesto_obtenido == 2:
+                medallas["plata"] += 1
+            elif "tercero" in pos or res.puesto_obtenido == 3:
+                medallas["bronce"] += 1
+                
+        return {
+            "total_competencias": total_competencias,
+            "medallas": medallas,
+            "experiencia": atleta.anios_experiencia
+        }

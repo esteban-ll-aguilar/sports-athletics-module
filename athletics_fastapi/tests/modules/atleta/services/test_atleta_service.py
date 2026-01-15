@@ -20,8 +20,12 @@ def mock_auth_repo():
     return AsyncMock()
 
 @pytest.fixture
-def service(mock_atleta_repo, mock_auth_repo):
-    return AtletaService(mock_atleta_repo, mock_auth_repo)
+def mock_resultado_repo():
+    return AsyncMock()
+
+@pytest.fixture
+def service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
+    return AtletaService(mock_atleta_repo, mock_auth_repo, mock_resultado_repo)
 
 @pytest.mark.asyncio
 async def test_create_atleta_success(service, mock_auth_repo, mock_atleta_repo):

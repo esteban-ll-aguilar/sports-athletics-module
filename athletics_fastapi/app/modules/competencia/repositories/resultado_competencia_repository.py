@@ -83,3 +83,13 @@ class ResultadoCompetenciaRepository:
         """Contar total de resultados."""
         result = await self.session.execute(select(func.count(ResultadoCompetencia.id)))
         return result.scalar() or 0
+
+    async def get_by_atleta(self, atleta_id: int) -> List[ResultadoCompetencia]:
+        """Obtener todos los resultados de un atleta (ordenados por fecha descendente)."""
+        result = await self.session.execute(
+            select(ResultadoCompetencia)
+            .where(ResultadoCompetencia.atleta_id == atleta_id)
+            .where(ResultadoCompetencia.estado == True)
+            .order_by(ResultadoCompetencia.fecha_registro.desc())
+        )
+        return result.scalars().all() or []

@@ -1,13 +1,13 @@
-from sqlalchemy import Integer, Time, ForeignKey, String
+from sqlalchemy import Integer, String, Time, ForeignKey, Boolean, UUID as PG_UUID, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid
-from typing import List, TYPE_CHECKING
+import datetime
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
-    from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
-    from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
+    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 
 
 class Horario(Base):
@@ -21,10 +21,11 @@ class Horario(Base):
     )
 
     external_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        default=uuid.uuid4,
         unique=True,
         index=True,
-        default=uuid.uuid4
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
     )
 
     name: Mapped[str] = mapped_column(String, nullable=False)

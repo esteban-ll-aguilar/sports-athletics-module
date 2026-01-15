@@ -35,7 +35,7 @@ class UserBaseSchema(BaseModel):
 # CREATE
 # ======================================================
 
-from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate
+from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
 from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
 
 # ======================================================
@@ -69,6 +69,8 @@ class UserUpdateSchema(BaseModel):
     sexo: Optional[SexoEnum] = None
     is_active: Optional[bool] = None
     role: Optional[RoleEnum] = None
+    
+    atleta_data: Optional['AtletaUpdate'] = None
 
 # ======================================================
 # RESPONSE
@@ -80,6 +82,7 @@ class UserResponseSchema(UserBaseSchema):
     auth_user_id: int
     email: Optional[str] = None
     is_active: Optional[bool] = None
+    two_factor_enabled: Optional[bool] = False
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, Boolean, UUID as PG_UUID, text
 from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
@@ -6,9 +6,10 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 if TYPE_CHECKING:
-    from app.modules.entrenador.domain.models.horario_model import Horario
     from app.modules.atleta.domain.models.atleta_model import Atleta
     from app.modules.entrenador.domain.models.asistencia_model import Asistencia
+    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+    from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
 
 
 class RegistroAsistencias(Base):
@@ -16,11 +17,11 @@ class RegistroAsistencias(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     external_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        default=uuid.uuid4,
         unique=True,
         index=True,
-        default=uuid.uuid4,
-        onupdate=uuid.uuid4
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
     )
 
     # FKs

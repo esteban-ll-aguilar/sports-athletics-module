@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import VerificationModal from '../widgets/VerificationModal';
+import TwoFactorLoginModal from '../widgets/TwoFactorLoginModal';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -14,6 +15,10 @@ const LoginPage = () => {
     // Estados para el modal de verificación
     const [showVerificationModal, setShowVerificationModal] = useState(false);
     const [verificationSuccessMsg, setVerificationSuccessMsg] = useState('');
+
+    // Estados para 2FA
+    const [showTwoFactorModal, setShowTwoFactorModal] = useState(false);
+    const [tempToken, setTempToken] = useState('');
 
     const navigate = useNavigate();
 
@@ -30,16 +35,22 @@ const LoginPage = () => {
         setVerificationSuccessMsg('');
 
         try {
-            await authService.login(email, password);
-            navigate('/dashboard'); // Redirect to home/dashboard
+            const response = await authService.login(email, password);
+
+            if (response.requires_2fa) {
+                // 2FA Requerido
+                setTempToken(response.temp_token);
+                setShowTwoFactorModal(true);
+            } else {
+                // Login normal exitoso
+                navigate('/dashboard');
+            }
         } catch (err) {
             console.error("Login error:", err);
 
             // Detectar si el error es por usuario inactivo
             if (err.detail === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
-                // No seteamos error visual aquí para no confundir, el modal se abre automáticamente
-                // Opcional: setError('Por favor verifica tu correo electrónico.');
             } else {
                 setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
             }
@@ -51,16 +62,16 @@ const LoginPage = () => {
     const handleVerificationSuccess = (msg) => {
         setShowVerificationModal(false);
         setVerificationSuccessMsg(msg || 'Email verificado exitosamente. Ahora puedes iniciar sesión.');
-        // Opcional: Auto-login o pedirle que inicie sesión de nuevo
-        // Como tenemos la contraseña en el estado, podríamos intentar login automático:
-        // handleSubmit(new Event('submit')); 
-        // Pero es más seguro pedirle que haga clic en 'Iniciar Sesión' de nuevo o simplemente reintentar el submit programáticamente si se desea.
-        // Por ahora, solo mostramos el mensaje de éxito.
+    };
+
+    const handleTwoFactorSuccess = () => {
+        setShowTwoFactorModal(false);
+        // Navigation handled inside modal or here if needed, but modal calls navigate
     };
 
     return (
         //fondo degradado//
-        <div className="flex h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
+        <div className="flex h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
             <VerificationModal
                 isOpen={showVerificationModal}
                 onClose={() => setShowVerificationModal(false)}
@@ -68,9 +79,17 @@ const LoginPage = () => {
                 onSuccess={handleVerificationSuccess}
             />
 
+            <TwoFactorLoginModal
+                isOpen={showTwoFactorModal}
+                tempToken={tempToken}
+                email={email}
+                onSuccess={handleTwoFactorSuccess}
+                onError={(msg) => setError(msg)} // Optional: show error in main form too
+            />
+
             {/* Left Side - Image & Text */}
             <div className="hidden lg:flex w-1/2 relative text-white items-center justify-center overflow-hidden bg-[#242223]">
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent">
                     {/* Placeholder for the image from the design. Using a generic athletic image for now. */}
                     <img
                         src={loginImage}
@@ -92,10 +111,10 @@ const LoginPage = () => {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-gradient-to-br from-[#212121] to-[#242223]">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-linear-to-br from-[#212121] to-[#242223]">
                 <div className="w-full max-w-md bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
                     <div className="text-center mb-8">
-                        <div className="mx-auto w-14 h-14 bg-gradient-to-br from-[#b30c25] to-[#362022] rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
+                        <div className="mx-auto w-14 h-14 bg-linear-to-br from-[#b30c25] to-[#362022] rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
                             {/* Simple Icon */}
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
@@ -133,7 +152,7 @@ const LoginPage = () => {
                                     id="email"
                                     type="email"
                                     required
-                                      className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -162,7 +181,7 @@ const LoginPage = () => {
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     required
-  className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -212,7 +231,7 @@ const LoginPage = () => {
 
                         <div className="text-center mt-4">
                             <span className="text-sm text-gray-400">¿No tienes cuenta? </span>
-                            <Link to= "/register" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
+                            <Link to="/register" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                 Regístrate aquí
                             </Link>
                         </div>
