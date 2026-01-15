@@ -3,7 +3,7 @@ Modelo de datos para el atleta.
 """
 
 from datetime import date
-from sqlalchemy import Date, Integer, ForeignKey
+from sqlalchemy import Date, Integer, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 import uuid
@@ -22,10 +22,12 @@ class Atleta(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
-    external_id: Mapped[UUID] = mapped_column(
+    external_id: Mapped[uuid.UUID] = mapped_column(
         default=uuid.uuid4,
         unique=True,
-        index=True
+        index=True,
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
     )
 
     anios_experiencia: Mapped[int] = mapped_column(Integer, nullable=False)

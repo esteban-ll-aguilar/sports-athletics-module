@@ -5,6 +5,7 @@ from typing import List, Optional
 from sqlalchemy.orm import selectinload
 
 from app.modules.atleta.domain.models.atleta_model import Atleta
+from app.modules.auth.domain.models.user_model import UserModel
 
 class AtletaRepository:
     """Repositorio para manejar la entidad 'Atleta'"""
@@ -19,9 +20,17 @@ class AtletaRepository:
         self.session.add(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
-        # Load user for response consistency if needed, though usually just ID is enough
-        # await self.session.refresh(atleta, attribute_names=['user']) 
-        return atleta
+        
+        # Load user and nest load auth for email property
+        stmt = (
+            select(Atleta)
+            .where(Atleta.id == atleta.id)
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
     # ----------------------
     # Obtener por ID (primary key de tabla atleta)
@@ -30,7 +39,9 @@ class AtletaRepository:
         result = await self.session.execute(
             select(Atleta)
             .where(Atleta.id == atleta_id)
-            .options(selectinload(Atleta.user))
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
         )
         return result.scalars().first()
 
@@ -41,7 +52,9 @@ class AtletaRepository:
         result = await self.session.execute(
             select(Atleta)
             .where(Atleta.user_id == user_id)
-            .options(selectinload(Atleta.user))
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
         )
         return result.scalars().first()
 
@@ -52,7 +65,9 @@ class AtletaRepository:
         result = await self.session.execute(
             select(Atleta)
             .where(Atleta.external_id == external_id)
-            .options(selectinload(Atleta.user))
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
         )
         return result.scalars().first()
 
@@ -62,7 +77,9 @@ class AtletaRepository:
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[Atleta]:
         result = await self.session.execute(
             select(Atleta)
-            .options(selectinload(Atleta.user))
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
             .offset(skip)
             .limit(limit)
         )
@@ -75,7 +92,16 @@ class AtletaRepository:
         self.session.add(atleta)
         await self.session.commit()
         await self.session.refresh(atleta)
-        return atleta
+        # Reload relationships
+        stmt = (
+            select(Atleta)
+            .where(Atleta.id == atleta.id)
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
 
     # ----------------------
     # Eliminar atleta
@@ -97,7 +123,9 @@ class AtletaRepository:
         result = await self.session.execute(
             select(Atleta)
             .where(Atleta.representante_id == representante_id)
-            .options(selectinload(Atleta.user))
+            .options(
+                selectinload(Atleta.user).selectinload(UserModel.auth)
+            )
         )
         return result.scalars().all()
 

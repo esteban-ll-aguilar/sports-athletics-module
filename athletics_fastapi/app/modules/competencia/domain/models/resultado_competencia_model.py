@@ -1,12 +1,13 @@
 """Modelo de Resultado de Competencia corregido para usar auth_users como atleta."""
-from sqlalchemy import Integer, String, Date, Float, Boolean, ForeignKey, DateTime, Text
+from sqlalchemy import Integer, String, Date, Float, Boolean, ForeignKey, DateTime, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 import uuid
 import datetime
 from typing import Optional, TYPE_CHECKING
 from enum import Enum as PyEnum
+
 
 if TYPE_CHECKING:
     from app.modules.competencia.domain.models.competencia_model import Competencia
@@ -32,7 +33,11 @@ class ResultadoCompetencia(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     external_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4
+        default=uuid.uuid4,
+        unique=True,
+        index=True,
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
     )
     
     # FKs

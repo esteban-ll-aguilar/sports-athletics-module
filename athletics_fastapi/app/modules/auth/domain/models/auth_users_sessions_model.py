@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Boolean, DateTime, func, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Integer, ForeignKey, Boolean, DateTime, String, text, func
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 import datetime, uuid
 from typing import TYPE_CHECKING
@@ -13,7 +13,15 @@ class AuthUsersSessionsModel(Base):
     __tablename__ = "auth_users_sessions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
-    external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4) 
+    external_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        default=uuid.uuid4,
+        unique=True,
+        index=True,
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
+    )
+
     user_id: Mapped[int] = mapped_column(
         Integer, 
         ForeignKey("auth_users.id", ondelete="CASCADE"), 

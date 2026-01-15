@@ -24,8 +24,8 @@ const DetalleAtletaPage = () => {
                 RepresentanteService.getAtletaEstadisticas(id),
                 RepresentanteService.getAtletaHistorial(id)
             ]);
-            setStats(statsData.data);
-            setHistorial(historialData.data);
+            setStats(statsData);
+            setHistorial(historialData);
         } catch (error) {
             console.error("Error cargando detalles del atleta:", error);
             toast.error("Error al cargar los datos. Verifique que sea su atleta representado.");

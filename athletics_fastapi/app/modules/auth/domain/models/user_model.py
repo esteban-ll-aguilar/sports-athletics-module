@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Date, Enum, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import String, Integer, Date,Enum, Boolean, Enum as SQLAlchemyEnum, text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 from typing import Optional, TYPE_CHECKING
 import uuid, datetime
@@ -33,10 +33,13 @@ class UserModel(Base):
     )
 
     external_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        PG_UUID(as_uuid=True),
         default=uuid.uuid4,
         unique=True,
-        index=True
+        index=True,
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
+
     )
 
     # -------- Datos personales --------
