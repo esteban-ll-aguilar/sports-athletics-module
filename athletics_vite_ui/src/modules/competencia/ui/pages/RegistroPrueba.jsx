@@ -22,7 +22,6 @@ const RegistroPruebaCompetenciaPage = () => {
             setRegistros(Array.isArray(resRegistros) ? resRegistros : []);
             setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
         } catch (err) {
-            console.error("Error cargando datos:", err);
         } finally {
             setLoading(false);
         }
@@ -45,7 +44,6 @@ const RegistroPruebaCompetenciaPage = () => {
             await registroPruebaCompetenciaService.create(payload);
             fetchData();
         } catch (err) {
-            console.error("Error al registrar prueba:", err);
             throw err;
         }
     };

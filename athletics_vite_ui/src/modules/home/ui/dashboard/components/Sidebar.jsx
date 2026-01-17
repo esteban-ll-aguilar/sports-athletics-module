@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     if (role) {
         menuItems.push(...rolePermissions[role]);
     }
-
+    
     const isActive = (path) => location.pathname === path;
 
     return (

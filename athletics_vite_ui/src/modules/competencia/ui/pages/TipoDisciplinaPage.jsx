@@ -16,7 +16,6 @@ const TipoDisciplinaPage = () => {
       // Obtenemos todos los registros para que no desaparezcan los inactivos
       setTipos(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      console.error("Error al cargar los tipos de disciplina", err);
     } finally {
       setLoading(false);
     }
@@ -72,16 +71,20 @@ const TipoDisciplinaPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900">
+        <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
         <Link
           to="/dashboard/pruebas"
-          className="group inline-flex items-center gap-2 px-4 py-2 mb-8 bg-white border-2 border-gray-200 rounded-xl 
-             text-gray-600 font-semibold hover:border-red-500 hover:text-red-600 
-             transition-all duration-200 hover:shadow-md"
-        >
+          className="
+  group inline-flex items-center gap-2 px-4 py-2 mb-8
+  bg-[#242223] border border-[#332122]
+  rounded-xl text-gray-300 font-semibold
+  hover:border-[#b30c25] hover:text-[#b30c25]
+  transition-all duration-200 hover:shadow-lg
+"
+>
           <span className="material-symbols-outlined text-lg transition-transform duration-200 group-hover:-translate-x-1">
             arrow_back
           </span>
@@ -92,17 +95,24 @@ const TipoDisciplinaPage = () => {
         {/* Cabecera */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-2">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+<h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-100">
               Tipos de Disciplina
             </h1>
-            <p className="text-gray-600 text-lg">
-              Administra las categorías generales de las competencias deportivas
+<p className="text-gray-400 text-lg">
+                Administra las categorías generales de las competencias deportivas
             </p>
           </div>
 
           <button
             onClick={handleOpenCreate}
-            className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
+            className="
+  group flex items-center gap-2
+  bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+  text-white px-8 py-4 rounded-2xl font-bold
+  shadow-xl shadow-black/40
+  transition-all hover:brightness-110 hover:scale-105
+  active:scale-100 duration-200
+"
           >
             <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
               add
@@ -112,21 +122,27 @@ const TipoDisciplinaPage = () => {
         </div>
 
         {/* Tabla */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+<div className="
+  bg-[#242223]
+  rounded-3xl
+  border border-[#332122]
+  shadow-2xl shadow-black/40
+  overflow-hidden
+">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
+                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-400 tracking-widest">
                     Nombre
                   </th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-400 tracking-widest">
                     Descripción
                   </th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider text-center">
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-4 tracking-widest text-center">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider text-right">
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-gray-400 tracking-widest text-right">
                     Acciones
                   </th>
                 </tr>
@@ -181,8 +197,8 @@ const TipoDisciplinaPage = () => {
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${t.estado
-                            ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
-                            : 'bg-red-100 text-red-700 ring-2 ring-red-200'
+                            ? 'bg-green-900/40 text-green-300 ring-green-700'
+                            : 'bg-red-900/40 text-red-300 ring-red-700'
                           }`}>
                           {t.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -191,7 +207,7 @@ const TipoDisciplinaPage = () => {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleOpenEdit(t)}
-                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                            className="p-2.5 text-blue-400 hover:bg-blue-900/30 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                             title="Editar"
                           >
                             <span className="material-symbols-outlined">edit</span>
@@ -200,8 +216,8 @@ const TipoDisciplinaPage = () => {
                           <button
                             onClick={() => toggleStatus(t)}
                             className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${t.estado
-                                ? 'text-red-600 hover:bg-red-50'
-                                : 'text-green-600 hover:bg-green-50'
+                                ? ' text-red-400 hover:bg-red-900/30'
+                                : ' text-green-400 hover:bg-green-900/30'
                               }`}
                             title={t.estado ? "Desactivar" : "Activar"}
                           >

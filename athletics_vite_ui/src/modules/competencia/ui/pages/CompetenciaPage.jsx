@@ -73,23 +73,23 @@ const CompetenciasPage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900">
+    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-2">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Gestión de Competencias
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-400 text-lg">
               Administra el calendario, lugares y estados de los eventos oficiales
             </p>
           </div>
 
           <button
             onClick={() => { setSelectedCompetencia(null); setIsModalOpen(true); }}
-            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-sm uppercase tracking-wide hover:shadow-2xl hover:shadow-red-200 hover:scale-105 active:scale-100 transition-all duration-200"
+            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8 bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] text-white font-bold text-sm uppercase tracking-wide hover:shadow-2xl hover:shadow-red-200 hover:scale-105 active:scale-100 transition-all duration-200"
           >
             <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
               add
@@ -101,7 +101,7 @@ const CompetenciasPage = () => {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 material-symbols-outlined">
               search
             </span>
             <input
@@ -109,35 +109,45 @@ const CompetenciasPage = () => {
               placeholder="Buscar por nombre, lugar o ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl focus:border-red-500 outline-none transition-all bg-white shadow-sm"
+              className="
+    w-full pl-12 pr-4 py-4 rounded-2xl
+    bg-[#1f1c1d]
+    border border-[#332122]
+    text-gray-100 placeholder-gray-500
+    focus:border-[#b30c25]
+    focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none transition-all
+    shadow-inner
+  "
             />
           </div>
         </div>
 
         {/* Table Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Nombre de Competencia
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Fecha
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Lugar
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#332122]">
                 {loading ? (
                   <tr>
                     <td colSpan="5" className="py-20 text-center">
@@ -171,7 +181,7 @@ const CompetenciasPage = () => {
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
+                          <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#b30c25] to-[#5a1a22] rounded-xl flex items-center justify-center">
                             <span className="material-symbols-outlined text-white text-xl">
                               emoji_events
                             </span>
@@ -186,13 +196,13 @@ const CompetenciasPage = () => {
                           </div>
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!comp.estado ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <td className={`px-6 py-5 ${!comp.estado ? 'text-gray-500' : 'text-gray-100'}`}>
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-sm">calendar_today</span>
                           <span className="font-medium">{formatDate(comp.fecha)}</span>
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!comp.estado ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <td className={`px-6 py-5 ${!comp.estado ? 'text-gray-500' : 'text-gray-300'}`}>
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-sm">location_on</span>
                           <span className="font-medium">{comp.lugar}</span>
@@ -200,8 +210,8 @@ const CompetenciasPage = () => {
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${comp.estado
-                          ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
-                          : 'bg-red-100 text-red-700 ring-2 ring-red-200'
+                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                          : ' bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
                           }`}>
                           {comp.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -219,8 +229,8 @@ const CompetenciasPage = () => {
                           <button
                             onClick={() => toggleStatus(comp)}
                             className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${comp.estado
-                              ? 'text-red-600 hover:bg-red-50'
-                              : 'text-green-600 hover:bg-green-50'
+                              ? 'text-red-400 hover:bg-red-500/10'
+                              : 'text-green-400 hover:bg-green-500/100'
                               }`}
                             title={comp.estado ? "Desactivar" : "Activar"}
                           >

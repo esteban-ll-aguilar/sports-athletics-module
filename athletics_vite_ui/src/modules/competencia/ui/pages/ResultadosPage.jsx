@@ -23,7 +23,6 @@ const ResultadosPage = () => {
       const data = await resultadoCompetenciaService.getAll();
       setResultados(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      console.error("Error al obtener resultados:", err);
     } finally {
       setLoading(false);
     }
@@ -34,7 +33,6 @@ const ResultadosPage = () => {
       const data = await competenciaService.getAll();
       setCompetencias(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      console.error("Error al obtener competencias:", err);
     }
   };
 
@@ -44,7 +42,6 @@ const ResultadosPage = () => {
       const response = await AtletaService.getAthletes(1, 200);
       setAtletas(response.items || []);
     } catch (err) {
-      console.error("Error al obtener atletas:", err);
     }
   };
 
@@ -53,7 +50,6 @@ const ResultadosPage = () => {
       const data = await PruebaRepository.getAll();
       setPruebas(data || []);
     } catch (err) {
-      console.error("Error al obtener pruebas:", err);
     }
   };
 
@@ -140,8 +136,8 @@ const ResultadosPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
         <Link
@@ -149,26 +145,28 @@ const ResultadosPage = () => {
           className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
         >
           <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-            arrow_back
+
           </span>
-          Volver a Gestión de Competencias
         </Link>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
-          <div className="space-y-2">
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+          <div className="space-y-1">
+<h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Registro de Resultados
             </h1>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-400">
             </p>
           </div>
 
           <button
             onClick={() => { setSelectedResultado(null); setIsModalOpen(true); }}
-            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8 bg-gradient-to-r from-red-600 to-red-500 text-white font-bold text-sm uppercase tracking-wide hover:shadow-2xl hover:shadow-red-200 hover:scale-105 active:scale-100 transition-all duration-200"
-          >
-            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+            className="
+      flex items-center gap-2 px-6 py-3 rounded-xl font-semibold
+      bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
+      hover:brightness-110 transition
+    "             >
+            <span className="material-symbols-outlined">
               add
             </span>
             Registrar Resultado
@@ -187,8 +185,16 @@ const ResultadosPage = () => {
               placeholder="Buscar por atleta o competencia..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl focus:border-red-500 outline-none transition-all bg-white shadow-sm"
-            />
+              className="
+    w-full pl-12 pr-4 py-4 rounded-2xl
+    bg-[#1f1c1d]
+    border border-[#332122]
+    text-gray-100 placeholder-gray-500
+    focus:border-[#b30c25]
+    focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none transition-all
+    shadow-inner
+  "            />
           </div>
 
           {/* Filtro por Competencia */}
@@ -199,8 +205,16 @@ const ResultadosPage = () => {
             <select
               value={filterCompetencia}
               onChange={(e) => setFilterCompetencia(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-2xl focus:border-red-500 outline-none transition-all bg-white shadow-sm appearance-none cursor-pointer"
-            >
+              className="
+    w-full pl-12 pr-4 py-4 rounded-2xl
+    bg-[#1f1c1d]
+    border border-[#332122]
+    text-gray-100 placeholder-gray-500
+    focus:border-[#b30c25]
+    focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none transition-all
+    shadow-inner
+  "            >
               <option value="">Todas las Competencias</option>
               {competencias.map(comp => (
                 <option key={comp.id} value={comp.id}>
@@ -213,15 +227,15 @@ const ResultadosPage = () => {
 
 
         {/* Últimos Registros Card */}
-        <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden mb-6">
+        <div className="bg-[#212121] rounded-3xl shadow-2xl border border-[#332122] overflow-hidden mb-6">
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-red-600 text-3xl">
                 today
               </span>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Últimos Registros</h2>
-                <p className="text-sm text-gray-500">Total de registros hoy: {filteredResultados.length}</p>
+                <h2 className="text-xl font-black text-gray-100 tracking-tight">Últimos Registros</h2>
+                <p className="text-sm text-gray-400">Total de registros hoy: {filteredResultados.length}</p>
               </div>
             </div>
           </div>
@@ -229,26 +243,28 @@ const ResultadosPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+
                     Competencia
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Participante
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Prueba
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Resultado
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Posición
                   </th>
-                  <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -283,26 +299,26 @@ const ResultadosPage = () => {
                     <tr
                       key={resultado.external_id}
                       className={`transition-all duration-200 ${!resultado.estado
-                        ? 'bg-gray-50/70 opacity-60'
-                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                        ? 'bg-[#1c1c1c] opacity-60'
+                        : 'hover:bg-[#1f1f1f] '
                         }`}
                     >
                       <td className="px-6 py-5">
-                        <div className={`font-semibold ${!resultado.estado ? 'text-gray-400' : 'text-gray-900'}`}>
+                        <div className={`font-semibold ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
                           {getCompetenciaNombre(resultado.competencia_id)}
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-medium">{getAtletaNombre(resultado.atleta_id)}</span>
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-gray-700'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-gray-400'}`}>
                         {getPruebaNombre(resultado.prueba_id)}
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <span className={`font-bold text-lg ${!resultado.estado ? 'text-gray-400' : 'text-red-600'}`}>
+                        <span className={`font-bold text-lg ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
                           {resultado.resultado} {resultado.unidad_medida}
                         </span>
                       </td>
@@ -332,8 +348,8 @@ const ResultadosPage = () => {
                           <button
                             onClick={() => toggleStatus(resultado)}
                             className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${resultado.estado
-                              ? 'text-red-600 hover:bg-red-50'
-                              : 'text-green-600 hover:bg-green-50'
+                              ? 'text-red-400 hover:bg-red-500/10'
+                              : 'text-green-400 hover:bg-green-500/10'
                               }`}
                             title={resultado.estado ? "Desactivar" : "Activar"}
                           >
@@ -366,7 +382,6 @@ const ResultadosPage = () => {
             setIsModalOpen(false);
             fetchResultados();
           } catch (error) {
-            console.error("Error al guardar:", error);
             alert("Error al guardar el resultado");
           }
         }}

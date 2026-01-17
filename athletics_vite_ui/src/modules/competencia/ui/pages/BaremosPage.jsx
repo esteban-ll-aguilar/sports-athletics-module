@@ -16,7 +16,6 @@ const BaremosPage = () => {
       // Obtenemos todos los datos sin filtrar para que los inactivos permanezcan visibles
       setBaremos(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      console.error("Error al obtener baremos:", err);
     } finally {
       setLoading(false);
     }

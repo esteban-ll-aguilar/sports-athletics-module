@@ -25,7 +25,6 @@ const PruebasPage = () => {
             setDisciplinas(Array.isArray(resDisc) ? resDisc : []);
             setBaremos(Array.isArray(resBar) ? resBar : []);
         } catch (err) {
-            console.error("Error al sincronizar datos:", err);
         } finally {
             setLoading(false);
         }

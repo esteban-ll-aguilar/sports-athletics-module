@@ -104,26 +104,32 @@ const AdminUsersTable = () => {
   const roles = Array.from(new Set(users.map((u) => u.role)));
 
   return (
-    <>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+          <div className="space-y-2">
             <UserCog className="text-indigo-600" />
-            <h2 className="text-lg font-semibold text-gray-800">
+            <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Usuarios del Sistema
             </h2>
+
           </div>
 
           <button
             onClick={exportPDF}
-            className="flex items-center gap-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded"
+            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8
+    bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+    text-white font-bold text-sm uppercase tracking-wide
+    hover:shadow-2xl hover:shadow-red-200 hover:scale-105
+    active:scale-100 transition-all duration-200"
           >
             <FileText size={16} />
             Exportar PDF
           </button>
         </div>
+
 
         {/* Filtros */}
         <div className="px-6 py-4 flex flex-wrap gap-4">
@@ -132,14 +138,27 @@ const AdminUsersTable = () => {
             placeholder="Buscar por nombre o correo"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring focus:ring-indigo-200"
-          />
+            className="
+        w-full pl-12 pr-4 py-4 rounded-2xl
+        bg-[#1f1c1d]
+        border border-[#332122]
+        text-gray-100 placeholder-gray-500
+        focus:border-[#b30c25]
+        focus:ring-1 focus:ring-[#b30c25]/40
+        outline-none transition-all
+        shadow-inner
+      "    />
 
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring focus:ring-indigo-200"
-          >
+            className="
+    px-4 py-4 rounded-xl
+    bg-[#121212] border border-[#332122]
+    text-gray-100
+    focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none
+  ">
             <option value="">Todos los roles</option>
             {roles.map((role) => (
               <option key={role} value={role}>
@@ -151,8 +170,13 @@ const AdminUsersTable = () => {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1 focus:outline-none focus:ring focus:ring-indigo-200"
-          >
+            className="
+    px-4 py-4 rounded-xl
+    bg-[#121212] border border-[#332122]
+    text-gray-100
+    focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none
+  ">
             <option value="">Todos los estados</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
@@ -160,23 +184,23 @@ const AdminUsersTable = () => {
         </div>
 
         {/* Tabla */}
-        <table className="w-full table-fixed divide-y divide-gray-100">
-          <thead className="bg-gray-50">
+        <table className="w-full divide-y table-auto min-w-[900px]">
+          
+          
+          <thead className="bg-[#1a1a1a] border-b border-[#332122]">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
+
                 Nombre
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
                 Correo
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                Rol
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Rol
               </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                Estado
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Estado
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
-                Acciones
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Acciones
               </th>
             </tr>
           </thead>
@@ -245,8 +269,10 @@ const AdminUsersTable = () => {
           onUpdated={fetchUsers}
         />
       )}
-    </>
+    </div>
+
   );
+
 };
 
 export default AdminUsersTable;

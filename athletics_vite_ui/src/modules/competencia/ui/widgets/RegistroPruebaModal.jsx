@@ -24,7 +24,6 @@ const RegistroPruebaCompetenciaPage = () => {
             setRegistros(Array.isArray(resRegistros) ? resRegistros : []);
             setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
         } catch (err) {
-            console.error("Error cargando datos:", err);
         } finally {
             setLoading(false);
         }
