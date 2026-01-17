@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 import pruebaService from "../../services/prueba_service";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import baremoService from "../../services/baremo_service";
@@ -24,10 +24,10 @@ const PruebasPage = () => {
             setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
             setDisciplinas(Array.isArray(resDisc) ? resDisc : []);
             setBaremos(Array.isArray(resBar) ? resBar : []);
-        } catch (err) { 
-            console.error("Error al sincronizar datos:", err); 
-        } finally { 
-            setLoading(false); 
+        } catch (err) {
+            console.error("Error al sincronizar datos:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,7 +59,7 @@ const PruebasPage = () => {
             } else {
                 await pruebaService.create(payload);
             }
-            
+
             setIsModalOpen(false);
             fetchData();
             alert("¡Registro guardado con éxito!");
@@ -83,44 +83,64 @@ const PruebasPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900 p-4 md:p-10">
+        <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
             <div className="max-w-7xl mx-auto">
-                
+
                 {/* Cabecera y Navegación */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
                     <div className="space-y-4">
                         {/* Breadcrumb Links */}
                         <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Link 
-                                to="baremos" 
-                                className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-600 hover:border-red-500 hover:text-red-600 transition-all duration-200 hover:shadow-md"
+                            <Link
+                                to="baremos"
+                                className="
+  px-4 py-2 rounded-xl text-sm font-semibold
+  bg-[#1a1a1a] border border-[#332122] text-gray-300
+  hover:text-[#b30c25] hover:border-[#b30c25]
+  transition
+"
                             >
                                 📊 Baremos
                             </Link>
                             <span className="text-gray-300">/</span>
-                            <Link 
-                                to="disciplinas" 
-                                className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-600 hover:border-red-500 hover:text-red-600 transition-all duration-200 hover:shadow-md"
+                            <Link
+                                to="disciplinas"
+                                className="
+  px-4 py-2 rounded-xl text-sm font-semibold
+  bg-[#1a1a1a] border border-[#332122] text-gray-300
+  hover:text-[#b30c25] hover:border-[#b30c25]
+  transition
+"
                             >
                                 🏃 Disciplinas
                             </Link>
                         </div>
-                        
+
                         <div>
-                            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+                            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
                                 Gestión de Pruebas
                             </h1>
-                            <p className="text-gray-600 text-lg mt-2">
+                            <p className="text-gray-400 text-lg mt-2">
                                 Administra las pruebas deportivas del sistema
                             </p>
                         </div>
                     </div>
-                    
-                    <button 
+
+                    <button
                         onClick={() => { setSelectedPrueba(null); setIsModalOpen(true); }}
-                        className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
-                    >
-                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+                        className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "                       >
+                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
                             add
                         </span>
                         Nueva Prueba
@@ -128,24 +148,24 @@ const PruebasPage = () => {
                 </div>
 
                 {/* Tabla de Resultados */}
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+                <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
+                                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
                                         Siglas / Nombre
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
+                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
+                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
                                         Disciplina / Baremo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-center">
+                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-right">
+                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
                                         Acciones
                                     </th>
                                 </tr>
@@ -176,9 +196,12 @@ const PruebasPage = () => {
                                         const disc = disciplinas.find(d => d.id === p.tipo_disciplina_id);
                                         const bar = baremos.find(b => b.id === p.baremo_id);
                                         return (
-                                            <tr 
-                                                key={p.external_id} 
-                                                className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200"
+                                            <tr
+                                                key={p.external_id}
+                                                className="
+  transition-colors
+  hover:bg-[#242223]
+"
                                             >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
@@ -196,11 +219,10 @@ const PruebasPage = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold uppercase ${
-                                                        p.tipo_prueba === 'COMPETENCIA' 
-                                                            ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200' 
-                                                            : 'bg-blue-100 text-blue-700 ring-2 ring-blue-200'
-                                                    }`}>
+                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold uppercase ${p.tipo_prueba === 'COMPETENCIA'
+                                                        ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200'
+                                                        : 'bg-blue-100 text-blue-700 ring-2 ring-blue-200'
+                                                        }`}>
                                                         {p.tipo_prueba}
                                                     </span>
                                                 </td>
@@ -215,25 +237,24 @@ const PruebasPage = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase ${
-                                                        p.estado 
-                                                            ? 'bg-green-100 text-green-700 ring-2 ring-green-200' 
-                                                            : 'bg-red-100 text-red-700 ring-2 ring-red-200'
-                                                    }`}>
+                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase ${p.estado
+                                                        ? 'bg-green-900/20 text-green-400 border border-green-800'
+                                                        : 'bg-red-900/20 text-red-400 border border-red-800'
+                                                        }`}>
                                                         {p.estado ? "Activo" : "Inactivo"}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
-                                                        <button 
-                                                            onClick={() => { setSelectedPrueba(p); setIsModalOpen(true); }} 
+                                                        <button
+                                                            onClick={() => { setSelectedPrueba(p); setIsModalOpen(true); }}
                                                             className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         >
                                                             <span className="material-symbols-outlined">edit</span>
                                                         </button>
                                                         {p.estado && (
-                                                            <button 
-                                                                onClick={() => handleDesactivar(p)} 
+                                                            <button
+                                                                onClick={() => handleDesactivar(p)}
                                                                 className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                             >
                                                                 <span className="material-symbols-outlined">block</span>
@@ -251,9 +272,9 @@ const PruebasPage = () => {
                 </div>
             </div>
 
-            <PruebaModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
+            <PruebaModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
                 editingData={selectedPrueba}
             />

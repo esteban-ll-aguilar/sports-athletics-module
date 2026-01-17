@@ -95,7 +95,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         });
 
         if (result.isConfirmed) {
-            setForm({...form, estado: !form.estado});
+            setForm({ ...form, estado: !form.estado });
 
             Swal.fire({
                 icon: 'success',
@@ -107,25 +107,35 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h2 className="text-xl font-black">{editingData ? 'Editar Prueba' : 'Nueva Prueba'}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-black">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className=" w-full max-w-xl rounded-2xl bg-[#242223] border border-[#332122] shadow-2xl shadow-black/50 animate-in fade-in zoom-in duration-200 ">
+                <div className="px-6 py-5 border-b border-[#332122] flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-black tracking-wide text-gray-100">
+                            {editingData ? 'Editar Prueba' : 'Nueva Prueba'}
+                        </h2>
+
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white transition">
+
                         <span className="material-symbols-outlined">close</span>
                     </button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     {/* Switch de Estado (Activar/Desactivar) */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <div>
+                    <div className="
+    flex items-center justify-between
+    p-4 rounded-xl
+    bg-[#212121]
+    border border-[#332122]
+">                        <div>
                             <span className="block text-xs font-black uppercase text-gray-400">Estado del Registro</span>
                             <span className={`text-sm font-bold ${form.estado ? 'text-green-600' : 'text-red-600'}`}>
                                 {form.estado ? 'PRUEBA ACTIVA' : 'PRUEBA DESACTIVADA'}
                             </span>
                         </div>
-                        <button 
+                        <button
                             type="button"
                             onClick={toggleEstado}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-300'}`}
@@ -137,33 +147,51 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
-                            <input 
-                                type="text" 
-                                value={form.siglas} 
-                                onChange={(e) => setForm({...form, siglas: e.target.value.toUpperCase()})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:border-[#ec1313] font-bold" 
-                                required 
+                            <input
+                                type="text"
+                                value={form.siglas}
+                                onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
+                                className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                  required
                             />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad Medida</label>
-                            <input 
-                                type="text" 
-                                value={form.unidad_medida} 
-                                onChange={(e) => setForm({...form, unidad_medida: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:border-[#ec1313]" 
-                                required 
+                            <input
+                                type="text"
+                                value={form.unidad_medida}
+                                onChange={(e) => setForm({ ...form, unidad_medida: e.target.value })}
+                                className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                                  required
                             />
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Tipo de Prueba</label>
-                        <select 
-                            value={form.tipo_prueba} 
-                            onChange={(e) => setForm({...form, tipo_prueba: e.target.value})} 
-                            className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white font-semibold"
-                            required
+                        <select
+                            value={form.tipo_prueba}
+                            onChange={(e) => setForm({ ...form, tipo_prueba: e.target.value })}
+                            className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                              required
                         >
                             <option value="COMPETENCIA">COMPETENCIA</option>
                             <option value="NORMAL">NORMAL</option>
@@ -173,10 +201,17 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Disciplina</label>
-                            <select 
-                                value={form.tipo_disciplina_id} 
-                                onChange={(e) => setForm({...form, tipo_disciplina_id: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white" required
+                            <select
+                                value={form.tipo_disciplina_id}
+                                onChange={(e) => setForm({ ...form, tipo_disciplina_id: e.target.value })}
+                                className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "   required
                             >
                                 <option value="">Seleccione...</option>
                                 {disciplinas.map(d => (<option key={d.id} value={d.id}>{d.nombre}</option>))}
@@ -184,10 +219,17 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         </div>
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Baremo</label>
-                            <select 
-                                value={form.baremo_id} 
-                                onChange={(e) => setForm({...form, baremo_id: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white" required
+                            <select
+                                value={form.baremo_id}
+                                onChange={(e) => setForm({ ...form, baremo_id: e.target.value })}
+                                className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "  required
                             >
                                 <option value="">Seleccione...</option>
                                 {baremos.map(b => (<option key={b.id} value={b.id}>Clase {b.clasificacion} ({b.valor_baremo} pts)</option>))}
@@ -196,8 +238,17 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     </div>
 
                     <div className="flex gap-3 pt-6">
-                        <button type="button" onClick={onClose} className="flex-1 p-4 border border-gray-100 rounded-xl font-bold text-gray-400 text-xs uppercase">Cancelar</button>
-                        <button type="submit" className="flex-1 p-4 bg-[#ec1313] text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-50 text-xs uppercase">
+                        <button type="button" onClick={onClose}
+                            className="
+              flex-1 px-4 py-3 rounded-xl font-semibold
+              border border-[#332122] text-gray-400
+              hover:bg-[#242223] transition
+            "            >Cancelar</button>
+                        <button type="submit" className="
+              flex-1 px-4 py-3 rounded-xl font-semibold text-white
+              bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
+              hover:brightness-110 transition active:scale-95
+            "            >
                             Guardar Cambios
                         </button>
                     </div>

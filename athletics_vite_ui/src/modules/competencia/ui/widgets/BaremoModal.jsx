@@ -69,7 +69,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="w-full max-w-md bg-[#212121] rounded-2xl shadow-2xl border border-[#332122]">
+      <div className="w-full max-w-lg bg-[#212121] rounded-2xl shadow-2xl border border-[#332122]">
 
         {/* HEADER */}
         <div className="px-6 py-5 border-b border-[#332122] flex items-center justify-between bg-[#1a1a1a] rounded-t-2xl">
@@ -92,7 +92,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-7 space-y-6">
           {/* CAMPO VALOR PUNTOS */}
           <div>
             <label className="block text-sm font-semibold mb-2 text-gray-300">Valor (Puntos)</label>
@@ -102,7 +102,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
               value={form.valor_baremo}
               onChange={(e) => setForm({ ...form, valor_baremo: e.target.value })}
               placeholder="Ej: 100"
-                    className="
+              className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -120,7 +120,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
               name="clasificacion"
               value={form.clasificacion}
               onChange={(e) => setForm({ ...form, clasificacion: e.target.value })}
-      className="
+              className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -137,7 +137,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
           </div>
 
           {/* TOGGLE DE ESTADO */}
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#1c1c1c] border border-[#332122]">
+          <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#1c1c1c] border border-[#332122]">
 
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-gray-200">Estado</span>
@@ -164,7 +164,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             <button
               type="button"
               onClick={onClose}
- className="
+              className="
               flex-1 px-4 py-3 rounded-xl font-semibold
               border border-[#332122] text-gray-400
               hover:bg-[#242223] transition
@@ -173,7 +173,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             </button>
             <button
               type="submit"
- className="
+              className="
               flex-1 px-4 py-3 rounded-xl font-semibold text-white
               bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
               hover:brightness-110 transition active:scale-95
