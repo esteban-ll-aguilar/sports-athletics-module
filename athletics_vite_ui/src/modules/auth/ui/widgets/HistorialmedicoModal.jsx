@@ -113,90 +113,148 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
     const isReadOnly = activeTab === "ver";
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl w-full max-w-xl p-6 shadow-xl">
-                {/* Tabs */}
-                <div className="flex border-b border-gray-200 mb-4">
-                    {!historial && (
-                        <button
-                            className={`px-4 py-2 -mb-px font-medium border-b-2 ${activeTab === "crear" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500"}`}
-                            onClick={() => setActiveTab("crear")}
-                        >
-                            Crear
-                        </button>
-                    )}
-                    {historial && (
-                        <>
-                            <button
-                                className={`px-4 py-2 -mb-px font-medium border-b-2 ${activeTab === "editar" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500"}`}
-                                onClick={() => setActiveTab("editar")}
-                            >
-                                Editar
-                            </button>
-                            <button
-                                className={`px-4 py-2 -mb-px font-medium border-b-2 ${activeTab === "ver" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500"}`}
-                                onClick={() => setActiveTab("ver")}
-                            >
-                                Ver Historial
-                            </button>
-                        </>
-                    )}
-                </div>
+   return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div className="bg-[#1e1e1e] w-full max-w-2xl rounded-3xl border border-[#332122] shadow-2xl text-gray-100 overflow-hidden">
+
+            {/* HEADER */}
+            <div className="px-8 py-6 bg-gradient-to-r from-[#b30c25] to-[#5c0a16]">
+                <h2 className="text-xl font-semibold">
+                    Historial Médico
+                </h2>
+                <p className="text-sm text-red-100/80">
+                    Información clínica del atleta
+                </p>
+            </div>
+
+            {/* TABS */}
+            <div className="flex px-8 pt-6 gap-6 border-b border-[#332122]">
+                {!historial && (
+                    <TabButton active={activeTab === "crear"} onClick={() => setActiveTab("crear")}>
+                        Crear
+                    </TabButton>
+                )}
+                {historial && (
+                    <>
+                        <TabButton active={activeTab === "editar"} onClick={() => setActiveTab("editar")}>
+                            Editar
+                        </TabButton>
+                        <TabButton active={activeTab === "ver"} onClick={() => setActiveTab("ver")}>
+                            Ver historial
+                        </TabButton>
+                    </>
+                )}
+            </div>
+
+            {/* BODY */}
+            <div className="px-8 py-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#332122]">
 
                 {(activeTab === "crear" || activeTab === "editar") && (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="flex gap-4">
-                            <div className="flex-1">
-                                <label className="block mb-1 font-medium">Talla (m) <span className="text-red-500">*</span></label>
-                                <input type="number" step="0.01" name="talla" value={formData.talla} onChange={handleChange} className="w-full border rounded-lg px-3 py-2" required readOnly={isReadOnly} />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block mb-1 font-medium">Peso (kg) <span className="text-red-500">*</span></label>
-                                <input type="number" step="0.1" name="peso" value={formData.peso} onChange={handleChange} className="w-full border rounded-lg px-3 py-2" required readOnly={isReadOnly} />
-                            </div>
-                            <div className="flex-1">
-                                <label className="block mb-1 font-medium">IMC</label>
-                                <input type="text" value={calcularIMC(formData.peso, formData.talla)} readOnly className="w-full border rounded-lg px-3 py-2 bg-gray-100" />
-                            </div>
-                        </div>
+                    <form onSubmit={handleSubmit} className="space-y-6">
 
-                        <div>
-                            <label className="block mb-1 font-medium">Alergias</label>
-                            <textarea name="alergias" value={formData.alergias} onChange={handleChange} className="w-full border rounded-lg px-3 py-2" readOnly={isReadOnly} />
-                        </div>
-                        <div>
-                            <label className="block mb-1 font-medium">Enfermedades</label>
-                            <textarea name="enfermedades" value={formData.enfermedades} onChange={handleChange} className="w-full border rounded-lg px-3 py-2" readOnly={isReadOnly} />
-                        </div>
-                        <div>
-                            <label className="block mb-1 font-medium">Enfermedades hereditarias</label>
-                            <textarea name="enfermedades_hereditarias" value={formData.enfermedades_hereditarias} onChange={handleChange} className="w-full border rounded-lg px-3 py-2" readOnly={isReadOnly} />
-                        </div>
+                        {/* MÉTRICAS */}
+                        <section>
+                            <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
+                                Métricas corporales
+                            </h3>
 
-                        <div className="flex justify-end gap-3 pt-4">
-                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border">Cerrar</button>
-                            <button type="submit" disabled={loading} className="px-5 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Input label="Talla (m)" name="talla" value={formData.talla} onChange={handleChange} />
+                                <Input label="Peso (kg)" name="peso" value={formData.peso} onChange={handleChange} />
+                                <Input label="IMC" value={calcularIMC(formData.peso, formData.talla)} readOnly />
+                            </div>
+                        </section>
+
+                        {/* CONDICIONES */}
+                        <section>
+                            <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
+                                Condiciones médicas
+                            </h3>
+
+                            <div className="space-y-4">
+                                <Textarea label="Alergias" name="alergias" value={formData.alergias} onChange={handleChange} />
+                                <Textarea label="Enfermedades" name="enfermedades" value={formData.enfermedades} onChange={handleChange} />
+                                <Textarea label="Enfermedades hereditarias" name="enfermedades_hereditarias" value={formData.enfermedades_hereditarias} onChange={handleChange} />
+                            </div>
+                        </section>
+
+                        {/* FOOTER */}
+                        <div className="flex justify-between items-center pt-6 border-t border-[#332122]">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-white transition"
+                            >
+                                Cancelar
+                            </button>
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-6 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8f091d] transition font-medium"
+                            >
                                 {loading ? "Guardando..." : activeTab === "editar" ? "Actualizar" : "Guardar"}
                             </button>
                         </div>
                     </form>
                 )}
 
+                {/* VISTA SOLO LECTURA */}
                 {activeTab === "ver" && historial && (
-                    <div className="space-y-2">
-                        <p>Talla: {historial.talla}</p>
-                        <p>Peso: {historial.peso}</p>
-                        <p>IMC: {historial.imc}</p>
-                        <p>Alergias: {historial.alergias}</p>
-                        <p>Enfermedades: {historial.enfermedades}</p>
-                        <p>Enfermedades hereditarias: {historial.enfermedades_hereditarias}</p>
-                        <button onClick={onClose} className="mt-4 px-4 py-2 border rounded">Cerrar</button>
+                    <div className="space-y-6">
+                        {[
+                            ["Talla", historial.talla],
+                            ["Peso", historial.peso],
+                            ["IMC", historial.imc],
+                            ["Alergias", historial.alergias],
+                            ["Enfermedades", historial.enfermedades],
+                            ["Enfermedades hereditarias", historial.enfermedades_hereditarias]
+                        ].map(([label, value]) => (
+                            <div key={label} className="flex justify-between border-b border-[#332122] pb-2">
+                                <span className="text-gray-400">{label}</span>
+                                <span>{value || "—"}</span>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
         </div>
-    );
+    </div>
+);
 };
+// Componentes auxiliares
+const TabButton = ({ active, children, ...props }) => (
+    <button
+        {...props}
+        className={`pb-3 text-sm font-medium border-b-2 transition ${
+            active
+                ? "border-[#b30c25] text-[#b30c25]"
+                : "border-transparent text-gray-400 hover:text-white"
+        }`}
+    >
+        {children}
+    </button>
+);
 
+const Input = ({ label, readOnly = false, ...props }) => (
+    <div>
+        <label className="block mb-1 text-sm text-gray-400">{label}</label>
+        <input
+            readOnly={readOnly}
+            {...props}
+            className="w-full bg-[#242223] border border-[#332122] rounded-xl px-4 py-2.5 text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50"
+        />
+    </div>
+);
+
+const Textarea = ({ label, ...props }) => (
+    <div>
+        <label className="block mb-1 text-sm text-gray-400">{label}</label>
+        <textarea
+            {...props}
+            rows={3}
+            className="w-full bg-[#242223] border border-[#332122] rounded-xl px-4 py-2.5 text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50"
+        />
+    </div>
+);
 export default HistorialMedicoModal;

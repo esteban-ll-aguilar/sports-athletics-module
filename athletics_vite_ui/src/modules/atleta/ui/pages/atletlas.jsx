@@ -160,26 +160,27 @@ const AthletesTable = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+      <div className="bg-[#212121] rounded-2xl shadow-xl border border-[#332122] overflow-auto text-gray-200">
         <p className="text-sm text-red-700">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-auto">
+    <div className="bg-[#212121] rounded-2xl shadow-xl border border-[#332122] overflow-auto text-gray-200">
 
       {/* Header */}
-      <div className="px-6 py-4 border-b flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+      <div className="px-6 py-5 border-b border-[#332122] flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-3">
           <User className="text-green-600" />
-          <h2 className="text-lg font-semibold">Listado de Atletas</h2>
+          <h2 className="text-lg font-semibold text-white">Listado de Atletas</h2>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+            bg-gradient-to-r from-[#b30c25] to-[#5a0f1d] hover:brightness-110 transition"
           >
             <UserPlus size={16} />
             Nuevo Atleta
@@ -187,7 +188,8 @@ const AthletesTable = () => {
 
           <button
             onClick={exportPDF}
-            className="flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+            bg-[#1a1a1a] border border-[#332122] hover:bg-[#242223] transition"
           >
             <FileText size={16} />
             Exportar PDF
@@ -196,18 +198,24 @@ const AthletesTable = () => {
       </div>
 
       {/* Filtros */}
-      <div className="px-6 py-4 flex gap-4 flex-wrap">
+      <div className="px-6 py-4 flex flex-wrap gap-4 bg-[#1a1a1a] border-b border-[#332122]">
         <input
           type="text"
           placeholder="Buscar por nombre, correo o identificación"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded px-3 py-1"
+          className="
+            bg-[#121212] border border-[#332122] rounded-lg px-4 py-2
+            text-gray-200 placeholder-gray-500 focus:ring-2 focus:ring-[#b30c25]
+        "
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded px-3 py-1"
+          className="
+            bg-[#121212] border border-[#332122] rounded-lg px-4 py-2
+            text-gray-200 focus:ring-2 focus:ring-[#b30c25]
+        "
         >
           <option value="">Todos</option>
           <option value="activo">Activo</option>
@@ -217,32 +225,33 @@ const AthletesTable = () => {
 
       {/* Tabla */}
       <table className="w-full divide-y table-auto min-w-[900px]">
-        <thead className="bg-gray-50">
+        <thead className="bg-[#1a1a1a] border-b border-[#332122]">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Usuario</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Nombre</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Apellido</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Correo</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Tipo ID</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">ID</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Estamento</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Teléfono</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Dirección</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Estado</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold">Acciones</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Usuario</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Nombre</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Apellido</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Correo</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tipo ID</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">ID</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Estamento</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Teléfono</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Dirección</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Estado</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Acciones</th>
           </tr>
         </thead>
 
         <tbody>
           {filteredUsers.map((user) => (
-            <tr key={user.id} className="hover:bg-gray-50">
+            <tr key={user.id} className="hover:bg-[#242223] transition-colors">
               <td className="px-4 py-3">{user.username}</td>
               <td className="px-4 py-3">{user.first_name}</td>
               <td className="px-4 py-3">{user.last_name}</td>
-              <td className="px-4 py-3 flex items-center">
-                <Mail size={14} className="mr-2 text-gray-400" />
+              <td className="px-4 py-3 flex items-center gap-2 text-gray-300">
+                <Mail size={14} className="text-[#b30c25]" />
                 {user.email}
               </td>
+
               <td className="px-4 py-3">{user.tipo_identificacion}</td>
               <td className="px-4 py-3">{user.identificacion}</td>
               <td className="px-4 py-3">{user.tipo_estamento}</td>
@@ -250,30 +259,33 @@ const AthletesTable = () => {
               <td className="px-4 py-3">{user.direccion}</td>
               <td className="px-4 py-3">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs ${user.is_active
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
+                  className={`px-3 py-1 rounded-full text-xs font-medium border ${user.is_active
+                    ? "bg-green-900/30 text-green-400 border-green-700"
+                    : "bg-red-900/30 text-red-400 border-red-700"
                     }`}
                 >
                   {user.is_active ? "Activo" : "Inactivo"}
                 </span>
+
               </td>
               <td className="px-4 py-3">
                 <button
                   onClick={() => openEditModal(user)}
-                  className="text-indigo-600 hover:underline text-sm"
+                  className="text-sm font-medium text-[#b30c25] hover:underline"
                 >
                   Editar
                 </button>
+
               </td>
             </tr>
           ))}
 
           {filteredUsers.length === 0 && (
             <tr>
-              <td colSpan="11" className="text-center py-6 text-gray-500">
+              <td colSpan="11" className="text-center py-10 text-gray-500">
                 No hay atletas registrados.
               </td>
+
             </tr>
           )}
         </tbody>

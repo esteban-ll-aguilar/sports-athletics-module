@@ -97,43 +97,58 @@ const TwoFactorSettings = () => {
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8 mt-8">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-full ${isEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                        <Shield size={24} />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-semibold text-gray-800">Autenticación de Dos Factores (2FA)</h2>
-                        <p className="text-sm text-gray-500">Aumenta la seguridad de tu cuenta.</p>
-                    </div>
-                </div>
-                <div>
-                    {isEnabled ? (
-                        <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm font-medium">
-                            <CheckCircle size={16} /> Activado
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-3 py-1 rounded-full text-sm font-medium">
-                            <AlertTriangle size={16} /> Desactivado
-                        </div>
-                    )}
-                </div>
-            </div>
+<div className="bg-[#212121] border border-[#332122] rounded-2xl p-6 md:p-8 mt-8 text-gray-200 shadow-xl">
+            <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+            ${isEnabled
+                ? 'bg-[rgba(34,197,94,0.15)] text-green-500'
+                : 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+            }`}
+        >
+            <Shield size={24} />
+        </div>
+
+        <div>
+            <h2 className="text-xl font-semibold text-white">
+                Autenticación de Dos Factores
+            </h2>
+            <p className="text-sm text-gray-400">
+                Protección adicional para tu cuenta
+            </p>
+        </div>
+    </div>
+
+    <span className={`px-4 py-1 rounded-full text-sm font-medium
+        ${isEnabled
+            ? 'bg-green-900/30 text-green-400 border border-green-700'
+            : 'bg-red-900/30 text-red-400 border border-red-700'
+        }`}
+    >
+        {isEnabled ? 'ACTIVADO' : 'DESACTIVADO'}
+    </span>
+</div>
+
 
             {!isEnabled && setupStep === 0 && (
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                    <p className="text-indigo-800 text-sm">
-                        Protege tu cuenta solicitando un código adicional al iniciar sesión.
-                    </p>
-                    <button
-                        onClick={handleEnableClick}
-                        disabled={loading}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
-                    >
-                        {loading ? 'Cargando...' : 'Habilitar 2FA'}
-                    </button>
-                </div>
+               <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#242223] p-5 rounded-xl border border-[#332122]">
+    <p className="text-gray-400 text-sm max-w-lg">
+        Añade una capa adicional de seguridad solicitando un código temporal al iniciar sesión.
+    </p>
+
+    <button
+        onClick={handleEnableClick}
+        disabled={loading}
+        className="
+            px-6 py-2 rounded-lg text-white font-medium
+            bg-gradient-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
+            hover:brightness-110 transition
+        "
+    >
+        {loading ? 'Cargando...' : 'Activar 2FA'}
+    </button>
+</div>
+
             )}
 
             {/* SETUP STEP 1: SCAN QR */}
@@ -173,7 +188,12 @@ const TwoFactorSettings = () => {
                                 <input
                                     type="text"
                                     placeholder="000000"
-                                    className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-center text-xl tracking-widest font-mono"
+    className="
+        w-full py-3 text-center text-xl font-mono tracking-widest
+        bg-[#121212] border border-[#332122] rounded-lg
+        text-white placeholder-gray-200
+        focus:ring-2 focus:ring-[#b30c25]
+    "
                                     maxLength={6}
                                     value={verificationCode}
                                     onChange={(e) => setVerificationCode(e.target.value)}
@@ -182,14 +202,16 @@ const TwoFactorSettings = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+   className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                            focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
+                        
                                 >
                                     {loading ? 'Verificando...' : 'Verificar y Activar'}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setSetupStep(0)}
-                                    className="w-full py-2 text-gray-500 hover:text-gray-700 text-sm"
+                                    className="w-full py-2 text-gray-400 hover:text-gray-500 text-sm"
                                 >
                                     Cancelar
                                 </button>

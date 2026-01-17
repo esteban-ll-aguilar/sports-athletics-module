@@ -146,7 +146,7 @@ const RegisterPage = () => {
     };
 
     return (
-<div className="flex min-h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
+        <div className="flex min-h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
             {/* Left Side - Image */}
             <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
                 <div className="absolute inset-0 z-0">
@@ -167,7 +167,7 @@ const RegisterPage = () => {
 
             {/* Right Side - Form */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto">
-<div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
+                <div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
                     <div className="text-center mb-8">
                         <h2 className="text-2xl font-bold text-white">Crear Cuenta</h2>
                         <p className="text-gray-400 mt-2">Ingresa tus datos para registrarte</p>
@@ -317,7 +317,7 @@ const RegisterPage = () => {
                                     name="fecha_nacimiento"
                                     value={formData.fecha_nacimiento}
                                     onChange={handleChange}
-                                        className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -336,7 +336,7 @@ const RegisterPage = () => {
                                     name="sexo"
                                     value={formData.sexo}
                                     onChange={handleChange}
-                                        className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -350,7 +350,7 @@ const RegisterPage = () => {
                                 </select>
                             </div>
                         </div>
- 
+
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
@@ -405,7 +405,7 @@ const RegisterPage = () => {
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                        className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -425,7 +425,7 @@ const RegisterPage = () => {
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                        className="
+                                    className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -447,7 +447,7 @@ const RegisterPage = () => {
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
-                                        className="
+                                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -484,7 +484,7 @@ const RegisterPage = () => {
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                        className="
+                                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -520,7 +520,7 @@ const RegisterPage = () => {
                         <button
                             type="submit"
                             disabled={loading}
-className="
+                            className="
   w-full py-3 px-4 rounded-lg
   text-sm font-semibold text-white
   bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
