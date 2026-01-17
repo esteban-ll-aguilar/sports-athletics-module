@@ -182,7 +182,7 @@ const RegisterPage = () => {
 
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-100 border-b pb-2">Datos Personales</h3>
+                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos Personales</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>

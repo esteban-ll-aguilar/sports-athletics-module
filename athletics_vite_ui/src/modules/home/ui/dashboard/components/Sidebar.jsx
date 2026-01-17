@@ -58,21 +58,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             )}
 
             {/* Sidebar Container */}
-            <div
-                className={`
-                    fixed top-0 left-0 h-full bg-white shadow-xl z-40 transition-all duration-300 ease-in-out
-                    ${isOpen ? 'w-64' : 'w-20'}
-                    ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                `}
-            >
+           <div
+    className={`
+        fixed top-0 left-0 h-full bg-[#242223] shadow-xl z-40 transition-all duration-300 ease-in-out
+        border-r border-[#332122]
+        ${isOpen ? 'w-64' : 'w-20'}
+        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}
+>
+
                 {/* Logo Section */}
-                <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
+                <div className="flex items-center justify-between h-16 px-4 border-b border-[#332122]">
                     <div className={`flex items-center ${!isOpen && 'justify-center w-full'}`}>
-                        <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
+                        <div className="w-8 h-8 bg-[#b30c25] rounded-lg flex items-center justify-center text-white font-bold text-xl">
                             A
                         </div>
                         {isOpen && (
-                            <span className="ml-3 text-lg font-bold text-gray-800 truncate">
+                            <span className="ml-3 text-lg font-bold text-white truncate">
                                 Athletics
                             </span>
                         )}
@@ -80,8 +82,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                     {/* Desktop Toggle Button */}
                     <button
                         onClick={toggleSidebar}
-                        className="hidden md:flex p-1 rounded-full hover:bg-gray-100 text-gray-500"
-                    >
+                        className="hidden md:flex p-1 rounded-full hover:bg-[#332122] text-gray-400"
+                        >
                         {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                     </button>
                 </div>
@@ -92,13 +94,13 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`
-                                flex items-center px-4 py-3 rounded-lg transition-colors duration-200
-                                ${isActive(item.path)
-                                    ? 'bg-indigo-50 text-indigo-600'
-                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-                                ${!isOpen && 'justify-center px-2'}
-                            `}
+                             className={`
+        flex items-center px-4 py-3 rounded-lg transition-colors duration-200
+        ${isActive(item.path)
+            ? 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+            : 'text-gray-400 hover:bg-[#332122] hover:text-white'}
+        ${!isOpen && 'justify-center px-2'}
+    `}
                         >
                             <item.icon size={24} />
                             {isOpen && (
@@ -112,15 +114,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                         </Link>
                     ))}
                     {/* #Perfil de usuario */}
-                    <Link
-                        to="/profile"
-                        className={`flex items-center px-4 py-3 rounded-lg transition-colors duration-200
-                            ${isActive('/profile')
-                                ? 'bg-indigo-50 text-indigo-600'
-                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
-                            ${!isOpen && 'justify-center px-2'}
-                        `}
-                    >
+                   <Link
+    to="/profile"
+    className={`
+        flex items-center px-4 py-3 rounded-lg transition-colors duration-200
+        ${isActive('/profile')
+            ? 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+            : 'text-gray-400 hover:bg-[#332122] hover:text-white'}
+        ${!isOpen && 'justify-center px-2'}
+    `}
+>
+
                         <User size={24} />
                         {isOpen && <span className="ml-3">Perfil de usuario</span>}
                     </Link>
@@ -131,15 +135,16 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 </nav>
 
                 {/* User Section & Logout */}
-                <div className="absolute bottom-0 w-full border-t border-gray-200 p-4 bg-gray-50">
+<div className="absolute bottom-0 w-full border-t border-[#332122] p-4 bg-[#212121]">
                     <div className={`flex items-center ${!isOpen && 'justify-center'}`}>
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+<div className="w-10 h-10 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25] font-bold">
                             U
                         </div>
                         {isOpen && (
                             <div className="ml-3 overflow-hidden">
-                                <p className="text-sm font-medium text-gray-900 truncate">{getUserName() || 'Cargando...'}</p>
-                                <p className="text-xs text-gray-500 truncate">{getUserEmail() || 'Cargando...'}</p>
+                               <p className="text-sm font-medium text-white truncate">
+{getUserName() || 'Cargando...'}</p>
+                              <p className="text-xs text-gray-400 truncate">{getUserEmail() || 'Cargando...'}</p>
                             </div>
                         )}
                     </div>
