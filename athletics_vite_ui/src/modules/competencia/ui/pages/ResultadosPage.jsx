@@ -68,11 +68,23 @@ const ResultadosPage = () => {
 
   const toggleStatus = async (resultado) => {
     const nuevoEstado = !resultado.estado;
-    const mensaje = nuevoEstado
-      ? `¿Deseas activar este resultado?`
-      : `¿Deseas desactivar este resultado?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Deseas activar este resultado?`
+        : `¿Deseas desactivar este resultado?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await resultadoCompetenciaService.update(resultado.external_id, {
@@ -84,9 +96,26 @@ const ResultadosPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
+
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
+
       fetchResultados();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import baremoService from "../../services/baremo_service";
 import BaremoModal from "../widgets/BaremoModal";
+import Swal from "sweetalert2";
+
 
 const BaremosPage = () => {
   const [baremos, setBaremos] = useState([]);
@@ -29,32 +31,63 @@ const BaremosPage = () => {
     setSelectedBaremo(baremo);
     setIsModalOpen(true);
   };
-
   const toggleStatus = async (baremo) => {
     const nuevoEstado = !baremo.estado;
-    const mensaje = nuevoEstado
-      ? `¿Deseas activar el baremo "${baremo.clasificacion}"?`
-      : `¿Deseas desactivar el baremo "${baremo.clasificacion}"?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Desea activar el baremo: ${baremo.clasificacion}?`
+        : `¿Desea desactivar el baremo: ${baremo.clasificacion}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await baremoService.update(baremo.external_id, {
         ...baremo,
         estado: nuevoEstado
       });
-      // Actualización local inmediata para asegurar que no desaparezca de la lista
-      setBaremos(prev => prev.map(item =>
-        item.external_id === baremo.external_id
-          ? { ...item, estado: nuevoEstado }
-          : item
-      ));
+
+      // 🔹 Actualización local inmediata (no desaparece de la tabla)
+      setBaremos(prev =>
+        prev.map(b =>
+          b.external_id === baremo.external_id
+            ? { ...b, estado: nuevoEstado }
+            : b
+        )
+      );
+
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Baremo activado exitosamente' : 'Baremo desactivado exitosamente',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
 
       fetchBaremos();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado del baremo',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
@@ -139,9 +172,9 @@ const BaremosPage = () => {
                   baremos.map((b) => (
                     <tr
                       key={b.external_id}
-                      className={`transition-colors ${!b.estado
-                        ? "opacity-50"
-                        : "hover:bg-[#242223]"
+                      className={`transition-all duration-200 ${!b.estado
+                        ? "bg-gray-50/70 opacity-60"
+                        : "hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent"
                         }`}
                     >
                       <td className={`px-6 py-5 font-bold text-2xl ${!b.estado ? 'text-gray-400' : 'text-gray-900'}`}>
@@ -181,10 +214,10 @@ const BaremosPage = () => {
                           <button
                             onClick={() => toggleStatus(b)}
                             className={`p-2.5 rounded-lg transition ${b.estado
-                                ? "text-red-400 hover:bg-red-900/20"
-                                : "text-green-400 hover:bg-green-900/20"
+                              ? "text-red-400 hover:bg-red-900/20"
+                              : "text-green-400 hover:bg-green-900/20"
                               }`}
-                          
+
 
                             title={b.estado ? "Desactivar" : "Activar"}
                           >
