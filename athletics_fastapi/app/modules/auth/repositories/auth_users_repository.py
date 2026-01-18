@@ -326,3 +326,45 @@ class AuthUsersRepository:
 
         users = result.scalars().all()
         return users, total
+    async def update_password_by_email(self, email: str, new_password_hash: str, password: str = None) -> bool:
+        """
+        Actualiza la contraseña de un usuario dado su email.
+        Retorna True si tuvo éxito, False si el usuario no existe.
+        """
+        user = await self.get_by_email(email)
+        if not user:
+            return False
+            
+        # Actualizar en servicio externo si se provee la contraseña en plano
+        if password:
+            try:
+                from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
+                from app.modules.external.services.external_users_api_service import ExternalUsersApiService
+                from app.modules.external.domain.schemas.users_api_schemas import UserExternalUpdateAccountRequest
+                
+                external_repo = ExternalUsersApiRepository(self.db)
+                external_service = ExternalUsersApiService(external_repo)
+                
+                # Necesitamos el external_id que está en el perfil (UserModel)
+                # El get_by_email ya hace eager load del profile
+                if user.profile and user.profile.external_id:
+                     await external_service.update_user_account(
+                        str(user.profile.external_id),
+                        UserExternalUpdateAccountRequest(
+                            dni=user.profile.identificacion,
+                            password=password
+                        )
+                    )
+            except Exception as e:
+                logger.warning(f"⚠️ Error actualizando contraseña en servicio externo para {email}: {e}")
+                # No fallamos el reset local si falla el externo
+        
+        user.hashed_password = new_password_hash
+        self.db.add(user)
+        try:
+            await self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error updating password in DB: {e}")
+            await self.db.rollback()
+            return False
