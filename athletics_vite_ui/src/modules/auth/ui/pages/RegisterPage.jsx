@@ -246,7 +246,8 @@ const RegisterPage = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">
                                         Identificación
-                                        <span className="text-xs text-gray-500 ml-1">(solo números)</span>
+                                        <span className="text-xs text-gray-500 ml-1">
+                                              </span>
                                     </label>
                                     <input
                                         name="identificacion"

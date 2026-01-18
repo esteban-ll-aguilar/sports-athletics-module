@@ -4,6 +4,8 @@ import pruebaService from "../../services/prueba_service";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import baremoService from "../../services/baremo_service";
 import PruebaModal from "../widgets/PruebaModal.jsx";
+import Swal from "sweetalert2";
+
 
 const PruebasPage = () => {
     const [pruebas, setPruebas] = useState([]);
@@ -70,16 +72,63 @@ const PruebasPage = () => {
         }
     };
 
-    const handleDesactivar = async (prueba) => {
-        if (!confirm(`¿Desea desactivar la prueba ${prueba.tipo_prueba}?`)) return;
+    const toggleStatus = async (prueba) => {
+        const nuevoEstado = !prueba.estado;
+
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: nuevoEstado
+                ? `¿Desea activar la prueba ${prueba.siglas}?`
+                : `¿Desea desactivar la prueba ${prueba.siglas}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+            cancelButtonText: 'Cancelar',
+            background: '#212121',
+            color: '#fff'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
-            const payload = { ...prueba, estado: false };
-            await pruebaService.update(prueba.external_id, payload);
+            await pruebaService.update(prueba.external_id, {
+                ...prueba,
+                estado: nuevoEstado
+            });
+
+            // 🔹 Actualización visual inmediata
+            setPruebas(prev =>
+                prev.map(p =>
+                    p.external_id === prueba.external_id
+                        ? { ...p, estado: nuevoEstado }
+                        : p
+                )
+            );
+
+            Swal.fire({
+                title: '¡Éxito!',
+                text: nuevoEstado ? 'Prueba activada exitosamente' : 'Prueba desactivada exitosamente',
+                icon: 'success',
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
+            });
+
             fetchData();
         } catch (err) {
-            alert("Error al desactivar el registro");
+            Swal.fire({
+                title: 'Error',
+                text: 'Error al cambiar el estado de la prueba',
+                icon: 'error',
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
+            });
         }
     };
+
 
     return (
         <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
@@ -197,11 +246,10 @@ const PruebasPage = () => {
                                         return (
                                             <tr
                                                 key={p.external_id}
-                                                className="
-  transition-colors
-  hover:bg-[#242223]
-"
-                                            >
+                                                className={`transition-all duration-200 ${!p.estado
+                                                        ? 'bg-gray-50/70 opacity-60'
+                                                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                                                    }`}                     >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg">
@@ -251,14 +299,19 @@ const PruebasPage = () => {
                                                         >
                                                             <span className="material-symbols-outlined">edit</span>
                                                         </button>
-                                                        {p.estado && (
-                                                            <button
-                                                                onClick={() => handleDesactivar(p)}
-                                                                className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                                                            >
-                                                                <span className="material-symbols-outlined">block</span>
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() => toggleStatus(p)}
+                                                            className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${p.estado
+                                                                    ? 'text-red-400 hover:bg-red-900/30'
+                                                                    : 'text-green-400 hover:bg-green-900/30'
+                                                                }`}
+                                                            title={p.estado ? 'Desactivar' : 'Activar'}
+                                                        >
+                                                            <span className="material-symbols-outlined">
+                                                                {p.estado ? 'block' : 'check_circle'}
+                                                            </span>
+                                                        </button>
+
                                                     </div>
                                                 </td>
                                             </tr>

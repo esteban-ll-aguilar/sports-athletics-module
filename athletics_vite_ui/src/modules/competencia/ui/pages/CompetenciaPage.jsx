@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import competenciaService from "../../services/competencia_service";
 import CompetenciaModal from "../widgets/CompetenciaModal";
+import Swal from "sweetalert2";
 
 const CompetenciasPage = () => {
   const [competencias, setCompetencias] = useState([]);
@@ -33,11 +34,23 @@ const CompetenciasPage = () => {
 
   const toggleStatus = async (competencia) => {
     const nuevoEstado = !competencia.estado;
-    const mensaje = nuevoEstado
-      ? `¿Deseas activar la competencia "${competencia.nombre}"?`
-      : `¿Deseas desactivar la competencia "${competencia.nombre}"?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Deseas activar la competencia "${competencia.nombre}"?`
+        : `¿Deseas desactivar la competencia "${competencia.nombre}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await competenciaService.update(competencia.external_id, {
@@ -49,9 +62,26 @@ const CompetenciasPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
+
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
+
       fetchCompetencias();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
 
@@ -82,9 +112,6 @@ const CompetenciasPage = () => {
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Gestión de Competencias
             </h1>
-            <p className="text-gray-400 text-lg">
-              Administra el calendario, lugares y estados de los eventos oficiales
-            </p>
           </div>
 
           <button
@@ -187,7 +214,7 @@ const CompetenciasPage = () => {
                             </span>
                           </div>
                           <div>
-                            <p className={`font-bold ${!comp.estado ? 'text-gray-400' : 'text-gray-900'}`}>
+                            <p className={`font-bold ${!comp.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                               {comp.nombre}
                             </p>
                             <p className="text-xs text-gray-400 font-mono">
