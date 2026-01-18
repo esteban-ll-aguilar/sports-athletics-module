@@ -24,8 +24,12 @@ async def lifespan(app: FastAPI):
     # Inicializa base de datos
     logger.info("📊 Initializing database connection...")
     db_engine = _db.get_engine()
-    async with db_engine.begin() as conn:
-        logger.info("✅ Database connection established")
+    try:
+        async with db_engine.begin() as conn:
+            logger.info("✅ Database connection established")       
+    except Exception as e:
+        logger.error(f"❌ Database connection failed: {e}")
+        raise e
     
     # Inicializa Redis
     logger.info("📊 Initializing Redis connection...")
@@ -35,6 +39,7 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Redis connection established")
     except Exception as e:
         logger.error(f"❌ Redis connection failed: {e}")
+        raise e
     
     # Verificar rotación de JWT secrets
     logger.info("🔐 Checking JWT secret rotation...")
