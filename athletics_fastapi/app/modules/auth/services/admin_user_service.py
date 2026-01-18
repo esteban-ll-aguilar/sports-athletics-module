@@ -9,13 +9,27 @@ class AdminUserService:
         self.users_repo = users_repo
 
     async def update_user_role(self, user_id: str, new_role: RoleEnum):
-        # user_id is now external_id (UUID string)
-        user = await self.users_repo.get_by_external_id(user_id)
+        # user_id can be external_id (UUID string) or internal_id (int string)
+        user = await self.users_repo.get_by_any_id(user_id)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
         
+        from app.modules.atleta.domain.models.atleta_model import Atleta
+        from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+        from app.modules.representante.domain.models.representante_model import Representante
+
         user.role = new_role
-        await self.users_repo.session.commit()
+
+        # Asegurar que exista la sub-entidad para el nuevo rol
+        if new_role == RoleEnum.ATLETA and not user.atleta:
+            self.users_repo.db.add(Atleta(user_id=user.id, anios_experiencia=0))
+        elif new_role == RoleEnum.ENTRENADOR and not user.entrenador:
+            self.users_repo.db.add(Entrenador(user_id=user.id, anios_experiencia=0))
+        elif new_role == RoleEnum.REPRESENTANTE and not user.representante:
+            self.users_repo.db.add(Representante(user_id=user.id))
+
+        await self.users_repo.db.commit()
+        await self.users_repo.db.refresh(user)
         return user
 
     async def get_all_users(self, page: int = 1, size: int = 20, role: Optional[RoleEnum] = None):
@@ -37,7 +51,7 @@ class AdminUserService:
         user_id: str,
         data: AdminUserUpdateRequest
     ):
-        user = await self.users_repo.get_by_external_id(user_id)
+        user = await self.users_repo.get_by_any_id(user_id)
 
         if not user:
             raise HTTPException(
@@ -57,8 +71,8 @@ class AdminUserService:
         if data.profile_image is not None:
             user.profile_image = data.profile_image
 
-        await self.users_repo.session.commit()
-        await self.users_repo.session.refresh(user)
+        await self.users_repo.db.commit()
+        await self.users_repo.db.refresh(user)
 
         return user
     

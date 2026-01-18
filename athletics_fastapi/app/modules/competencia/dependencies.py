@@ -121,7 +121,7 @@ async def get_registro_prueba_competencia_service(
 async def get_current_admin_or_entrenador(
     current_user=Depends(get_current_user)
 ):
-    if current_user.role not in (
+    if current_user.profile.role not in (
         RoleEnum.ADMINISTRADOR,
         RoleEnum.ENTRENADOR
     ):

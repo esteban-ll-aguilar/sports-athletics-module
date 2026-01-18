@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -12,6 +13,7 @@ import asyncio
 async def lifespan(app: FastAPI):
     # Startup
     from app.core.logging.logger import logger
+    
     from app.core.db.database import _db
     from app.core.cache.redis import _redis
     from app.core.jwt.secret_rotation import JWTSecretRotation
@@ -117,6 +119,19 @@ _APP = FastAPI(
 
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter
+
+@_APP.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    from app.core.logging.logger import logger
+    logger.error(f"❌ GLOBAL ERROR: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "message": str(exc)},
+        headers={
+            "Access-Control-Allow-Origin": _SETTINGS.cors_allow_origins if _SETTINGS.cors_allow_origins != "*" else "*",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 # Agregar handler para rate limit exceeded
 _APP.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

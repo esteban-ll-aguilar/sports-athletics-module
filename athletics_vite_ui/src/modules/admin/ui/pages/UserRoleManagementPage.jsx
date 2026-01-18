@@ -22,24 +22,14 @@ const UserRoleManagementPage = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log('🔵 [ADMIN] Iniciando petición de usuarios...');
+
       const response = await adminService.getUsers();
-
-      console.log('🔵 [ADMIN] RESPUESTA RAW BACKEND:', response);
-      console.log('🔵 [ADMIN] response.items:', response?.items);
-      console.log('🔵 [ADMIN] Tipo de response:', typeof response);
-      console.log('🔵 [ADMIN] Es array response?:', Array.isArray(response));
-
       const usersArray =
         response?.items ||
         response?.data ||
         response?.results ||
         response?.users ||
         (Array.isArray(response) ? response : []);
-
-      console.log('🔵 [ADMIN] USUARIOS EXTRAIDOS:', usersArray);
-      console.log('🔵 [ADMIN] Cantidad de usuarios:', usersArray?.length);
-      console.log('🔵 [ADMIN] Es array usersArray?:', Array.isArray(usersArray));
 
       if (!Array.isArray(usersArray)) {
         console.error('🔴 [ADMIN] ERROR: usersArray no es un array!');

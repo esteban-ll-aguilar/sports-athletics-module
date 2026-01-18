@@ -48,10 +48,8 @@ class CompetenciaService:
     async def update(self, external_id: UUID, data: CompetenciaUpdate):
         competencia = await self.get_by_external_id(external_id)
 
-        for field, value in data.model_dump(exclude_unset=True).items():
-            setattr(competencia, field, value)
-
-        return await self.repo.update(competencia)
+        changes = data.model_dump(exclude_unset=True)
+        return await self.repo.update(competencia, changes)
 
 
     async def count(self) -> int:
@@ -59,4 +57,4 @@ class CompetenciaService:
 
     async def delete(self, external_id: UUID) -> None:
         competencia = await self.get_by_external_id(external_id)
-        await self.repo.delete(competencia)
+        await self.repo.delete(competencia.id)

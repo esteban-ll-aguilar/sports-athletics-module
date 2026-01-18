@@ -521,15 +521,15 @@ const RegisterPage = () => {
                             type="submit"
                             disabled={loading}
                             className="
-  w-full py-3 px-4 rounded-lg
-  text-sm font-semibold text-white
-  bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-  hover:brightness-110
-  focus:ring-2 focus:ring-[#b30c25]
-  disabled:opacity-50
-  transition-all duration-300 shadow-lg
-  mt-6
-"
+                        w-full py-3 px-4 rounded-lg
+                        text-sm font-semibold text-white
+                        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+                        hover:brightness-110
+                        focus:ring-2 focus:ring-[#b30c25]
+                        disabled:opacity-50
+                        transition-all duration-300 shadow-lg
+                        mt-6
+                        "
                         >
                             {loading ? 'Registrando...' : 'Registrarse'}
                         </button>

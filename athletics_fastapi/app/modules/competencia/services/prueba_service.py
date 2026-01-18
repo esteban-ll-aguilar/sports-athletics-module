@@ -10,7 +10,7 @@ class PruebaService:
         return await self.repo.create(data)
 
     async def get_prueba(self, external_id: str):
-        prueba = await self.repo.get(external_id)
+        prueba = await self.repo.get_by_external_id(external_id)
         if not prueba:
             raise HTTPException(status_code=404, detail="Prueba no encontrada")
         return prueba
@@ -19,10 +19,8 @@ class PruebaService:
         return await self.repo.list(skip, limit)
 
     async def update_prueba(self, external_id: str, data: PruebaUpdate):
-        # Primero verificamos si existe (o confiamos en que repo.update devuelva None si falla)
-        # Asumiendo patrón optimista: intentamos update, o verificamos antes.
-        # Generalmente es mejor verificar existencia.
-        prueba = await self.repo.get(external_id)
+        # Primero verificamos si existe
+        prueba = await self.repo.get_by_external_id(external_id)
         if not prueba:
             raise HTTPException(status_code=404, detail="Prueba no encontrada")
         

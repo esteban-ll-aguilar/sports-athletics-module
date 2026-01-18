@@ -5,6 +5,7 @@ import competenciaService from "../../services/competencia_service";
 import AtletaService from "../../../atleta/services/AtletaService";
 import PruebaRepository from "../../services/prueba_service";
 import ResultadoModal from "../widgets/ResultadoModal";
+import Swal from "sweetalert2";
 
 const ResultadosPage = () => {
   const [resultados, setResultados] = useState([]);
@@ -152,7 +153,7 @@ const ResultadosPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-1">
-<h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Registro de Resultados
             </h1>
             <p className="text-gray-400">
@@ -379,10 +380,12 @@ const ResultadosPage = () => {
             } else {
               await resultadoCompetenciaService.create(data);
             }
+            Swal.fire("Éxito", "Resultado guardado correctamente", "success");
             setIsModalOpen(false);
             fetchResultados();
           } catch (error) {
-            alert("Error al guardar el resultado");
+            console.error("Error al guardar:", error);
+            Swal.fire("Error", "No se pudo guardar el resultado", "error");
           }
         }}
         editingResultado={selectedResultado}

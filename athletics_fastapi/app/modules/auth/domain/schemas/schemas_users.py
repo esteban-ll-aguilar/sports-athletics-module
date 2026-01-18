@@ -104,21 +104,21 @@ class UserSimpleSchema(BaseModel):
 # ======================================================
 
 class AtletaSimpleSchema(BaseModel):
-    external_id: UUID
+    external_id: Optional[UUID] = None
     categoria: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class EntrenadorSimpleSchema(BaseModel):
-    external_id: UUID
+    external_id: Optional[UUID] = None
     especialidad: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class RepresentanteSimpleSchema(BaseModel):
-    external_id: UUID
+    external_id: Optional[UUID] = None
     parentesco: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)

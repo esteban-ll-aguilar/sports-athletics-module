@@ -171,9 +171,31 @@ class AuthUsersRepository:
         result = await self.db.execute(
             select(UserModel)
             .where(UserModel.external_id == external_id)
-            .join(UserModel.auth) # Eager load auth for properties like email/is_active
+            .options(selectinload(UserModel.auth)) # Eager load auth for properties like email/is_active
         )
         return result.scalar_one_or_none()
+
+    # =====================================================
+    # GET BY ANY ID (INTELLIGENT LOOKUP)
+    # =====================================================
+    async def get_by_any_id(self, user_id: str) -> Optional[UserModel]:
+        """
+        Busca un usuario intentando primero por external_id (UUID)
+        y luego por ID interno (integer).
+        """
+        user = None
+        # 1. Intentar por external_id (UUID)
+        try:
+            val_uuid = uuid.UUID(str(user_id))
+            user = await self.get_by_external_id(str(val_uuid))
+        except (ValueError, TypeError):
+            pass
+
+        # 2. Si no se encontró, intentar por ID interno (solo si es numérico)
+        if not user and str(user_id).isdigit():
+            user = await self.get_by_id_profile(int(user_id))
+        
+        return user
 
     # =====================================================
     # UPDATE USER

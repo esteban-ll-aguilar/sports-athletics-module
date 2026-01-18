@@ -55,7 +55,7 @@ async def actualizar_competencia(
 ):
     """Actualizar una competencia (solo rol ENTRENADOR)."""
 
-    if current_user.role != RoleEnum.ENTRENADOR:
+    if current_user.profile.role != RoleEnum.ENTRENADOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los entrenadores pueden modificar competencias"
@@ -73,7 +73,7 @@ async def eliminar_competencia(
     service: CompetenciaService = Depends(get_competencia_service),
 ):
     """Eliminar una competencia (solo rol ENTRENADOR)."""
-    if current_user.role != RoleEnum.ENTRENADOR:
+    if current_user.profile.role != RoleEnum.ENTRENADOR:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los entrenadores pueden eliminar competencias"

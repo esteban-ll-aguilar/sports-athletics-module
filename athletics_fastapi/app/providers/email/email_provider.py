@@ -22,13 +22,13 @@ class EmailProvider:
         msg.add_alternative(self.generate_html(subject, body), subtype="html")
 
         if self.use_tls:
-            with smtplib.SMTP(self.host, self.port) as server:
+            with smtplib.SMTP(self.host, self.port, timeout=10) as server:
                 server.ehlo()
                 server.starttls()
                 server.login(self.username, self.password)
                 server.send_message(msg)
         else:
-            with smtplib.SMTP_SSL(self.host, self.port) as server:
+            with smtplib.SMTP_SSL(self.host, self.port, timeout=10) as server:
                 server.login(self.username, self.password)
                 server.send_message(msg)
 

@@ -58,10 +58,14 @@ async def request_password_reset(
         except Exception as e:
             # Si falla el envío, eliminar el código
             await reset_service.delete_reset_code(data.email)
-            logger.error(f"Error enviando email de reset a {data.email}: {e}")
+            
+            # Loguear error detallado para el administrador
+            logger.error(f"Error CRÍTICO enviando email de reset a {data.email}: {type(e).__name__} - {e}")
+            
+            # Lanzar 500 pero con un mensaje que no bloquee al usuario si es solo un timeout
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error al enviar el email"
+                detail="No se pudo enviar el email de recuperación. Por favor intenta más tarde o contacta a soporte."
             )
     else:
         # Aunque no exista, loguear el intento

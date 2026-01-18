@@ -135,22 +135,8 @@ async def update_user_by_id(
     repo: AuthUsersRepository = Depends(get_users_repo),
     current_user: AuthUserModel = Depends(get_current_user),
 ):
-    # Intentar buscar por external_id (UUID)
-    user = None
-    try:
-        val_uuid = UUID(user_id)
-        user = await repo.get_by_external_id(val_uuid)
-    except (ValueError, TypeError):
-        pass
-
-    # Si no se encontró por UUID, intentar por ID interno (solo si es numérico)
-    if not user and user_id.isdigit():
-        result = await repo.db.execute(
-            select(UserModel)
-            .where(UserModel.id == int(user_id))
-            .options(selectinload(UserModel.auth))
-        )
-        user = result.scalar_one_or_none()
+    # Buscar usuario (UUID o ID interno) usando el repo helper
+    user = await repo.get_by_any_id(user_id)
 
     if not user:
         raise HTTPException(

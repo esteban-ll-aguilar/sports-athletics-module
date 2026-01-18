@@ -20,7 +20,7 @@ async def get_current_entrenador(
 ) -> Entrenador:
     
     # 1. Verificar Rol
-    if current_user.role != RoleEnum.ENTRENADOR:
+    if current_user.profile.role != RoleEnum.ENTRENADOR:
         # Nota: Si se permite que admin actúe como entrenador, ajustar aquí.
         # Por ahora estricto a que tenga el rol.
         raise HTTPException(

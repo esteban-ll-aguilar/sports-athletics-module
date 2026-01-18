@@ -22,7 +22,7 @@ async def create_historial(
     current_user: AuthUserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
 ):
-    if current_user.role != RoleEnum.ATLETA:
+    if current_user.profile.role != RoleEnum.ATLETA:
         raise HTTPException(status_code=403, detail="Solo ATLETAS")
 
     service = HistorialMedicoService(db)

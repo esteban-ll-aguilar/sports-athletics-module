@@ -4,7 +4,7 @@ import { Mail, FileText, User, UserPlus } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
-import EditUserModal from "../widgets/atletasModal";
+import EditUserModal from "../../../auth/ui/pages/RegisterPage";
 
 const AthletesTable = () => {
   const [users, setUsers] = useState([]);
@@ -336,15 +336,26 @@ const AthletesTable = () => {
           </table>
 
           {/* Modal */}
-          {
-            showModal && (
+          {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+              onClick={closeModal}
+            />
+
+            {/* Modal container */}
+            <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
               <EditUserModal
+                asModal
                 user={selectedUser}
                 onClose={closeModal}
                 onUpdated={fetchAthletes}
               />
-            )
-          }
+            </div>
+          </div>
+        )}
+
         </div >
       </div>
     </div>

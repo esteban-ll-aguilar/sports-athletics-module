@@ -65,6 +65,6 @@ async def actualizar_resultado(
     Solo puede actualizarlo el entrenador propietario o un administrador.
     """
     resultado = await service.get_by_external_id(external_id)
-    if resultado.entrenador_id != current_user.id and current_user.role != "ADMINISTRADOR":
+    if resultado.entrenador_id != current_user.id and current_user.profile.role != "ADMINISTRADOR":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso")
     return await service.update(external_id, data)

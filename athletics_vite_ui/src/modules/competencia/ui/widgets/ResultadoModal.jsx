@@ -6,10 +6,8 @@ import AdminService from "../../../admin/services/adminService";
 import resultadoCompetenciaService from "../../services/resultado_competencia_service";
 import Swal from "sweetalert2";
 
-const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competencias = [] }) => {
+const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competencias = [], atletas = [], pruebas = [] }) => {
   const [form, setForm] = useState(new ResultadoCompetencia());
-  const [atletas, setAtletas] = useState([]);
-  const [pruebas, setPruebas] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const posicionesDisponibles = [
@@ -38,23 +36,6 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     return value;
   };
 
-  // Cargar atletas y pruebas
-  useEffect(() => {
-    if (!isOpen) return;
-
-    setLoading(true);
-
-    Promise.all([
-      AtletaService.getAthletes(1, 100).catch(() => ({ items: [] })),
-      PruebaRepository.getAll().catch(() => [])
-    ])
-      .then(([response, pruebasResponse]) => {
-        const atletasData = response.items || [];
-        setAtletas(atletasData);
-        setPruebas(pruebasResponse || []);
-      })
-      .finally(() => setLoading(false));
-  }, [isOpen]);
 
   // Inicializar formulario
   useEffect(() => {
@@ -68,7 +49,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
 
       const inicializado = {
         external_id: editingResultado.external_id,
-        atleta_id: atletaObj?.external_id ?? "",
+        atleta_id: atletaObj ? (atletaObj.atleta?.external_id || atletaObj.external_id) : "",
         atleta: atletaObj,
         prueba_id: pruebaObj?.external_id ?? "",
         prueba: pruebaObj,
@@ -104,7 +85,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
       estado: form.estado
     };
 
- 
+
 
     // Validaciones básicas
     if (!form.competencia_id || !form.atleta_id || !form.prueba_id || payload.resultado === null || !form.posicion_final) {
@@ -113,13 +94,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     }
 
     try {
-      if (editingResultado) {
-        await resultadoCompetenciaService.update(form.external_id, payload);
-      } else {
-        await resultadoCompetenciaService.create(payload);
-      }
-
-      Swal.fire("Éxito", "Resultado guardado correctamente", "success");
+      // Delegamos la persistencia al padre (ResultadosPage) via onSubmit
       onSubmit(payload);
       onClose();
     } catch (err) {
@@ -171,8 +146,9 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <select
               value={form.atleta_id}
               onChange={e => {
-                const selected = atletas.find(a => a.atleta?.external_id === e.target.value);
-                setForm({ ...form, atleta_id: selected?.atleta?.external_id ?? "", atleta: selected ?? null });
+                const val = e.target.value;
+                const selected = atletas.find(a => (a.atleta?.external_id || a.external_id) === val);
+                setForm({ ...form, atleta_id: val, atleta: selected ?? null });
               }}
               className="
     block w-full pl-10 pr-3 py-2.5
@@ -183,8 +159,10 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     sm"                required
             >
               <option value="">Seleccione un atleta</option>
-              {atletas.map(a => (
-                <option key={a.atleta?.external_id} value={a.atleta?.external_id}>{a.first_name || a.username} {a.last_name || ""} ({a.email})</option>
+              {(atletas || []).map(a => (
+                <option key={a.external_id} value={a.atleta?.external_id || a.external_id}>
+                  {a.first_name || a.username} {a.last_name || ""} {!a.atleta ? "(Sin perfil de atleta)" : ""}
+                </option>
               ))}
             </select>
           </div>
@@ -300,55 +278,52 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     sm"              />
           </div>
 
-    {/* TOGGLE DE ESTADO */}
-<div className="flex items-center justify-between px-5 py-4 rounded-2xl bg-[#1c1c1c] border border-[#332122]">
-  <div className="flex flex-col">
-    <span className="text-sm font-semibold text-gray-200">
-      Estado
-    </span>
-    <span
-      className={`text-[11px] font-black uppercase tracking-wider ${
-        form.estado ? 'text-green-400' : 'text-red-400'
-      }`}
-    >
-      {form.estado ? 'Activo / Visible' : 'Inactivo / Oculto'}
-    </span>
-  </div>
+          {/* TOGGLE DE ESTADO */}
+          <div className="flex items-center justify-between px-5 py-4 rounded-2xl bg-[#1c1c1c] border border-[#332122]">
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-gray-200">
+                Estado
+              </span>
+              <span
+                className={`text-[11px] font-black uppercase tracking-wider ${form.estado ? 'text-green-400' : 'text-red-400'
+                  }`}
+              >
+                {form.estado ? 'Activo / Visible' : 'Inactivo / Oculto'}
+              </span>
+            </div>
 
-  <button
-    type="button"
-    onClick={() => setForm({ ...form, estado: !form.estado })}
-    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-      form.estado ? 'bg-green-500' : 'bg-gray-600'
-    }`}
-  >
-    <span
-      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-md ${
-        form.estado ? 'translate-x-7' : 'translate-x-1'
-      }`}
-    />
-  </button>
-</div>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, estado: !form.estado })}
+              className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-300 focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-600'
+                }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-md ${form.estado ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+              />
+            </button>
+          </div>
 
-{/* BOTONES DE ACCIÓN */}
-<div className="flex gap-4 pt-4">
-  <button
-    type="button"
-    onClick={onClose}
-    className="
+          {/* BOTONES DE ACCIÓN */}
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="
       flex-1 px-5 py-3 rounded-xl font-semibold
       border border-[#332122]
       text-gray-400
       hover:bg-[#242223] hover:text-gray-200
       transition-all duration-300
     "
-  >
-    Cancelar
-  </button>
+            >
+              Cancelar
+            </button>
 
-  <button
-    type="submit"
-    className="
+            <button
+              type="submit"
+              className="
       flex-1 px-5 py-3 rounded-xl font-semibold text-white
       bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
       hover:brightness-110
@@ -356,12 +331,12 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
       active:scale-95
       shadow-lg
     "
-  >
-    {editingResultado ? 'Actualizar Resultado' : 'Guardar Resultado'}
-  </button>
-</div>
+            >
+              {editingResultado ? 'Actualizar Resultado' : 'Guardar Resultado'}
+            </button>
+          </div>
         </form>
-      </div > 
+      </div >
     </div>
   );
 };
