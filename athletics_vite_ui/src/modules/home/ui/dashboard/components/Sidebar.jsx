@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -16,13 +16,29 @@ import {
 import authService from '@modules/auth/services/auth_service';
 import { getUserRole, getUserEmail, getUserName } from '../../../../auth/utils/roleUtils';
 import rolePermissions from '../../../../../core/router/const/rolePermissions';
+import Settings from '../../../../../config/enviroment';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
 
     const toggleMobileSidebar = () => setIsMobileOpen(!isMobileOpen);
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const response = await authService.getProfile();
+                if (response.data) {
+                    setUserProfile(response.data);
+                }
+            } catch (error) {
+                console.error("Error loading sidebar profile", error);
+            }
+        };
+        fetchUserProfile();
+    }, []);
 
     const handleLogout = async () => {
         await authService.logout();
@@ -34,7 +50,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     if (role) {
         menuItems.push(...rolePermissions[role]);
     }
-    
+
     const isActive = (path) => location.pathname === path;
 
     return (
@@ -137,9 +153,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {/* User Section & Logout */}
                 <div className="absolute bottom-0 w-full border-t border-[#332122] p-4 bg-[#212121]">
                     <div className={`flex items-center ${!isOpen && 'justify-center'}`}>
-                        <div className="w-10 h-10 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25] font-bold">
-                            U
-                        </div>
+                        {userProfile?.profile_image ? (
+                            <img
+                                src={`${Settings.API_URL}/${userProfile.profile_image}`}
+                                alt="User"
+                                className="w-10 h-10 rounded-full object-cover border border-[#b30c25]"
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://ui-avatars.com/api/?name=" + (userProfile.first_name || 'U') + "&background=random"; }}
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25] font-bold">
+                                {getUserName() ? getUserName().charAt(0).toUpperCase() : 'U'}
+                            </div>
+                        )}
+
                         {isOpen && (
                             <div className="ml-3 overflow-hidden">
                                 <p className="text-sm font-medium text-white truncate">

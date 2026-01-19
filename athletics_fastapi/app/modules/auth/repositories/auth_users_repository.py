@@ -38,11 +38,20 @@ class AuthUsersRepository:
     # =====================================================
     # uPDATE PROFILE
     # =====================================================
+    # =====================================================
+    # UPDATE PROFILE (Helpers)
+    # =====================================================
     async def update_profile(self, user: UserModel):
-        self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
+        self.db.add(user)
+        await self.db.commit()
+        await self.db.refresh(user)
         return user
+
+    async def commit(self):
+        await self.db.commit()
+
+    async def refresh(self, instance):
+        await self.db.refresh(instance)
     # =====================================================
     # CREATE USER
     # =====================================================
