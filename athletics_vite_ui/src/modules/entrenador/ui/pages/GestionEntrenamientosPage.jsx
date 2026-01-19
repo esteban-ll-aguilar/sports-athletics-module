@@ -62,22 +62,22 @@ const GestionEntrenamientosPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900 p-4 md:p-10">
+        <div className="min-h-screen bg-[#111] font-['Lexend'] text-white p-4 md:p-10 pb-20">
             <div className="max-w-7xl mx-auto">
                 {/* Cabecera */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
                     <div>
-                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-2">
                             Gestión de Entrenamientos
                         </h1>
-                        <p className="text-gray-600 text-lg mt-2">
+                        <p className="text-gray-400 text-lg">
                             Planifica y administra las sesiones de entrenamiento
                         </p>
                     </div>
 
                     <button
                         onClick={handleCreate}
-                        className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
+                        className="group flex items-center gap-2 bg-[#E50914] hover:bg-[#b8070f] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-red-900/20 transition-all hover:scale-105 active:scale-95 duration-200"
                     >
                         <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
                             add
@@ -87,31 +87,31 @@ const GestionEntrenamientosPage = () => {
                 </div>
 
                 {/* Tabla */}
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+                <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 shadow-2xl shadow-black/50 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
+                                <tr className="bg-[#111] border-b border-gray-800">
+                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 tracking-wider">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
+                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500">
                                         Descripción
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-center">
+                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 text-center">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-right">
+                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 text-right">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-800">
                                 {isLoading ? (
                                     <tr>
                                         <td colSpan="4" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                                                <div className="w-12 h-12 border-4 border-gray-700 border-t-red-600 rounded-full animate-spin"></div>
                                                 <span className="text-gray-500 font-semibold">Cargando entrenamientos...</span>
                                             </div>
                                         </td>
@@ -119,49 +119,61 @@ const GestionEntrenamientosPage = () => {
                                 ) : entrenamientos.length === 0 ? (
                                     <tr>
                                         <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <span className="material-symbols-outlined text-6xl text-gray-300">
-                                                    fitness_center
-                                                </span>
-                                                <span className="text-gray-400 font-semibold">No hay entrenamientos registrados</span>
+                                            <div className="flex flex-col items-center gap-4">
+                                                <div className="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-4xl text-gray-600">
+                                                        fitness_center
+                                                    </span>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-white font-bold text-lg">No hay entrenamientos</p>
+                                                    <p className="text-gray-500">Comienza creando tu primera sesión.</p>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
                                     entrenamientos.map((ent) => (
-                                        <tr key={ent.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-900">
-                                                    {ent.tipo_entrenamiento}
+                                        <tr key={ent.id} className="hover:bg-white/5 transition-colors duration-200 group">
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
+                                                        <span className="material-symbols-outlined">exercise</span>
+                                                    </div>
+                                                    <span className="font-bold text-white text-lg">
+                                                        {ent.tipo_entrenamiento}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
-                                                {ent.descripcion}
+                                            <td className="px-6 py-5">
+                                                <p className="text-gray-400 text-sm max-w-xs truncate font-medium">
+                                                    {ent.descripcion || <span className="italic text-gray-600">Sin descripción</span>}
+                                                </p>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700">
+                                            <td className="px-6 py-5 text-center">
+                                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-300 border border-gray-700">
                                                     {ent.fecha_entrenamiento}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className="flex justify-end gap-2">
+                                            <td className="px-6 py-5 text-right">
+                                                <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => handleHorarios(ent)}
-                                                        className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group"
-                                                        title="Gestionar Horarios"
+                                                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
+                                                        title="Gestionar Asistencia"
                                                     >
-                                                        <span className="material-symbols-outlined group-hover:text-amber-600">schedule</span>
+                                                        <span className="material-symbols-outlined">groups</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleEdit(ent)}
-                                                        className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
                                                         title="Editar"
                                                     >
                                                         <span className="material-symbols-outlined">edit</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(ent.id)}
-                                                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                                                         title="Eliminar"
                                                     >
                                                         <span className="material-symbols-outlined">delete</span>

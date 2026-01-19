@@ -36,14 +36,18 @@ async def inscribir_atleta(
     """
     return await service.registrar_atleta_horario(data, current_entrenador.id)
 
+from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.domain.models.user_model import UserModel
+
 @router.get("/inscripcion/horario/{horario_id}", response_model=List[RegistroAsistenciasResponse])
 async def listar_inscritos(
     horario_id: int,
-    current_entrenador: Entrenador = Depends(get_current_entrenador),
+    current_user: UserModel = Depends(get_current_user),
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
     Lista los atletas inscritos en un horario.
+    Acceso: Usuarios autenticados (Entrenadores y Atletas).
     """
     return await service.get_atletas_by_horario(horario_id)
 
