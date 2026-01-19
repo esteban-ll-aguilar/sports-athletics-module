@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import JSONResponse
 from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     PasswordResetRequest, PasswordResetCodeValidation, 
-    PasswordResetComplete, MessageResponse,
+    PasswordResetComplete, MessageResponse, PasswordResetConfirm
 )
+from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.dependencies import (
     get_users_repo, 
     get_password_hasher, get_email_service, get_password_reset_service,
@@ -14,6 +16,7 @@ from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.password_reset_service import PasswordResetService
 from app.core.logging.logger import logger
 from app.modules.modules import APP_TAGS_V1
+from typing import Optional
 
 
 reset_password_router_v1 = APIRouter()
@@ -21,7 +24,7 @@ reset_password_router_v1 = APIRouter()
 # Gestión de Reset de Contraseña
 # ============================================
 
-@reset_password_router_v1.post("/request", response_model=MessageResponse, status_code=status.HTTP_200_OK)
+@reset_password_router_v1.post("/request", response_model=APIResponse[Optional[dict]], status_code=status.HTTP_200_OK)
 async def request_password_reset(
     data: PasswordResetRequest,
     repo: AuthUsersRepository = Depends(get_users_repo),
@@ -43,9 +46,13 @@ async def request_password_reset(
         # Verificar si ya existe un código activo
         if await reset_service.code_exists(data.email):
             logger.warning(f"Intento de reset con código activo para: {data.email}")
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS, 
-                detail="Ya existe un código activo. Espera 5 minutos antes de solicitar otro"
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content=APIResponse(
+                    success=False,
+                    message="Ya existe un código activo. Espera 5 minutos antes de solicitar otro",
+                    data=None
+                ).model_dump()
             )
         
         # Almacenar código
@@ -62,19 +69,26 @@ async def request_password_reset(
             # Loguear error detallado para el administrador
             logger.error(f"Error CRÍTICO enviando email de reset a {data.email}: {type(e).__name__} - {e}")
             
-            # Lanzar 500 pero con un mensaje que no bloquee al usuario si es solo un timeout
-            raise HTTPException(
+            return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="No se pudo enviar el email de recuperación. Por favor intenta más tarde o contacta a soporte."
+                content=APIResponse(
+                    success=False,
+                    message="No se pudo enviar el email de recuperación. Por favor intenta más tarde o contacta a soporte.",
+                    data=None
+                ).model_dump()
             )
     else:
         # Aunque no exista, loguear el intento
         logger.warning(f"Intento de reset para email inexistente: {data.email}")
     
     # SIEMPRE retornar el mismo mensaje (no revelar si el email existe)
-    return MessageResponse(message="Si el email existe en nuestro sistema, recibirás un código de restablecimiento")
+    return APIResponse(
+        success=True,
+        message="Si el email existe en nuestro sistema, recibirás un código de restablecimiento",
+        data=None
+    )
 
-@reset_password_router_v1.post("/validate-code", response_model=MessageResponse, status_code=status.HTTP_200_OK)
+@reset_password_router_v1.post("/validate-code", response_model=APIResponse[Optional[dict]], status_code=status.HTTP_200_OK)
 async def validate_reset_code(
     data: PasswordResetCodeValidation,
     reset_service: PasswordResetService = Depends(get_password_reset_service)
@@ -86,17 +100,25 @@ async def validate_reset_code(
     # Validar el código sin consumirlo
     if not await reset_service.validate_reset_code_only(data.email, data.code):
         logger.warning(f"Código de validación inválido para: {data.email}")
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Código inválido, expirado o se han superado los intentos máximos"
+            content=APIResponse(
+                success=False,
+                message="Código inválido, expirado o se han superado los intentos máximos",
+                data=None
+            ).model_dump()
         )
     
     logger.info(f"Código de reset validado correctamente para: {data.email}")
-    return MessageResponse(message="Código válido. Puedes proceder a cambiar tu contraseña")
+    return APIResponse(
+        success=True,
+        message="Código válido. Puedes proceder a cambiar tu contraseña",
+        data=None
+    )
 
-@reset_password_router_v1.post("/reset", response_model=MessageResponse, status_code=status.HTTP_200_OK)
+@reset_password_router_v1.post("/reset", response_model=APIResponse[Optional[dict]], status_code=status.HTTP_200_OK)
 async def complete_password_reset(
-    data: PasswordResetComplete,
+    data: PasswordResetConfirm,
     repo: AuthUsersRepository = Depends(get_users_repo),
     hasher: PasswordHasher = Depends(get_password_hasher),
     reset_service: PasswordResetService = Depends(get_password_reset_service),
@@ -109,16 +131,24 @@ async def complete_password_reset(
     # Verificar que el usuario existe
     user = await repo.get_by_email(data.email)
     if not user:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Usuario no encontrado",
+                data=None
+            ).model_dump()
         )
     
     # Consumir el código (validar y eliminar)
     if not await reset_service.consume_reset_code(data.email, data.code):
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Código inválido, expirado o ya utilizado"
+            content=APIResponse(
+                success=False,
+                message="Código inválido, expirado o ya utilizado",
+                data=None
+            ).model_dump()
         )
     
     # Actualizar contraseña
@@ -126,9 +156,13 @@ async def complete_password_reset(
     success = await repo.update_password_by_email(data.email, new_password_hash, password=data.new_password)
     
     if not success:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al actualizar la contraseña"
+            content=APIResponse(
+                success=False,
+                message="Error al actualizar la contraseña",
+                data=None
+            ).model_dump()
         )
     
     # Enviar email de confirmación
@@ -138,5 +172,9 @@ async def complete_password_reset(
         # Log el error pero no fallar la operación ya que la contraseña ya fue cambiada
         print(f"Error enviando email de confirmación: {e}")
     
-    return MessageResponse(message="Contraseña restablecida exitosamente. Se ha enviado un email de confirmación.")
+    return APIResponse(
+        success=True,
+        message="Contraseña restablecida exitosamente. Se ha enviado un email de confirmación.",
+        data=None
+    )
 
