@@ -428,65 +428,31 @@ async def get_current_user_profile(
     )
 
 # ======================================================
-@users_router_v1.put(
-    "/users/me",
-    response_model=BaseResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Actualizar perfil del usuario actual"
-)
-async def update_profile(
-    username: str = Form(...),
-    first_name: str = Form(...),
-    last_name: str = Form(...),
-    phone: str | None = Form(None),
-    direccion: str | None = Form(None),
-    sexo: SexoEnum | None = Form(None),
-    tipo_estamento: TipoEstamentoEnum | None = Form(None),
-    fecha_nacimiento: date | None = Form(None),
-    tipo_identificacion: TipoIdentificacionEnum | None = Form(None),
-    profile_image: UploadFile | None = File(None),
-
+@users_router_v1.put("/users/me")
+async def update_me(
+    user_data: UserUpdateSchema,
     current_user: AuthUserModel = Depends(get_current_user),
-    repo: AuthUsersRepository = Depends(get_users_repo)
+    repo: AuthUsersRepository = Depends(get_users_repo),
 ):
     user = current_user.profile
+    updated = await repo.update(user, user_data)
+    return updated
 
-    # =========================
-    # ACTUALIZAR CAMPOS
-    # =========================
-    user.username = username
-    user.first_name = first_name
-    user.last_name = last_name
-    user.phone = phone
-    user.direccion = direccion
-    user.sexo = sexo
-    user.tipo_estamento = tipo_estamento
-    user.fecha_nacimiento = fecha_nacimiento
-    user.tipo_identificacion = tipo_identificacion
+@users_router_v1.put("/users/me/profile-image")
+async def update_profile_image(
+    profile_image: UploadFile = File(...),
+    current_user: AuthUserModel = Depends(get_current_user),
+    repo: AuthUsersRepository = Depends(get_users_repo),
+):
+    os.makedirs("media/profiles", exist_ok=True)
 
-    # =========================
-    # IMAGEN
-    # =========================
-    if profile_image:
-        os.makedirs("media/profiles", exist_ok=True)
+    filename = f"user_{current_user.profile.id}.jpg"
+    path = f"media/profiles/{filename}"
 
-        ext = profile_image.filename.split(".")[-1]
-        filename = f"user_{user.id}.{ext}"
-        path = f"media/profiles/{filename}"
+    with open(path, "wb") as buffer:
+        shutil.copyfileobj(profile_image.file, buffer)
 
-        with open(path, "wb") as buffer:
-            shutil.copyfileobj(profile_image.file, buffer)
+    current_user.profile.profile_image = path
+    await repo.update_profile(current_user.profile)
 
-        user.profile_image = path
-
-    await repo.commit()
-
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Perfil actualizado correctamente",
-        status=status.HTTP_200_OK
-    )
-# ======================================================
+    return {"profile_image": path}
