@@ -216,32 +216,3 @@ class ExternalUsersApiService:
         
 
 
-    async def update_user_account(self, external_id: str, user_data: UserExternalUpdateAccountRequest) -> BaseResponse:
-        """
-        Updates the user account (password) directly using the external_id.
-        Avoids DNI lookup if we already know the external_id.
-        """
-        await self._ensure_token()
-        
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.put(
-                _SETTINGS.users_api_url + "/api/person/update-account/",
-                headers=self.headers,
-                json= {
-                    "external": external_id,
-                    "password": user_data.password
-                }
-            )
-
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=response.json()
-            )
-
-        return BaseResponse(
-            data=response.json().get("data"),
-            message=response.json().get("message"),
-            errors=response.json().get("errors"),
-            status=200 if response.json().get("status") == "success" else 404
-        )
