@@ -64,7 +64,10 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: 'Sí',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#212121',
+            color: '#fff'
         });
 
         if (result.isConfirmed) {
@@ -74,7 +77,9 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                 icon: 'success',
                 title: editingData ? 'Prueba actualizada' : 'Prueba creada',
                 text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
             });
 
             onClose();
@@ -91,7 +96,10 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: `Sí, ${action}`,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#212121',
+            color: '#fff'
         });
 
         if (result.isConfirmed) {
@@ -101,7 +109,9 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                 icon: 'success',
                 title: `Prueba ${form.estado ? 'desactivada' : 'activada'}`,
                 text: `La prueba ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
             });
         }
     };

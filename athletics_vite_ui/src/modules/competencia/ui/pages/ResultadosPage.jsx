@@ -68,10 +68,10 @@ const ResultadosPage = () => {
 
   const toggleStatus = async (resultado) => {
     const nuevoEstado = !resultado.estado;
-
+    
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: nuevoEstado
+      text: nuevoEstado 
         ? `¿Deseas activar este resultado?`
         : `¿Deseas desactivar este resultado?`,
       icon: 'warning',
@@ -96,7 +96,7 @@ const ResultadosPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
-
+      
       Swal.fire({
         title: '¡Éxito!',
         text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
@@ -105,7 +105,7 @@ const ResultadosPage = () => {
         background: '#212121',
         color: '#fff'
       });
-
+      
       fetchResultados();
     } catch (err) {
       Swal.fire({
@@ -191,12 +191,19 @@ const ResultadosPage = () => {
 
           <button
             onClick={() => { setSelectedResultado(null); setIsModalOpen(true); }}
-            className="
-      flex items-center gap-2 px-6 py-3 rounded-xl font-semibold
-      bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
-      hover:brightness-110 transition
-    "             >
-            <span className="material-symbols-outlined">
+           className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "              >
+                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
               add
             </span>
             Registrar Resultado

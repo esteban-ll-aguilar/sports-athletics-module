@@ -63,12 +63,18 @@ const PruebasPage = () => {
 
             setIsModalOpen(false);
             fetchData();
-            alert("¡Registro guardado con éxito!");
 
         } catch (err) {
             console.error("3. Error del Servidor (422 Detail):", err.response?.data);
             const detail = err.response?.data?.detail;
-            alert("Error: " + (detail ? JSON.stringify(detail) : "Error de validación"));
+            Swal.fire({
+                title: 'Error',
+                text: detail ? JSON.stringify(detail) : "Error de validación",
+                icon: 'error',
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
+            });
         }
     };
 

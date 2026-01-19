@@ -25,7 +25,10 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
       showCancelButton: true,
       confirmButtonText: 'Sí',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ec1313'
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      background: '#212121',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -35,7 +38,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
         icon: 'success',
         title: editingBaremo ? 'Baremo actualizado' : 'Baremo creado',
         text: `El Baremo ha sido ${editingBaremo ? 'actualizado' : 'creado'} correctamente.`,
-        confirmButtonColor: '#ec1313'
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
       });
 
       onClose();
@@ -52,7 +57,10 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
       showCancelButton: true,
       confirmButtonText: `Sí, ${action}`,
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ec1313'
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      background: '#212121',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -62,7 +70,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
         icon: 'success',
         title: `Baremo ${form.estado ? 'desactivado' : 'activado'}`,
         text: `El Baremo ha sido ${form.estado ? 'desactivado' : 'activado'} correctamente.`,
-        confirmButtonColor: '#ec1313'
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
       });
     }
   };
