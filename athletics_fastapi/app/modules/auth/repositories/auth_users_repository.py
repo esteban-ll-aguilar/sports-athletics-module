@@ -36,8 +36,13 @@ class AuthUsersRepository:
         self.db = db
 
     # =====================================================
-    # CREATE USER
+    # uPDATE PROFILE
     # =====================================================
+    async def update_profile(self, user: UserModel):
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
     # =====================================================
     # CREATE USER
     # =====================================================

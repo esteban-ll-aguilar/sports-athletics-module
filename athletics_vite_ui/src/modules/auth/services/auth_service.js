@@ -35,9 +35,14 @@ class AuthService {
         return await authRepository.getProfile();
     }
 
-    async updateProfile(userData) {
-        return await authRepository.updateProfile(userData);
+   async updateProfile(formData) {
+    if (!(formData instanceof FormData)) {
+        throw new Error("updateProfile requiere FormData");
     }
+
+    return await authRepository.updateProfile(formData);
+}
+
 
     // New methods delegating to repository
     async refreshToken() {

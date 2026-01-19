@@ -75,19 +75,21 @@ class AuthRepository {
         }
     }
 
-    async updateProfile(userData) {
-        try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/auth/users/me`, userData, {
+    async updateProfile(formData) {
+        const token = localStorage.getItem('access_token');
+
+        const response = await axios.put(
+            `${API_URL}/auth/users/me`,
+            formData,
+            {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    Authorization: `Bearer ${token}`
+                    // ❌ NO Content-Type
                 }
-            });
-            return response.data;
-        } catch (error) {
-            throw error.response ? error.response.data : error;
-        }
+            }
+        );
+
+        return response.data;
     }
 
     //  Funcion para actualizar el rol de un usuario por un administrador

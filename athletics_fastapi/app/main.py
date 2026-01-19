@@ -6,6 +6,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.core.config.enviroment import _SETTINGS
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+
 import asyncio
 
 
@@ -18,6 +21,8 @@ async def lifespan(app: FastAPI):
     from app.core.cache.redis import _redis
     from app.core.jwt.secret_rotation import JWTSecretRotation
     from app.modules.auth.repositories.sessions_repository import SessionsRepository
+
+
     
     logger.info("🚀 Starting up application...")
     
@@ -104,6 +109,7 @@ async def lifespan(app: FastAPI):
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
 
+
 _APP = FastAPI(
     title='API Dalios Facturacion SRI',
     description=(
@@ -121,6 +127,10 @@ _APP = FastAPI(
     },
     lifespan=lifespan
 )
+# ✅ 2. LUEGO MONTAS STATIC FILES
+_APP.mount("/media", StaticFiles(directory="media"), name="media")
+
+
 
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter
@@ -153,3 +163,11 @@ _APP.add_middleware(
 from app.api.api_v1 import router_api_v1 as api_v1_router
 
 _APP.include_router(api_v1_router)
+@_APP.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Error de validación en la solicitud. Revisa los campos enviados."
+        }
+    )
