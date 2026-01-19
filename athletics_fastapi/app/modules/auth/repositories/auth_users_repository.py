@@ -382,3 +382,24 @@ class AuthUsersRepository:
             logger.error(f"Error updating password in DB: {e}")
             await self.db.rollback()
             return False
+
+    async def activate_user(self, email: str) -> bool:
+        """
+        Activa un usuario dado su email.
+        Retorna True si tuvo éxito, False si el usuario no existe.
+        """
+        user = await self.get_by_email(email)
+        if not user:
+            return False
+            
+        user.is_active = True
+        user.email_confirmed_at = datetime.utcnow()
+        self.db.add(user)
+        
+        try:
+            await self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error activating user {email}: {e}")
+            await self.db.rollback()
+            return False

@@ -32,23 +32,45 @@ const AsistenciaHistoryModal = ({ isOpen, onClose, atletaName, asistencias }) =>
                         </div>
                     ) : (
                         <div className="max-h-60 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                            {sortedAsistencias.map((asist) => (
-                                <div key={asist.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-green-100 text-green-600 rounded-lg">
-                                            <span className="material-symbols-outlined text-lg">check_circle</span>
-                                        </div>
-                                        <div>
-                                            <div className="font-semibold text-gray-800">
-                                                {asist.fecha_asistencia}
+                            {sortedAsistencias.map((asist) => {
+                                // Determine status for history item
+                                const isPresente = asist.asistio;
+                                const isRejection = !asist.asistio && asist.atleta_confirmo === false;
+
+                                let icon = "check_circle";
+                                let colorClass = "bg-green-100 text-green-600";
+                                let statusText = "Asistió";
+
+                                if (!isPresente) {
+                                    if (isRejection) {
+                                        icon = "event_busy";
+                                        colorClass = "bg-red-100 text-red-600";
+                                        statusText = "No Asistirá (Confirmado por Atleta)";
+                                    } else {
+                                        icon = "cancel";
+                                        colorClass = "bg-red-100 text-red-600";
+                                        statusText = "marcado como Ausente";
+                                    }
+                                }
+
+                                return (
+                                    <div key={asist.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-xl shadow-sm hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`p-2 rounded-lg ${colorClass}`}>
+                                                <span className="material-symbols-outlined text-lg">{icon}</span>
                                             </div>
-                                            <div className="text-xs text-gray-400">
-                                                Registrado a las {asist.hora_llegada}
+                                            <div>
+                                                <div className="font-semibold text-gray-800">
+                                                    {asist.fecha_asistencia}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                    {statusText} • {asist.hora_llegada || '--:--'}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

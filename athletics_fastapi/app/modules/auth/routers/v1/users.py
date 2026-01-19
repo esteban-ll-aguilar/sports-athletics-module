@@ -110,7 +110,7 @@ async def get_current_user_profile(
         )
 
     return BaseResponse(
-        data=UserResponseSchema.model_validate(
+        data=UserWithRelationsSchema.model_validate(
             current_user.profile,
             from_attributes=True
         ).model_dump(),

@@ -10,8 +10,8 @@ const rolePermissions = {
         { path: '/dashboard/pruebas', icon: Users, label: 'Gestion de Pruebas' },
     ],
     ATLETA: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Atleta' },
-
+        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/dashboard/schedule', icon: Calendar, label: 'Horario' },
     ],
     ENTRENADOR: [
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },

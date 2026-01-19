@@ -13,6 +13,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
     "axios": "^1.13.2",
+    "date-fns": "^4.1.0",
     "flowbite": "^4.0.1",
     "flowbite-react": "^0.12.15",
     "jspdf": "^3.0.4",
