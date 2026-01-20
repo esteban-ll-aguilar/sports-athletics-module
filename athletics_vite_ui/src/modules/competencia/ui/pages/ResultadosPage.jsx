@@ -167,7 +167,7 @@ const ResultadosPage = () => {
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
         <Link
@@ -185,8 +185,6 @@ const ResultadosPage = () => {
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Registro de Resultados
             </h1>
-            <p className="text-gray-400">
-            </p>
           </div>
 
           <button
@@ -262,10 +260,9 @@ const ResultadosPage = () => {
           </div>
         </div>
 
-
         {/* Últimos Registros Card */}
-        <div className="bg-[#212121] rounded-3xl shadow-2xl border border-[#332122] overflow-hidden mb-6">
-          <div className="p-6 border-b border-gray-100">
+        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+          <div className="overflow-x-auto p-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-red-600 text-3xl">
                 today
@@ -278,7 +275,7 @@ const ResultadosPage = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left">
               <thead>
                 <tr className="bg-[#1a1a1a] border-b border-[#332122]">
 
@@ -306,7 +303,7 @@ const ResultadosPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#332122]">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="py-20 text-center">

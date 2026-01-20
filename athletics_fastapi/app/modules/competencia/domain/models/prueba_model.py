@@ -30,4 +30,4 @@ class Prueba(Base):
 
     # Relationships
     tipo_disciplina: Mapped["TipoDisciplina"] = relationship("TipoDisciplina")
-    baremo: Mapped["Baremo"] = relationship("Baremo")
+    

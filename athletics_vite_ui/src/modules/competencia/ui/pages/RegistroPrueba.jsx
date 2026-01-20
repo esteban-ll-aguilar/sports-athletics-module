@@ -1,27 +1,31 @@
 import { useEffect, useState } from "react";
-import registroPruebaCompetenciaService 
-    from "../../services/registro_prueba_service";
+import registroPruebaService from "../../services/registro_prueba_service";
 import pruebaService from "../../services/prueba_service";
-import RegistroPruebaCompetenciaModal 
-    from "../../widgets/RegistroPruebaModal";
+import AtletaService from "../../../atleta/services/AtletaService";
+import RegistroPruebaModal from "../widgets/RegistroPruebaModal";
+import authService from "../../../auth/services/auth_service";
 
-const RegistroPruebaCompetenciaPage = () => {
+const RegistroPruebasPage = () => {
     const [registros, setRegistros] = useState([]);
     const [pruebas, setPruebas] = useState([]);
+    const [atletas, setAtletas] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [resRegistros, resPruebas] = await Promise.all([
-                registroPruebaCompetenciaService.getAll(),
-                pruebaService.getAll()
+            const [rRes, pRes, aRes] = await Promise.all([
+                registroPruebaService.getAll(),
+                pruebaService.getAll(),
+                AtletaService.getAll()
             ]);
 
-            setRegistros(Array.isArray(resRegistros) ? resRegistros : []);
-            setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
-        } catch (err) {
+            setRegistros(Array.isArray(rRes) ? rRes : []);
+            setPruebas(Array.isArray(pRes) ? pRes : []);
+            setAtletas(Array.isArray(aRes) ? aRes : []);
+        } catch (error) {
+            console.error("Error cargando datos:", error);
         } finally {
             setLoading(false);
         }
@@ -31,83 +35,91 @@ const RegistroPruebaCompetenciaPage = () => {
         fetchData();
     }, []);
 
-    // Crear registro desde el modal
-    const handleCreate = async (data) => {
-        try {
-            const payload = {
-                id_entrenador: parseInt(data.id_entrenador, 10),
-                prueba_id: parseInt(data.prueba_id, 10),
-                valor: parseFloat(data.valor),
-                fecha_registro: data.fecha_registro
-            };
+    const getPrueba = (id) => pruebas.find(p => p.id === id);
+    const getAtleta = (authId) => atletas.find(a => a.auth_user_id === authId);
 
-            await registroPruebaCompetenciaService.create(payload);
-            fetchData();
-        } catch (err) {
-            throw err;
-        }
+    const handleCreate = async (formData) => {
+        const entrenadorId = authService.getProfile()?.id;
+
+        const payload = {
+            id_entrenador: entrenadorId,
+            prueba_id: parseInt(formData.prueba_id),
+            auth_user_id: parseInt(formData.auth_user_id),
+            valor: parseFloat(formData.valor),
+            fecha_registro: formData.fecha_registro
+        };
+
+        await registroPruebaService.create(payload);
+        setIsModalOpen(false);
+        fetchData();
     };
 
     return (
         <div className="min-h-screen bg-gray-50 p-6 font-['Lexend']">
-            <div className="max-w-6xl mx-auto space-y-8">
+            <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* HEADER */}
-                <div className="flex items-center justify-between">
-                    <h1 className="text-4xl font-black text-gray-900">
-                        Registro de Pruebas de Competencia
-                    </h1>
-
+                <div className="flex justify-between items-center">
+                    <h1 className="text-4xl font-black">Registro de Pruebas</h1>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition shadow-lg"
+                        className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700"
                     >
                         + Registrar Prueba
                     </button>
                 </div>
 
                 {/* TABLA */}
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div className="bg-white rounded-xl shadow overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-gray-100">
                             <tr>
-                                <th className="px-4 py-3 text-left font-black">Prueba</th>
-                                <th className="px-4 py-3 text-left font-black">Valor</th>
-                                <th className="px-4 py-3 text-left font-black">Fecha</th>
-                                <th className="px-4 py-3 text-left font-black">Entrenador</th>
+                                <th className="px-4 py-3">Prueba</th>
+                                <th className="px-4 py-3">Atleta</th>
+                                <th className="px-4 py-3">Valor</th>
+                                <th className="px-4 py-3">Fecha</th>
+                                <th className="px-4 py-3">Entrenador</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan="4" className="text-center py-10">
+                                    <td colSpan="5" className="text-center py-8">
                                         Cargando...
                                     </td>
                                 </tr>
                             ) : registros.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" className="text-center py-10 text-gray-400">
+                                    <td colSpan="5" className="text-center py-8 text-gray-400">
                                         No hay registros
                                     </td>
                                 </tr>
                             ) : (
-                                registros.map((r) => (
-                                    <tr key={r.external_id} className="border-t hover:bg-gray-50">
-                                        <td className="px-4 py-3 font-bold">
-                                            {r.prueba?.siglas || r.prueba_id}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {r.valor}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {r.fecha_registro}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {r.id_entrenador}
-                                        </td>
-                                    </tr>
-                                ))
+                                registros.map(r => {
+                                    const prueba = getPrueba(r.prueba_id);
+                                    const atleta = getAtleta(r.auth_user_id);
+
+                                    return (
+                                        <tr key={r.external_id} className="border-t">
+                                            <td className="px-4 py-3 font-semibold">
+                                                {prueba?.siglas || "N/A"}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {atleta
+                                                    ? `${atleta.nombres} ${atleta.apellidos}`
+                                                    : "N/A"}
+                                            </td>
+                                            <td className="px-4 py-3">{r.valor}</td>
+                                            <td className="px-4 py-3">
+                                                {new Date(r.fecha_registro).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                {r.id_entrenador}
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
@@ -115,14 +127,15 @@ const RegistroPruebaCompetenciaPage = () => {
             </div>
 
             {/* MODAL */}
-            <RegistroPruebaCompetenciaModal
+            <RegistroPruebaModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSubmit={handleCreate}
                 pruebas={pruebas}
+                atletas={atletas}
             />
         </div>
     );
 };
 
-export default RegistroPruebaCompetenciaPage;
+export default RegistroPruebasPage;

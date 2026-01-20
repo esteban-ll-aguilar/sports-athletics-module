@@ -144,31 +144,9 @@ const PruebasPage = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
                     <div className="space-y-4">
                         {/* Breadcrumb Links */}
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Link
-                                to="baremos"
-                                className="
-  px-4 py-2 rounded-xl text-sm font-semibold
-  bg-[#1a1a1a] border border-[#332122] text-gray-300
-  hover:text-[#b30c25] hover:border-[#b30c25]
-  transition
-"
-                            >
-                                📊 Baremos
-                            </Link>
-                            <span className="text-gray-300">/</span>
-                            <Link
-                                to="disciplinas"
-                                className="
-  px-4 py-2 rounded-xl text-sm font-semibold
-  bg-[#1a1a1a] border border-[#332122] text-gray-300
-  hover:text-[#b30c25] hover:border-[#b30c25]
-  transition
-"
-                            >
-                                🏃 Disciplinas
-                            </Link>
-                        </div>
+
+                            
+
 
                         <div>
                             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">

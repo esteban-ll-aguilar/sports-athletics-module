@@ -29,6 +29,7 @@ import AdminUsersTable from '@modules/admin/ui/pages/admin_controller_user_ui';
 
 // Competencia
 import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
+import RegistroPruebasPage from '@modules/competencia/ui/pages/RegistroPrueba.jsx';
 import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
 import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
 import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
@@ -93,16 +94,23 @@ const router = createBrowserRouter([
           },
 
           // --- COMPETENCIA / PRUEBAS ROUTES ---
-          {
-            path: 'pruebas',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
-            children: [
-              { index: true, element: <PruebasPage /> },
-              { path: 'baremos', element: <BaremosPage /> },
-              { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-              { path: 'competencias', element: <CompetenciasPage /> },
-            ],
-          },
+        {
+  path: 'registro-pruebas',
+  element: (
+    <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />
+  ),
+  children: [
+    {
+      element: <Outlet />,   // 👈 ESTO ES CLAVE
+      children: [
+        { index: true, element: <PruebasPage /> },
+        { path: 'baremos', element: <BaremosPage /> },
+        { path: 'disciplinas', element: <TipoDisciplinaPage /> },
+      ]
+    }
+  ],
+},
+
           {
             path: 'competitions',
             element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
