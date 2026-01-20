@@ -95,10 +95,10 @@ const GestionEntrenamientosPage = () => {
                         bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
                         hover:brightness-110
                         focus:outline-none focus:ring-2 focus:ring-[#b30c25]
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition-all duration-300
-        shadow-lg shadow-[#b30c25]/40
-        active:scale-95
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-all duration-300
+                        shadow-lg shadow-[#b30c25]/40
+                        active:scale-95
     "                    >
                         <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
                             add
