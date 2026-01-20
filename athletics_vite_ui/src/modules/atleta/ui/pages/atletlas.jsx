@@ -5,6 +5,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
 import EditUserModal from "../../../auth/ui/pages/RegisterPage";
+import { Link } from "react-router-dom";
+
 
 const AthletesTable = () => {
   const [users, setUsers] = useState([]);
@@ -167,30 +169,42 @@ const AthletesTable = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
-      <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <Link to="/dashboard/atleta"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+        >
+          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+          </span>
+        </Link>
 
 
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#332122] bg-[#1a1a1a] flex items-center justify-between">
-          <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+          <div className="space-y-1">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Gestión de Atletas
             </h1>
             <p className="text-gray-400 text-lg">
-              Administra la información y estado de los atletas registrados
             </p>
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={openCreateModal}
-              className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8
-    bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-    text-white font-bold text-sm uppercase tracking-wide
-    hover:shadow-2xl hover:shadow-red-200 hover:scale-105
-    active:scale-100 transition-all duration-200"
-            >
+              className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "      >
               <UserPlus size={18} />
               Nuevo Atleta
             </button>
@@ -208,10 +222,10 @@ const AthletesTable = () => {
 
 
         {/* Filtros */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
 
           {/* Buscador */}
-          <div className="relative flex-1">
+          <div className="relative ">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 material-symbols-outlined">
               search
             </span>
@@ -232,24 +246,20 @@ const AthletesTable = () => {
       "
             />
           </div>
-          <div className="relative w-full sm:w-56">
+          <div className="relative">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="
-        w-full h-full px-4 py-4 rounded-2xl
-        bg-[#1f1c1d]
-        border border-[#332122]
-        text-gray-100
-        focus:border-[#b30c25]
-        focus:ring-1 focus:ring-[#b30c25]/40
-        outline-none transition-all
-        shadow-inner
-        appearance-none
-        cursor-pointer
-      "
-
-            >
+    w-full pl-12 pr-4 py-4 rounded-2xl
+    bg-[#1f1c1d]
+    border border-[#332122]
+    text-gray-100 placeholder-gray-500
+    focus:border-[#b30c25]
+    focus:ring-1 focus:ring-[#b30c25]/40
+    outline-none transition-all
+    shadow-inner
+  "            >
               <option value="">Todos</option>
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
@@ -264,30 +274,32 @@ const AthletesTable = () => {
 
         {/* CARD */}
         <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
 
           {/* Tabla */}
 
-          <table className="w-full divide-y table-auto min-w-[900px]">
+          <table className="w-full text-left">
+            
 
             <thead className="bg-[#1a1a1a] border-b border-[#332122]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Usuario</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Nombre</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Apellido</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Correo</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Tipo ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">ID</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Estamento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Teléfono</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Dirección</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Estado</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Acciones</th>
+              <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Usuario</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Apellido</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Correo</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo ID</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estamento</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Teléfono</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dirección</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-[#242223] transition-colors">
+                <tr key={user.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent">
                   <td className="px-4 py-3">{user.username}</td>
                   <td className="px-4 py-3">{user.first_name}</td>
                   <td className="px-4 py-3">{user.last_name}</td>
@@ -303,23 +315,26 @@ const AthletesTable = () => {
                   <td className="px-4 py-3">{user.direccion}</td>
                   <td className="px-4 py-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${user.is_active
-                        ? "bg-green-900/30 text-green-400 border-green-700"
-                        : "bg-red-900/30 text-red-400 border-red-700"
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
+                        ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                        : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
                         }`}
                     >
                       {user.is_active ? "Activo" : "Inactivo"}
                     </span>
 
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-5">
+                    <div className="flex justify-end gap-2">
+
                     <button
                       onClick={() => openEditModal(user)}
-                      className="text-sm font-medium text-[#b30c25] hover:underline"
+                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                      title="Editar"
                     >
-                      Editar
+                      <span className="material-symbols-outlined">edit</span>
                     </button>
-
+                      </div>
                   </td>
                 </tr>
               ))}
@@ -337,24 +352,26 @@ const AthletesTable = () => {
 
           {/* Modal */}
           {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Overlay */}
-            <div
-              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-              onClick={closeModal}
-            />
-
-            {/* Modal container */}
-            <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
-              <EditUserModal
-                asModal
-                user={selectedUser}
-                onClose={closeModal}
-                onUpdated={fetchAthletes}
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay */}
+              <div
+                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                onClick={closeModal}
               />
+
+              {/* Modal container */}
+              <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
+                <EditUserModal
+                  asModal
+                  user={selectedUser}
+                  onClose={closeModal}
+                  onUpdated={fetchAthletes}
+                />
+              </div>
             </div>
-          </div>
-        )}
+
+          )}
+                  </div>
 
         </div >
       </div>

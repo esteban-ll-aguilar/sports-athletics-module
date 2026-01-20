@@ -49,14 +49,32 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-6">
-        <h3 className="text-lg font-semibold text-gray-800">Editar Usuario</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+      <div className="w-full max-w-lg bg-[#212121] rounded-2xl shadow-2xl border border-[#332122]">
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+  {/* HEADER */}
+        <div className="px-6 py-5 border-b border-[#332122] flex items-center justify-between bg-[#1a1a1a] rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(179,12,37,0.15)] text-[#b30c25] flex items-center justify-center">
+              <Shield size={18} />
+            </div>
+            <h2 className="text-lg font-black text-gray-100">
+              Editar Usuario
+            </h2>
+          </div>
+
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-7 space-y-6">
+          
+          
+          
           {/* Usuario */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold mb-2 text-gray-300">
               Usuario
             </label>
             <input
@@ -64,13 +82,19 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })
               }
-              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-indigo-500"
-            />
+ className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  " required             />
           </div>
 
           {/* Correo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold mb-2 text-gray-300">
               Correo
             </label>
             <input
@@ -79,27 +103,39 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-indigo-500"
-            />
+ className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  " required             />
           </div>
 
           {/* Rol */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-bold mb-2 text-gray-300">
               Rol
             </label>
             <div className="relative">
               <Shield
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <select
                 value={formData.role}
                 onChange={(e) =>
                   setFormData({ ...formData, role: e.target.value })
                 }
-                className="w-full pl-10 pr-4 py-2 rounded-lg border bg-white focus:ring-2 focus:ring-indigo-500"
-              >
+ className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  " required            >
                 {ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
@@ -118,7 +154,7 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
             className="flex w-full items-center justify-between rounded-xl border px-6 py-5 hover:bg-gray-50 active:scale-[0.98] transition"
           >
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-800">
+              <p className="block text-xs font-black uppercase tracking-widest text-gray-400">
                 Estado del usuario
               </p>
               <p className="text-xs text-gray-500">
@@ -126,10 +162,10 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
               </p>
             </div>
             <span
-              className={`rounded-full px-4 py-1 text-xs font-semibold ${
+              className={`text-sm font-bold font-black uppercase tracking-widest${
                 formData.is_active
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
+                  ? "bg-green-100 text-green-400"
+                  : "bg-red-100 text-red-400"
               }`}
             >
               {formData.is_active ? "Activo" : "Inactivo"}
@@ -141,15 +177,21 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50"
-              disabled={loading}
+className="
+              flex-1 px-4 py-3 rounded-xl font-semibold
+              border border-[#332122] text-gray-400
+              hover:bg-[#242223] transition
+            "               disabled={loading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
-              disabled={loading}
+ className="
+              flex-1 px-4 py-3 rounded-xl font-semibold text-white
+              bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
+              hover:brightness-110 transition active:scale-95
+            "              disabled={loading}
             >
               {loading ? "Guardando..." : "Guardar"}
             </button>

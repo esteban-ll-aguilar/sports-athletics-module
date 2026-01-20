@@ -160,15 +160,14 @@ const CompetenciasPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="
-    w-full pl-12 pr-4 py-4 rounded-2xl
-    bg-[#1f1c1d]
-    border border-[#332122]
-    text-gray-100 placeholder-gray-500
-    focus:border-[#b30c25]
-    focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none transition-all
-    shadow-inner
-  "
+              w-full pl-12 pr-4 py-4 rounded-2xl bg-[#1f1c1d]
+              border border-[#332122]
+              text-gray-100 placeholder-gray-500
+              focus:border-[#b30c25]
+              focus:ring-1 focus:ring-[#b30c25]/40
+              outline-none transition-all
+              shadow-inner
+                "
             />
           </div>
 
@@ -181,14 +180,14 @@ const CompetenciasPage = () => {
               value={filterEstado}
               onChange={(e) => setFilterEstado(e.target.value)}
               className="
-    w-full pl-12 pr-4 py-4 rounded-2xl
-    bg-[#1f1c1d]
-    border border-[#332122]
-    text-gray-100 placeholder-gray-500
-    focus:border-[#b30c25]
-    focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none transition-all
-    shadow-inner
+              w-full pl-12 pr-4 py-4 rounded-2xl
+              bg-[#1f1c1d]
+              border border-[#332122]
+              text-gray-100 placeholder-gray-500
+              focus:border-[#b30c25]
+              focus:ring-1 focus:ring-[#b30c25]/40
+              outline-none transition-all
+              shadow-inner
   "            >
               <option value="">Todos los Estados</option>
               <option value="true">Activos</option>
