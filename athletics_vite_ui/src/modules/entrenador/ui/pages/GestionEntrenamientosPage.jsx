@@ -109,31 +109,31 @@ const GestionEntrenamientosPage = () => {
 
 
                 {/* Tabla */}
-                <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 shadow-2xl shadow-black/50 overflow-hidden">
+                <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-[#111] border-b border-gray-800">
-                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 tracking-wider">
+                                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Descripción
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 text-center">
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-bold uppercase text-gray-500 text-right">
+                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-[#332122]">
                                 {isLoading ? (
                                     <tr>
                                         <td colSpan="4" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-gray-700 border-t-red-600 rounded-full animate-spin"></div>
+                                                <div className="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
                                                 <span className="text-gray-500 font-semibold">Cargando entrenamientos...</span>
                                             </div>
                                         </td>
@@ -141,30 +141,34 @@ const GestionEntrenamientosPage = () => {
                                 ) : entrenamientos.length === 0 ? (
                                     <tr>
                                         <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="w-20 h-20 bg-gray-800/50 rounded-full flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-4xl text-gray-600">
-                                                        fitness_center
-                                                    </span>
-                                                </div>
-                                                <div className="text-center">
-                                                    <p className="text-white font-bold text-lg">No hay entrenamientos</p>
-                                                    <p className="text-gray-500">Comienza creando tu primera sesión.</p>
-                                                </div>
+                                            <div className="flex flex-col items-center gap-3">
+                                                <span className="material-symbols-outlined text-6xl text-gray-300">
+                                                    fitness_center
+                                                </span>
+                                                <span className="text-gray-400 font-semibold">
+                                                    No hay entrenamientos registrados
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
                                     entrenamientos.map((ent) => (
-                                        <tr key={ent.id} className="hover:bg-white/5 transition-colors duration-200 group">
+                                        <tr
+                                            key={ent.id}
+                                            className="transition-all duration-200 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent"
+                                        >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-white transition-colors">
-                                                        <span className="material-symbols-outlined">exercise</span>
+                                                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#b30c25] to-[#5a1a22] rounded-xl flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-white text-xl">
+                                                            exercise
+                                                        </span>
                                                     </div>
-                                                    <span className="font-bold text-white text-lg">
-                                                        {ent.tipo_entrenamiento}
-                                                    </span>
+                                                    <div>
+                                                        <p className="font-bold text-gray-200">
+                                                            {ent.tipo_entrenamiento}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5">
@@ -173,29 +177,29 @@ const GestionEntrenamientosPage = () => {
                                                 </p>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-gray-800 text-gray-300 border border-gray-700">
+                                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1f1c1d] text-gray-200 border border-[#332122]">
                                                     {ent.fecha_entrenamiento}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-5 text-right">
-                                                <div className="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                            <td className="px-6 py-5">
+                                                <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => handleHorarios(ent)}
-                                                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
+                                                        className="p-2.5 text-gray-400 hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         title="Gestionar Asistencia"
                                                     >
                                                         <span className="material-symbols-outlined">groups</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleEdit(ent)}
-                                                        className="p-2 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all"
+                                                        className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         title="Editar"
                                                     >
                                                         <span className="material-symbols-outlined">edit</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(ent.id)}
-                                                        className="p-2 text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                        className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         title="Eliminar"
                                                     >
                                                         <span className="material-symbols-outlined">delete</span>
