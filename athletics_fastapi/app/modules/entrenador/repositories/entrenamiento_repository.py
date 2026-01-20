@@ -2,6 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
 from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+
 
 class EntrenamientoRepository:
     def __init__(self, session: AsyncSession):
@@ -33,7 +35,12 @@ class EntrenamientoRepository:
         result = await self.session.execute(
             select(Entrenamiento)
             .where(Entrenamiento.entrenador_id == entrenador_id)
-            .options(selectinload(Entrenamiento.horarios))
+            .options(
+                 selectinload(Entrenamiento.entrenador)
+            .selectinload(Entrenador.user),
+                selectinload(Entrenamiento.horarios)
+                
+                )
         )
         return result.scalars().all()
 
@@ -42,7 +49,10 @@ class EntrenamientoRepository:
         result = await self.session.execute(
             select(Entrenamiento)
             .where(Entrenamiento.id == entrenamiento_id)
-            .options(selectinload(Entrenamiento.horarios))
+            .options(selectinload(Entrenamiento.entrenador)
+            .selectinload(Entrenador.user),
+                selectinload(Entrenamiento.horarios)
+                     )
         )
         return result.scalars().first()
     
@@ -54,7 +64,8 @@ class EntrenamientoRepository:
                 Entrenamiento.id == entrenamiento_id,
                 Entrenamiento.entrenador_id == entrenador_id
             )
-            .options(selectinload(Entrenamiento.horarios))
+            .options(selectinload(Entrenamiento.entrenador)
+            .selectinload(Entrenador.user),selectinload(Entrenamiento.horarios))
         )
         return result.scalars().first()
 
@@ -67,7 +78,8 @@ class EntrenamientoRepository:
         result = await self.session.execute(
              select(Entrenamiento)
              .where(Entrenamiento.id == entrenamiento.id)
-             .options(selectinload(Entrenamiento.horarios))
+             .options(selectinload(Entrenamiento.entrenador)
+            .selectinload(Entrenador.user),selectinload(Entrenamiento.horarios))
         )
         return result.scalars().first()
 
