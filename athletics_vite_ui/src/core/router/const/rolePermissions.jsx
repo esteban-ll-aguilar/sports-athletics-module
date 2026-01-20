@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Trophy, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, Calendar,Activity } from 'lucide-react';
 
 const rolePermissions = {
     ADMINISTRADOR: [
