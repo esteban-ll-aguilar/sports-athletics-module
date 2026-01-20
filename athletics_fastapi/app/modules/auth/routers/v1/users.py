@@ -305,6 +305,3 @@ async def update_user_by_id(
         message="Usuario actualizado correctamente",
         status=status.HTTP_200_OK
     )
-
-
->>>>>>> acfbdf7c70cac8bb2d1ec89fe2e21631a91274e1
