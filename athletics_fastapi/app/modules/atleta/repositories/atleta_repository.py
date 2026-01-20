@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.modules.auth.domain.models.user_model import UserModel
+from app.modules.auth.domain.enums import RoleEnum
 
 class AtletaRepository:
     """Repositorio para manejar la entidad 'Atleta'"""
@@ -77,6 +78,8 @@ class AtletaRepository:
     async def get_all(self, skip: int = 0, limit: int = 100) -> List[Atleta]:
         result = await self.session.execute(
             select(Atleta)
+            .join(Atleta.user)
+            .where(UserModel.role == RoleEnum.ATLETA)
             .options(
                 selectinload(Atleta.user).selectinload(UserModel.auth)
             )
@@ -116,6 +119,8 @@ class AtletaRepository:
     async def count(self) -> int:
         result = await self.session.execute(
             select(func.count(Atleta.id))
+            .join(Atleta.user)
+            .where(UserModel.role == RoleEnum.ATLETA)
         )
         return result.scalar() or 0
 

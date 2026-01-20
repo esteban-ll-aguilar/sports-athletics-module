@@ -38,10 +38,12 @@ import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
 // Atleta
 import AthletesTable from '@modules/atleta/ui/pages/atletlas';
 import DashboardAtletaPage from '@modules/atleta/ui/pages/DashboardAtletaPage';
+import ConfirmacionEntrenamientoPage from '@modules/atleta/ui/pages/ConfirmacionEntrenamientoPage';
 
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
+
 
 // Representante
 // Representante
@@ -138,6 +140,7 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <GestionEntrenamientosPage /> },
               { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
+
             ],
           },
 
@@ -156,7 +159,17 @@ const router = createBrowserRouter([
           {
             path: 'atleta',
             element: <ProtectedRoute allowedRoles={['ATLETA']} />,
-            children: [{ index: true, element: <DashboardAtletaPage /> }],
+            children: [
+              { index: true, element: <DashboardAtletaPage /> },
+              { path: 'entrenamiento/:id/confirmar', element: <ConfirmacionEntrenamientoPage /> },
+            ],
+          },
+          {
+            path: 'schedule',
+            element: <ProtectedRoute allowedRoles={['ATLETA']} />,
+            children: [
+              { index: true, element: <ConfirmacionEntrenamientoPage /> }
+            ],
           },
 
         ],

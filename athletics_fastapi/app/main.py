@@ -129,6 +129,7 @@ _APP = FastAPI(
 )
 # ✅ 2. LUEGO MONTAS STATIC FILES
 _APP.mount("/media", StaticFiles(directory="media"), name="media")
+_APP.mount("/data", StaticFiles(directory="data"), name="data")
 
 
 
@@ -168,6 +169,6 @@ async def validation_exception_handler(request, exc):
     return JSONResponse(
         status_code=422,
         content={
-            "detail": "Error de validación en la solicitud. Revisa los campos enviados."
+            "detail": "Error de validación en la solicitud. Revisa los campos enviados.",
         }
     )

@@ -18,10 +18,13 @@ class EntrenamientoUpdate(BaseModel):
     fecha_entrenamiento: Optional[date] = None
     horarios: Optional[List[HorarioBase]] = None
 
+from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorRead
+
 class EntrenamientoResponse(EntrenamientoBase):
     id: int
     external_id: uuid.UUID
     entrenador_id: int
+    entrenador: Optional[EntrenadorRead] = None
     horarios: List[HorarioResponse] = []
 
     

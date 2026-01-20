@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera }
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
 import TwoFactorSettings from '../widgets/TwoFactorSettings';
+import Settings from '../../../../config/enviroment';
 
 const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
@@ -66,7 +67,7 @@ const ProfilePage = () => {
             setLoading(false);
         }
     };
-    
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -86,15 +87,23 @@ const ProfilePage = () => {
             data.append('last_name', formData.last_name);
             data.append('phone', formData.phone);
             data.append('direccion', formData.direccion);
-            data.append('sexo', formData.sexo);
-            data.append('tipo_estamento', formData.tipo_estamento);
 
+            if (formData.sexo) {
+                data.append('sexo', formData.sexo);
+            }
+            if (formData.tipo_estamento) {
+                data.append('tipo_estamento', formData.tipo_estamento);
+            }
             if (formData.fecha_nacimiento) {
                 data.append('fecha_nacimiento', formData.fecha_nacimiento);
             }
 
             if (formData.tipo_identificacion) {
                 data.append('tipo_identificacion', formData.tipo_identificacion);
+            }
+
+            if (formData.identificacion) {
+                data.append('identificacion', formData.identificacion);
             }
 
             if (profileFile) {
@@ -111,7 +120,8 @@ const ProfilePage = () => {
             setMessage('Perfil actualizado correctamente');
             await fetchProfile();
         } catch (err) {
-            console.error(err);
+            console.error("Full profile update error:", err);
+            console.error("Validation details:", err.response?.data);
             setError('Error al actualizar perfil');
         } finally {
             setSubmitting(false);
@@ -138,20 +148,20 @@ const ProfilePage = () => {
                         <div className="-mt-12 relative">
                             <div className="h-24 w-24 rounded-full border-4 border-[#332122] bg-[#212121]
                   shadow-md flex items-center justify-center overflow-hidden">
-                                {formData.profile_image && typeof formData.profile_image === "object" ? (
+                                {profileFile ? (
                                     // Preview local
                                     <img
-                                        
-                                        src={`http://127.0.0.1:8000/${formData.profile_image}`} 
-                                        alt="Perfil"
+                                        src={URL.createObjectURL(profileFile)}
+                                        alt="Perfil Local"
                                         className="w-full h-full object-cover"
                                     />
                                 ) : formData.profile_image ? (
                                     // Imagen desde backend
                                     <img
-                                        src={`http://127.0.0.1:8000/${formData.profile_image}`}
+                                        src={`${Settings.API_URL}/${formData.profile_image}`}
                                         alt="Perfil"
                                         className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://ui-avatars.com/api/?name=" + formData.first_name + "+" + formData.last_name + "&background=random"; }}
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -484,7 +494,7 @@ const ProfilePage = () => {
                     <button
                         type="submit"
                         disabled={submitting}
-                        className={`inline-flex items-center px-6 py-3 rounded-lg text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg ${submitting ? 'opacity-50' : ''}`}
+                        className={`inline-flex items-center px-6 py-3 rounded-lg text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg ${submitting ? 'opacity-50' : ''}`}
                     >
                         <Save className="mr-2 h-5 w-5" />
                         Guardar Cambios

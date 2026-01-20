@@ -16,9 +16,23 @@ class HorarioUpdate(BaseModel):
     hora_inicio: Optional[time] = None
     hora_fin: Optional[time] = None
 
+
+from datetime import date
+from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorRead
+
+class EntrenamientoSimpleInHorario(BaseModel):
+    id: int
+    external_id: uuid.UUID
+    tipo_entrenamiento: str
+    descripcion: str
+    fecha_entrenamiento: date
+    entrenador: Optional[EntrenadorRead] = None
+    model_config = ConfigDict(from_attributes=True)
+
 class HorarioResponse(HorarioBase):
     id: int
     external_id: uuid.UUID
     entrenamiento_id: int
+    entrenamiento: Optional[EntrenamientoSimpleInHorario] = None
     
     model_config = ConfigDict(from_attributes=True)
