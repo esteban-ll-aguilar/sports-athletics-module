@@ -198,7 +198,7 @@ const GestionAsistenciaPage = () => {
     const presentes = inscritos.filter(r => hasAttendedToday(r.asistencias)).length;
 
     return (
-        <div className="min-h-screen bg-[#111] text-white font-['Lexend'] p-6 md:p-10 pb-20">
+        <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend'] p-6 md:p-10 pb-20">
             <div className="max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
@@ -218,13 +218,13 @@ const GestionAsistenciaPage = () => {
 
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-2">{entrenamiento.tipo_entrenamiento}</h1>
+                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-100 mb-2">{entrenamiento.tipo_entrenamiento}</h1>
                             <p className="text-gray-400 font-medium flex items-center gap-2">
                                 <span className="bg-gray-800 text-white px-2 py-0.5 rounded text-xs uppercase">{selectedHorario?.name}</span>
                                 {selectedHorario?.hora_inicio} - {selectedHorario?.hora_fin}
                             </p>
                         </div>
-                        <button className="flex items-center gap-2 bg-[#1a1a1a] hover:bg-[#222] px-6 py-3 rounded-xl transition-all border border-gray-800 hover:border-gray-700 text-sm font-bold text-gray-300">
+                        <button className="flex items-center gap-2 bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 text-white px-6 py-3 rounded-xl transition-all border border-gray-800 hover:border-gray-700 text-sm font-bold">
                             <span className="material-symbols-outlined">download</span>
                             Exportar Reporte
                         </button>

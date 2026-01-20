@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
 import HorarioManager from '../components/HorarioManager';
+import { Link } from "react-router-dom";
+
 
 const GestionEntrenamientosPage = () => {
     const [entrenamientos, setEntrenamientos] = useState([]);
@@ -62,29 +64,49 @@ const GestionEntrenamientosPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#111] font-['Lexend'] text-white p-4 md:p-10 pb-20">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                {/* Breadcrumb */}
+                <Link
+                    to="/dashboard/entrenamientos"
+                    className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+                >
+                    <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+
+                    </span>
+                </Link>
+
                 {/* Cabecera */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                    <div>
-                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white mb-2">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                    <div className="space-y-1">
+                        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
                             Gestión de Entrenamientos
                         </h1>
                         <p className="text-gray-400 text-lg">
-                            Planifica y administra las sesiones de entrenamiento
                         </p>
                     </div>
 
                     <button
                         onClick={handleCreate}
-                        className="group flex items-center gap-2 bg-[#E50914] hover:bg-[#b8070f] text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-red-900/20 transition-all hover:scale-105 active:scale-95 duration-200"
-                    >
-                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+                        className="
+                        group flex items-center gap-3
+                        px-8 py-4 rounded-2xl
+                        text-sm font-semibold text-white
+                        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+                        hover:brightness-110
+                        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "                    >
+                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
                             add
                         </span>
                         Nuevo Entrenamiento
                     </button>
                 </div>
+
 
                 {/* Tabla */}
                 <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 shadow-2xl shadow-black/50 overflow-hidden">

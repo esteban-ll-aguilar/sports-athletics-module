@@ -68,10 +68,10 @@ const ResultadosPage = () => {
 
   const toggleStatus = async (resultado) => {
     const nuevoEstado = !resultado.estado;
-    
+
     const result = await Swal.fire({
       title: '¿Estás seguro?',
-      text: nuevoEstado 
+      text: nuevoEstado
         ? `¿Deseas activar este resultado?`
         : `¿Deseas desactivar este resultado?`,
       icon: 'warning',
@@ -96,7 +96,7 @@ const ResultadosPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
-      
+
       Swal.fire({
         title: '¡Éxito!',
         text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
@@ -105,7 +105,7 @@ const ResultadosPage = () => {
         background: '#212121',
         color: '#fff'
       });
-      
+
       fetchResultados();
     } catch (err) {
       Swal.fire({
@@ -333,38 +333,38 @@ const ResultadosPage = () => {
                     <tr
                       key={resultado.external_id}
                       className={`transition-all duration-200 ${!resultado.estado
-                        ? 'bg-[#1c1c1c] opacity-60'
-                        : 'hover:bg-[#1f1f1f] '
+                        ? 'bg-gray-50/70 opacity-60'
+                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
                         }`}
                     >
                       <td className="px-6 py-5">
-                        <div className={`font-semibold ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                        <div className={`font-bold ${!resultado.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                           {getCompetenciaNombre(resultado.competencia_id)}
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-500' : 'text-gray-200'}`}>
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-medium">{getAtletaNombre(resultado.atleta_id)}</span>
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-gray-400'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-500' : 'text-gray-200'}`}>
                         {getPruebaNombre(resultado.prueba_id)}
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <span className={`font-bold text-lg ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                        <span className={`font-semibold text-base ${!resultado.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                           {resultado.resultado} {resultado.unidad_medida}
                         </span>
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className="text-2xl">
+                      <td className="px-6 py- text-center">
+                        <span className="flex items-center gap-2">
                           {getPosicionEmoji(resultado.posicion_final)}
                         </span>
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${resultado.estado
-                          ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
-                          : 'bg-red-100 text-red-700 ring-2 ring-red-200'
+                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                          : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
                           }`}>
                           {resultado.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -426,7 +426,7 @@ const ResultadosPage = () => {
         atletas={atletas}
         pruebas={pruebas}
       />
-    </div>
+    </div >
   );
 };
 
