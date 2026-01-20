@@ -41,6 +41,7 @@ import DashboardAtletaPage from '@modules/atleta/ui/pages/DashboardAtletaPage';
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
+import HistorialMedicoPage from '@modules/entrenador/ui/pages/HistorialMedicoPage';
 
 // Representante
 // Representante
@@ -131,6 +132,11 @@ const router = createBrowserRouter([
               { index: true, element: <GestionEntrenamientosPage /> },
               { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
             ],
+          },
+          {
+            path: 'historial-medico',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <HistorialMedicoPage /> }],
           },
 
           // --- REPRESENTANTE ROUTES ---

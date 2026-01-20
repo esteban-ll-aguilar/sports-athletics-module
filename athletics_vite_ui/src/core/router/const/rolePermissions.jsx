@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Users, Trophy, Calendar, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, Trophy, Calendar, Activity, Heart } from 'lucide-react';
 
 const rolePermissions = {
     ADMINISTRADOR: [
@@ -17,6 +17,7 @@ const rolePermissions = {
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/pruebas', icon: Users, label: 'Gestion de Pruebas' },
         { path: '/dashboard/entrenamientos', icon: Users, label: 'Gestion de Entrenamientos' },
+        { path: '/dashboard/historial-medico', icon: Heart, label: 'Historial Médico' },
         { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
         { path: '/dashboard/results', icon: Activity, label: 'Resultados' },
     ],
