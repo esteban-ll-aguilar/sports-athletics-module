@@ -6,19 +6,17 @@ from datetime import datetime
 import uuid
 
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+from app.modules.auth.domain.models.user_model import UserModel
+from app.modules.auth.domain.enums import RoleEnum
 
 from app.modules.auth.domain.schemas.schemas_users import (
     UserCreateSchema,
     UserUpdateSchema,
 )
 
-from app.modules.auth.domain.models.user_model import UserModel
-from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 from app.modules.representante.domain.models.representante_model import Representante
-from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate
-from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
 
 from app.modules.external.domain.schemas.users_api_schemas import (
     UserExternalCreateRequest,
@@ -26,7 +24,6 @@ from app.modules.external.domain.schemas.users_api_schemas import (
     UserExternalUpdateRequest,
 )
 
-from app.modules.external.dependencies import get_external_users_service
 from app.core.logging.logger import logger
 
 
@@ -36,8 +33,22 @@ class AuthUsersRepository:
         self.db = db
 
     # =====================================================
-    # CREATE USER
+    # UPDATE PROFILE
     # =====================================================
+    # =====================================================
+    # UPDATE PROFILE (Helpers)
+    # =====================================================
+    async def update_profile(self, user: UserModel):
+        self.db.add(user)
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
+    async def commit(self):
+        await self.db.commit()
+
+    async def refresh(self, instance):
+        await self.db.refresh(instance)
     # =====================================================
     # CREATE USER
     # =====================================================
@@ -47,17 +58,13 @@ class AuthUsersRepository:
         user_data: UserCreateSchema,
     ) -> UserModel:
 
-        # Instantiate external service manually since we are in a repo, not a route
-        # Using local import to avoid circular dependency if any, or just import at top
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService
-        
+
         external_repo = ExternalUsersApiRepository(self.db)
         external_service = ExternalUsersApiService(external_repo)
 
         try:
-            # Crear usuario en sistema externo
-            # Nota: Ajustamos para usar los datos del schema que ahora sí tiene los campos
             external_user = await external_service.create_user(
                 UserExternalCreateRequest(
                     first_name=user_data.first_name,
@@ -73,24 +80,22 @@ class AuthUsersRepository:
             )
         except Exception as e:
             logger.error(f"Error creating user in external service: {e}", exc_info=True)
-            # Re-raise or handle gracefully. If external service creation fails, we likely shouldn't proceed.
             raise e
 
-        # 1. Crear AuthUser
+        # 1. Auth user
         auth_user = AuthUserModel(
             email=user_data.email,
             hashed_password=password_hash,
-            is_active=False, # Wait for email verification
+            is_active=False,
             created_at=datetime.utcnow(),
         )
         self.db.add(auth_user)
-        # Flush para obtener auth_user.id
         await self.db.flush()
 
-        # 2. Crear UserModel (Profile)
+        # 2. User profile
         user_profile = UserModel(
             auth_user_id=auth_user.id,
-            external_id=external_user.data.get("external"), # Usamos el ID del servicio externo
+            external_id=external_user.data.get("external"),
             username=user_data.username,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
@@ -102,58 +107,55 @@ class AuthUsersRepository:
             tipo_estamento=user_data.tipo_estamento,
             fecha_nacimiento=user_data.fecha_nacimiento,
             sexo=user_data.sexo,
-            role=user_data.role
+            role=user_data.role,
         )
         self.db.add(user_profile)
-        # Flush para obtener user_profile.id
         await self.db.flush()
 
-        # 3. Crear Entidad Específica según Rol
+        # 3. Sub-entidad por rol
         if user_data.role == RoleEnum.ATLETA and user_data.atleta_data:
-            atleta = Atleta(
-                user_id=user_profile.id,
-                anios_experiencia=user_data.atleta_data.anios_experiencia,
-                # Mapa otros campos si existen en create schema
+            self.db.add(
+                Atleta(
+                    user_id=user_profile.id,
+                    anios_experiencia=user_data.atleta_data.anios_experiencia,
+                )
             )
-            self.db.add(atleta)
-        
-        elif user_data.role == RoleEnum.ENTRENADOR and user_data.entrenador_data:
-            entrenador = Entrenador(
-                user_id=user_profile.id,
-                anios_experiencia=user_data.entrenador_data.anios_experiencia,
-                is_pasante=user_data.entrenador_data.is_pasante
-            )
-            self.db.add(entrenador)
-        
-        elif user_data.role == RoleEnum.REPRESENTANTE:
-            representante = Representante(
-                user_id=user_profile.id
-            )
-            self.db.add(representante)
 
-        # Commit final lo hace el llamador o aquí si queremos asegurar atomicidad completa del repo method
-        # El código original hacía commit, así que lo mantenemos.
+        elif user_data.role == RoleEnum.ENTRENADOR and user_data.entrenador_data:
+            self.db.add(
+                Entrenador(
+                    user_id=user_profile.id,
+                    anios_experiencia=user_data.entrenador_data.anios_experiencia,
+                    is_pasante=user_data.entrenador_data.is_pasante,
+                )
+            )
+
+        elif user_data.role == RoleEnum.REPRESENTANTE:
+            self.db.add(Representante(user_id=user_profile.id))
+
         await self.db.commit()
         await self.db.refresh(user_profile)
-        
-        # Cargar relaciones si es necesario para el response
-        # await self.db.refresh(user_profile, attribute_names=["auth", "atleta", "entrenador"])
 
         return user_profile
 
     # =====================================================
-    # GET BY ID PROFILE
+    # GET BY ID PROFILE  ✅ CORREGIDO
     # =====================================================
     async def get_by_id_profile(self, user_id: int) -> Optional[UserModel]:
         result = await self.db.execute(
             select(UserModel)
             .where(UserModel.id == user_id)
-            .options(selectinload(UserModel.auth))
+            .options(
+                selectinload(UserModel.auth),
+                selectinload(UserModel.atleta),
+                selectinload(UserModel.entrenador),
+                selectinload(UserModel.representante),
+            )
         )
         return result.scalars().first()
 
     # =====================================================
-    # GET BY ID
+    # GET BY ID (AUTH)
     # =====================================================
     async def get_by_id(self, user_id: int) -> Optional[AuthUserModel]:
         result = await self.db.execute(
@@ -167,34 +169,35 @@ class AuthUsersRepository:
     # GET BY EXTERNAL ID
     # =====================================================
     async def get_by_external_id(self, external_id: str) -> Optional[UserModel]:
-        # external_id está en UserModel
         result = await self.db.execute(
             select(UserModel)
             .where(UserModel.external_id == external_id)
-            .options(selectinload(UserModel.auth)) # Eager load auth for properties like email/is_active
+            .options(
+                selectinload(UserModel.auth),
+                selectinload(UserModel.atleta),
+                selectinload(UserModel.entrenador),
+                selectinload(UserModel.representante),
+            )
         )
         return result.scalar_one_or_none()
 
     # =====================================================
-    # GET BY ANY ID (INTELLIGENT LOOKUP)
+    # GET BY ANY ID
     # =====================================================
     async def get_by_any_id(self, user_id: str) -> Optional[UserModel]:
-        """
-        Busca un usuario intentando primero por external_id (UUID)
-        y luego por ID interno (integer).
-        """
         user = None
-        # 1. Intentar por external_id (UUID)
+
+        # Try UUID
         try:
             val_uuid = uuid.UUID(str(user_id))
             user = await self.get_by_external_id(str(val_uuid))
         except (ValueError, TypeError):
             pass
 
-        # 2. Si no se encontró, intentar por ID interno (solo si es numérico)
+        # Try internal ID
         if not user and str(user_id).isdigit():
             user = await self.get_by_id_profile(int(user_id))
-        
+
         return user
 
     # =====================================================
@@ -208,13 +211,11 @@ class AuthUsersRepository:
 
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService
-        
+
         external_repo = ExternalUsersApiRepository(self.db)
         external_service = ExternalUsersApiService(external_repo)
 
-        # Actualizar datos externos (Opcional, no bloquear si falla el servicio externo)
         try:
-            from app.modules.external.domain.schemas.users_api_schemas import UserExternalUpdateRequest
             await external_service.update_user(
                 UserExternalUpdateRequest(
                     dni=user.identificacion,
@@ -223,28 +224,22 @@ class AuthUsersRepository:
                     type_identification=user.tipo_identificacion.value,
                     type_stament=user.tipo_estamento.value,
                     direction=user_data.direccion or user.direccion or "N/A",
-                    phono=user_data.phone or user.phone or "N/A"
+                    phono=user_data.phone or user.phone or "N/A",
                 )
             )
         except Exception as e:
-            logger.warning(f"⚠️ Error actualizando usuario en servicio externo: {e}")
+            logger.warning(f"⚠️ Error actualizando usuario externo: {e}")
 
         data_dict = user_data.model_dump(exclude_unset=True)
-        
-        # Manejar campos de AuthUserModel (proxied)
+
         if "email" in data_dict:
             user.auth.email = data_dict.pop("email")
         if "is_active" in data_dict:
             user.auth.is_active = data_dict.pop("is_active")
-            
-        # Actualizar UserModel con los campos restantes
+
         for field, value in data_dict.items():
             if hasattr(user, field):
                 setattr(user, field, value)
-
-        # Si user_data tuviera email, habría que actualizar user.auth.email, pero
-        # UserUpdateSchema parece ser solo de perfil (username, names, phone...).
-        # Email se maneja por separado usualmente o en Admin update.
 
         self.db.add(user)
         await self.db.commit()
@@ -263,15 +258,13 @@ class AuthUsersRepository:
 
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService
-        
+
         external_repo = ExternalUsersApiRepository(self.db)
         external_service = ExternalUsersApiService(external_repo)
 
         await external_service.update_user_account(
             user.external_id,
-            UserExternalUpdateAccountRequest(
-                password=new_password_hash
-            )
+            UserExternalUpdateAccountRequest(password=new_password_hash),
         )
 
         user.password = new_password_hash
@@ -282,7 +275,6 @@ class AuthUsersRepository:
     # GET BY EMAIL
     # =====================================================
     async def get_by_email(self, email: str) -> Optional[AuthUserModel]:
-        from sqlalchemy.orm import selectinload
         result = await self.db.execute(
             select(AuthUserModel)
             .where(AuthUserModel.email == email)
@@ -302,27 +294,84 @@ class AuthUsersRepository:
 
         offset = (page - 1) * size
 
-        # Query base para contar
         count_query = select(func.count(UserModel.id))
-        
-        # Query base para datos
         data_query = select(UserModel).options(
             selectinload(UserModel.auth),
             selectinload(UserModel.atleta),
             selectinload(UserModel.entrenador),
-            selectinload(UserModel.representante)
+            selectinload(UserModel.representante),
         )
 
         if role:
             count_query = count_query.where(UserModel.role == role)
             data_query = data_query.where(UserModel.role == role)
 
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar_one()
+        total = (await self.db.execute(count_query)).scalar_one()
+        users = (
+            await self.db.execute(data_query.offset(offset).limit(size))
+        ).scalars().all()
 
-        result = await self.db.execute(
-            data_query.offset(offset).limit(size)
-        )
-
-        users = result.scalars().all()
         return users, total
+    async def update_password_by_email(self, email: str, new_password_hash: str, password: str = None) -> bool:
+        """
+        Actualiza la contraseña de un usuario dado su email.
+        Retorna True si tuvo éxito, False si el usuario no existe.
+        """
+        user = await self.get_by_email(email)
+        if not user:
+            return False
+            
+        # Actualizar en servicio externo si se provee la contraseña en plano
+        if password:
+            try:
+                from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
+                from app.modules.external.services.external_users_api_service import ExternalUsersApiService
+                from app.modules.external.domain.schemas.users_api_schemas import UserExternalUpdateAccountRequest
+                
+                external_repo = ExternalUsersApiRepository(self.db)
+                external_service = ExternalUsersApiService(external_repo)
+                
+                # Necesitamos el external_id que está en el perfil (UserModel)
+                # El get_by_email ya hace eager load del profile
+                if user.profile and user.profile.external_id:
+                     await external_service.update_user_account(
+                        str(user.profile.external_id),
+                        UserExternalUpdateAccountRequest(
+                            dni=user.profile.identificacion,
+                            password=password
+                        )
+                    )
+            except Exception as e:
+                logger.warning(f"⚠️ Error actualizando contraseña en servicio externo para {email}: {e}")
+                # No fallamos el reset local si falla el externo
+        
+        user.hashed_password = new_password_hash
+        self.db.add(user)
+        try:
+            await self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error updating password in DB: {e}")
+            await self.db.rollback()
+            return False
+
+    async def activate_user(self, email: str) -> bool:
+        """
+        Activa un usuario dado su email.
+        Retorna True si tuvo éxito, False si el usuario no existe.
+        """
+        user = await self.get_by_email(email)
+        if not user:
+            return False
+            
+        user.is_active = True
+        user.email_confirmed_at = datetime.utcnow()
+        self.db.add(user)
+        
+        try:
+            await self.db.commit()
+            return True
+        except Exception as e:
+            logger.error(f"Error activating user {email}: {e}")
+            await self.db.rollback()
+            return False

@@ -1,9 +1,10 @@
-from sqlalchemy import Integer, String, Date, Time, ForeignKey, text, UUID as PG_UUID
+from sqlalchemy import Integer, String, Date, Time, ForeignKey, text, UUID as PG_UUID, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import datetime
+from typing import Optional
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -25,6 +26,11 @@ class Asistencia(Base):
     fecha_asistencia: Mapped[Date] = mapped_column(Date)
     hora_llegada: Mapped[Time] = mapped_column(Time)
     descripcion: Mapped[str] = mapped_column(String)
+    
+    # Nuevos campos para control de asistencia
+    asistio: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default=text("false"))
+    atleta_confirmo: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True) # True=Confirmó, False=Rechazó, None=Pendiente
+    fecha_confirmacion: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime, nullable=True)
 
     # FK
     registro_asistencias_id: Mapped[int] = mapped_column(

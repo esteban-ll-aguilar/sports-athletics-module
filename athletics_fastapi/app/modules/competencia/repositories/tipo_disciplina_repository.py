@@ -20,6 +20,13 @@ class TipoDisciplinaRepository:
             select(TipoDisciplina).where(TipoDisciplina.external_id == external_id)
         )
         return result.scalar_one_or_none()
+    
+    async def get_by_id(self, id: int):
+        """Get TipoDisciplina by integer ID"""
+        result = await self.db.execute(
+            select(TipoDisciplina).where(TipoDisciplina.id == id)
+        )
+        return result.scalar_one_or_none()
 
     async def list(self, skip: int = 0, limit: int = 100):
         result = await self.db.execute(select(TipoDisciplina).offset(skip).limit(limit))

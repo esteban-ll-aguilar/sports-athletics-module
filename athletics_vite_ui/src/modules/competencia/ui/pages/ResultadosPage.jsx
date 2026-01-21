@@ -68,11 +68,23 @@ const ResultadosPage = () => {
 
   const toggleStatus = async (resultado) => {
     const nuevoEstado = !resultado.estado;
-    const mensaje = nuevoEstado
-      ? `¿Deseas activar este resultado?`
-      : `¿Deseas desactivar este resultado?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Deseas activar este resultado?`
+        : `¿Deseas desactivar este resultado?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await resultadoCompetenciaService.update(resultado.external_id, {
@@ -84,9 +96,26 @@ const ResultadosPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
+
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
+
       fetchResultados();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
 
@@ -138,7 +167,7 @@ const ResultadosPage = () => {
 
   return (
     <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
         <Link
@@ -156,18 +185,23 @@ const ResultadosPage = () => {
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Registro de Resultados
             </h1>
-            <p className="text-gray-400">
-            </p>
           </div>
 
           <button
             onClick={() => { setSelectedResultado(null); setIsModalOpen(true); }}
-            className="
-      flex items-center gap-2 px-6 py-3 rounded-xl font-semibold
-      bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
-      hover:brightness-110 transition
-    "             >
-            <span className="material-symbols-outlined">
+           className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "              >
+                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
               add
             </span>
             Registrar Resultado
@@ -226,10 +260,9 @@ const ResultadosPage = () => {
           </div>
         </div>
 
-
         {/* Últimos Registros Card */}
-        <div className="bg-[#212121] rounded-3xl shadow-2xl border border-[#332122] overflow-hidden mb-6">
-          <div className="p-6 border-b border-gray-100">
+        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+          <div className="overflow-x-auto p-4">
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-red-600 text-3xl">
                 today
@@ -242,7 +275,7 @@ const ResultadosPage = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-left">
               <thead>
                 <tr className="bg-[#1a1a1a] border-b border-[#332122]">
 
@@ -270,7 +303,7 @@ const ResultadosPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[#332122]">
                 {loading ? (
                   <tr>
                     <td colSpan="7" className="py-20 text-center">
@@ -300,38 +333,38 @@ const ResultadosPage = () => {
                     <tr
                       key={resultado.external_id}
                       className={`transition-all duration-200 ${!resultado.estado
-                        ? 'bg-[#1c1c1c] opacity-60'
-                        : 'hover:bg-[#1f1f1f] '
+                        ? 'bg-gray-50/70 opacity-60'
+                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
                         }`}
                     >
                       <td className="px-6 py-5">
-                        <div className={`font-semibold ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                        <div className={`font-bold ${!resultado.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                           {getCompetenciaNombre(resultado.competencia_id)}
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-500' : 'text-gray-200'}`}>
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-sm">person</span>
                           <span className="font-medium">{getAtletaNombre(resultado.atleta_id)}</span>
                         </div>
                       </td>
-                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-400' : 'text-gray-400'}`}>
+                      <td className={`px-6 py-5 ${!resultado.estado ? 'text-gray-500' : 'text-gray-200'}`}>
                         {getPruebaNombre(resultado.prueba_id)}
                       </td>
                       <td className="px-6 py-5 text-center">
-                        <span className={`font-bold text-lg ${!resultado.estado ? 'text-gray-400' : 'text-[#b30c25]'}`}>
+                        <span className={`font-semibold text-base ${!resultado.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                           {resultado.resultado} {resultado.unidad_medida}
                         </span>
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className="text-2xl">
+                      <td className="px-6 py- text-center">
+                        <span className="flex items-center gap-2">
                           {getPosicionEmoji(resultado.posicion_final)}
                         </span>
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${resultado.estado
-                          ? 'bg-green-100 text-green-700 ring-2 ring-green-200'
-                          : 'bg-red-100 text-red-700 ring-2 ring-red-200'
+                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                          : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
                           }`}>
                           {resultado.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -393,7 +426,7 @@ const ResultadosPage = () => {
         atletas={atletas}
         pruebas={pruebas}
       />
-    </div>
+    </div >
   );
 };
 

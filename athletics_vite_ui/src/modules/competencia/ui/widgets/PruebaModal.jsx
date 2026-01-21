@@ -1,20 +1,22 @@
 import { useEffect, useState } from "react";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
-import baremoService from "../../services/baremo_service";
 import Swal from "sweetalert2";
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     const [form, setForm] = useState({
+        nombre: "",
+        fecha_prueba: "",
         siglas: "",
         tipo_prueba: "COMPETENCIA",
+        tipo_medicion: "TIEMPO",
         unidad_medida: "",
         estado: true,
         tipo_disciplina_id: "",
-        baremo_id: ""
+        fecha_registro: "",
     });
 
     const [disciplinas, setDisciplinas] = useState([]);
-    const [baremos, setBaremos] = useState([]);
+
 
     useEffect(() => {
         if (isOpen) {
@@ -22,17 +24,21 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             if (editingData) {
                 setForm({
                     ...editingData,
+                    nombre: editingData.nombre || "",
+                    fecha_prueba: editingData.fecha_prueba || "",
                     tipo_disciplina_id: editingData.tipo_disciplina_id?.toString() || "",
-                    baremo_id: editingData.baremo_id?.toString() || ""
                 });
             } else {
                 setForm({
+                    nombre: "",
+                    fecha_prueba: "",
                     siglas: "",
                     tipo_prueba: "COMPETENCIA",
+                    tipo_medicion: "TIEMPO",
                     unidad_medida: "",
                     estado: true,
                     tipo_disciplina_id: "",
-                    baremo_id: ""
+                    fecha_registro: "",
                 });
             }
         }
@@ -42,10 +48,8 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         try {
             const [resD, resB] = await Promise.all([
                 tipoDisciplinaService.getAll(),
-                baremoService.getAll()
             ]);
             setDisciplinas(Array.isArray(resD) ? resD : []);
-            setBaremos(Array.isArray(resB) ? resB : []);
         } catch (err) { console.error(err); }
     };
 
@@ -64,7 +68,10 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: 'Sí',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#212121',
+            color: '#fff'
         });
 
         if (result.isConfirmed) {
@@ -74,7 +81,9 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                 icon: 'success',
                 title: editingData ? 'Prueba actualizada' : 'Prueba creada',
                 text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
             });
 
             onClose();
@@ -91,7 +100,10 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: `Sí, ${action}`,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#212121',
+            color: '#fff'
         });
 
         if (result.isConfirmed) {
@@ -101,7 +113,9 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                 icon: 'success',
                 title: `Prueba ${form.estado ? 'desactivada' : 'activada'}`,
                 text: `La prueba ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
             });
         }
     };
@@ -146,29 +160,30 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Nombre</label>
                             <input
                                 type="text"
-                                value={form.siglas}
-                                onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
+                                value={form.nombre}
+                                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                                 className="
-    block w-full pl-10 pr-3 py-2.5
+    block w-full pl-3 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
     focus:ring-[#b30c25] focus:border-[#b30c25]
     sm:text-sm
   "                                  required
+                                placeholder="Ej. 100m Planos"
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad Medida</label>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
                             <input
                                 type="text"
-                                value={form.unidad_medida}
-                                onChange={(e) => setForm({ ...form, unidad_medida: e.target.value })}
+                                value={form.siglas}
+                                onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
                                 className="
-    block w-full pl-10 pr-3 py-2.5
+    block w-full pl-3 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
@@ -198,6 +213,48 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         </select>
                     </div>
 
+                    <div>
+                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Tipo de Medición</label>
+                        <select
+                            value={form.tipo_medicion}
+                            onChange={(e) => {
+                                const newTipo = e.target.value;
+                                setForm({
+                                    ...form,
+                                    tipo_medicion: newTipo,
+                                    unidad_medida: newTipo === "TIEMPO" ? "s" : "m"
+                                });
+                            }}
+                            className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                              required
+                        >
+                            <option value="TIEMPO">TIEMPO</option>
+                            <option value="DISTANCIA">DISTANCIA</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad de Medida</label>
+                        <input
+                            type="text"
+                            value={form.unidad_medida}
+                            disabled
+                            className="
+    block w-full pl-3 pr-3 py-2.5
+    bg-gray-100 text-gray-600
+    border border-gray-300 rounded-lg
+    sm:text-sm cursor-not-allowed
+  "
+                            placeholder="Auto-completado"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Disciplina</label>
@@ -217,23 +274,45 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                                 {disciplinas.map(d => (<option key={d.id} value={d.id}>{d.nombre}</option>))}
                             </select>
                         </div>
+
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Baremo</label>
-                            <select
-                                value={form.baremo_id}
-                                onChange={(e) => setForm({ ...form, baremo_id: e.target.value })}
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                                Fecha de Registro
+                            </label>
+                            <input
+                                type="date"
+                                value={form.fecha_registro}
+                                onChange={(e) => setForm({ ...form, fecha_registro: e.target.value })}
                                 className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "  required
-                            >
-                                <option value="">Seleccione...</option>
-                                {baremos.map(b => (<option key={b.id} value={b.id}>Clase {b.clasificacion} ({b.valor_baremo} pts)</option>))}
-                            </select>
+                                    block w-full pl-3 pr-3 py-2.5
+                                    bg-white text-black
+                                    border border-gray-300 rounded-lg
+                                    placeholder-gray-500
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm
+                                "
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                                Fecha de Prueba
+                            </label>
+                            <input
+                                type="date"
+                                value={form.fecha_prueba}
+                                onChange={(e) => setForm({ ...form, fecha_prueba: e.target.value })}
+                                className="
+                                    block w-full pl-3 pr-3 py-2.5
+                                    bg-white text-black
+                                    border border-gray-300 rounded-lg
+                                    placeholder-gray-500
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm
+                                "
+                            />
                         </div>
                     </div>
 

@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera }
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
 import TwoFactorSettings from '../widgets/TwoFactorSettings';
+import Settings from '../../../../config/enviroment';
 
 const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
@@ -10,6 +11,8 @@ const ProfilePage = () => {
     const [message, setMessage] = useState(null);
     const [error, setError] = useState(null);
     const [isHistorialModalOpen, setIsHistorialModalOpen] = useState(false);
+    const [profileFile, setProfileFile] = useState(null);
+
 
     const [formData, setFormData] = useState({
         username: '',
@@ -65,11 +68,11 @@ const ProfilePage = () => {
         }
     };
 
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -77,30 +80,54 @@ const ProfilePage = () => {
         setMessage(null);
 
         try {
-            const updatePayload = {
-                username: formData.username,
-                first_name: formData.first_name,
-                last_name: formData.last_name,
-                tipo_identificacion: formData.tipo_identificacion,
-                tipo_estamento: formData.tipo_estamento,
-                fecha_nacimiento: formData.fecha_nacimiento,
-                phone: formData.phone,
-                direccion: formData.direccion,
-                sexo: formData.sexo,
-                profile_image: formData.profile_image
-            };
+            const data = new FormData();
 
-            await authService.updateProfile(updatePayload);
-            setMessage('Perfil actualizado exitosamente.');
+            data.append('username', formData.username);
+            data.append('first_name', formData.first_name);
+            data.append('last_name', formData.last_name);
+            data.append('phone', formData.phone);
+            data.append('direccion', formData.direccion);
+
+            if (formData.sexo) {
+                data.append('sexo', formData.sexo);
+            }
+            if (formData.tipo_estamento) {
+                data.append('tipo_estamento', formData.tipo_estamento);
+            }
+            if (formData.fecha_nacimiento) {
+                data.append('fecha_nacimiento', formData.fecha_nacimiento);
+            }
+
+            if (formData.tipo_identificacion) {
+                data.append('tipo_identificacion', formData.tipo_identificacion);
+            }
+
+            if (formData.identificacion) {
+                data.append('identificacion', formData.identificacion);
+            }
+
+            if (profileFile) {
+                data.append('profile_image', profileFile);
+            }
+
+            // DEBUG
+            for (let pair of data.entries()) {
+                console.log('📦', pair[0], pair[1]);
+            }
+
+            await authService.updateProfile(data);
+
+            setMessage('Perfil actualizado correctamente');
             await fetchProfile();
         } catch (err) {
-            console.error(err);
-            const errorMsg = err.detail || err.message || 'Error al actualizar el perfil.';
-            setError(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+            console.error("Full profile update error:", err);
+            console.error("Validation details:", err.response?.data);
+            setError('Error al actualizar perfil');
         } finally {
             setSubmitting(false);
         }
     };
+
 
     if (loading) {
         return (
@@ -119,19 +146,51 @@ const ProfilePage = () => {
                     <div className="flex flex-col md:flex-row items-center">
                         {/* Avatar */}
                         <div className="-mt-12 relative">
-                            <div className="h-24 w-24 rounded-full border-4 border-[#332122] bg-[#212121] shadow-md flex items-center justify-center overflow-hidden">
-                                {formData.profile_image ? (
-                                    <img src={formData.profile_image} alt="Profile" className="h-full w-full object-cover" />
+                            <div className="h-24 w-24 rounded-full border-4 border-[#332122] bg-[#212121]
+                  shadow-md flex items-center justify-center overflow-hidden">
+                                {profileFile ? (
+                                    // Preview local
+                                    <img
+                                        src={URL.createObjectURL(profileFile)}
+                                        alt="Perfil Local"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : formData.profile_image ? (
+                                    // Imagen desde backend
+                                    <img
+                                        src={`${Settings.API_URL}/${formData.profile_image}`}
+                                        alt="Perfil"
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://ui-avatars.com/api/?name=" + formData.first_name + "+" + formData.last_name + "&background=random"; }}
+                                    />
                                 ) : (
-                                    <span className="text-3xl font-bold text-[#b30c25]">
-                                        {formData.first_name ? formData.first_name[0] : 'U'}
-                                    </span>
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                        Sin imagen
+                                    </div>
                                 )}
                             </div>
-                            <button disabled className="absolute bottom-0 right-0 bg-[#332122] p-1.5 rounded-full border border-[#332122] text-gray-400 hover:text-[#b30c25] transition-colors cursor-not-allowed" title="Cambiar foto (Próximamente)">
+
+                            {/* INPUT FILE */}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                id="profileUpload"
+                                className="hidden"
+                                onChange={(e) => setProfileFile(e.target.files[0])}
+                            />
+
+                            {/* BOTÓN REAL */}
+                            <label
+                                htmlFor="profileUpload"
+                                className="absolute bottom-0 right-0 bg-[#332122] p-1.5
+               rounded-full border border-[#332122]
+               cursor-pointer hover:text-[#b30c25]"
+                                title="Cambiar foto"
+                            >
                                 <Camera size={16} />
-                            </button>
+                            </label>
                         </div>
+
 
                         {/* Name & Role */}
                         <div className="mt-4 md:mt-0 md:ml-6 text-center md:text-left flex-1">
@@ -160,30 +219,34 @@ const ProfilePage = () => {
             </div>
 
             {/* Flash Messages */}
-            {message && (
-                <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
-                    <div className="flex">
-                        <div className="shrink-0">
-                            <Save className="h-5 w-5 text-[#b30c25]" />
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-white">{message}</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-            {error && (
-                <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
-                    <div className="flex">
-                        <div className="shrink-0">
-                            <Shield className="h-5 w-5 text-[#b30c25]" />
-                        </div>
-                        <div className="ml-3">
-                            <p className="text-sm text-white">{error}</p>
+            {
+                message && (
+                    <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
+                        <div className="flex">
+                            <div className="shrink-0">
+                                <Save className="h-5 w-5 text-[#b30c25]" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-white">{message}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
+            {
+                error && (
+                    <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
+                        <div className="flex">
+                            <div className="shrink-0">
+                                <Shield className="h-5 w-5 text-[#b30c25]" />
+                            </div>
+                            <div className="ml-3">
+                                <p className="text-sm text-white">{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* Main Form */}
             <form onSubmit={handleSubmit} className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6 md:p-8">
@@ -201,7 +264,7 @@ const ProfilePage = () => {
                             name="first_name"
                             value={formData.first_name}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -220,7 +283,7 @@ className="
                             name="last_name"
                             value={formData.last_name}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -238,7 +301,7 @@ className="
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -260,7 +323,7 @@ className="
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
-className="
+                                className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -283,7 +346,7 @@ className="
                                 name="direccion"
                                 value={formData.direccion}
                                 onChange={handleChange}
-className="
+                                className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -306,7 +369,7 @@ className="
                                 name="fecha_nacimiento"
                                 value={formData.fecha_nacimiento}
                                 onChange={handleChange}
-className="
+                                className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -324,7 +387,7 @@ className="
                             name="sexo"
                             value={formData.sexo}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -347,7 +410,7 @@ className="
                             name="tipo_identificacion"
                             value={formData.tipo_identificacion}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -375,7 +438,7 @@ className="
                                 name="identificacion"
                                 value={formData.identificacion}
                                 readOnly
-className="
+                                className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -393,7 +456,7 @@ className="
                             name="tipo_estamento"
                             value={formData.tipo_estamento}
                             onChange={handleChange}
-className="
+                            className="
     block w-full pl-10 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
@@ -431,7 +494,7 @@ className="
                     <button
                         type="submit"
                         disabled={submitting}
-                        className={`inline-flex items-center px-6 py-3 rounded-lg text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg ${submitting ? 'opacity-50' : ''}`}
+                        className={`inline-flex items-center px-6 py-3 rounded-lg text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg ${submitting ? 'opacity-50' : ''}`}
                     >
                         <Save className="mr-2 h-5 w-5" />
                         Guardar Cambios
@@ -443,15 +506,17 @@ className="
 
             <TwoFactorSettings />
 
-            {isHistorialModalOpen && (
-                <HistorialMedicoModal
-                    isOpen={isHistorialModalOpen}
-                    onClose={() => setIsHistorialModalOpen(false)}
-                    atletaId={formData.identificacion}
-                />
-            )}
+            {
+                isHistorialModalOpen && (
+                    <HistorialMedicoModal
+                        isOpen={isHistorialModalOpen}
+                        onClose={() => setIsHistorialModalOpen(false)}
+                        atletaId={formData.identificacion}
+                    />
+                )
+            }
 
-        </div>
+        </div >
 
     );
 

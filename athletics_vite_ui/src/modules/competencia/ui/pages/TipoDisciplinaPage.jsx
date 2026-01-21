@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom"; // Importante para la navegación
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import TipoDisciplinaModal from "../widgets/TipoDisciplinaModal";
+import Swal from "sweetalert2";
 
 const TipoDisciplinaPage = () => {
   const [tipos, setTipos] = useState([]);
@@ -50,11 +51,23 @@ const TipoDisciplinaPage = () => {
   // Función actualizada para Activar/Desactivar sin que desaparezca
   const toggleStatus = async (item) => {
     const nuevoEstado = !item.estado;
-    const mensaje = nuevoEstado
-      ? `¿Desea activar la disciplina: ${item.nombre}?`
-      : `¿Desea desactivar la disciplina: ${item.nombre}?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Desea activar la disciplina: ${item.nombre}?`
+        : `¿Desea desactivar la disciplina: ${item.nombre}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await tipoDisciplinaService.update(item.external_id, { ...item, estado: nuevoEstado });
@@ -64,14 +77,30 @@ const TipoDisciplinaPage = () => {
         t.external_id === item.external_id ? { ...t, estado: nuevoEstado } : t
       ));
 
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
+
       fetchData();
     } catch (err) {
-      alert("Error al cambiar el estado del registro");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado del registro',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
 
   return (
-        <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
+    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb */}
@@ -84,7 +113,7 @@ const TipoDisciplinaPage = () => {
   hover:border-[#b30c25] hover:text-[#b30c25]
   transition-all duration-200 hover:shadow-lg
 "
->
+        >
           <span className="material-symbols-outlined text-lg transition-transform duration-200 group-hover:-translate-x-1">
             arrow_back
           </span>
@@ -95,11 +124,11 @@ const TipoDisciplinaPage = () => {
         {/* Cabecera */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-2">
-<h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-100">
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-100">
               Tipos de Disciplina
             </h1>
-<p className="text-gray-400 text-lg">
-                Administra las categorías generales de las competencias deportivas
+            <p className="text-gray-400 text-lg">
+              Administra las categorías generales de las competencias deportivas
             </p>
           </div>
 
@@ -122,7 +151,7 @@ const TipoDisciplinaPage = () => {
         </div>
 
         {/* Tabla */}
-<div className="
+        <div className="
   bg-[#242223]
   rounded-3xl
   border border-[#332122]
@@ -173,15 +202,15 @@ const TipoDisciplinaPage = () => {
                     <tr
                       key={t.external_id}
                       className={`transition-all duration-200 ${!t.estado
-                          ? 'bg-gray-50/70 opacity-60'
-                          : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                        ? 'bg-gray-50/70 opacity-60'
+                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
                         }`}
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
                           <div className={`flex items-center justify-center w-12 h-12 rounded-xl font-bold ${!t.estado
-                              ? 'bg-gray-200 text-gray-400'
-                              : 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
+                            ? 'bg-gray-200 text-gray-400'
+                            : 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
                             }`}>
                             {t.nombre?.substring(0, 2).toUpperCase()}
                           </div>
@@ -197,8 +226,8 @@ const TipoDisciplinaPage = () => {
                       </td>
                       <td className="px-6 py-5 text-center">
                         <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${t.estado
-                            ? 'bg-green-900/40 text-green-300 ring-green-700'
-                            : 'bg-red-900/40 text-red-300 ring-red-700'
+                          ? 'bg-green-900/40 text-green-300 ring-green-700'
+                          : 'bg-red-900/40 text-red-300 ring-red-700'
                           }`}>
                           {t.estado ? "Activo" : "Inactivo"}
                         </span>
@@ -216,8 +245,8 @@ const TipoDisciplinaPage = () => {
                           <button
                             onClick={() => toggleStatus(t)}
                             className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${t.estado
-                                ? ' text-red-400 hover:bg-red-900/30'
-                                : ' text-green-400 hover:bg-green-900/30'
+                              ? ' text-red-400 hover:bg-red-900/30'
+                              : ' text-green-400 hover:bg-green-900/30'
                               }`}
                             title={t.estado ? "Desactivar" : "Activar"}
                           >

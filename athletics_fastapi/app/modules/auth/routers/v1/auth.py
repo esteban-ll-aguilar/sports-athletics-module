@@ -107,7 +107,7 @@ async def login(
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario inactivo, verifica tu email",
+            detail="Usuario inactivo, por favor verifica tu email",
         )
 
     if user.two_factor_enabled:

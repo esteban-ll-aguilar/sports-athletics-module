@@ -4,6 +4,8 @@ import { Shield, Mail, UserCog, FileText } from "lucide-react";
 import EditUserModal from "./EditUserModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Link } from "react-router-dom";
+
 
 const AdminUsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -104,27 +106,40 @@ const AdminUsersTable = () => {
   const roles = Array.from(new Set(users.map((u) => u.role)));
 
   return (
-    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
+    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <Link
+          to="/dashboard/pruebas"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+        >
+          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
 
+          </span>
+        </Link>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
-          <div className="space-y-2">
-            <UserCog className="text-indigo-600" />
-            <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
+          <div className="space-y-1">
+            <h1 className="text-4xl sm:text-5xl font-black text-gray-100">
               Usuarios del Sistema
-            </h2>
+            </h1>
 
           </div>
 
           <button
             onClick={exportPDF}
-            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8
-    bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-    text-white font-bold text-sm uppercase tracking-wide
-    hover:shadow-2xl hover:shadow-red-200 hover:scale-105
-    active:scale-100 transition-all duration-200"
-          >
+            className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "    >
             <FileText size={16} />
             Exportar PDF
           </button>
@@ -132,33 +147,34 @@ const AdminUsersTable = () => {
 
 
         {/* Filtros */}
-        <div className="px-6 py-4 flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <input
             type="text"
             placeholder="Buscar por nombre o correo"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="
-        w-full pl-12 pr-4 py-4 rounded-2xl
-        bg-[#1f1c1d]
-        border border-[#332122]
-        text-gray-100 placeholder-gray-500
-        focus:border-[#b30c25]
-        focus:ring-1 focus:ring-[#b30c25]/40
-        outline-none transition-all
-        shadow-inner
-      "    />
+                w-full pl-12 pr-4 py-4 rounded-2xl
+                bg-[#1f1c1d]
+                border border-[#332122]
+                text-gray-100
+                focus:border-[#b30c25]
+                focus:ring-1 focus:ring-[#b30c25]/40
+                outline-none
+              "    />
 
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             className="
-    px-4 py-4 rounded-xl
-    bg-[#121212] border border-[#332122]
-    text-gray-100
-    focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none
-  ">
+              w-full px-4 py-4 rounded-2xl
+              bg-[#1f1c1d]
+              border border-[#332122]
+              text-gray-100
+              focus:border-[#b30c25]
+              focus:ring-1 focus:ring-[#b30c25]/40
+              outline-none
+            ">
             <option value="">Todos los roles</option>
             {roles.map((role) => (
               <option key={role} value={role}>
@@ -167,99 +183,95 @@ const AdminUsersTable = () => {
             ))}
           </select>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="
-    px-4 py-4 rounded-xl
-    bg-[#121212] border border-[#332122]
-    text-gray-100
-    focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none
-  ">
-            <option value="">Todos los estados</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-          </select>
+
         </div>
 
         {/* Tabla */}
-        <table className="w-full divide-y table-auto min-w-[900px]">
-          
-          
-          <thead className="bg-[#1a1a1a] border-b border-[#332122]">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
+        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+          <div className="overflow-x-auto">
 
-                Nombre
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">
-                Correo
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Rol
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Estado
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase">                Acciones
-              </th>
-            </tr>
-          </thead>
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
 
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm font-medium truncate">
-                  {user.username}
-                </td>
+                    Nombre
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Correo
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
+                                 Rol
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
+                                 Estado
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">             
+                       Acciones
+                  </th>
+                </tr>
+              </thead>
 
-                <td className="px-4 py-3 text-sm text-gray-600 truncate">
-                  <div className="flex items-center">
-                    <Mail size={14} className="mr-2 text-gray-400" />
-                    {user.email}
-                  </div>
-                </td>
+              <tbody className="divide-y divide-[#332122]">
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50/30">
+                   
+                      <td className="px-6 py-5 font-bold text-gray-200">
+                      {user.username}
+                    </td>
 
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-indigo-100 text-indigo-800">
-                    <Shield size={12} className="mr-1" />
-                    {user.role}
-                  </span>
-                </td>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <Mail size={14} className="mr-2 text-gray-400" />
+                        {user.email}
+                      </div>
+                    </td>
 
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${user.is_active
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                      }`}
-                  >
-                    {user.is_active ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
+                    <td className="px-6 py-5">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30">
+                        <Shield size={12} className="mr-1" />
+                        {user.role}
+                      </span>
+                    </td>
 
-                <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => setEditingUser(user)}
-                    className="text-sm font-medium text-indigo-600 hover:underline"
-                  >
-                    Editar
-                  </button>
-                </td>
-              </tr>
-            ))}
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
+                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                          : ' bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
+                          }`}
+                      >
+                        {user.is_active ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
 
-            {filteredUsers.length === 0 && (
-              <tr>
-                <td
-                  colSpan="5"
-                  className="px-4 py-6 text-center text-sm text-gray-500"
-                >
-                  No hay usuarios registrados.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingUser(user)}
+                          className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                          title="Editar usuario"
+                        >
+                          <span className="material-symbols-outlined">edit</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="5" className="py-20 text-center text-gray-400">
+                      No hay usuarios registrados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+            </table>
+          </div>
+        </div>
       </div>
 
       {editingUser && (
@@ -270,6 +282,7 @@ const AdminUsersTable = () => {
         />
       )}
     </div>
+
 
   );
 

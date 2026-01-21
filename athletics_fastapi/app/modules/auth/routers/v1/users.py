@@ -1,7 +1,10 @@
-from typing import Optional
-from fastapi import APIRouter, Depends, status, HTTPException
+from typing import Optional, Union
+from fastapi import APIRouter, Depends, status, HTTPException, Form, File, UploadFile
 from uuid import UUID
 import math
+import os
+import shutil
+from datetime import date
 
 from app.modules.auth.domain.schemas import (
     PaginatedUsers,
@@ -15,11 +18,11 @@ from app.modules.auth.domain.schemas import (
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse
-from app.modules.auth.domain.models import AuthUserModel, UserModel
-from app.modules.auth.domain.enums.role_enum import RoleEnum
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-
+from app.modules.auth.domain.models import AuthUserModel
+from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
+from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
+from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
+from app.modules.common.services.file_service import FileService
 
 users_router_v1 = APIRouter()
 
@@ -88,6 +91,132 @@ async def list_users(
     )
 
 # ======================================================
+# GET CURRENT USER (ME) - MOVED UP TO AVOID CONFLICT
+# ======================================================
+
+@users_router_v1.get(
+    "/me",
+    response_model=BaseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Obtener perfil del usuario actual"
+)
+async def get_current_user_profile(
+    current_user: AuthUserModel = Depends(get_current_user),
+):
+    if not current_user.profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Perfil de usuario no encontrado"
+        )
+
+    return BaseResponse(
+        data=UserWithRelationsSchema.model_validate(
+            current_user.profile,
+            from_attributes=True
+        ).model_dump(),
+        message="Perfil obtenido exitosamente",
+        status=status.HTTP_200_OK
+    )
+
+# ======================================================
+# UPDATE MY PROFILE (With File Upload) - MOVED UP TO AVOID CONFLICT
+# ======================================================
+
+@users_router_v1.put(
+    "/me",
+    response_model=BaseResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Actualizar perfil del usuario actual"
+)
+async def update_profile(
+    username: str = Form(...),
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    phone: Optional[str] = Form(None),
+    direccion: Optional[str] = Form(None),
+    sexo: Optional[str] = Form(None), # Enum as string from form
+    tipo_estamento: Optional[str] = Form(None), # Enum as string from form
+    fecha_nacimiento: Optional[str] = Form(None), # Date as string from form
+    tipo_identificacion: Optional[str] = Form(None),
+    identificacion: Optional[str] = Form(None),
+    profile_image: Optional[UploadFile] = File(None),
+
+    current_user: AuthUserModel = Depends(get_current_user),
+    repo: AuthUsersRepository = Depends(get_users_repo),
+):
+    """
+    Endpoint para que el usuario actual actualice su perfil.
+    Acepta `multipart/form-data` para subir imagen de perfil.
+    """
+    user = current_user.profile
+    if not user:
+         raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Perfil no encontrado"
+        )
+
+    # =========================
+    # ACTUALIZAR CAMPOS
+    # =========================
+    # Validar y convertir Enums si es necesario, o dejar que SQLAlchemy intente.
+    # Como viene de Form(), viene como string.
+    
+    user.username = username
+    user.first_name = first_name
+    user.last_name = last_name
+    user.phone = phone
+    user.direccion = direccion
+    user.identificacion = identificacion
+    
+    if sexo:
+        try:
+            user.sexo = SexoEnum(sexo)
+        except ValueError:
+            pass # O lanzar error
+            
+    if tipo_estamento:
+        try:
+            user.tipo_estamento = TipoEstamentoEnum(tipo_estamento)
+        except ValueError:
+            pass
+
+    if tipo_identificacion:
+        try:
+            user.tipo_identificacion = TipoIdentificacionEnum(tipo_identificacion)
+        except ValueError:
+            pass
+
+    if fecha_nacimiento:
+        try:
+             # Convertir string 'YYYY-MM-DD' a date object
+             user.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
+        except ValueError:
+             pass
+
+    # =========================
+    # IMAGEN
+    # =========================
+    if profile_image:
+        file_service = FileService(base_dir="data")
+        
+        # Opcional: Borrar imagen anterior si existe?
+        # if user.profile_image:
+        #     file_service.delete_file(user.profile_image)
+            
+        saved_path = await file_service.save_profile_picture(profile_image)
+        user.profile_image = saved_path
+
+    await repo.commit()
+    await repo.refresh(user)
+
+    return BaseResponse(
+        data=UserResponseSchema.model_validate(
+            user,
+            from_attributes=True
+        ).model_dump(),
+        message="Perfil actualizado correctamente",
+        status=status.HTTP_200_OK
+    )
 # GET USER BY EXTERNAL_ID
 # ======================================================
 
@@ -174,56 +303,5 @@ async def update_user_by_id(
     return BaseResponse(
         data=UserResponseSchema.model_validate(updated_user).model_dump(),
         message="Usuario actualizado correctamente",
-        status=status.HTTP_200_OK
-    )
-
-
-# ======================================================
-# GET CURRENT USER (ME)
-# ======================================================
-
-@users_router_v1.get(
-    "/me",
-    response_model=BaseResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Obtener perfil del usuario actual"
-)
-async def get_current_user_profile(
-    current_user: AuthUserModel = Depends(get_current_user),
-):
-    if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Perfil de usuario no encontrado"
-        )
-
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            current_user.profile,
-            from_attributes=True
-        ).model_dump(),
-        message="Perfil obtenido exitosamente",
-        status=status.HTTP_200_OK
-    )
-
-@users_router_v1.put(
-    "/me",
-    response_model=BaseResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Actualizar perfil del usuario actual"
-)
-async def update_current_user_profile(
-    user_data: UserUpdateSchema,
-    repo: AuthUsersRepository = Depends(get_users_repo),
-    current_user: AuthUserModel = Depends(get_current_user),
-):
-    if not current_user.profile:
-         raise HTTPException(status_code=404, detail="Perfil no encontrado")
-
-    updated = await repo.update(current_user.profile, user_data)
-    
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(updated, from_attributes=True).model_dump(),
-        message="Perfil actualizado exitosamente",
         status=status.HTTP_200_OK
     )

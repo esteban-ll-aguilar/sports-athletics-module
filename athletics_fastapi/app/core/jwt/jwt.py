@@ -184,10 +184,19 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Token inválido")
 
     # ⚠️ user_id se guarda como string → convertir a int
+    # Importar UserModel aquí para evitar ciclos si es necesario, o asegura que está arriba
+    from app.modules.auth.domain.models.user_model import UserModel
+
     result = await session.execute(
         select(AuthUserModel)
         .where(AuthUserModel.id == int(user_id))
-        .options(selectinload(AuthUserModel.profile))
+        .options(
+            selectinload(AuthUserModel.profile).options(
+                selectinload(UserModel.atleta),
+                selectinload(UserModel.entrenador),
+                selectinload(UserModel.representante)
+            )
+        )
     )
     user = result.scalar_one_or_none()
 

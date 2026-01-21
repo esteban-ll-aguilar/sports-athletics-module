@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
 import HorarioManager from '../components/HorarioManager';
+import { Link } from "react-router-dom";
+
 
 const GestionEntrenamientosPage = () => {
     const [entrenamientos, setEntrenamientos] = useState([]);
@@ -62,56 +64,76 @@ const GestionEntrenamientosPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900 p-4 md:p-10">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                {/* Breadcrumb */}
+                <Link
+                    to="/dashboard/entrenamientos"
+                    className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+                >
+                    <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+
+                    </span>
+                </Link>
+
                 {/* Cabecera */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                    <div>
-                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+                    <div className="space-y-1">
+                        <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
                             Gestión de Entrenamientos
                         </h1>
-                        <p className="text-gray-600 text-lg mt-2">
-                            Planifica y administra las sesiones de entrenamiento
+                        <p className="text-gray-400 text-lg">
                         </p>
                     </div>
 
                     <button
                         onClick={handleCreate}
-                        className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
-                    >
-                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+                        className="
+                        group flex items-center gap-3
+                        px-8 py-4 rounded-2xl
+                        text-sm font-semibold text-white
+                        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+                        hover:brightness-110
+                        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-all duration-300
+                        shadow-lg shadow-[#b30c25]/40
+                        active:scale-95
+    "                    >
+                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
                             add
                         </span>
                         Nuevo Entrenamiento
                     </button>
                 </div>
 
+
                 {/* Tabla */}
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+                <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
+                                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Descripción
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-center">
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-right">
+                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-[#332122]">
                                 {isLoading ? (
                                     <tr>
                                         <td colSpan="4" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                                                <div className="w-10 h-10 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
                                                 <span className="text-gray-500 font-semibold">Cargando entrenamientos...</span>
                                             </div>
                                         </td>
@@ -123,34 +145,50 @@ const GestionEntrenamientosPage = () => {
                                                 <span className="material-symbols-outlined text-6xl text-gray-300">
                                                     fitness_center
                                                 </span>
-                                                <span className="text-gray-400 font-semibold">No hay entrenamientos registrados</span>
+                                                <span className="text-gray-400 font-semibold">
+                                                    No hay entrenamientos registrados
+                                                </span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
                                     entrenamientos.map((ent) => (
-                                        <tr key={ent.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-900">
-                                                    {ent.tipo_entrenamiento}
+                                        <tr
+                                            key={ent.id}
+                                            className="transition-all duration-200 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent"
+                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#b30c25] to-[#5a1a22] rounded-xl flex items-center justify-center">
+                                                        <span className="material-symbols-outlined text-white text-xl">
+                                                            exercise
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-gray-200">
+                                                            {ent.tipo_entrenamiento}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
-                                                {ent.descripcion}
+                                            <td className="px-6 py-5">
+                                                <p className="text-gray-400 text-sm max-w-xs truncate font-medium">
+                                                    {ent.descripcion || <span className="italic text-gray-600">Sin descripción</span>}
+                                                </p>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700">
+                                            <td className="px-6 py-5 text-center">
+                                                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-bold bg-[#1f1c1d] text-gray-200 border border-[#332122]">
                                                     {ent.fecha_entrenamiento}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-5">
                                                 <div className="flex justify-end gap-2">
                                                     <button
                                                         onClick={() => handleHorarios(ent)}
-                                                        className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group"
-                                                        title="Gestionar Horarios"
+                                                        className="p-2.5 text-gray-400 hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                        title="Gestionar Asistencia"
                                                     >
-                                                        <span className="material-symbols-outlined group-hover:text-amber-600">schedule</span>
+                                                        <span className="material-symbols-outlined">groups</span>
                                                     </button>
                                                     <button
                                                         onClick={() => handleEdit(ent)}
@@ -161,7 +199,7 @@ const GestionEntrenamientosPage = () => {
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(ent.id)}
-                                                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                        className="p-2.5 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
                                                         title="Eliminar"
                                                     >
                                                         <span className="material-symbols-outlined">delete</span>

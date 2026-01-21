@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
@@ -11,18 +11,44 @@ import {
     Menu,
     X,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ChevronDown
 } from 'lucide-react';
 import authService from '@modules/auth/services/auth_service';
 import { getUserRole, getUserEmail, getUserName } from '../../../../auth/utils/roleUtils';
 import rolePermissions from '../../../../../core/router/const/rolePermissions';
+import Settings from '../../../../../config/enviroment';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
 
     const toggleMobileSidebar = () => setIsMobileOpen(!isMobileOpen);
+
+    const [expandedItems, setExpandedItems] = useState({});
+
+    const toggleExpand = (path) => {
+        setExpandedItems(prev => ({
+            ...prev,
+            [path]: !prev[path]
+        }));
+    };
+
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const response = await authService.getProfile();
+                if (response.data) {
+                    setUserProfile(response.data);
+                }
+            } catch (error) {
+                console.error("Error loading sidebar profile", error);
+            }
+        };
+        fetchUserProfile();
+    }, []);
 
     const handleLogout = async () => {
         await authService.logout();
@@ -34,7 +60,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     if (role) {
         menuItems.push(...rolePermissions[role]);
     }
-    
+
     const isActive = (path) => location.pathname === path;
 
     return (
@@ -90,29 +116,91 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
                 {/* Navigation Items */}
                 <nav className="mt-6 px-2 space-y-2">
-                    {menuItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            className={`
+                    {menuItems.map((item) => {
+                        // Logic for items with children (Accordion view)
+                        if (item.children && isOpen) {
+                            const isChildActive = [item.path, ...item.children.map(c => c.path)].includes(location.pathname);
+                            const isExpanded = expandedItems[item.path];
+
+                            return (
+                                <div key={item.path} className="flex flex-col">
+                                    <div
+                                        className={`
+                                            w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors duration-200
+                                            ${isChildActive
+                                                ? 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+                                                : 'text-gray-400 hover:bg-[#332122] hover:text-white'}
+                                        `}
+                                    >
+                                        <Link
+                                            to={item.path}
+                                            className="flex items-center flex-grow"
+                                            onClick={() => {
+                                                // Optional: Auto-expand when clicking parent
+                                                // if (!expandedItems[item.path]) toggleExpand(item.path);
+                                            }}
+                                        >
+                                            <item.icon size={24} />
+                                            <span className="ml-3 font-medium text-left">{item.label}</span>
+                                        </Link>
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                toggleExpand(item.path);
+                                            }}
+                                            className="p-1 rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors"
+                                        >
+                                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                        </button>
+                                    </div>
+
+                                    {isExpanded && (
+                                        <div className="ml-12 mt-1 space-y-1 border-l-2 border-[#332122]">
+                                            {item.children.map(child => (
+                                                <Link
+                                                    key={child.path}
+                                                    to={child.path}
+                                                    className={`
+                                                        block px-4 py-2 text-sm rounded-r-lg transition-colors duration-200
+                                                        ${location.pathname === child.path
+                                                            ? 'text-[#b30c25] bg-[rgba(179,12,37,0.05)] font-medium'
+                                                            : 'text-gray-400 hover:text-white hover:bg-[#332122]'}
+                                                    `}
+                                                >
+                                                    {child.label}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={item.path}
+                                to={item.path}
+                                className={`
         flex items-center px-4 py-3 rounded-lg transition-colors duration-200
         ${isActive(item.path)
-                                    ? 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
-                                    : 'text-gray-400 hover:bg-[#332122] hover:text-white'}
+                                        ? 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+                                        : 'text-gray-400 hover:bg-[#332122] hover:text-white'}
         ${!isOpen && 'justify-center px-2'}
     `}
-                        >
-                            <item.icon size={24} />
-                            {isOpen && (
-                                <span className="ml-3 font-medium">{item.label}</span>
-                            )}
-                            {!isOpen && isActive(item.path) && (
-                                <div className="absolute left-full ml-2 px-2 py-1 bg-indigo-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none">
-                                    {item.label}
-                                </div>
-                            )}
-                        </Link>
-                    ))}
+                            >
+                                <item.icon size={24} />
+                                {isOpen && (
+                                    <span className="ml-3 font-medium">{item.label}</span>
+                                )}
+                                {!isOpen && isActive(item.path) && (
+                                    <div className="absolute left-full ml-2 px-2 py-1 bg-indigo-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none">
+                                        {item.label}
+                                    </div>
+                                )}
+                            </Link>
+                        )
+                    })}
                     {/* #Perfil de usuario */}
                     <Link
                         to="/profile"
@@ -137,9 +225,19 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                 {/* User Section & Logout */}
                 <div className="absolute bottom-0 w-full border-t border-[#332122] p-4 bg-[#212121]">
                     <div className={`flex items-center ${!isOpen && 'justify-center'}`}>
-                        <div className="w-10 h-10 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25] font-bold">
-                            U
-                        </div>
+                        {userProfile?.profile_image ? (
+                            <img
+                                src={`${Settings.API_URL}/${userProfile.profile_image}`}
+                                alt="User"
+                                className="w-10 h-10 rounded-full object-cover border border-[#b30c25]"
+                                onError={(e) => { e.target.onerror = null; e.target.src = "https://ui-avatars.com/api/?name=" + (userProfile.first_name || 'U') + "&background=random"; }}
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25] font-bold">
+                                {getUserName() ? getUserName().charAt(0).toUpperCase() : 'U'}
+                            </div>
+                        )}
+
                         {isOpen && (
                             <div className="ml-3 overflow-hidden">
                                 <p className="text-sm font-medium text-white truncate">

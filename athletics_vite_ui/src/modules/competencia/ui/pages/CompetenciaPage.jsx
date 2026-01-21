@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import competenciaService from "../../services/competencia_service";
 import CompetenciaModal from "../widgets/CompetenciaModal";
+import Swal from "sweetalert2";
 
 const CompetenciasPage = () => {
   const [competencias, setCompetencias] = useState([]);
@@ -9,6 +10,7 @@ const CompetenciasPage = () => {
   const [selectedCompetencia, setSelectedCompetencia] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterEstado, setFilterEstado] = useState("");
 
   const fetchCompetencias = async () => {
     setLoading(true);
@@ -33,11 +35,23 @@ const CompetenciasPage = () => {
 
   const toggleStatus = async (competencia) => {
     const nuevoEstado = !competencia.estado;
-    const mensaje = nuevoEstado
-      ? `¿Deseas activar la competencia "${competencia.nombre}"?`
-      : `¿Deseas desactivar la competencia "${competencia.nombre}"?`;
 
-    if (!confirm(mensaje)) return;
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: nuevoEstado
+        ? `¿Deseas activar la competencia "${competencia.nombre}"?`
+        : `¿Deseas desactivar la competencia "${competencia.nombre}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      background: '#212121',
+      color: '#fff'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await competenciaService.update(competencia.external_id, {
@@ -49,9 +63,26 @@ const CompetenciasPage = () => {
           ? { ...item, estado: nuevoEstado }
           : item
       ));
+
+      Swal.fire({
+        title: '¡Éxito!',
+        text: nuevoEstado ? 'Activado exitosamente' : 'Desactivado exitoso',
+        icon: 'success',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
+
       fetchCompetencias();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al cambiar el estado',
+        icon: 'error',
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
+      });
     }
   };
 
@@ -67,39 +98,58 @@ const CompetenciasPage = () => {
   };
 
   // Filtrar competencias por búsqueda
-  const filteredCompetencias = competencias.filter(comp =>
-    comp.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    comp.lugar.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompetencias = competencias.filter(comp => {
+    const matchSearch = comp.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      comp.lugar.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchEstado = filterEstado === "" || comp.estado.toString() === filterEstado;
+    return matchSearch && matchEstado;
+  });
 
   return (
-    <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
+    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        {/* Breadcrumb */}
+        <Link
+          to="/dashboard/competencias"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+        >
+          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+
+          </span>
+        </Link>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
-          <div className="space-y-2">
+          <div className="space-y-1">
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
               Gestión de Competencias
             </h1>
-            <p className="text-gray-400 text-lg">
-              Administra el calendario, lugares y estados de los eventos oficiales
-            </p>
           </div>
 
           <button
             onClick={() => { setSelectedCompetencia(null); setIsModalOpen(true); }}
-            className="group relative flex items-center justify-center gap-2 rounded-2xl h-14 px-8 bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] text-white font-bold text-sm uppercase tracking-wide hover:shadow-2xl hover:shadow-red-200 hover:scale-105 active:scale-100 transition-all duration-200"
-          >
-            <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
+            className="
+        group flex items-center gap-3
+        px-8 py-4 rounded-2xl
+        text-sm font-semibold text-white
+        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+        hover:brightness-110
+        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+        disabled:opacity-50 disabled:cursor-not-allowed
+        transition-all duration-300
+        shadow-lg shadow-[#b30c25]/40
+        active:scale-95
+    "            >
+            <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
               add
             </span>
             Crear Nueva Competencia
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
+        {/* Filtros */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Search Bar */}
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 material-symbols-outlined">
               search
@@ -110,16 +160,39 @@ const CompetenciasPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="
-    w-full pl-12 pr-4 py-4 rounded-2xl
-    bg-[#1f1c1d]
-    border border-[#332122]
-    text-gray-100 placeholder-gray-500
-    focus:border-[#b30c25]
-    focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none transition-all
-    shadow-inner
-  "
+              w-full pl-12 pr-4 py-4 rounded-2xl bg-[#1f1c1d]
+              border border-[#332122]
+              text-gray-100 placeholder-gray-500
+              focus:border-[#b30c25]
+              focus:ring-1 focus:ring-[#b30c25]/40
+              outline-none transition-all
+              shadow-inner
+                "
             />
+          </div>
+
+          {/* Filtro por Estado */}
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
+              filter_list
+            </span>
+            <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              className="
+              w-full pl-12 pr-4 py-4 rounded-2xl
+              bg-[#1f1c1d]
+              border border-[#332122]
+              text-gray-100 placeholder-gray-500
+              focus:border-[#b30c25]
+              focus:ring-1 focus:ring-[#b30c25]/40
+              outline-none transition-all
+              shadow-inner
+  "            >
+              <option value="">Todos los Estados</option>
+              <option value="true">Activos</option>
+              <option value="false">Inactivos</option>
+            </select>
           </div>
         </div>
 
@@ -187,7 +260,7 @@ const CompetenciasPage = () => {
                             </span>
                           </div>
                           <div>
-                            <p className={`font-bold ${!comp.estado ? 'text-gray-400' : 'text-gray-900'}`}>
+                            <p className={`font-bold ${!comp.estado ? 'text-gray-400' : 'text-gray-200'}`}>
                               {comp.nombre}
                             </p>
                             <p className="text-xs text-gray-400 font-mono">
@@ -269,7 +342,7 @@ const CompetenciasPage = () => {
         }}
         editingCompetencia={selectedCompetencia}
       />
-    </div>
+    </div >
   );
 };
 

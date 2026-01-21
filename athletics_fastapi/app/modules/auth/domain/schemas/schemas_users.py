@@ -3,6 +3,8 @@ from typing import Optional
 from uuid import UUID
 import datetime
 
+from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
+from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
 from app.modules.auth.domain.enums import (
     TipoEstamentoEnum,
     TipoIdentificacionEnum,
@@ -30,13 +32,6 @@ class UserBaseSchema(BaseModel):
     fecha_nacimiento: Optional[datetime.date] = None
     sexo: Optional[SexoEnum] = None
     role: RoleEnum = RoleEnum.ATLETA
-
-# ======================================================
-# CREATE
-# ======================================================
-
-from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
-from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
 
 # ======================================================
 # CREATE
@@ -104,6 +99,7 @@ class UserSimpleSchema(BaseModel):
 # ======================================================
 
 class AtletaSimpleSchema(BaseModel):
+    id: Optional[int] = None
     external_id: Optional[UUID] = None
     categoria: Optional[str] = None
 
@@ -111,6 +107,7 @@ class AtletaSimpleSchema(BaseModel):
 
 
 class EntrenadorSimpleSchema(BaseModel):
+    id: Optional[int] = None
     external_id: Optional[UUID] = None
     especialidad: Optional[str] = None
 
@@ -118,6 +115,7 @@ class EntrenadorSimpleSchema(BaseModel):
 
 
 class RepresentanteSimpleSchema(BaseModel):
+    id: Optional[int] = None
     external_id: Optional[UUID] = None
     parentesco: Optional[str] = None
 
