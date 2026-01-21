@@ -20,15 +20,21 @@ const DetalleAtletaPage = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [statsData, historialData] = await Promise.all([
+            const [statsRes, historialRes] = await Promise.all([
                 RepresentanteService.getAtletaEstadisticas(id),
                 RepresentanteService.getAtletaHistorial(id)
             ]);
-            setStats(statsData);
-            setHistorial(historialData);
+
+            if (statsRes.success) setStats(statsRes.data);
+            if (historialRes.success) setHistorial(historialRes.data);
+
+            if (!statsRes.success || !historialRes.success) {
+                toast.error(statsRes.message || historialRes.message || "Error parcial al cargar datos.");
+            }
         } catch (error) {
             console.error("Error cargando detalles del atleta:", error);
-            toast.error("Error al cargar los datos. Verifique que sea su atleta representado.");
+            const errorMsg = error.response?.data?.message || "Error al cargar los datos. Verifique que sea su atleta representado.";
+            toast.error(errorMsg);
             navigate("/dashboard/representante/mis-atletas");
         } finally {
             setLoading(false);

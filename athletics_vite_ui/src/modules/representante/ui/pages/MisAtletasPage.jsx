@@ -14,12 +14,18 @@ const MisAtletasPage = () => {
 
     const fetchAthletes = async () => {
         try {
+            setLoading(true);
             const response = await RepresentanteService.getMyAthletes();
-            // ApiClient already unwraps response.data
-            setAthletes(response || []);
+            // response is standardized as { success: true, message: "...", data: [...] }
+            if (response.success) {
+                setAthletes(response.data || []);
+            } else {
+                toast.error(response.message || "No se pudieron cargar los atletas");
+            }
         } catch (error) {
             console.error("Error fetching athletes:", error);
-            toast.error("Error al cargar los atletas");
+            const errorMsg = error.response?.data?.message || "Error al cargar los atletas";
+            toast.error(errorMsg);
         } finally {
             setLoading(false);
         }
@@ -40,16 +46,21 @@ const MisAtletasPage = () => {
         try {
             setSelectedAtletaId(atletaId);
             setLoading(true);
-            const detail = await RepresentanteService.getAtletaDetail(atletaId);
-            setEditFormData({
-                first_name: detail.user.first_name || '',
-                last_name: detail.user.last_name || '',
-                identificacion: detail.user.identificacion || detail.user.cedula || '',
-                direccion: detail.user.direccion || '',
-                phone: detail.user.phone || '',
-                anios_experiencia: detail.anios_experiencia || 0,
-            });
-            setShowEditModal(true);
+            const response = await RepresentanteService.getAtletaDetail(atletaId);
+            if (response.success && response.data) {
+                const detail = response.data;
+                setEditFormData({
+                    first_name: detail.user?.first_name || '',
+                    last_name: detail.user?.last_name || '',
+                    identificacion: detail.user?.identificacion || '',
+                    direccion: detail.user?.direccion || '',
+                    phone: detail.user?.phone || '',
+                    anios_experiencia: detail.anios_experiencia || 0,
+                });
+                setShowEditModal(true);
+            } else {
+                toast.error(response.message || "Error al cargar información.");
+            }
         } catch (error) {
             toast.error("Error cargando información para editar.");
         } finally {
@@ -59,6 +70,7 @@ const MisAtletasPage = () => {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
+        const toastId = toast.loading("Actualizando información...");
         try {
             const payload = {
                 first_name: editFormData.first_name,
@@ -71,13 +83,18 @@ const MisAtletasPage = () => {
                 }
             };
 
-            await RepresentanteService.updateChildAthlete(selectedAtletaId, payload);
-            toast.success("Información actualizada correctamente.");
-            setShowEditModal(false);
-            fetchAthletes(); // Refresh list
+            const response = await RepresentanteService.updateChildAthlete(selectedAtletaId, payload);
+            if (response.success) {
+                toast.success(response.message || "Información actualizada correctamente.", { id: toastId });
+                setShowEditModal(false);
+                fetchAthletes(); // Refresh list
+            } else {
+                toast.error(response.message || "Error al actualizar.", { id: toastId });
+            }
         } catch (error) {
             console.error(error);
-            toast.error("Error al actualizar la información.");
+            const errorMsg = error.response?.data?.message || "Error al actualizar la información.";
+            toast.error(errorMsg, { id: toastId });
         }
     };
 

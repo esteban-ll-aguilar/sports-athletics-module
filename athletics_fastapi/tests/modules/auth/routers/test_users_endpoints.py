@@ -1,7 +1,8 @@
 import pytest
 from httpx import AsyncClient
 from fastapi import status
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+import unittest
 from types import SimpleNamespace
 from datetime import date
 import uuid
@@ -122,6 +123,98 @@ async def test_tc_up_02_update_me_success_multipart(client, mock_repo, mock_user
     # but the logic inside the endpoint modifies 'user.profile' in memory.
     # Since our mock `user` is passed to the dependency, the endpoint modifies it.
     assert data["data"]["first_name"] == "Updated"
+
+    assert response.status_code == status.HTTP_200_OK
+    assert data["success"] is True
+    assert data["message"] == "Perfil actualizado correctamente"
+    assert data["data"]["first_name"] == "Updated"
+
+
+@pytest.mark.asyncio
+async def test_tc_up_03_update_me_image_success(client, mock_repo, mock_user_profile):
+    """
+    TC-UP-03: Actualizar Perfil (Me) - Imagen (Success)
+    """
+    user = mock_user_profile(user_id=1)
+    
+    # Mock file saving logic if needed, but since we mock repo.commit/refresh, it should be fine.
+    # However, the endpoint calls FileService to save file. We might need to mock FileService or ensure it doesn't break.
+    # We can mock FileService.save_profile_picture
+    
+    with unittest.mock.patch("app.modules.auth.routers.v1.users.FileService") as MockFileService:
+        instance = MockFileService.return_value
+        instance.save_profile_picture = AsyncMock(return_value="uploads/profiles/new_img.jpg")
+        
+        async def mock_refresh(u):
+            # Simulate DB update
+            if u.profile_image == "uploads/profiles/new_img.jpg":
+                pass 
+
+        mock_repo.commit = AsyncMock()
+        mock_repo.refresh = AsyncMock(side_effect=mock_refresh)
+
+        _APP.dependency_overrides[get_users_repo] = lambda: mock_repo
+        _APP.dependency_overrides[get_current_user] = lambda: user
+
+        # Files for multipart
+        files = {
+            "profile_image": ("test_image.jpg", b"fake-image-content", "image/jpeg")
+        }
+        
+        # Required fields by endpoint Form(...)
+        data_payload = {
+            "username": "testuser",
+            "first_name": "Test",
+            "last_name": "User",
+            "identificacion": "0705743177",
+            "profile_image": "test_image.jpg"
+        }
+
+        response = await client.put(
+            f"{BASE_URL}/me",
+            files=files,
+            data=data_payload
+        )
+
+        data = response.json()
+        assert response.status_code == status.HTTP_200_OK
+        assert data["success"] is True
+        assert data["message"] == "Perfil actualizado correctamente"
+        # Since we are mocking dependencies and the users object is mutable in memory,
+        # the endpoint updates user.profile_image before calling Refresh.
+        # Our assert checks if endpoint logic executed correctly.
+        # user.profile.profile_image should have been updated to "uploads/profiles/new_img.jpg"
+        assert user.profile.profile_image == "uploads/profiles/new_img.jpg"
+
+
+@pytest.mark.asyncio
+async def test_tc_up_06_update_user_admin_success(client, mock_repo, mock_user_profile):
+    """
+    TC-UP-06: Actualizar Usuario por ID (Admin) - Success
+    """
+    admin_user = mock_user_profile(role=RoleEnum.ADMINISTRADOR, user_id=1)
+    
+    target_user_full = mock_user_profile(role=RoleEnum.ENTRENADOR, user_id=2)
+    target_user_profile = target_user_full.profile
+    
+    mock_repo.get_by_any_id.return_value = target_user_profile
+    mock_repo.update = AsyncMock(return_value=target_user_profile) # Return updated user
+
+    _APP.dependency_overrides[get_users_repo] = lambda: mock_repo
+    _APP.dependency_overrides[get_current_user] = lambda: admin_user
+
+    payload = {
+        "first_name": "EditedByAdmin"
+    }
+
+    # "2" as user_id
+    response = await client.put(f"{BASE_URL}/2", json=payload)
+
+    data = response.json()
+    assert response.status_code == status.HTTP_200_OK
+    assert data["success"] is True
+    assert data["message"] == "Usuario actualizado correctamente"
+
 
 @pytest.mark.asyncio
 async def test_tc_up_04_get_user_by_external_id_success(client, mock_repo, mock_user_profile):
