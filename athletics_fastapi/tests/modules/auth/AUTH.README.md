@@ -48,11 +48,11 @@
 
 | ID | Funcionalidad | Descripción | Datos de Entrada (JSON) | Salida Esperada (JSON) | Condiciones Previas | Resultado (Exitoso/Fallido) |
 |---|---|---|---|---|---|---|
-| TC-L01 | Login Exitoso | Inicio de sesión con credenciales correctas | `{"username":"juan@test.com", "password":"Abc123$%"}` | `{"success": true, "message": "Inicio de sesión exitoso", "data": {"access_token": "...", "refresh_token": "...", "token_type": "bearer"}, "errors": null}` | Usuario activo y verificado | Exitoso |
+| TC-L01 | Login Exitoso | Inicio de sesión con credenciales correctas | `{"username":"juan@test.com", "password":"Abc123$%"}` | `{"success": true, "message": "Inicio de sesión exitoso", "data": {"access_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", "refresh_token": "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4", "token_type": "bearer"}, "errors": null}` | Usuario activo y verificado | Exitoso |
 | TC-L02 | Credenciales Inválidas (Password) | Intento con contraseña incorrecta | `{"username":"juan@test.com", "password":"WrongPassword"}` | `{"success": false, "message": "Credenciales inválidas", "errors": null}` (Status 401) | Usuario existe | Fallido |
 | TC-L03 | Credenciales Inválidas (Usuario) | Intento con usuario inexistente | `{"username":"noexiste@test.com", "password":"Abc123$%"}` | `{"success": false, "message": "Credenciales inválidas", "errors": null}` (Status 401) | Usuario no existe | Fallido |
 | TC-L04 | Usuario Inactivo | Intento de login sin validar email | `{"username":"inactive@test.com", "password":"Abc123$%"}` | `{"success": false, "message": "Usuario inactivo, por favor verifica tu email", "errors": null}` (Status 401) | Usuario registrado pero no activado | Fallido |
-| TC-L05 | 2FA Requerido | Login con usuario que tiene 2FA activo | `{"username":"2fa@test.com", "password":"Abc123$%"}` | `{"success": true, "message": "2FA requerido", "data": {"temp_token": "...", "message": "2FA requerido"}}` | Usuario con 2FA enabled | Exitoso (Parcial) |
+| TC-L05 | 2FA Requerido | Login con usuario que tiene 2FA activo | `{"username":"2fa@test.com", "password":"Abc123$%"}` | `{"success": true, "message": "2FA requerido", "data": {"temp_token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwidHlwZSI6InRlbXBfdG9rZW4ifQ.signature", "message": "2FA requerido"}}` | Usuario con 2FA enabled | Exitoso (Parcial) |
 
 
 ## FRONTEND - REFRESH TOKEN
@@ -68,7 +68,7 @@
 
 | ID | Funcionalidad | Descripción | Datos de Entrada (JSON) | Salida Esperada (JSON) | Condiciones Previas | Resultado (Exitoso/Fallido) |
 |---|---|---|---|---|---|---|
-| TC-R01 | Renovación Exitosa | Renovar token con refresh token válido | `{"refresh_token": "valid_refresh_token"}` | `{"success": true, "message": "Token renovado correctamente", "data": {"access_token": "...", "refresh_token": "..."}, "errors": null}` | Refresh token válido y no expirado | Exitoso |
+| TC-R01 | Renovación Exitosa | Renovar token con refresh token válido | `{"refresh_token": "valid_refresh_token"}` | `{"success": true, "message": "Token renovado correctamente", "data": {"access_token": "eyJhbGciOiJIUzI1NiJ9.new_access_token.signature", "refresh_token": "new_refresh_token_string"}, "errors": null}` | Refresh token válido y no expirado | Exitoso |
 | TC-R02 | Token Inválido | Intento con token alterado o falso | `{"refresh_token": "invalid_token"}` | `{"success": false, "message": "Token inválido", "errors": null}` (Status 400) | | Fallido |
 | TC-R03 | Refresh Reusado/Inválido | Intento con token ya usado o no encontrado en DB | `{"refresh_token": "old_refresh_token"}` | `{"success": false, "message": "Refresh inválido", "errors": null}` (Status 401) | Token ya consumido o no existe | Fallido |
 
@@ -156,7 +156,7 @@
 
 | ID | Funcionalidad | Descripción | Datos de Entrada (JSON) | Salida Esperada (JSON) | Condiciones Previas | Resultado (Exitoso/Fallido) |
 |---|---|---|---|---|---|---|
-| TC-2FA-01 | Habilitar 2FA (Éxito) | Usuario sin 2FA solicita activación | `{}` (Header: Auth Token) | `{"secret": "JBSWY3DPEHPK3PXP", "qr_code": "data:image/png;base64,...", "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012", "MNOP-3456", "QRST-7890"], "message": "Guarda estos códigos..."}` | 2FA no activo | Exitoso |
+| TC-2FA-01 | Habilitar 2FA (Éxito) | Usuario sin 2FA solicita activación | `{}` (Header: Auth Token) | `{"secret": "JBSWY3DPEHPK3PXP", "qr_code": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKwFtQAAAABJRU5ErkJggg==", "backup_codes": ["ABCD-1234", "EFGH-5678", "IJKL-9012", "MNOP-3456", "QRST-7890"], "message": "Guarda estos códigos..."}` | 2FA no activo | Exitoso |
 | TC-2FA-02 | Habilitar 2FA (Ya Activo) | Usuario con 2FA activo intenta activar | `{}` (Header: Auth Token) | `{"success": false, "message": "2FA ya está habilitado", "data": null}` (Status 400) | 2FA activo | Fallido |
 | TC-2FA-03 | Verificar y Activar (Éxito) | Usuario verifica código TOTP | `{"code": "123456"}` | `{"success": true, "message": "2FA activado exitosamente. Ahora necesitarás un código en cada login.", "data": {"message": "2FA activado exitosamente. Ahora necesitarás un código en cada login."}}` | Setup iniciado, código válido | Exitoso |
 | TC-2FA-04 | Verificar y Activar (Código Inválido) | Usuario ingresa código incorrecto | `{"code": "999999"}` | `{"success": false, "message": "Código inválido", "data": null}` (Status 400) | Setup iniciado | Fallido |
@@ -165,12 +165,12 @@
 | TC-2FA-07 | Deshabilitar 2FA (Password Incorrecto) | Password erróneo | `{"password": "WrongPass", "code": "123456"}` | `{"success": false, "message": "Contraseña incorrecta", "data": null}` (Status 401) | 2FA activo | Fallido |
 | TC-2FA-08 | Deshabilitar 2FA (Código Incorrecto) | Código TOTP incorrecto | `{"password": "Abc123!", "code": "999999"}` | `{"success": false, "message": "Código TOTP inválido", "data": null}` (Status 400) | 2FA activo | Fallido |
 | TC-2FA-09 | Deshabilitar 2FA (NO Activo) | Usuario intenta deshabilitar sin tener 2FA | `{"password": "Abc123!", "code": "123456"}` | `{"success": false, "message": "2FA no está habilitado", "data": null}` (Status 400) | 2FA no activo | Fallido |
-| TC-2FA-10 | Login 2FA (Éxito) | Login con código TOTP correcto | `{"email": "test@test.com", "code": "123456", "temp_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}` | `{"success": true, "message": "Login exitoso", "data": {"access_token": "eyJhbGciOi...", "refresh_token": "eyJhbGciOi..."}}` | temp_token válido, 2FA activo | Exitoso |
-| TC-2FA-11 | Login 2FA (Código Incorrecto) | Código TOTP inválido | `{"email": "test@test.com", "code": "999999", "temp_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}` | `{"success": false, "message": "Código 2FA inválido", "data": null}` (Status 401) | temp_token válido | Fallido |
-| TC-2FA-12 | Login 2FA (Token Expirado) | temp_token expirado o inválido | `{"email": "test@test.com", "code": "123456", "temp_token": "invalid_token"}` | `{"success": false, "message": "Token temporal inválido o expirado", "data": null}` (Status 401) | | Fallido |
-| TC-2FA-13 | Login 2FA (Rate Limit) | Más de 5 intentos fallidos | `{"email": "test@test.com", "code": "wrong", "temp_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}` | `{"success": false, "message": "Demasiados intentos fallidos. Espera 15 minutos.", "data": null}` (Status 429) | 5+ intentos previos | Fallido |
-| TC-2FA-14 | Login Backup Code (Éxito) | Login con backup code válido | `{"email": "test@test.com", "backup_code": "ABCD-1234", "temp_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}` | `{"success": true, "message": "Login exitoso", "data": {"access_token": "eyJhbGciOi...", "refresh_token": "eyJhbGciOi..."}}` | temp_token válido, código no usado | Exitoso |
-| TC-2FA-15 | Login Backup Code (Código Usado/Inválido) | Backup code ya consumido | `{"email": "test@test.com", "backup_code": "USED-CODE", "temp_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}` | `{"success": false, "message": "Código de respaldo inválido o ya usado", "data": null}` (Status 401) | Código previamente usado | Fallido |
+| TC-2FA-10 | Login 2FA (Éxito) | Login con código TOTP correcto | `{"email": "test@test.com", "code": "123456", "temp_token": "eyJhbGciOiJIUzI1NiJ9.valid_temp_token.signature"}` | `{"success": true, "message": "Login exitoso", "data": {"access_token": "eyJhbGciOiJIUzI1NiJ9.access_token.signature", "refresh_token": "eyJhbGciOiJIUzI1NiJ9.refresh_token.signature"}}` | temp_token válido, 2FA activo | Exitoso |
+| TC-2FA-11 | Login 2FA (Código Incorrecto) | Código TOTP inválido | `{"email": "test@test.com", "code": "999999", "temp_token": "eyJhbGciOiJIUzI1NiJ9.valid_temp_token.signature"}` | `{"success": false, "message": "Código 2FA inválido", "data": null}` (Status 401) | temp_token válido | Fallido |
+| TC-2FA-12 | Login 2FA (Token Expirado) | temp_token expirado o inválido | `{"email": "test@test.com", "code": "123456", "temp_token": "invalid_token_string"}` | `{"success": false, "message": "Token temporal inválido o expirado", "data": null}` (Status 401) | | Fallido |
+| TC-2FA-13 | Login 2FA (Rate Limit) | Más de 5 intentos fallidos | `{"email": "test@test.com", "code": "wrong", "temp_token": "eyJhbGciOiJIUzI1NiJ9.valid_temp_token.signature"}` | `{"success": false, "message": "Demasiados intentos fallidos. Espera 15 minutos.", "data": null}` (Status 429) | 5+ intentos previos | Fallido |
+| TC-2FA-14 | Login Backup Code (Éxito) | Login con backup code válido | `{"email": "test@test.com", "backup_code": "ABCD-1234", "temp_token": "eyJhbGciOiJIUzI1NiJ9.valid_temp_token.signature"}` | `{"success": true, "message": "Login exitoso", "data": {"access_token": "eyJhbGciOiJIUzI1NiJ9.access_token.signature", "refresh_token": "eyJhbGciOiJIUzI1NiJ9.refresh_token.signature"}}` | temp_token válido, código no usado | Exitoso |
+| TC-2FA-15 | Login Backup Code (Código Usado/Inválido) | Backup code ya consumido | `{"email": "test@test.com", "backup_code": "USED-CODE", "temp_token": "eyJhbGciOiJIUzI1NiJ9.valid_temp_token.signature"}` | `{"success": false, "message": "Código de respaldo inválido o ya usado", "data": null}` (Status 401) | Código previamente usado | Fallido |
 
 
 
@@ -199,3 +199,25 @@
 | TC-UM-06 | Actualizar Rol (Usuario No Encontrado) | Intento con user_id inexistente | `PUT /api/v1/auth/user-management/99999/role` con `{"role": "ATLETA"}` (Header: Admin Token) | `{"success": false, "message": "Usuario no encontrado", "data": null}` (Status 404) | Usuario no existe | Fallido |
 | TC-UM-07 | Actualizar Rol (Sin Permisos Admin) | Usuario regular intenta actualizar rol | `PUT /api/v1/auth/user-management/1/role` con `{"role": "ADMIN"}` (Header: Non-Admin Token) | `{"success": false, "message": "No autorizado. Se requieren permisos de administrador", "data": null}` (Status 403) | Usuario no-admin | Fallido |
 | TC-UM-08 | Actualizar Rol (Validación Rol Inválido) | Rol no existente en enum | `PUT /api/v1/auth/user-management/1/role` con `{"role": "INVALID_ROLE"}` (Header: Admin Token) | `{"success": false, "message": "Validation Error", "errors": [{"field": "role", "message": "Rol inválido"}]}` (Status 422) | | Fallido |
+
+## FRONTEND - PERFIL DE USUARIO & GESTIÓN
+
+| ID | Funcionalidad | Descripción | Datos de Entrada | Salida Esperada | Condiciones Previas | Resultado (Exitoso/Fallido) |
+|---|---|---|---|---|---|---|
+| TC-UP-01 | Ver Perfil | Usuario accede a "Mi Perfil" | Click en Avatar -> Perfil | Carga de formulario con datos del usuario (Nombre, Email, Rol). Avatar visible. | Usuario autenticado | |
+| TC-UP-02 | Actualizar Datos Básicos | Usuario modifica nombre y teléfono | Input Nombre: "NuevoNombre", Tel: "0987654321" -> Guardar | Toast: "Perfil actualizado correctamente". Formulario muestra nuevos datos. | | |
+| TC-UP-03 | Actualizar Imagen | Usuario sube nueva foto de perfil | Selección de archivo (JPG/PNG) -> Guardar | Toast: "Perfil actualizado correctamente". Nuevo avatar visible en header y formulario. | | |
+| TC-UP-04 | Error Validación | Usuario deja campos requeridos vacíos | Nombre: "" -> Guardar | Mensaje de error en input o Toast: "El nombre es requerido". No envía request. | | |
+| TC-UP-05 | Ver Otro Perfil (Admin) | Admin ve perfil de otro usuario | Navegación a `/users/123-uuid` | Carga de datos de usuario en modo edición (si tiene permisos) o lectura. | Admin autenticado | |
+
+## BACKEND - PERFIL DE USUARIO & GESTIÓN
+
+| ID | Funcionalidad | Descripción | Datos de Entrada (JSON) | Salida Esperada (JSON) | Condiciones Previas | Resultado (Exitoso/Fallido) |
+|---|---|---|---|---|---|---|
+| TC-UP-01 | Obtener Perfil (Me) | Usuario solicita su propio perfil | `GET /api/v1/auth/users/me` (Header: Auth Token) | `{"success": true, "message": "Perfil obtenido exitosamente", "data": {"id": 1, "username": "user1", "email": "user1@test.com", "first_name": "Juan", "last_name": "Perez", "role": "ATLETA", "profile_image": "path/to/img.jpg", "tipo_identificacion": "CEDULA", "identificacion": "0999999999"}}` | Usuario autenticado | Exitoso |
+| TC-UP-02 | Actualizar Perfil (Me) | Actualizar datos básicos | `PUT /api/v1/auth/users/me` (Multipart/Form-Data)<br>Fields: `first_name="Nuevo"`, `phone="0988888888"` | `{"success": true, "message": "Perfil actualizado correctamente", "data": {"id": 1, "first_name": "Nuevo", "phone": "0988888888"}}` | Usuario autenticado | Exitoso |
+| TC-UP-03 | Actualizar Perfil (Me) - Imagen | Actualizar con imagen | `PUT /api/v1/auth/users/me` (Multipart)<br>File: `profile_image` (binary) | `{"success": true, "message": "Perfil actualizado correctamente", "data": {"id": 1, "profile_image": "uploads/profiles/new_img.jpg"}}` | Usuario autenticado | Exitoso |
+| TC-UP-04 | Obtener Usuario por ID | Obtener datos de otro usuario por ID externo (UUID) | `GET /api/v1/auth/users/users/{external_id}` (Header: Admin Token) | `{"success": true, "message": "Usuario encontrado exitosamente", "data": {"id": 2, "external_id": "uuid-123", "username": "other", "email": "other@test.com"}}` | Usuario existe | Exitoso |
+| TC-UP-05 | Obtener Usuario (No Encontrado) | ID inexistente | `GET /api/v1/auth/users/users/uuid-fake` | `{"success": false, "message": "Usuario no encontrado", "data": null}` (Status 404) | | Fallido |
+| TC-UP-06 | Actualizar Usuario por ID (Admin) | Admin actualiza datos de otro usuario | `PUT /api/v1/auth/users/{user_id}`<br>JSON: `{"first_name": "EditedByAdmin"}` | `{"success": true, "message": "Usuario actualizado correctamente", "data": {"id": 2, "first_name": "EditedByAdmin"}}` | Es Admin | Exitoso |
+| TC-UP-07 | Actualizar Usuario (Forbidden) | Usuario normal intenta editar a otro | `PUT /api/v1/auth/users/{other_user_id}`<br>JSON: `{"first_name": "Hacker"}` | `{"success": false, "message": "No tienes permisos para editar este usuario", "data": null}` (Status 403) | No es self ni admin | Fallido |

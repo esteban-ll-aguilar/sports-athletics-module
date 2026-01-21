@@ -1,5 +1,6 @@
+from fastapi import APIRouter, Depends, status, Form, File, UploadFile
+from fastapi.responses import JSONResponse
 from typing import Optional, Union
-from fastapi import APIRouter, Depends, status, HTTPException, Form, File, UploadFile
 from uuid import UUID
 import math
 import os
@@ -17,7 +18,7 @@ from app.modules.auth.domain.schemas import (
 
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
-from app.public.schemas import BaseResponse
+from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
@@ -32,7 +33,7 @@ users_router_v1 = APIRouter()
 
 @users_router_v1.post(
     "/users",
-    response_model=BaseResponse,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_201_CREATED,
     summary="Crear usuario"
 )
@@ -40,16 +41,26 @@ async def create_user(
     user_data: UserCreateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
 ):
-    user = await repo.create_user(user_data)
+    try:
+        user = await repo.create_user(user_data)
 
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Usuario creado exitosamente",
-        status=status.HTTP_201_CREATED
-    )
+        return APIResponse(
+            data=UserResponseSchema.model_validate(
+                user,
+                from_attributes=True
+            ),
+            message="Usuario creado exitosamente",
+            success=True
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=APIResponse(
+                success=False,
+                message=str(e),
+                data=None
+            ).model_dump()
+        )
 
 # ======================================================
 # LIST USERS (PAGINATED)
@@ -57,7 +68,7 @@ async def create_user(
 
 @users_router_v1.get(
     "/list",
-    response_model=PaginatedUsers,
+    response_model=APIResponse[PaginatedUsersWithRelations],
     status_code=status.HTTP_200_OK,
     summary="Lista paginada de usuarios"
 )
@@ -76,18 +87,22 @@ async def list_users(
 
     pages = math.ceil(total / page_size)
 
-    return PaginatedUsersWithRelations(
-        total=total,
-        page=page,
-        size=page_size,
-        pages=pages,
-        items=[
-            UserWithRelationsSchema.model_validate(
-                user,
-                from_attributes=True
-            )
-            for user in users
-        ]
+    return APIResponse(
+        success=True,
+        message="Usuarios listados correctamente",
+        data=PaginatedUsersWithRelations(
+            total=total,
+            page=page,
+            size=page_size,
+            pages=pages,
+            items=[
+                UserWithRelationsSchema.model_validate(
+                    user,
+                    from_attributes=True
+                )
+                for user in users
+            ]
+        )
     )
 
 # ======================================================
@@ -96,7 +111,7 @@ async def list_users(
 
 @users_router_v1.get(
     "/me",
-    response_model=BaseResponse,
+    response_model=APIResponse[UserWithRelationsSchema],
     status_code=status.HTTP_200_OK,
     summary="Obtener perfil del usuario actual"
 )
@@ -104,18 +119,22 @@ async def get_current_user_profile(
     current_user: AuthUserModel = Depends(get_current_user),
 ):
     if not current_user.profile:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Perfil de usuario no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Perfil de usuario no encontrado",
+                data=None
+            ).model_dump()
         )
 
-    return BaseResponse(
+    return APIResponse(
         data=UserWithRelationsSchema.model_validate(
             current_user.profile,
             from_attributes=True
-        ).model_dump(),
+        ),
         message="Perfil obtenido exitosamente",
-        status=status.HTTP_200_OK
+        success=True
     )
 
 # ======================================================
@@ -124,7 +143,7 @@ async def get_current_user_profile(
 
 @users_router_v1.put(
     "/me",
-    response_model=BaseResponse,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_200_OK,
     summary="Actualizar perfil del usuario actual"
 )
@@ -150,9 +169,13 @@ async def update_profile(
     """
     user = current_user.profile
     if not user:
-         raise HTTPException(
+         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Perfil no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Perfil no encontrado",
+                data=None
+            ).model_dump()
         )
 
     # =========================
@@ -209,20 +232,20 @@ async def update_profile(
     await repo.commit()
     await repo.refresh(user)
 
-    return BaseResponse(
+    return APIResponse(
         data=UserResponseSchema.model_validate(
             user,
             from_attributes=True
-        ).model_dump(),
+        ),
         message="Perfil actualizado correctamente",
-        status=status.HTTP_200_OK
+        success=True
     )
 # GET USER BY EXTERNAL_ID
 # ======================================================
 
 @users_router_v1.get(
     "/users/{external_id}",
-    response_model=BaseResponse,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_200_OK,
     summary="Obtener usuario por external_id"
 )
@@ -234,18 +257,22 @@ async def get_user_by_external_id(
     user = await repo.get_by_external_id(external_id)
 
     if not user:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Usuario no encontrado",
+                data=None
+            ).model_dump()
         )
 
-    return BaseResponse(
+    return APIResponse(
         data=UserResponseSchema.model_validate(
             user,
             from_attributes=True
-        ).model_dump(),
+        ),
         message="Usuario encontrado exitosamente",
-        status=status.HTTP_200_OK
+        success=True
     )
 
 # ======================================================
@@ -254,7 +281,7 @@ async def get_user_by_external_id(
 
 @users_router_v1.put(
     "/{user_id}",
-    response_model=BaseResponse,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_200_OK,
     summary="Actualizar usuario por external_id o ID interno"
 )
@@ -268,9 +295,13 @@ async def update_user_by_id(
     user = await repo.get_by_any_id(user_id)
 
     if not user:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Usuario no encontrado",
+                data=None
+            ).model_dump()
         )
 
     from app.core.logging.logger import logger
@@ -290,9 +321,13 @@ async def update_user_by_id(
 
     if not (is_self or is_admin or is_coach_editing_athlete):
          logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
-         raise HTTPException(
+         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para editar este usuario"
+            content=APIResponse(
+                success=False,
+                message="No tienes permisos para editar este usuario",
+                data=None
+            ).model_dump()
         )
 
     updated_user = await repo.update(
@@ -300,8 +335,8 @@ async def update_user_by_id(
         user_data=user_data
     )
 
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(updated_user).model_dump(),
+    return APIResponse(
+        data=UserResponseSchema.model_validate(updated_user),
         message="Usuario actualizado correctamente",
-        status=status.HTTP_200_OK
+        success=True
     )

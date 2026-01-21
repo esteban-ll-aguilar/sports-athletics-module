@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
 from app.main import _APP
 from app.core.db.database import _db
+from typing import Optional
 
 # Asegurar imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
