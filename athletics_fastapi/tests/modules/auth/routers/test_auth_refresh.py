@@ -81,7 +81,7 @@ async def test_tc_r02_token_invalido_estructura(client: AsyncClient, override_de
     response = await client.post("/api/v1/auth/refresh", json=payload)
 
     assert response.status_code == 400
-    assert "Token inválido" in response.json()["detail"]
+    assert "Token inválido" in response.json()["message"]
 
 # --------------------------
 # TC-R03: Refresh Reusado/Inválido (Logica de consumo)
@@ -96,4 +96,4 @@ async def test_tc_r03_refresh_consumido(client: AsyncClient, override_deps, mock
     response = await client.post("/api/v1/auth/refresh", json=payload)
 
     assert response.status_code == 401
-    assert "Refresh inválido" in response.json()["detail"]
+    assert "Refresh inválido" in response.json()["message"]

@@ -9,7 +9,7 @@ class TipoDisciplinaRepository:
         self.db = db
 
     async def create(self, tipo_data: TipoDisciplinaCreate):
-        tipo = TipoDisciplina(**tipo_data.dict())
+        tipo = TipoDisciplina(**tipo_data.model_dump())
         self.db.add(tipo)
         await self.db.commit()
         await self.db.refresh(tipo)
@@ -29,7 +29,7 @@ class TipoDisciplinaRepository:
         tipo = await self.get(external_id)
         if not tipo:
             return None
-        for field, value in tipo_data.dict(exclude_unset=True).items():
+        for field, value in tipo_data.model_dump(exclude_unset=True).items():
             setattr(tipo, field, value)
         await self.db.commit()
         await self.db.refresh(tipo)

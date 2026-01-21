@@ -25,7 +25,7 @@ async def test_create_prueba_ok():
     """
     Verifica que se llame al repositorio correctamente para crear una prueba.
     """
-    repo = Mock()
+    repo = AsyncMock()
     repo.create = AsyncMock(return_value={"external_id": "123", "nombre": "Prueba Test"})
 
     service = PruebaService(repo)
@@ -55,15 +55,15 @@ async def test_get_prueba_ok():
     """
     Verifica la obtención exitosa de una prueba por su ID.
     """
-    repo = Mock()
+    repo = AsyncMock()
     # Simulamos que devuelve un objeto o dict
-    repo.get = AsyncMock(return_value={"external_id": "123", "nombre": "Existente"})
+    repo.get_by_external_id = AsyncMock(return_value={"external_id": "123", "nombre": "Existente"})
 
     service = PruebaService(repo)
 
     result = await service.get_prueba("123")
 
-    repo.get.assert_awaited_once_with("123")
+    repo.get_by_external_id.assert_awaited_once_with("123")
     assert result["external_id"] == "123"
 
 
@@ -72,8 +72,8 @@ async def test_get_prueba_not_found():
     """
     Verifica que se lance HTTPException(404) cuando la prueba no existe.
     """
-    repo = Mock()
-    repo.get = AsyncMock(return_value=None)
+    repo = AsyncMock()
+    repo.get_by_external_id = AsyncMock(return_value=None)
 
     service = PruebaService(repo)
 
@@ -92,7 +92,7 @@ async def test_get_pruebas_ok():
     """
     Verifica el listado paginado de pruebas.
     """
-    repo = Mock()
+    repo = AsyncMock()
     repo.list = AsyncMock(return_value=[{"id": 1}, {"id": 2}])
 
     service = PruebaService(repo)
@@ -111,9 +111,9 @@ async def test_update_prueba_ok():
     """
     Verifica la actualización de una prueba existente.
     """
-    repo = Mock()
-    # Mock get() para encontrar la prueba primero
-    repo.get = AsyncMock(return_value={"external_id": "123", "nombre": "Viejo"})
+    repo = AsyncMock()
+    # Mock get_by_external_id() para encontrar la prueba primero
+    repo.get_by_external_id = AsyncMock(return_value={"external_id": "123", "nombre": "Viejo"})
     # Mock update() para devolver la prueba actualizada
     repo.update = AsyncMock(return_value={"external_id": "123", "nombre": "Nuevo nombre"})
 
@@ -124,7 +124,7 @@ async def test_update_prueba_ok():
     result = await service.update_prueba("123", data)
 
     # Verifica que primero buscó si existía
-    repo.get.assert_awaited_once_with("123")
+    repo.get_by_external_id.assert_awaited_once_with("123")
     # Verifica que llamó a update
     repo.update.assert_awaited_once_with("123", data)
     assert result["nombre"] == "Nuevo nombre"
@@ -135,9 +135,9 @@ async def test_update_prueba_not_found():
     """
     Verifica que se lance 404 al intentar actualizar una prueba inexistente.
     """
-    repo = Mock()
-    # Mock get() devolviendo None
-    repo.get = AsyncMock(return_value=None)
+    repo = AsyncMock()
+    # Mock get_by_external_id() devolviendo None
+    repo.get_by_external_id = AsyncMock(return_value=None)
 
     service = PruebaService(repo)
 

@@ -3,7 +3,7 @@ from sqlalchemy import select, update
 from app.modules.auth.domain.models.auth_users_sessions_model import AuthUsersSessionsModel
 from typing import Optional, List
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SessionsRepository:
@@ -106,7 +106,7 @@ class SessionsRepository:
         result = await self.session.execute(
             update(AuthUsersSessionsModel)
             .where(
-                AuthUsersSessionsModel.expires_at < datetime.utcnow(),
+                AuthUsersSessionsModel.expires_at < datetime.now(timezone.utc),
                 AuthUsersSessionsModel.status == True
             )
             .values(status=False)

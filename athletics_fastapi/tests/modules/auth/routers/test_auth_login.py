@@ -107,7 +107,7 @@ async def test_tc_l02_password_incorrecto(client: AsyncClient, override_deps, mo
     response = await client.post("/api/v1/auth/login", data=payload)
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Credenciales inválidas"
+    assert response.json()["message"] == "Credenciales inválidas"
 
 # --------------------------
 # TC-L03: Credenciales Inválidas (Usuario)
@@ -121,7 +121,7 @@ async def test_tc_l03_usuario_inexistente(client: AsyncClient, override_deps, mo
     response = await client.post("/api/v1/auth/login", data=payload)
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Credenciales inválidas"
+    assert response.json()["message"] == "Credenciales inválidas"
 
 # --------------------------
 # TC-L04: Usuario Inactivo
@@ -137,7 +137,7 @@ async def test_tc_l04_usuario_inactivo(client: AsyncClient, override_deps, mock_
     response = await client.post("/api/v1/auth/login", data=payload)
 
     assert response.status_code == 401
-    assert "inactivo" in response.json()["detail"]
+    assert "inactivo" in response.json()["message"]
 
 # --------------------------
 # TC-L05: 2FA Requerido

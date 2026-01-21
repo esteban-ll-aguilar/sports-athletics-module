@@ -15,8 +15,16 @@ async def test_get_athlete_historial_success(client: AsyncClient, mock_represent
     user = MagicMock()
     user.id = 1
     _APP.dependency_overrides[get_current_user] = lambda: user
+    
+    # Mock the service dependency
+    from app.modules.representante.dependencies import get_representante_service
+    _APP.dependency_overrides[get_representante_service] = lambda: mock_representante_service
 
-    mock_representante_service.get_athlete_historial.return_value = []
+    mock_representante_service.get_athlete_historial = AsyncMock(return_value={
+        "success": True,
+        "message": "Historial obtenido",
+        "data": []
+    })
     
     response = await client.get("/api/v1/representante/athletes/10/historial")
     
@@ -31,15 +39,23 @@ async def test_get_athlete_stats_success(client: AsyncClient, mock_representante
     user = MagicMock()
     user.id = 1
     _APP.dependency_overrides[get_current_user] = lambda: user
+    
+    # Mock the service dependency
+    from app.modules.representante.dependencies import get_representante_service
+    _APP.dependency_overrides[get_representante_service] = lambda: mock_representante_service
 
-    mock_representante_service.get_athlete_stats.return_value = {
-        "total_competencias": 5, "medallas": {"oro":1}, "experiencia": 2
-    }
+    mock_representante_service.get_athlete_stats = AsyncMock(return_value={
+        "success": True,
+        "message": "Estadísticas obtenidas",
+        "data": {"total_competencias": 5, "medallas": {"oro":1}, "experiencia": 2}
+    })
     
     response = await client.get("/api/v1/representante/athletes/10/estadisticas")
     
     assert response.status_code == 200
-    assert response.json()["total_competencias"] == 5
+    data = response.json()
+    assert data["success"] == True
+    assert data["data"]["total_competencias"] == 5
     mock_representante_service.get_athlete_stats.assert_called_with(1, 10)
 
     _APP.dependency_overrides = {}

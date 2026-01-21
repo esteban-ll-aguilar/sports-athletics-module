@@ -36,7 +36,7 @@ async def test_create_resultado_ok():
     prueba_repo = Mock()
 
     competencia = SimpleNamespace(id=1)
-    atleta = SimpleNamespace(id=2)
+    atleta = SimpleNamespace(id=2, user_id=10)  # Add user_id
     prueba = SimpleNamespace(id=3)
 
     competencia_repo.get_by_external_id = AsyncMock(return_value=competencia)

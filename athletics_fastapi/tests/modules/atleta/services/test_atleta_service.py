@@ -30,7 +30,8 @@ def service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
 @pytest.mark.asyncio
 async def test_create_atleta_success(service, mock_auth_repo, mock_atleta_repo):
     """Verifica creación de atleta exitosa."""
-    user = AuthUserModel(id=1, role=RoleEnum.ATLETA, email="test@test.com")
+    user = MagicMock(id=1, email="test@test.com")
+    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
     mock_auth_repo.get_by_id.return_value = user
     mock_atleta_repo.get_by_user_id.return_value = None # No existe aun
     mock_atleta_repo.create.return_value = MagicMock(id=1, user_id=1)
@@ -49,7 +50,8 @@ async def test_create_atleta_success(service, mock_auth_repo, mock_atleta_repo):
 @pytest.mark.asyncio
 async def test_create_atleta_not_atleta_role(service, mock_auth_repo):
     """Falla si usuario no es ATLETA."""
-    user = AuthUserModel(id=1, role=RoleEnum.ADMINISTRADOR)
+    user = MagicMock(id=1)
+    user.user_profile = MagicMock(role=RoleEnum.ADMINISTRADOR)
     mock_auth_repo.get_by_id.return_value = user
 
     data = AtletaCreate(
@@ -65,7 +67,8 @@ async def test_create_atleta_not_atleta_role(service, mock_auth_repo):
 @pytest.mark.asyncio
 async def test_create_atleta_already_exists(service, mock_auth_repo, mock_atleta_repo):
     """Falla si ya tiene perfil."""
-    user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
+    user = MagicMock(id=1)
+    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
     mock_auth_repo.get_by_id.return_value = user
     mock_atleta_repo.get_by_user_id.return_value = MagicMock() # Ya existe
 

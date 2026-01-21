@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -59,16 +60,24 @@ async def register(
     """
 
     if await repo.get_by_email(data.email):
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email ya registrado",
+            content=APIResponse(
+                success=False,
+                message="Email ya registrado",
+                data=None
+            ).model_dump()
         )
 
     # Check duplicate username
     if await repo.get_by_username(data.username):
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username ya registrado",
+            content=APIResponse(
+                success=False,
+                message="Username ya registrado",
+                data=None
+            ).model_dump()
         )
 
     password_hash = hasher.hash(data.password)
@@ -111,15 +120,23 @@ async def login(
     user = await repo.get_by_email(form.username)
 
     if not user or not hasher.verify(form.password, user.hashed_password):
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
+            content=APIResponse(
+                success=False,
+                message="Credenciales inválidas",
+                data=None
+            ).model_dump()
         )
 
     if not user.is_active:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario inactivo, por favor verifica tu email",
+            content=APIResponse(
+                success=False,
+                message="Usuario inactivo, por favor verifica tu email",
+                data=None
+            ).model_dump()
         )
 
     if user.two_factor_enabled:
@@ -192,13 +209,27 @@ async def refresh_token(
     payload = jwtm.decode(body.refresh_token)
 
     if payload.get("type") != "refresh":
-        raise HTTPException(status_code=400, detail="Token inválido")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content=APIResponse(
+                success=False,
+                message="Token inválido",
+                data=None
+            ).model_dump()
+        )
 
     sub = payload["sub"]
     jti = payload["jti"]
 
     if await jwtm.consume_refresh(jti) != sub:
-        raise HTTPException(status_code=401, detail="Refresh inválido")
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content=APIResponse(
+                success=False,
+                message="Refresh inválido",
+                data=None
+            ).model_dump()
+        )
 
     access = jwtm.create_access_token(
         sub, payload["role"], payload["email"], payload["name"]

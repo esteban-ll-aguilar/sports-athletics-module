@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
@@ -87,7 +87,7 @@ class AuthUsersRepository:
             email=user_data.email,
             hashed_password=password_hash,
             is_active=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         self.db.add(auth_user)
         await self.db.flush()
@@ -375,7 +375,7 @@ class AuthUsersRepository:
             return False
             
         user.is_active = True
-        user.email_confirmed_at = datetime.utcnow()
+        user.email_confirmed_at = datetime.now(timezone.utc)
         self.db.add(user)
         
         try:

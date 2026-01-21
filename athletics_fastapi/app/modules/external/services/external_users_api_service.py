@@ -82,7 +82,7 @@ class ExternalUsersApiService:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(
                     _SETTINGS.users_api_url + "/api/person/save-account",
-                    json=user.dict(),
+                    json=user.model_dump(),
                     headers=self.headers
                 )
 
@@ -131,7 +131,7 @@ class ExternalUsersApiService:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.post(
                 _SETTINGS.users_api_url + "/api/person/update",
-                json=user.dict(),
+                json=user.model_dump(),
                 headers=self.headers
             )
 

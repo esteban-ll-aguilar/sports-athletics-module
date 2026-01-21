@@ -34,10 +34,11 @@ async def override_get_current_admin_user():
     """
     Override para simular un usuario administrador autenticado.
     """
-    user = MagicMock(spec=AuthUserModel)
+    user = MagicMock()
     user.id = "admin_id"
     user.email = "admin@example.com"
-    user.role.name = RoleEnum.ADMINISTRADOR
+    user.user_profile = MagicMock()
+    user.user_profile.role = RoleEnum.ADMINISTRADOR
     return user
 
 @pytest.mark.asyncio
@@ -59,7 +60,9 @@ async def test_admin_list_users(client: AsyncClient, mock_admin_service):
     
     # 200 OK
     assert response.status_code == 200
-    data = response.json()
+    json_response = response.json()
+    assert "data" in json_response
+    data = json_response["data"]
     assert "items" in data
     assert data["items"] == []
 
@@ -101,7 +104,10 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     # Asegurar que el response model pueda leer el enum correctamente o su valor
     # En esquemas de auth/admin suele ser role: RoleEnum
     
-    mock_admin_service.update_user_role.return_value = mock_user_updated
+    mock_admin_service.update_user_role.return_value = {
+        "success": True,
+        "user": mock_user_updated
+    }
     
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
@@ -111,4 +117,7 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     _APP.dependency_overrides = {}
     
     assert response.status_code == 200
-    assert response.json()["role"] == "ENTRENADOR"
+    json_response = response.json()
+    assert "data" in json_response
+    data = json_response["data"]
+    assert data["role"] == "ENTRENADOR"

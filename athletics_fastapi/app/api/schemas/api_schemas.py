@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any, Generic, TypeVar
 from uuid import UUID
 from datetime import datetime
@@ -22,8 +22,8 @@ class APIResponse(BaseModel, Generic[T]):
         description="List of error details, if any"
     )
     
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Operation completed successfully",
@@ -31,6 +31,7 @@ class APIResponse(BaseModel, Generic[T]):
                 "errors": None
             }
         }
+    )
 
 
 class PaginationMeta(BaseModel):

@@ -327,7 +327,7 @@ async def test_tc_10_activar_usuario_fail(client: AsyncClient, override_deps, mo
     response = await client.post("/api/v1/auth/email/verify", json=payload)
     
     assert response.status_code == 400
-    assert "Código inválido" in response.json()["detail"]
+    assert "Código inválido" in response.json()["message"]
 
 # --------------------------
 # TC-11: Validar email duplicado
@@ -351,7 +351,7 @@ async def test_tc_11_email_duplicado(client: AsyncClient, override_deps, mock_re
     response = await client.post("/api/v1/auth/register", json=payload)
     
     assert response.status_code == 409
-    assert "Email ya registrado" in response.json()["detail"]
+    assert "Email ya registrado" in response.json()["message"]
 
 # --------------------------
 # TC-12: Validar username duplicado

@@ -49,11 +49,15 @@ async def test_create_historial_calculo_automatico_imc(db):
     """
     service = HistorialMedicoService(db)
 
-    user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
+    user = MagicMock(id=1)
+    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
+    
+    atleta = MagicMock(id=1)
 
     # Mocks de base de datos
     db.execute.side_effect = [
         MagicMock(scalar_one_or_none=lambda: user), # Encuentra usuario
+        MagicMock(scalar_one_or_none=lambda: atleta), # Encuentra atleta
         MagicMock(scalar_one_or_none=lambda: None), # No encuentra historial previo
     ]
 
@@ -91,8 +95,11 @@ async def test_create_historial_user_not_atleta(db):
     """
     service = HistorialMedicoService(db)
 
+    user = MagicMock(id=99)
+    user.user_profile = MagicMock(role=RoleEnum.ENTRENADOR)
+
     db.execute.return_value = MagicMock(
-        scalar_one_or_none=lambda: None
+        scalar_one_or_none=lambda: user
     )
 
     data = HistorialMedicoCreate(
@@ -117,11 +124,15 @@ async def test_create_historial_already_exists(db):
     """
     service = HistorialMedicoService(db)
 
-    user = AuthUserModel(id=1, role=RoleEnum.ATLETA)
-    historial = HistorialMedico(auth_user_id=1)
+    user = MagicMock(id=1)
+    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
+    
+    atleta = MagicMock(id=1)
+    historial = HistorialMedico(atleta_id=1)
 
     db.execute.side_effect = [
         MagicMock(scalar_one_or_none=lambda: user),
+        MagicMock(scalar_one_or_none=lambda: atleta),
         MagicMock(scalar_one_or_none=lambda: historial),
     ]
 
@@ -186,7 +197,7 @@ async def test_get_by_user_ok(db):
     """
     service = HistorialMedicoService(db)
 
-    historial = HistorialMedico(auth_user_id=1)
+    historial = HistorialMedico(atleta_id=1)
 
     db.execute.return_value = MagicMock(
         scalar_one_or_none=lambda: historial
@@ -194,7 +205,7 @@ async def test_get_by_user_ok(db):
 
     result = await service.get_by_user(1)
 
-    assert result.auth_user_id == 1
+    assert result.atleta_id == 1
 
 
 @pytest.mark.asyncio
