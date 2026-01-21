@@ -22,11 +22,11 @@ def users_repo():
     """
     Mock del repositorio de usuarios.
     """
-    repo = MagicMock()
+    repo = AsyncMock()
     repo.get_by_external_id = AsyncMock()
     repo.get_all = AsyncMock()
     repo.count = AsyncMock()
-    repo.session = MagicMock()
+    repo.session = AsyncMock()
     repo.session.commit = AsyncMock()
     repo.session.refresh = AsyncMock()
     return repo
@@ -45,35 +45,42 @@ async def test_update_user_role_ok(users_repo):
     user = MagicMock()
     user.external_id = str(uuid4())
     user.role = RoleEnum.ATLETA
+    user.id = 1
 
-    users_repo.get_by_external_id.return_value = user
+    users_repo.get_by_any_id.return_value = user
+    users_repo.db = AsyncMock()
+    users_repo.db.execute = AsyncMock(return_value=MagicMock(scalar_one_or_none=lambda: None))
+    users_repo.db.add = MagicMock()
+    users_repo.db.commit = AsyncMock()
+    users_repo.db.refresh = AsyncMock()
 
     result = await service.update_user_role(
         user_id=user.external_id,
         new_role=RoleEnum.ENTRENADOR  # rol válido
     )
 
-    assert result.role == RoleEnum.ENTRENADOR
-    users_repo.session.commit.assert_called_once()
+    assert result["success"] == True
+    assert result["user"].role == RoleEnum.ENTRENADOR
+    users_repo.db.commit.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_update_user_role_user_not_found(users_repo):
     """
-    Verifica que se lance una excepción 404 si el usuario no existe.
+    Verifica que se retorne un dict con success=False si el usuario no existe.
     """
     service = AdminUserService(users_repo)
 
-    users_repo.get_by_external_id.return_value = None
+    users_repo.get_by_any_id.return_value = None
 
-    with pytest.raises(HTTPException) as exc:
-        await service.update_user_role(
-            user_id=str(uuid4()),
-            new_role=RoleEnum.ENTRENADOR
-        )
+    result = await service.update_user_role(
+        user_id=str(uuid4()),
+        new_role=RoleEnum.ENTRENADOR
+    )
 
-    assert exc.value.status_code == 404
-    assert exc.value.detail == "Usuario no encontrado"
+    assert result["success"] == False
+    assert result["message"] == "Usuario no encontrado"
+    assert result["status_code"] == 404
 
 
 # ---------------------------------
@@ -87,8 +94,7 @@ async def test_get_all_users_ok(users_repo):
     service = AdminUserService(users_repo)
 
     users = [MagicMock(), MagicMock()]
-    users_repo.get_all.return_value = users
-    users_repo.count.return_value = 2
+    users_repo.get_paginated.return_value = (users, 2)  # Returns tuple
 
     result = await service.get_all_users(page=1, size=10)
 
@@ -112,11 +118,15 @@ async def test_update_user_by_id_ok(users_repo):
     user = MagicMock()
     user.external_id = str(uuid4())
     user.username = "old_user"
-    user.email = "old@email.com"
-    user.is_active = True
+    user.auth = MagicMock()
+    user.auth.email = "old@email.com"
+    user.auth.is_active = True
     user.profile_image = None
 
-    users_repo.get_by_external_id.return_value = user
+    users_repo.get_by_any_id.return_value = user
+    users_repo.db = AsyncMock()
+    users_repo.db.commit = AsyncMock()
+    users_repo.db.refresh = AsyncMock()
 
     data = AdminUserUpdateRequest(
         username="new_user",
@@ -128,12 +138,12 @@ async def test_update_user_by_id_ok(users_repo):
     result = await service.update_user_by_id(user.external_id, data)
 
     assert result.username == "new_user"
-    assert result.email == "new@email.com"
-    assert result.is_active is False
+    assert result.auth.email == "new@email.com"
+    assert result.auth.is_active is False
     assert result.profile_image == "image.png"
 
-    users_repo.session.commit.assert_called_once()
-    users_repo.session.refresh.assert_called_once_with(user)
+    users_repo.db.commit.assert_called_once()
+    users_repo.db.refresh.assert_called_once_with(user)
 
 
 @pytest.mark.asyncio
@@ -143,7 +153,7 @@ async def test_update_user_by_id_not_found(users_repo):
     """
     service = AdminUserService(users_repo)
 
-    users_repo.get_by_external_id.return_value = None
+    users_repo.get_by_any_id.return_value = None
 
     data = AdminUserUpdateRequest(username="test")
 

@@ -1,10 +1,21 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
+import { APIResponse } from '../../../core/api/schemas/api_schema';
 
 const API_URL = `${Settings.API_URL}/api/v1`;
 
 
 class AuthRepository {
+    // Helper to save tokens
+    _saveTokens(data) {
+        if (data.access_token) {
+            localStorage.setItem('access_token', data.access_token);
+        }
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+    }
+
     async login(email, password) {
         try {
             const formData = new FormData();
@@ -16,7 +27,16 @@ class AuthRepository {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             });
-            return response.data;
+            const apiResponse = APIResponse.fromJson(response.data);
+
+            if (apiResponse.success && apiResponse.data) {
+                // Check if we received tokens (successful login) vs temp_token (2FA required)
+                if (apiResponse.data.access_token) {
+                    this._saveTokens(apiResponse.data);
+                }
+            }
+
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -29,7 +49,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -42,7 +62,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -55,7 +75,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -135,7 +155,12 @@ class AuthRepository {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return response.data;
+
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -211,7 +236,12 @@ class AuthRepository {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return response.data;
+            // Backend returns APIResponse[Enable2FAResponse]
+            // So response.data = {success, message, data: {secret, qr_code, backup_codes, message}}
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return the Enable2FAResponse
+            }
+            return response.data; // Return whole APIResponse for errors
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -226,6 +256,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
+            // Backend returns APIResponse[MessageResponse]
+            // So response.data = {success, message, data: {message}}
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return MessageResponse {message}
+            }
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
@@ -240,6 +275,10 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
+            // Backend returns APIResponse[MessageResponse]
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return MessageResponse {message}
+            }
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
@@ -254,7 +293,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -268,7 +311,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

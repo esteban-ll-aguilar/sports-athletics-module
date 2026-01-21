@@ -24,12 +24,8 @@ const TwoFactorSettings = () => {
     }, []);
 
     const checkStatus = async () => {
-        // We infer status from profile or just assumes false initially and let user try to enable
-        // Ideally, getProfile should return two_factor_enabled.
-        // Let's check if getProfile returns it.
         try {
             const profile = await authService.getProfile();
-            // Assuming profile data includes two_factor_enabled boolean
             if (profile.data && profile.data.two_factor_enabled !== undefined) {
                 setIsEnabled(profile.data.two_factor_enabled);
             }
@@ -42,11 +38,18 @@ const TwoFactorSettings = () => {
         setLoading(true);
         try {
             const response = await authService.enable2FA();
-            setQrCodeData(response); // Contains secret, qr_code (base64 or url), backup_codes
-            setBackupCodes(response.backup_codes);
-            setSetupStep(1);
+            // Backend twofa.py /enable returns Enable2FAResponse directly, NOT wrapped in APIResponse yet
+            // So response has {secret, qr_code, backup_codes, message}
+            if (response.secret) {
+                setQrCodeData(response);
+                setBackupCodes(response.backup_codes);
+                setSetupStep(1);
+            } else {
+                toast.error(response.message || "Error iniciando configuración 2FA");
+            }
         } catch (error) {
-            toast.error(error.detail || "Error iniciando configuración 2FA");
+            const msg = error.message || error.detail || "Error iniciando configuración 2FA";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -56,12 +59,18 @@ const TwoFactorSettings = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await authService.verify2FA(verificationCode);
-            setIsEnabled(true);
-            setSetupStep(2); // Show backup codes
-            toast.success("¡2FA Habilitado correctamente!");
+            const response = await authService.verify2FA(verificationCode);
+            // Backend returns MessageResponse, NOT APIResponse yet
+            if (response.message) {
+                setIsEnabled(true);
+                setSetupStep(2); // Show backup codes
+                toast.success("¡2FA Habilitado correctamente!");
+            } else {
+                toast.error("Error en la verificación");
+            }
         } catch (error) {
-            toast.error(error.detail || "Código incorrecto");
+            const msg = error.message || error.detail || "Código incorrecto";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -71,21 +80,19 @@ const TwoFactorSettings = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            // disable2FA requires password and code according to backend logic we saw in twofa.py?
-            // Actually verification in twofa.py disable endpoint requires: password and code.
-            // Wait, let's re-read auth_repository.js disable2FA implementation.
-            // It calls post /auth/2fa/disable with EMPTY body {}.
-            // BUT backend twofa.py `disable_2fa` expects `Disable2FARequest` with `password` and `code`.
-            // REPO IS WRONG.
-            // I need to update repo first.
-            await authService.disable2FA(disablePassword, disableCode);
-            setIsEnabled(false);
-            setShowDisableConfirm(false);
-            setDisablePassword('');
-            setDisableCode('');
-            toast.success("2FA Deshabilitado");
+            const response = await authService.disable2FA(disablePassword, disableCode);
+            if (response.message) {
+                setIsEnabled(false);
+                setShowDisableConfirm(false);
+                setDisablePassword('');
+                setDisableCode('');
+                toast.success("2FA Deshabilitado");
+            } else {
+                toast.error("Error al deshabilitar 2FA");
+            }
         } catch (error) {
-            toast.error(error.detail || "Error al deshabilitar 2FA");
+            const msg = error.message || error.detail || "Error al deshabilitar 2FA";
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
@@ -97,57 +104,57 @@ const TwoFactorSettings = () => {
     };
 
     return (
-<div className="bg-[#212121] border border-[#332122] rounded-2xl p-6 md:p-8 mt-8 text-gray-200 shadow-xl">
+        <div className="bg-[#212121] border border-[#332122] rounded-2xl p-6 md:p-8 mt-8 text-gray-200 shadow-xl">
             <div className="flex items-center justify-between mb-8">
-    <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+                <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center
             ${isEnabled
-                ? 'bg-[rgba(34,197,94,0.15)] text-green-500'
-                : 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
-            }`}
-        >
-            <Shield size={24} />
-        </div>
+                            ? 'bg-[rgba(34,197,94,0.15)] text-green-500'
+                            : 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+                        }`}
+                    >
+                        <Shield size={24} />
+                    </div>
 
-        <div>
-            <h2 className="text-xl font-semibold text-white">
-                Autenticación de Dos Factores
-            </h2>
-            <p className="text-sm text-gray-400">
-                Protección adicional para tu cuenta
-            </p>
-        </div>
-    </div>
+                    <div>
+                        <h2 className="text-xl font-semibold text-white">
+                            Autenticación de Dos Factores
+                        </h2>
+                        <p className="text-sm text-gray-400">
+                            Protección adicional para tu cuenta
+                        </p>
+                    </div>
+                </div>
 
-    <span className={`px-4 py-1 rounded-full text-sm font-medium
+                <span className={`px-4 py-1 rounded-full text-sm font-medium
         ${isEnabled
-            ? 'bg-green-900/30 text-green-400 border border-green-700'
-            : 'bg-red-900/30 text-red-400 border border-red-700'
-        }`}
-    >
-        {isEnabled ? 'ACTIVADO' : 'DESACTIVADO'}
-    </span>
-</div>
+                        ? 'bg-green-900/30 text-green-400 border border-green-700'
+                        : 'bg-red-900/30 text-red-400 border border-red-700'
+                    }`}
+                >
+                    {isEnabled ? 'ACTIVADO' : 'DESACTIVADO'}
+                </span>
+            </div>
 
 
             {!isEnabled && setupStep === 0 && (
-               <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#242223] p-5 rounded-xl border border-[#332122]">
-    <p className="text-gray-400 text-sm max-w-lg">
-        Añade una capa adicional de seguridad solicitando un código temporal al iniciar sesión.
-    </p>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#242223] p-5 rounded-xl border border-[#332122]">
+                    <p className="text-gray-400 text-sm max-w-lg">
+                        Añade una capa adicional de seguridad solicitando un código temporal al iniciar sesión.
+                    </p>
 
-    <button
-        onClick={handleEnableClick}
-        disabled={loading}
-        className="
+                    <button
+                        onClick={handleEnableClick}
+                        disabled={loading}
+                        className="
             px-6 py-2 rounded-lg text-white font-medium
             bg-gradient-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
             hover:brightness-110 transition
         "
-    >
-        {loading ? 'Cargando...' : 'Activar 2FA'}
-    </button>
-</div>
+                    >
+                        {loading ? 'Cargando...' : 'Activar 2FA'}
+                    </button>
+                </div>
 
             )}
 
@@ -188,7 +195,7 @@ const TwoFactorSettings = () => {
                                 <input
                                     type="text"
                                     placeholder="000000"
-    className="
+                                    className="
         w-full py-3 text-center text-xl font-mono tracking-widest
         bg-[#121212] border border-[#332122] rounded-lg
         text-white placeholder-gray-200
@@ -202,9 +209,9 @@ const TwoFactorSettings = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-   className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                                    className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
                             focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
-                        
+
                                 >
                                     {loading ? 'Verificando...' : 'Verificar y Activar'}
                                 </button>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.responses import JSONResponse
 from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (

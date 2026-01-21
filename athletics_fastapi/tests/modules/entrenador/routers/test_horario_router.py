@@ -44,6 +44,7 @@ async def test_create_horario_exitoso(client: AsyncClient, mock_horario_service)
     Esperado: 201 Created
     """
     from app.main import _APP
+    from datetime import date
     
     # Mockear respuesta exitosa
     mock_resp = MagicMock()
@@ -52,7 +53,25 @@ async def test_create_horario_exitoso(client: AsyncClient, mock_horario_service)
     mock_resp.name = "Entrenamiento Matutino"
     mock_resp.hora_inicio = time(8, 0)
     mock_resp.hora_fin = time(10, 0)
-    mock_resp.entrenamiento_id = 1 
+    mock_resp.entrenamiento_id = 1
+    
+    # Mock entrenamiento anidado
+    mock_entrenamiento = MagicMock()
+    mock_entrenamiento.external_id = uuid4()
+    mock_entrenamiento.tipo_entrenamiento = "Velocidad"
+    mock_entrenamiento.descripcion = "Entrenamiento de velocidad"
+    mock_entrenamiento.fecha_entrenamiento = date.today()
+    
+    # Mock entrenador anidado
+    mock_entrenador = MagicMock()
+    mock_user = MagicMock()
+    mock_user.first_name = "Juan"
+    mock_user.last_name = "Pérez"
+    mock_user.profile_image = "image.jpg"
+    mock_entrenador.user = mock_user
+    mock_entrenamiento.entrenador = mock_entrenador
+    
+    mock_resp.entrenamiento = mock_entrenamiento
 
     mock_horario_service.create_horario.return_value = mock_resp
 
@@ -148,8 +167,9 @@ async def test_get_horarios_exitoso(client: AsyncClient, mock_horario_service):
     Esperado: 200 OK con lista de horarios
     """
     from app.main import _APP
+    from datetime import date
     
-    # Simular lista de horarios
+    # Simular lista de horarios con entrenamiento anidado
     h1 = MagicMock()
     h1.id = 1
     h1.external_id = uuid4()
@@ -157,6 +177,24 @@ async def test_get_horarios_exitoso(client: AsyncClient, mock_horario_service):
     h1.name = "Entrenamiento Vespertino"
     h1.hora_inicio = time(16, 0)
     h1.hora_fin = time(18, 0)
+    
+    # Mock entrenamiento anidado
+    mock_entrenamiento = MagicMock()
+    mock_entrenamiento.external_id = uuid4()
+    mock_entrenamiento.tipo_entrenamiento = "Resistencia"
+    mock_entrenamiento.descripcion = "Entrenamiento de resistencia"
+    mock_entrenamiento.fecha_entrenamiento = date.today()
+    
+    # Mock entrenador anidado
+    mock_entrenador = MagicMock()
+    mock_user = MagicMock()
+    mock_user.first_name = "María"
+    mock_user.last_name = "García"
+    mock_user.profile_image = "profile.jpg"
+    mock_entrenador.user = mock_user
+    mock_entrenamiento.entrenador = mock_entrenador
+    
+    h1.entrenamiento = mock_entrenamiento
     
     mock_horario_service.get_horarios_by_entrenamiento.return_value = [h1]
 

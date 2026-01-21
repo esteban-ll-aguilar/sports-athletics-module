@@ -4,17 +4,16 @@ import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import VerificationModal from '../widgets/VerificationModal';
 import TwoFactorLoginModal from '../widgets/TwoFactorLoginModal';
+import { toast } from 'react-hot-toast';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Estados para el modal de verificación
     const [showVerificationModal, setShowVerificationModal] = useState(false);
-    const [verificationSuccessMsg, setVerificationSuccessMsg] = useState('');
 
     // Estados para 2FA
     const [showTwoFactorModal, setShowTwoFactorModal] = useState(false);
@@ -30,29 +29,38 @@ const LoginPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
-        setVerificationSuccessMsg('');
 
         try {
             const response = await authService.login(email, password);
+            // Response is an APIResponse object { success, message, data, errors }
 
-            if (response.requires_2fa) {
+            // Check if 2FA is required (Backend returns success=true but data has temp_token instead of access_token)
+            // We can check for temp_token existence
+            if (response.data && response.data.temp_token) {
                 // 2FA Requerido
-                setTempToken(response.temp_token);
+                setTempToken(response.data.temp_token);
                 setShowTwoFactorModal(true);
-            } else {
-                // Login normal exitoso
+                toast.success(response.data.message || '2FA Requerido');
+            } else if (response.success) {
+                // Login normal exitoso (tokens already saved by authService)
+                toast.success('Inicio de sesión exitoso');
                 navigate('/dashboard');
             }
         } catch (err) {
             console.error("Login error:", err);
 
+            // Extract error message from APIResponse structure if possible
+            let message = 'Error al iniciar sesión';
+            if (err.message) message = err.message;
+            if (err.detail) message = err.detail;
+
             // Detectar si el error es por usuario inactivo
-            if (err.detail === "Usuario inactivo, por favor verifica tu email") {
+            if (message === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
+                toast.error(message);
             } else {
-                setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+                toast.error(message);
             }
         } finally {
             setLoading(false);
@@ -61,12 +69,12 @@ const LoginPage = () => {
 
     const handleVerificationSuccess = (msg) => {
         setShowVerificationModal(false);
-        setVerificationSuccessMsg(msg || 'Email verificado exitosamente. Ahora puedes iniciar sesión.');
+        toast.success(msg || 'Email verificado exitosamente');
     };
 
     const handleTwoFactorSuccess = () => {
         setShowTwoFactorModal(false);
-        // Navigation handled inside modal or here if needed, but modal calls navigate
+        toast.success('Verificación de 2 pasos completa');
     };
 
     return (
@@ -84,7 +92,7 @@ const LoginPage = () => {
                 tempToken={tempToken}
                 email={email}
                 onSuccess={handleTwoFactorSuccess}
-                onError={(msg) => setError(msg)} // Optional: show error in main form too
+                onError={(msg) => toast.error(msg)}
             />
 
             {/* Left Side - Image & Text */}
@@ -127,16 +135,6 @@ const LoginPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {verificationSuccessMsg && (
-                            <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm text-center border border-green-200">
-                                {verificationSuccessMsg}
-                            </div>
-                        )}
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
-                                {error}
-                            </div>
-                        )}
 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
@@ -222,7 +220,7 @@ const LoginPage = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                            className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
                             focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
                         >
 

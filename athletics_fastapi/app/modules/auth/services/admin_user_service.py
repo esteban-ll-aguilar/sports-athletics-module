@@ -23,10 +23,11 @@ class AdminUserService:
         user = await self.users_repo.get_by_any_id(user_id)
 
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Usuario no encontrado"
-            )
+            return {
+                "success": False,
+                "message": "Usuario no encontrado",
+                "status_code": 404
+            }
 
         # Actualizar rol
         user.role = new_role
@@ -76,7 +77,10 @@ class AdminUserService:
         await self.users_repo.db.commit()
         await self.users_repo.db.refresh(user)
 
-        return user
+        return {
+            "success": True,
+            "user": user
+        }
 
     # =====================================================
     # GET ALL USERS

@@ -22,7 +22,7 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                 ? await authService.loginBackup(email, code, tempToken)
                 : await authService.login2FA(email, code, tempToken);
 
-            if (response.access_token) {
+            if (response.success) {
                 onSuccess(response);
                 navigate('/dashboard');
             }
@@ -104,7 +104,7 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                         disabled={loading || code.length < 4}
                         className="
                             w-full py-3 rounded-lg text-white font-medium
-                            bg-gradient-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
+                            bg-linear-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
                             hover:brightness-110
                             focus:ring-2 focus:ring-[#b30c25]
                             disabled:opacity-50 disabled:cursor-not-allowed

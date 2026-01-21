@@ -48,6 +48,7 @@ const RegisterAthletePage = () => {
         }
 
         setLoading(true);
+        const toastId = toast.loading("Registrando atleta...");
         try {
             // Remove confirmPassword
             const { confirmPassword, ...dataToSend } = formData;
@@ -55,22 +56,30 @@ const RegisterAthletePage = () => {
             // Force role just in case frontend logic leaks, but backend handles it
             dataToSend.role = 'ATLETA';
 
-            await RepresentanteService.registerChildAthlete(dataToSend);
-            toast.success("Atleta registrado exitosamente");
-            navigate('/dashboard/entrenamientos'); // Or wherever appropriate
+            const response = await RepresentanteService.registerChildAthlete(dataToSend);
+
+            if (response.success) {
+                toast.success(response.message || "Atleta registrado exitosamente", { id: toastId });
+                navigate('/dashboard/representante/mis-atletas');
+            } else {
+                toast.error(response.message || "Error al registrar atleta", { id: toastId });
+            }
         } catch (err) {
             console.error("Error creating athlete:", err);
             let msg = "Error al registrar atleta";
-            if (err.response?.data?.detail) {
+
+            // Handle standardized APIResponse error if available
+            if (err.response?.data?.message) {
+                msg = err.response.data.message;
+            } else if (err.response?.data?.detail) {
                 const detail = err.response.data.detail;
                 if (Array.isArray(detail)) {
-                    // Pydantic validation error list
                     msg = detail.map(e => `${e.loc[1] || 'Campo'}: ${e.msg}`).join('\n');
                 } else {
                     msg = String(detail);
                 }
             }
-            toast.error(msg);
+            toast.error(msg, { id: toastId });
         } finally {
             setLoading(false);
         }

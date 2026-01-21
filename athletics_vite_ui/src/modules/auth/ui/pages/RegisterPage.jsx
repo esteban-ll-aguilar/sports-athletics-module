@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
+import { toast } from 'react-hot-toast';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -24,7 +25,6 @@ const RegisterPage = () => {
     });
 
     const [fieldErrors, setFieldErrors] = useState({});
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -55,12 +55,12 @@ const RegisterPage = () => {
 
     const validatePhone = (value) => {
         if (!value) return '';
-        
+
         // Verificar si hay caracteres inválidos antes de limpiar
         if (!/^[0-9+\-() ]*$/.test(value)) {
             return 'El teléfono solo debe contener números';
         }
-        
+
         const cleanPhone = value.replace(/\D/g, '');
         if (cleanPhone.length > 0) {
             if (!cleanPhone.startsWith('09')) return 'El número celular debe empezar con 09';
@@ -198,11 +198,10 @@ const RegisterPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
 
         // Validar todos los campos
         if (!validateFormOnSubmit()) {
-            setError('Por favor, corrige los errores en los campos.');
+            toast.error('Por favor, corrige los errores en los campos.');
             return;
         }
 
@@ -217,24 +216,29 @@ const RegisterPage = () => {
             if (phone && phone.trim() !== '') dataToSend.phone = phone;
             if (direccion && direccion.trim() !== '') dataToSend.direccion = direccion;
 
-            // 🔹 Aquí puedes ver toda la data que se enviará
             console.log("Data enviada al backend:", dataToSend);
 
             await authService.register(dataToSend);
+            toast.success('Usuario registrado exitosamente. Verifique su correo.');
             navigate('/login');
         } catch (err) {
             console.error("Registration error:", err);
-            let errorMessage = 'Error al registrar usuario. Inténtalo de nuevo.';
+            let errorMessage = 'Error al registrar usuario';
 
+            if (err.message) errorMessage = err.message;
+            // APIResponse errors extraction
             if (err.detail) {
                 if (typeof err.detail === 'string') {
                     errorMessage = err.detail;
                 } else if (Array.isArray(err.detail)) {
-                    // Pydantic validation errors
+                    // Pydantic validation errors or APIResponse errors list if mapped there
                     errorMessage = err.detail.map(e => e.msg).join(', ');
                 }
             }
-            setError(errorMessage);
+            // If backend sends errors list in new API format directly in data... 
+            // auth_repository probably throws the parsed error.
+
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -248,7 +252,7 @@ const RegisterPage = () => {
     };
 
     return (
-        <div className="flex min-h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
+        <div className="flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
             {/* Left Side - Image */}
             <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
                 <div className="absolute inset-0 z-0">
@@ -276,11 +280,6 @@ const RegisterPage = () => {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-200">
-                                {error}
-                            </div>
-                        )}
 
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
@@ -331,7 +330,7 @@ const RegisterPage = () => {
                                     <label className="block text-sm font-medium text-gray-400 mb-1">
                                         Identificación
                                         <span className="text-xs text-gray-500 ml-1">
-                                              </span>
+                                        </span>
                                     </label>
                                     <input
                                         name="identificacion"
@@ -547,7 +546,7 @@ const RegisterPage = () => {
                             className="
                         w-full py-3 px-4 rounded-lg
                         text-sm font-semibold text-white
-                        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
+                        bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122]
                         hover:brightness-110
                         focus:ring-2 focus:ring-[#b30c25]
                         disabled:opacity-50

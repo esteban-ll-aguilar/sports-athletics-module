@@ -16,6 +16,8 @@ from app.modules.auth.dependencies import get_current_user
 async def override_get_current_atleta():
     user = MagicMock()
     user.id = 1
+    user.profile = MagicMock()
+    user.profile.role = "ATLETA"  # Router checks current_user.profile.role
     return user
 
 
@@ -42,7 +44,7 @@ async def test_create_historial_medico(client: AsyncClient):
         mock_response.peso = 70.0
         mock_response.imc = 22.8
         mock_response.id = 1
-        mock_response.auth_user_id = 10
+        mock_response.atleta_id = 10
         mock_response.external_id = uuid4()
 
         mock_service_instance.create = AsyncMock(return_value=mock_response)
@@ -79,7 +81,7 @@ async def test_get_my_historial(client: AsyncClient):
         mock_response = MagicMock()
         mock_response.id = 1
         mock_response.external_id = uuid4()
-        mock_response.auth_user_id = 10
+        mock_response.atleta_id = 10
         mock_response.talla = 1.75
         mock_response.peso = 70.0
         mock_response.imc = 22.8

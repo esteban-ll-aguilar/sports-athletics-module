@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.atleta.domain.models.historial_medico_model import HistorialMedico
+from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+from app.modules.auth.domain.models.user_model import UserModel
 from app.modules.auth.domain.enums import RoleEnum
 from app.modules.atleta.domain.schemas.historial_medico_schema import (
     HistorialMedicoCreate,
@@ -19,10 +21,13 @@ class HistorialMedicoService:
 
     async def create(self, data: HistorialMedicoCreate, user_id: int) -> HistorialMedico:
     
+        # Get user with profile join to check role
         result = await self.db.execute(
-            select(AuthUserModel).where(
+            select(AuthUserModel)
+            .join(UserModel, AuthUserModel.id == UserModel.auth_user_id)
+            .where(
                 AuthUserModel.id == user_id,
-                AuthUserModel.role == RoleEnum.ATLETA
+                UserModel.role == RoleEnum.ATLETA
             )
         )
         user = result.scalar_one_or_none()
@@ -33,9 +38,22 @@ class HistorialMedicoService:
                 detail="El usuario no existe o no es ATLETA"
             )
 
+        # Get atleta by user_id
+        result = await self.db.execute(
+            select(Atleta).join(UserModel).where(UserModel.auth_user_id == user_id)
+        )
+        atleta = result.scalar_one_or_none()
+        
+        if not atleta:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El usuario no tiene perfil de atleta"
+            )
+
+        # Check if historial already exists
         result = await self.db.execute(
             select(HistorialMedico).where(
-                HistorialMedico.auth_user_id == user_id
+                HistorialMedico.atleta_id == atleta.id
             )
         )
         if result.scalar_one_or_none():
@@ -52,7 +70,7 @@ class HistorialMedicoService:
             alergias=data.alergias,
             enfermedades_hereditarias=data.enfermedades_hereditarias,
             enfermedades=data.enfermedades,
-            auth_user_id=user_id
+            atleta_id=atleta.id
         )
 
         self.db.add(historial)
@@ -76,9 +94,21 @@ class HistorialMedicoService:
         return historial
 
     async def get_by_user(self, user_id: int) -> HistorialMedico:
+        # Get atleta by user_id, then get historial by atleta_id
+        result = await self.db.execute(
+            select(Atleta).join(UserModel).where(UserModel.auth_user_id == user_id)
+        )
+        atleta = result.scalar_one_or_none()
+        
+        if not atleta:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Atleta no encontrado"
+            )
+        
         result = await self.db.execute(
             select(HistorialMedico).where(
-                HistorialMedico.auth_user_id == user_id
+                HistorialMedico.atleta_id == atleta.id
             )
         )
         historial = result.scalar_one_or_none()
@@ -99,7 +129,7 @@ class HistorialMedicoService:
     async def update(self, external_id: UUID, data: HistorialMedicoUpdate):
         historial = await self.get(external_id)
 
-        for key, value in data.dict(exclude_unset=True).items():
+        for key, value in data.model_dump(exclude_unset=True).items():
             setattr(historial, key, value)
 
         await self.db.commit()

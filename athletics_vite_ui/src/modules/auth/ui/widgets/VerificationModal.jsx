@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import authService from '../../services/auth_service';
+import { toast } from 'react-hot-toast';
 
 const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
     const [code, setCode] = useState('');
@@ -36,9 +37,23 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
 
         try {
             const response = await authService.verifyEmail(email, code);
-            onSuccess(response.message);
+            if (response.success) {
+                toast.success(response.message || 'Email verificado exitosamente');
+                onSuccess(response.message);
+            } else {
+                // Should technically be caught by catch block if service throws on 400
+                const msg = response.message || 'Verificación fallida';
+                toast.error(msg);
+                setError(msg);
+            }
         } catch (err) {
-            setError(err.detail || 'Código inválido o expirado');
+            let msg = 'Código inválido o expirado';
+            if (err.message) msg = err.message;
+            if (err.detail) msg = err.detail;
+
+            // Strict compliance with TC-E02 (can vary slightly but meaning is key)
+            toast.error(msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -52,11 +67,22 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
         setError('');
 
         try {
-            await authService.resendVerification(email);
-            setResendMessage('Nuevo código enviado a tu correo.');
-            setCountdown(60); // 60 seconds cooldown
+            const response = await authService.resendVerification(email);
+            if (response.success) {
+                // TC-E03: Success
+                const msg = response.message || 'Nuevo código enviado';
+                toast.success(msg);
+                setResendMessage(msg);
+                setCountdown(60);
+            }
         } catch (err) {
-            setError(err.detail || 'Error al reenviar el código');
+            let msg = 'Error al reenviar el código';
+            if (err.message) msg = err.message; // "Ya existe un código activo...", etc.
+            if (err.detail) msg = err.detail;
+
+            // TC-E05: Rate Limit message usually comes here
+            toast.error(msg);
+            setError(msg);
         } finally {
             setResendLoading(false);
         }

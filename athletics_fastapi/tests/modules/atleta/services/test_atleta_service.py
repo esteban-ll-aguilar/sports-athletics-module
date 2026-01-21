@@ -44,6 +44,24 @@ def atleta_service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
         resultado_repo=mock_resultado_repo
     )
 
+def service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
+    return AtletaService(mock_atleta_repo, mock_auth_repo, mock_resultado_repo)
+
+@pytest.mark.asyncio
+async def test_create_atleta_success(service, mock_auth_repo, mock_atleta_repo):
+    """Verifica creación de atleta exitosa."""
+    user = MagicMock(id=1, email="test@test.com")
+    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
+    mock_auth_repo.get_by_id.return_value = user
+    mock_atleta_repo.get_by_user_id.return_value = None # No existe aun
+    mock_atleta_repo.create.return_value = MagicMock(id=1, user_id=1)
+
+    data = AtletaCreate(
+        anios_experiencia=5,
+        fecha_nacimiento=date(2000, 1, 1),
+        foto_perfil=None
+    )
+
 
 # ========== TESTS - CREAR PERFIL DE ATLETA (TC-A01 a TC-A07) ==========
 

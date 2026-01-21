@@ -29,7 +29,8 @@ async def override_get_current_entrenador():
     user = MagicMock(spec=AuthUserModel)
     user.id = uuid4()
     user.email = "entrenador@test.com"
-    user.role = RoleEnum.ENTRENADOR
+    user.profile = MagicMock()
+    user.profile.role = RoleEnum.ENTRENADOR
     return user
 
 @pytest.mark.asyncio

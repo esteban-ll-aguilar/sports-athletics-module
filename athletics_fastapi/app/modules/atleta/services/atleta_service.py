@@ -28,7 +28,7 @@ class AtletaService:
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-        if user.role != RoleEnum.ATLETA:
+        if user.user_profile.role != RoleEnum.ATLETA:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Solo usuarios con rol ATLETA pueden crear perfil deportivo"

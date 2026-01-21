@@ -2,7 +2,7 @@ from typing import Optional, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
@@ -87,7 +87,7 @@ class AuthUsersRepository:
             email=user_data.email,
             hashed_password=password_hash,
             is_active=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
         self.db.add(auth_user)
         await self.db.flush()
@@ -283,6 +283,16 @@ class AuthUsersRepository:
         return result.scalar_one_or_none()
 
     # =====================================================
+    # GET BY USERNAME
+    # =====================================================
+    async def get_by_username(self, username: str) -> Optional[UserModel]:
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.username == username)
+        )
+        return result.scalar_one_or_none()
+
+    # =====================================================
     # PAGINATED LIST
     # =====================================================
     async def get_paginated(
@@ -365,7 +375,7 @@ class AuthUsersRepository:
             return False
             
         user.is_active = True
-        user.email_confirmed_at = datetime.utcnow()
+        user.email_confirmed_at = datetime.now(timezone.utc)
         self.db.add(user)
         
         try:

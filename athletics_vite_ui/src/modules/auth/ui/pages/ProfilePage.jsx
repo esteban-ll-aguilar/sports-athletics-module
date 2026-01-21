@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
 import TwoFactorSettings from '../widgets/TwoFactorSettings';
+import ActiveSessionsWidget from '../widgets/ActiveSessionsWidget';
 import Settings from '../../../../config/enviroment';
 
 const ProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [message, setMessage] = useState(null);
-    const [error, setError] = useState(null);
     const [isHistorialModalOpen, setIsHistorialModalOpen] = useState(false);
     const [profileFile, setProfileFile] = useState(null);
 
@@ -61,7 +61,7 @@ const ProfilePage = () => {
                 });
             }
         } catch (err) {
-            setError('No se pudo cargar la información del perfil.');
+            toast.error(err.message || 'No se pudo cargar la información del perfil.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -75,9 +75,15 @@ const ProfilePage = () => {
     };
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Frontend Validation
+        if (!formData.first_name || !formData.last_name || !formData.phone) {
+            toast.error("Por favor completa los campos obligatorios");
+            return;
+        }
+
         setSubmitting(true);
-        setError(null);
-        setMessage(null);
+        const toastId = toast.loading('Actualizando perfil...');
 
         try {
             const data = new FormData();
@@ -110,19 +116,14 @@ const ProfilePage = () => {
                 data.append('profile_image', profileFile);
             }
 
-            // DEBUG
-            for (let pair of data.entries()) {
-                console.log('📦', pair[0], pair[1]);
-            }
+            const response = await authService.updateProfile(data);
 
-            await authService.updateProfile(data);
-
-            setMessage('Perfil actualizado correctamente');
+            toast.success(response.message || 'Perfil actualizado correctamente', { id: toastId });
             await fetchProfile();
         } catch (err) {
             console.error("Full profile update error:", err);
-            console.error("Validation details:", err.response?.data);
-            setError('Error al actualizar perfil');
+            const errorMessage = err.message || 'Error al actualizar perfil';
+            toast.error(errorMessage, { id: toastId });
         } finally {
             setSubmitting(false);
         }
@@ -218,35 +219,7 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {/* Flash Messages */}
-            {
-                message && (
-                    <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
-                        <div className="flex">
-                            <div className="shrink-0">
-                                <Save className="h-5 w-5 text-[#b30c25]" />
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-white">{message}</p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-            {
-                error && (
-                    <div className="bg-[#332122] border-l-4 border-[#b30c25] p-4 rounded-md">
-                        <div className="flex">
-                            <div className="shrink-0">
-                                <Shield className="h-5 w-5 text-[#b30c25]" />
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-white">{error}</p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+
 
             {/* Main Form */}
             <form onSubmit={handleSubmit} className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6 md:p-8">
@@ -505,6 +478,8 @@ const ProfilePage = () => {
             </form>
 
             <TwoFactorSettings />
+
+            {/* <ActiveSessionsWidget /> */}
 
             {
                 isHistorialModalOpen && (

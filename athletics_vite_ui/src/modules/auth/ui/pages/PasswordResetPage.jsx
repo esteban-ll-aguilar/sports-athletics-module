@@ -23,11 +23,15 @@ const PasswordResetPage = () => {
         setLoading(true);
         try {
             const response = await PasswordResetService.requestReset(email);
-            toast.success(response.message || "Si el correo existe, recibirás un código.");
-            setStep(2);
+            if (response.success) {
+                toast.success(response.message || "Si el correo existe, recibirás un código.");
+                setStep(2);
+            } else {
+                toast.error(response.message || "Error al solicitar código.");
+            }
         } catch (error) {
             console.error(error);
-            const msg = error.response?.data?.message || "Error al solicitar código. Inténtalo de nuevo.";
+            const msg = error.message || error.detail || "Error al solicitar código. Inténtalo de nuevo.";
             toast.error(msg);
         } finally {
             setLoading(false);
@@ -43,11 +47,15 @@ const PasswordResetPage = () => {
         setLoading(true);
         try {
             const response = await PasswordResetService.validateCode(email, code);
-            toast.success(response.message || "Código validado correctamente.");
-            setStep(3);
+            if (response.success) {
+                toast.success(response.message || "Código validado correctamente.");
+                setStep(3);
+            } else {
+                toast.error(response.message || "Código inválido.");
+            }
         } catch (error) {
             console.error(error);
-            const msg = error.response?.data?.message || "Código inválido o expirado";
+            const msg = error.message || error.detail || "Código inválido o expirado";
             toast.error(msg);
         } finally {
             setLoading(false);
@@ -68,14 +76,18 @@ const PasswordResetPage = () => {
         setLoading(true);
         try {
             const response = await PasswordResetService.completeReset(email, code, password);
-            console.log("Reset Success Response:", response);
-            toast.success(response.message || "Contraseña actualizada exitosamente.");
-            setTimeout(() => {
-                navigate('/login');
-            }, 2000);
+            if (response.success) {
+                console.log("Reset Success Response:", response);
+                toast.success(response.message || "Contraseña actualizada exitosamente.");
+                setTimeout(() => {
+                    navigate('/login');
+                }, 2000);
+            } else {
+                toast.error(response.message || "Error al actualizar contraseña");
+            }
         } catch (error) {
             console.error("Reset Error:", error);
-            const msg = error.response?.data?.message || error.message || "Error al actualizar contraseña";
+            const msg = error.message || error.detail || "Error al actualizar contraseña";
             toast.error(msg);
         } finally {
             setLoading(false);

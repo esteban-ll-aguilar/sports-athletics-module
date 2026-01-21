@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     MessageResponse,
     SessionsListResponse, SessionInfo, RevokeSessionRequest,
 )
+from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.dependencies import (
     get_sessions_repo, get_jwt_manager, 
 )
@@ -24,7 +26,7 @@ auth_sessions_router_v1 = APIRouter()
 # Gestión de Sesiones
 # ============================================
 
-@auth_sessions_router_v1.get("/", response_model=SessionsListResponse)
+@auth_sessions_router_v1.get("/", response_model=APIResponse[SessionsListResponse])
 async def get_my_sessions(
     current_user: AuthUserModel = Depends(get_current_user),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo)
@@ -40,16 +42,22 @@ async def get_my_sessions(
             id=str(session.id),
             created_at=session.created_at.isoformat(),
             expires_at=session.expires_at.isoformat() if session.expires_at else None,
-            status=session.status
+            status=session.status,
+            is_current=False # Backfilled logic or handle in Repo, usually requires strict mapping
         )
         for session in sessions
     ]
     
     logger.info(f"Usuario {current_user.email} consultó sus sesiones activas ({len(sessions_info)})")
-    return SessionsListResponse(sessions=sessions_info, total=len(sessions_info))
+    
+    return APIResponse(
+        success=True,
+        message="Sesiones obtenidas correctamente",
+        data=SessionsListResponse(sessions=sessions_info, total=len(sessions_info))
+    )
 
 
-@auth_sessions_router_v1.post("/revoke", response_model=MessageResponse)
+@auth_sessions_router_v1.post("/revoke", response_model=APIResponse[MessageResponse])
 async def revoke_session(
     data: RevokeSessionRequest,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -65,9 +73,13 @@ async def revoke_session(
     session_ids = [str(s.id) for s in sessions]
     
     if data.session_id not in session_ids:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sesión no encontrada o ya revocada"
+            content=APIResponse(
+                success=False,
+                message="Sesión no encontrada o ya revocada",
+                data=None
+            ).model_dump()
         )
     
     # Buscar la sesión para obtener sus JTIs
@@ -77,25 +89,36 @@ async def revoke_session(
         # Revocar en Redis
         try:
             # Calcular tiempo restante de expiración
-            exp_timestamp = int(session_to_revoke.expires_at.timestamp())
-            await jwtm.revoke_until(session_to_revoke.access_token, exp_timestamp)
-            await jwtm.revoke_until(session_to_revoke.refresh_token, exp_timestamp)
+            if session_to_revoke.expires_at:
+                exp_timestamp = int(session_to_revoke.expires_at.timestamp())
+                await jwtm.revoke_until(session_to_revoke.access_token, exp_timestamp)
+                await jwtm.revoke_until(session_to_revoke.refresh_token, exp_timestamp)
         except Exception as e:
             logger.error(f"Error revocando tokens en Redis: {e}")
         
         # Revocar en BD
-        await sessions_repo.revoke_session_by_refresh_jti(session_to_revoke.refresh_token)
+        # Ensure refresh_token is present
+        if session_to_revoke.refresh_token:
+            await sessions_repo.revoke_session_by_refresh_jti(session_to_revoke.refresh_token)
         
         logger.info(f"Usuario {current_user.email} revocó sesión {data.session_id}")
-        return MessageResponse(message="Sesión revocada exitosamente")
+        return APIResponse(
+            success=True,
+            message="Sesión revocada exitosamente",
+            data=MessageResponse(message="Sesión revocada exitosamente")
+        )
     
-    raise HTTPException(
+    return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail="Error al revocar la sesión"
+        content=APIResponse(
+            success=False,
+            message="Error al revocar la sesión",
+            data=None
+        ).model_dump()
     )
 
 
-@auth_sessions_router_v1.post("/revoke-all", response_model=MessageResponse)
+@auth_sessions_router_v1.post("/revoke-all", response_model=APIResponse[MessageResponse])
 async def revoke_all_sessions(
     current_user: AuthUserModel = Depends(get_current_user),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
@@ -110,9 +133,10 @@ async def revoke_all_sessions(
     # Revocar todas en Redis y BD
     for session in sessions:
         try:
-            exp_timestamp = int(session.expires_at.timestamp())
-            await jwtm.revoke_until(session.access_token, exp_timestamp)
-            await jwtm.revoke_until(session.refresh_token, exp_timestamp)
+            if session.expires_at:
+                exp_timestamp = int(session.expires_at.timestamp())
+                await jwtm.revoke_until(session.access_token, exp_timestamp)
+                await jwtm.revoke_until(session.refresh_token, exp_timestamp)
         except Exception as e:
             logger.error(f"Error revocando token en Redis: {e}")
     
@@ -120,5 +144,10 @@ async def revoke_all_sessions(
     count = await sessions_repo.revoke_all_user_sessions(current_user.id)
     
     logger.warning(f"Usuario {current_user.email} revocó TODAS sus sesiones ({count})")
-    return MessageResponse(message=f"Se revocaron {count} sesiones exitosamente")
+    
+    return APIResponse(
+        success=True,
+        message=f"Se revocaron {count} sesiones exitosamente",
+        data=MessageResponse(message=f"Se revocaron {count} sesiones exitosamente")
+    )
 
