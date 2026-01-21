@@ -28,7 +28,10 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
       showCancelButton: true,
       confirmButtonText: 'Sí',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ec1313'
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      background: '#212121',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -38,7 +41,9 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         icon: 'success',
         title: editingData ? 'Disciplina actualizada' : 'Disciplina creada',
         text: `La disciplina ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
-        confirmButtonColor: '#ec1313'
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
       });
 
       onClose();
@@ -55,7 +60,10 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
       showCancelButton: true,
       confirmButtonText: `Sí, ${action}`,
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#ec1313'
+      confirmButtonColor: '#b30c25',
+      cancelButtonColor: '#6b7280',
+      background: '#212121',
+      color: '#fff'
     });
 
     if (result.isConfirmed) {
@@ -65,7 +73,9 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         icon: 'success',
         title: `Disciplina ${form.estado ? 'desactivada' : 'activada'}`,
         text: `La disciplina ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
-        confirmButtonColor: '#ec1313'
+        confirmButtonColor: '#b30c25',
+        background: '#212121',
+        color: '#fff'
       });
     }
   };
@@ -163,7 +173,7 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
               hover:bg-[#181111]
               transition-colors
             "
-          >
+            >
               Cancelar
             </button>
             <button
@@ -176,7 +186,7 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
               shadow-lg shadow-black/40
               active:scale-95
             "
-          >
+            >
               {editingData ? 'Guardar' : 'Crear'}
             </button>
           </div>

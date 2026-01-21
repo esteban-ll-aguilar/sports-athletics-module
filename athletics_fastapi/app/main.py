@@ -128,7 +128,7 @@ _APP = FastAPI(
     lifespan=lifespan
 )
 # ✅ 2. LUEGO MONTAS STATIC FILES
-_APP.mount("/media", StaticFiles(directory="media"), name="media")
+
 _APP.mount("/data", StaticFiles(directory="data"), name="data")
 
 

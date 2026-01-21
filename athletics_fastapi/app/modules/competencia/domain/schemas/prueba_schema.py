@@ -13,7 +13,6 @@ class PruebaBase(BaseModel):
     unidad_medida: str
     estado: bool = True
     tipo_disciplina_id: int
-    baremo_id: int
 
 # Crear Prueba
 class PruebaCreate(PruebaBase):
@@ -27,7 +26,6 @@ class PruebaUpdate(BaseModel):
     unidad_medida: str | None = None
     estado: bool | None = None
     tipo_disciplina_id: int | None = None
-    baremo_id: int | None = None
 
 # Leer Prueba
 class PruebaRead(PruebaBase):

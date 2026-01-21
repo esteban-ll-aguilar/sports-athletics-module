@@ -23,91 +23,186 @@ const RegisterPage = () => {
         sexo: 'M',
     });
 
+    const [fieldErrors, setFieldErrors] = useState({});
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
+    // Funciones de validación específicas por campo
+    const validateFirstName = (value) => {
+        if (!value) return 'El nombre es requerido';
+        if (value.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+        if (!/^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/.test(value)) return 'El nombre solo debe contener letras y espacios';
+        return '';
+    };
 
-        // Validación especial para identificación: solo números
-        if (name === 'identificacion') {
-            // Remover cualquier carácter que no sea número
-            const numericValue = value.replace(/[^0-9]/g, '');
-            setFormData({
-                ...formData,
-                [name]: numericValue
-            });
-            return;
+    const validateLastName = (value) => {
+        if (!value) return 'El apellido es requerido';
+        if (value.length < 2) return 'El apellido debe tener al menos 2 caracteres';
+        if (!/^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/.test(value)) return 'El apellido solo debe contener letras y espacios';
+        return '';
+    };
+
+    const validateIdentificacion = (value, tipo) => {
+        if (!value) return 'La identificación debe ser numérica';
+        if (!/^\d+$/.test(value)) return 'La identificación solo debe contener números';
+        if (tipo === 'CEDULA' && value.length !== 10) return 'La cédula debe tener exactamente 10 caracteres numéricos';
+        if (tipo === 'PASAPORTE' && value.length < 5) return 'El pasaporte debe tener al menos 5 caracteres';
+        if (tipo === 'RUC' && value.length !== 13) return 'El RUC debe tener exactamente 13 caracteres numéricos';
+        return '';
+    };
+
+    const validatePhone = (value) => {
+        if (!value) return '';
+        
+        // Verificar si hay caracteres inválidos antes de limpiar
+        if (!/^[0-9+\-() ]*$/.test(value)) {
+            return 'El teléfono solo debe contener números';
         }
-
-        // Validación especial para teléfono: solo números y símbolos permitidos (+, -, paréntesis, espacios)
-        if (name === 'phone') {
-            const phoneValue = value.replace(/[^0-9+\-() ]/g, '');
-            setFormData({
-                ...formData,
-                [name]: phoneValue
-            });
-            return;
+        
+        const cleanPhone = value.replace(/\D/g, '');
+        if (cleanPhone.length > 0) {
+            if (!cleanPhone.startsWith('09')) return 'El número celular debe empezar con 09';
+            if (cleanPhone.length !== 10) return 'El número celular debe tener exactamente 10 dígitos';
         }
+        return '';
+    };
 
-        // Para el resto de campos, actualización normal
-        setFormData({
-            ...formData,
-            [name]: value
-        });
+    const validateFechaNacimiento = (value) => {
+        if (!value) return 'La fecha de nacimiento es requerida';
+        return '';
+    };
+
+    const validateDireccion = (value) => {
+        if (!value) return '';
+        if (value.length < 8) return 'La dirección debe tener al menos 8 caracteres';
+        if (value.length > 40) return 'La dirección no puede exceder 40 caracteres';
+        return '';
+    };
+
+    const validateUsername = (value) => {
+        if (!value) return 'El nombre de usuario es requerido';
+        if (value.length < 4) return 'El nombre de usuario debe tener al menos 4 caracteres';
+        return '';
+    };
+
+    const validateEmail = (value) => {
+        if (!value) return 'El correo es requerido';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return 'El correo debe ser válido';
+        return '';
     };
 
     const validatePassword = (password) => {
-        if (!/(?=.*[A-Z])/.test(password)) return 'La contraseña debe contener al menos una mayúscula.';
-        if (!/(?=.*[a-z])/.test(password)) return 'La contraseña debe contener al menos una minúscula.';
-        if (!/(?=.*[0-9])/.test(password)) return 'La contraseña debe contener al menos un número.';
-        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;\'`~])/.test(password)) return 'La contraseña debe contener al menos un carácter especial.';
-        if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
-        return null;
+        if (!password) return 'La contraseña es requerida';
+        if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+        if (!/(?=.*[A-Z])/.test(password)) return 'Debe contener al menos una mayúscula';
+        if (!/(?=.*[a-z])/.test(password)) return 'Debe contener al menos una minúscula';
+        if (!/(?=.*[0-9])/.test(password)) return 'Debe contener al menos un número';
+        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;\'`~])/.test(password)) return 'Debe contener al menos un carácter especial';
+        return '';
     };
 
-    const validateForm = () => {
-        if (formData.username.length < 4) return 'El nombre de usuario debe tener al menos 4 caracteres.';
-        if (formData.first_name.length < 2) return 'El nombre debe tener al menos 2 caracteres.';
-        if (formData.last_name.length < 2) return 'El apellido debe tener al menos 2 caracteres.';
+    const validateConfirmPassword = (password, confirmPassword) => {
+        if (!confirmPassword) return 'Debe confirmar la contraseña';
+        if (password !== confirmPassword) return 'Las contraseñas no coinciden';
+        return '';
+    };
 
-        // Validación de identificación: debe ser numérica
-        if (!/^\d+$/.test(formData.identificacion)) {
-            return 'La identificación debe contener solo números.';
-        }
-        if (formData.identificacion.length < 8) return 'La identificación debe tener al menos 8 caracteres.';
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        let newErrors = { ...fieldErrors };
+        let processedValue = value;
 
-        // Optional fields validation if provided
-        if (formData.phone && (formData.phone.length < 10 || formData.phone.length > 14)) {
-            return 'El teléfono debe tener entre 10 y 14 caracteres.';
+        // Validación especial para identificación: solo números
+        if (name === 'identificacion') {
+            processedValue = value.replace(/[^0-9]/g, '');
+            newErrors[name] = validateIdentificacion(processedValue, formData.tipo_identificacion);
         }
-        if (formData.direccion && (formData.direccion.length < 8 || formData.direccion.length > 40)) {
-            return 'La dirección debe tener entre 8 y 40 caracteres.';
+        // Validación especial para teléfono
+        else if (name === 'phone') {
+            // Validar ANTES de filtrar para detectar caracteres inválidos
+            newErrors[name] = validatePhone(value);
+            // Luego filtrar para guardar solo números y caracteres válidos
+            processedValue = value.replace(/[^0-9+\-() ]/g, '');
+        }
+        // Validación de nombre
+        else if (name === 'first_name') {
+            newErrors[name] = validateFirstName(value);
+        }
+        // Validación de apellido
+        else if (name === 'last_name') {
+            newErrors[name] = validateLastName(value);
+        }
+        // Validación de dirección
+        else if (name === 'direccion') {
+            newErrors[name] = validateDireccion(value);
+        }
+        // Validación de usuario
+        else if (name === 'username') {
+            newErrors[name] = validateUsername(value);
+        }
+        // Validación de email
+        else if (name === 'email') {
+            newErrors[name] = validateEmail(value);
+        }
+        // Validación de contraseña
+        else if (name === 'password') {
+            newErrors[name] = validatePassword(value);
+            if (formData.confirmPassword) {
+                newErrors['confirmPassword'] = validateConfirmPassword(value, formData.confirmPassword);
+            }
+        }
+        // Validación de confirmación de contraseña
+        else if (name === 'confirmPassword') {
+            newErrors[name] = validateConfirmPassword(formData.password, value);
+        }
+        // Validación de tipo de identificación
+        else if (name === 'tipo_identificacion') {
+            newErrors['identificacion'] = validateIdentificacion(formData.identificacion, value);
+        }
+        // Validación de fecha de nacimiento
+        else if (name === 'fecha_nacimiento') {
+            newErrors[name] = validateFechaNacimiento(value);
         }
 
-        return null;
+        setFormData({
+            ...formData,
+            [name]: processedValue || value
+        });
+        setFieldErrors(newErrors);
+    };
+
+    const validateFormOnSubmit = () => {
+        const newErrors = {};
+        newErrors['first_name'] = validateFirstName(formData.first_name);
+        newErrors['last_name'] = validateLastName(formData.last_name);
+        newErrors['username'] = validateUsername(formData.username);
+        newErrors['email'] = validateEmail(formData.email);
+        newErrors['identificacion'] = validateIdentificacion(formData.identificacion, formData.tipo_identificacion);
+        newErrors['password'] = validatePassword(formData.password);
+        newErrors['confirmPassword'] = validateConfirmPassword(formData.password, formData.confirmPassword);
+        newErrors['fecha_nacimiento'] = validateFechaNacimiento(formData.fecha_nacimiento);
+        if (formData.phone) newErrors['phone'] = validatePhone(formData.phone);
+        if (formData.direccion) newErrors['direccion'] = validateDireccion(formData.direccion);
+
+        // Remover campos vacíos de errores
+        Object.keys(newErrors).forEach(key => {
+            if (!newErrors[key]) delete newErrors[key];
+        });
+
+        setFieldErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (formData.password !== formData.confirmPassword) {
-            setError('Las contraseñas no coinciden.');
-            return;
-        }
-
-        const pwdError = validatePassword(formData.password);
-        if (pwdError) {
-            setError(pwdError);
-            return;
-        }
-
-        const formError = validateForm();
-        if (formError) {
-            setError(formError);
+        // Validar todos los campos
+        if (!validateFormOnSubmit()) {
+            setError('Por favor, corrige los errores en los campos.');
             return;
         }
 
@@ -145,6 +240,13 @@ const RegisterPage = () => {
         }
     };
 
+    // Componente auxiliar para mostrar errores debajo de campos
+    const ErrorMessage = ({ message }) => {
+        return message ? (
+            <p className="text-red-500 text-xs font-medium mt-1">{message}</p>
+        ) : null;
+    };
+
     return (
         <div className="flex min-h-screen w-full bg-gradient-to-br from-[#242223] via-[#212121] to-black">
             {/* Left Side - Image */}
@@ -175,7 +277,7 @@ const RegisterPage = () => {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center">
+                            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-200">
                                 {error}
                             </div>
                         )}
@@ -192,16 +294,10 @@ const RegisterPage = () => {
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Nombre"
                                     />
+                                    <ErrorMessage message={fieldErrors.first_name} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
@@ -210,15 +306,10 @@ const RegisterPage = () => {
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "                                        placeholder="Apellido"
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        placeholder="Apellido"
                                     />
+                                    <ErrorMessage message={fieldErrors.last_name} />
                                 </div>
                             </div>
 
@@ -229,14 +320,7 @@ const RegisterPage = () => {
                                         name="tipo_identificacion"
                                         value={formData.tipo_identificacion}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="CEDULA">Cédula</option>
                                         <option value="PASAPORTE">Pasaporte</option>
@@ -256,15 +340,10 @@ const RegisterPage = () => {
                                         onChange={handleChange}
                                         pattern="\d*"
                                         inputMode="numeric"
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "                                    placeholder="0123456789"
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
+                                        placeholder="0123456789"
                                     />
+                                    <ErrorMessage message={fieldErrors.identificacion} />
                                 </div>
                             </div>
 
@@ -276,17 +355,10 @@ const RegisterPage = () => {
                                         value={formData.phone}
                                         onChange={handleChange}
                                         inputMode="tel"
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  
-"
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0999999999"
                                     />
+                                    <ErrorMessage message={fieldErrors.phone} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
@@ -294,16 +366,10 @@ const RegisterPage = () => {
                                         name="direccion"
                                         value={formData.direccion}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Tu dirección"
                                     />
+                                    <ErrorMessage message={fieldErrors.direccion} />
                                 </div>
                             </div>
                         </div>
@@ -316,17 +382,12 @@ const RegisterPage = () => {
                                 <input
                                     type="date"
                                     name="fecha_nacimiento"
+                                    required
                                     value={formData.fecha_nacimiento}
                                     onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
                                 />
+                                <ErrorMessage message={fieldErrors.fecha_nacimiento} />
                             </div>
 
                             <div>
@@ -363,14 +424,7 @@ const RegisterPage = () => {
                                         name="tipo_estamento"
                                         value={formData.tipo_estamento}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
@@ -384,14 +438,7 @@ const RegisterPage = () => {
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
@@ -406,16 +453,10 @@ const RegisterPage = () => {
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="Nombre de usuario"
                                 />
+                                <ErrorMessage message={fieldErrors.username} />
                             </div>
 
                             <div>
@@ -426,16 +467,10 @@ const RegisterPage = () => {
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
+                                <ErrorMessage message={fieldErrors.email} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -448,14 +483,7 @@ const RegisterPage = () => {
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
                                             placeholder="********"
                                         />
                                         <button
@@ -475,6 +503,7 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    <ErrorMessage message={fieldErrors.password} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
@@ -485,14 +514,7 @@ const RegisterPage = () => {
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
                                             placeholder="********"
                                         />
                                         <button
@@ -512,6 +534,7 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    <ErrorMessage message={fieldErrors.confirmPassword} />
                                 </div>
                             </div>
                             <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>

@@ -200,12 +200,8 @@ const BaremosPage = () => {
                       <td className="px-6 py-5 font-bold text-2xl text-white">
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => toggleStatus(b)}
-                            className={`p-2.5 rounded-lg transition ${b.estado
-                              ? "text-red-400 hover:bg-red-900/20"
-                              : "text-green-400 hover:bg-green-900/20"
-                              }`}
-
+                            onClick={() => handleOpenEdit(b)}
+                            className="p-2.5 text-blue-400 hover:bg-blue-900/20 rounded-lg transition"
                             title="Editar"
                           >
                             <span className="material-symbols-outlined">edit</span>

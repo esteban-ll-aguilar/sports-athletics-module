@@ -1,288 +1,172 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import registroPruebaCompetenciaService from "../../services/registro_prueba_competencia_service";
+
+import registroPruebaService from "../../services/registro_prueba_service";
 import pruebaService from "../../services/prueba_service";
-import RegistroPruebaCompetenciaModal from "../widgets/RegistroPruebaModal";
-import Swal from "sweetalert2";
+import AdminService from "@modules/admin/services/adminService";
+import authService from "@modules/auth/services/auth_service";
 
-const RegistroPruebaCompetenciaPage = () => {
-    const location = useLocation();
-    const [registros, setRegistros] = useState([]);
+const RegistroPruebaCompetenciaModal = ({ isOpen, onClose, onSuccess }) => {
     const [pruebas, setPruebas] = useState([]);
+    const [atletas, setAtletas] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedRegistro, setSelectedRegistro] = useState(null);
 
-    const fetchData = async () => {
+    const [form, setForm] = useState({
+        prueba_external_id: "",
+        auth_user_id: "",
+        valor: "",
+        fecha_registro: ""
+    });
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const fetchData = async () => {
+            try {
+                const [pruebasRes, usersRes] = await Promise.all([
+                    pruebaService.getAll(),
+                    AdminService.getUsers(1, 100, "ATLETA")
+                ]);
+
+                console.log("🟢 PRUEBAS RAW:", pruebasRes);
+                console.log("🟢 USERS RAW:", usersRes);
+
+                setPruebas(pruebasRes || []);
+
+                const atletasFiltrados = usersRes?.items?.filter(
+                    u => u.role === "ATLETA"
+                ) || [];
+
+                console.log("🟢 ATLETAS FILTRADOS:", atletasFiltrados);
+                setAtletas(atletasFiltrados);
+
+            } catch (error) {
+                console.error("❌ Error cargando datos:", error);
+            }
+        };
+
+        fetchData();
+    }, [isOpen]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         setLoading(true);
-        try {
-            const [resRegistros, resPruebas] = await Promise.all([
-                registroPruebaCompetenciaService.getAll(),
-                pruebaService.getAll()
-            ]);
 
-            setRegistros(Array.isArray(resRegistros) ? resRegistros : []);
-            setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
-        } catch (err) {
+        try {
+            const entrenadorId = authService.getUserId();
+
+            const payload = {
+                prueba_external_id: form.prueba_external_id,
+                auth_user_id: Number(form.auth_user_id),
+                id_entrenador: Number(entrenadorId),
+                valor: Number(form.valor),
+                fecha_registro: form.fecha_registro
+            };
+
+            console.log("📤 PAYLOAD:", payload);
+
+            await registroPruebaService.create(payload);
+
+            onSuccess?.();
+            onClose();
+        } catch (error) {
+            console.error("❌ Error creando registro:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const handleSubmit = async (data) => {
-        try {
-            const payload = {
-                id_entrenador: parseInt(data.id_entrenador, 10),
-                prueba_id: parseInt(data.prueba_id, 10),
-                valor: parseFloat(data.valor),
-                fecha_registro: data.fecha_registro
-            };
-
-            if (selectedRegistro) {
-                await registroPruebaCompetenciaService.update(selectedRegistro.external_id, payload);
-            } else {
-                await registroPruebaCompetenciaService.create(payload);
-            }
-
-            fetchData();
-        } catch (err) {
-            console.error("Error al procesar registro:", err);
-            throw err;
-        }
-    };
-
-    const handleDelete = async (registro) => {
-        const result = await Swal.fire({
-            title: '¿Eliminar este registro?',
-            text: 'Esta acción no se puede deshacer',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ef4444'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                await registroPruebaCompetenciaService.delete(registro.external_id);
-                fetchData();
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Registro eliminado',
-                    text: 'El registro ha sido eliminado correctamente',
-                    confirmButtonColor: '#ec1313'
-                });
-            } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No se pudo eliminar el registro',
-                    confirmButtonColor: '#ec1313'
-                });
-            }
-        }
-    };
-
-    const isActiveTab = (path) => location.pathname === path;
+    if (!isOpen) return null;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900 p-4 md:p-10">
-            <div className="max-w-7xl mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl p-6">
 
-                {/* Cabecera y Navegación */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
-                    <div className="space-y-4">
-                        {/* Tabs de Navegación */}
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Link
-                                to="/dashboard/pruebas/gestion"
-                                className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-600 hover:border-red-500 hover:text-red-600 transition-all duration-200 hover:shadow-md"
-                            >
-                                📋 Pruebas
-                            </Link>
-                            <span className="text-gray-300">/</span>
-                            <Link
-                                to="/dashboard/pruebas/baremos"
-                                className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-600 hover:border-red-500 hover:text-red-600 transition-all duration-200 hover:shadow-md"
-                            >
-                                📊 Baremos
-                            </Link>
-                            <span className="text-gray-300">/</span>
-                            <Link
-                                to="/dashboard/pruebas/disciplinas"
-                                className="px-4 py-2 bg-white border-2 border-gray-200 rounded-xl text-gray-600 hover:border-red-500 hover:text-red-600 transition-all duration-200 hover:shadow-md"
-                            >
-                                🏃 Disciplinas
-                            </Link>
-                        </div>
+                <h2 className="text-2xl font-black mb-4">Registrar Prueba</h2>
 
-                        <div>
-                            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
-                                Registro de Pruebas de Competencia
-                            </h1>
-                            <p className="text-gray-600 text-lg mt-2">
-                                Administra los registros de resultados de pruebas
-                            </p>
-                        </div>
-                    </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
 
-                    <button
-                        onClick={() => { setSelectedRegistro(null); setIsModalOpen(true); }}
-                        className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
+                    {/* PRUEBA */}
+                    <select
+                        name="prueba_external_id"
+                        value={form.prueba_external_id}
+                        onChange={handleChange}
+                        required
+                        className="w-full border rounded-xl px-3 py-2"
                     >
-                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
-                            add
-                        </span>
-                        Registrar Prueba
-                    </button>
-                </div>
+                        <option value="">Seleccione prueba</option>
+                        {pruebas.map(p => (
+                            <option
+                                key={p.external_id}
+                                value={p.external_id}
+                            >
+                                {p.siglas} - {p.tipo_prueba}
+                            </option>
+                        ))}
+                    </select>
 
-                {/* TABLA */}
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
-                                        Prueba
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
-                                        Tipo
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
-                                        Valor
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
-                                        Fecha
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
-                                        Entrenador
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-right">
-                                        Acciones
-                                    </th>
-                                </tr>
-                            </thead>
+                    {/* ATLETA */}
+                    <select
+                        name="auth_user_id"
+                        value={form.auth_user_id}
+                        onChange={handleChange}
+                        required
+                        className="w-full border rounded-xl px-3 py-2"
+                    >
+                        <option value="">Seleccione atleta</option>
+                        {atletas.map(a => (
+                            <option
+                                key={a.auth_user_id}
+                                value={a.auth_user_id}
+                            >
+                                {a.first_name} {a.last_name}
+                            </option>
+                        ))}
+                    </select>
 
-                            <tbody className="divide-y divide-gray-100">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="6" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 font-semibold">Cargando registros...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : registros.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <span className="material-symbols-outlined text-6xl text-gray-300">
-                                                    assignment
-                                                </span>
-                                                <span className="text-gray-400 font-semibold">No hay registros de pruebas</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    registros.map((r) => {
-                                        const prueba = pruebas.find(p => p.id === r.prueba_id);
-                                        return (
-                                            <tr key={r.external_id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg">
-                                                            {prueba?.siglas?.substring(0, 2) || '??'}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">
-                                                                {prueba?.siglas || 'N/A'}
-                                                            </div>
-                                                            <div className="text-sm text-gray-500">
-                                                                ID: {r.prueba_id}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold uppercase ${prueba?.tipo_prueba === 'COMPETENCIA'
-                                                            ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200'
-                                                            : 'bg-blue-100 text-blue-700 ring-2 ring-blue-200'
-                                                        }`}>
-                                                        {prueba?.tipo_prueba || 'N/A'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="font-bold text-lg text-gray-900">
-                                                        {r.valor}
-                                                    </span>
-                                                    <span className="text-sm text-gray-400 ml-1">
-                                                        {prueba?.unidad_medida || ''}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <span className="material-symbols-outlined text-lg">
-                                                            calendar_today
-                                                        </span>
-                                                        {new Date(r.fecha_registro).toLocaleDateString('es-ES')}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                                            <span className="material-symbols-outlined text-blue-600 text-sm">
-                                                                person
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-sm font-semibold text-gray-700">
-                                                            ID: {r.id_entrenador}
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button
-                                                            onClick={() => { setSelectedRegistro(r); setIsModalOpen(true); }}
-                                                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                                                            title="Editar"
-                                                        >
-                                                            <span className="material-symbols-outlined">edit</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(r)}
-                                                            className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                                                            title="Eliminar"
-                                                        >
-                                                            <span className="material-symbols-outlined">delete</span>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
+                    <input
+                        type="number"
+                        step="any"
+                        name="valor"
+                        placeholder="Valor"
+                        value={form.valor}
+                        onChange={handleChange}
+                        required
+                        className="w-full border rounded-xl px-3 py-2"
+                    />
+
+                    <input
+                        type="date"
+                        name="fecha_registro"
+                        value={form.fecha_registro}
+                        onChange={handleChange}
+                        required
+                        className="w-full border rounded-xl px-3 py-2"
+                    />
+
+                    <div className="flex justify-end gap-3">
+                        <button type="button" onClick={onClose}>
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="bg-red-600 text-white px-6 py-2 rounded-xl"
+                        >
+                            Guardar
+                        </button>
                     </div>
-                </div>
+                </form>
             </div>
-
-            {/* MODAL */}
-            <RegistroPruebaCompetenciaModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSubmit={handleSubmit}
-                editingData={selectedRegistro}
-            />
         </div>
     );
 };
 
-export default RegistroPruebaCompetenciaPage;
+export default RegistroPruebaCompetenciaModal;
+
+
+

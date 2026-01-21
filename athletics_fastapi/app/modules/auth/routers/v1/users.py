@@ -142,7 +142,7 @@ async def update_profile(
     profile_image: Optional[UploadFile] = File(None),
 
     current_user: AuthUserModel = Depends(get_current_user),
-    repo: AuthUsersRepository = Depends(get_users_repo)
+    repo: AuthUsersRepository = Depends(get_users_repo),
 ):
     """
     Endpoint para que el usuario actual actualice su perfil.
@@ -217,8 +217,6 @@ async def update_profile(
         message="Perfil actualizado correctamente",
         status=status.HTTP_200_OK
     )
-
-# ======================================================
 # GET USER BY EXTERNAL_ID
 # ======================================================
 
@@ -307,5 +305,3 @@ async def update_user_by_id(
         message="Usuario actualizado correctamente",
         status=status.HTTP_200_OK
     )
-
-

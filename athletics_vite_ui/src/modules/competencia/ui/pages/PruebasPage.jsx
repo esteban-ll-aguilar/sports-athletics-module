@@ -63,12 +63,18 @@ const PruebasPage = () => {
 
             setIsModalOpen(false);
             fetchData();
-            alert("¡Registro guardado con éxito!");
 
         } catch (err) {
             console.error("3. Error del Servidor (422 Detail):", err.response?.data);
             const detail = err.response?.data?.detail;
-            alert("Error: " + (detail ? JSON.stringify(detail) : "Error de validación"));
+            Swal.fire({
+                title: 'Error',
+                text: detail ? JSON.stringify(detail) : "Error de validación",
+                icon: 'error',
+                confirmButtonColor: '#b30c25',
+                background: '#212121',
+                color: '#fff'
+            });
         }
     };
 
@@ -131,41 +137,23 @@ const PruebasPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[#121212] font-['Lexend'] ">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
                 {/* Cabecera y Navegación */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
-                    <div className="space-y-4">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
+                    <div className="space-y-1">
                         {/* Breadcrumb Links */}
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Link
-                                to="baremos"
-                                className="
-  px-4 py-2 rounded-xl text-sm font-semibold
-  bg-[#1a1a1a] border border-[#332122] text-gray-300
-  hover:text-[#b30c25] hover:border-[#b30c25]
-  transition
-"
-                            >
-                                📊 Baremos
-                            </Link>
-                            <span className="text-gray-300">/</span>
-                            <Link
-                                to="disciplinas"
-                                className="
-  px-4 py-2 rounded-xl text-sm font-semibold
-  bg-[#1a1a1a] border border-[#332122] text-gray-300
-  hover:text-[#b30c25] hover:border-[#b30c25]
-  transition
-"
-                            >
-                                🏃 Disciplinas
-                            </Link>
-                        </div>
+<Link
+          to="/dashboard/pruebas"
+          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+        >
+          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
 
+          </span>
+        </Link>
                         <div>
-                            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
+                            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
                                 Gestión de Pruebas
                             </h1>
                             <p className="text-gray-400 text-lg mt-2">
@@ -247,8 +235,8 @@ const PruebasPage = () => {
                                             <tr
                                                 key={p.external_id}
                                                 className={`transition-all duration-200 ${!p.estado
-                                                        ? 'bg-gray-50/70 opacity-60'
-                                                        : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                                                    ? 'bg-gray-50/70 opacity-60'
+                                                    : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
                                                     }`}                     >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
@@ -302,8 +290,8 @@ const PruebasPage = () => {
                                                         <button
                                                             onClick={() => toggleStatus(p)}
                                                             className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${p.estado
-                                                                    ? 'text-red-400 hover:bg-red-900/30'
-                                                                    : 'text-green-400 hover:bg-green-900/30'
+                                                                ? 'text-red-400 hover:bg-red-900/30'
+                                                                : 'text-green-400 hover:bg-green-900/30'
                                                                 }`}
                                                             title={p.estado ? 'Desactivar' : 'Activar'}
                                                         >
