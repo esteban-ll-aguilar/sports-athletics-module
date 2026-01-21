@@ -236,7 +236,12 @@ class AuthRepository {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return response.data;
+            // Backend returns APIResponse[Enable2FAResponse]
+            // So response.data = {success, message, data: {secret, qr_code, backup_codes, message}}
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return the Enable2FAResponse
+            }
+            return response.data; // Return whole APIResponse for errors
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -251,6 +256,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
+            // Backend returns APIResponse[MessageResponse]
+            // So response.data = {success, message, data: {message}}
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return MessageResponse {message}
+            }
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;
@@ -265,6 +275,10 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
+            // Backend returns APIResponse[MessageResponse]
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data; // Return MessageResponse {message}
+            }
             return response.data;
         } catch (error) {
             throw error.response ? error.response.data : error;

@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera }
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
 import TwoFactorSettings from '../widgets/TwoFactorSettings';
+import ActiveSessionsWidget from '../widgets/ActiveSessionsWidget';
 import Settings from '../../../../config/enviroment';
 
 const ProfilePage = () => {
@@ -505,6 +506,8 @@ const ProfilePage = () => {
             </form>
 
             <TwoFactorSettings />
+
+            {/* <ActiveSessionsWidget /> */}
 
             {
                 isHistorialModalOpen && (
