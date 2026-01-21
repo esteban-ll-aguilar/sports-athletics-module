@@ -4,8 +4,11 @@ import Swal from "sweetalert2";
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     const [form, setForm] = useState({
+        nombre: "",
+        fecha_prueba: "",
         siglas: "",
         tipo_prueba: "COMPETENCIA",
+        tipo_medicion: "TIEMPO",
         unidad_medida: "",
         estado: true,
         tipo_disciplina_id: "",
@@ -13,7 +16,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     });
 
     const [disciplinas, setDisciplinas] = useState([]);
-  
+
 
     useEffect(() => {
         if (isOpen) {
@@ -21,12 +24,17 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             if (editingData) {
                 setForm({
                     ...editingData,
+                    nombre: editingData.nombre || "",
+                    fecha_prueba: editingData.fecha_prueba || "",
                     tipo_disciplina_id: editingData.tipo_disciplina_id?.toString() || "",
                 });
             } else {
                 setForm({
+                    nombre: "",
+                    fecha_prueba: "",
                     siglas: "",
                     tipo_prueba: "COMPETENCIA",
+                    tipo_medicion: "TIEMPO",
                     unidad_medida: "",
                     estado: true,
                     tipo_disciplina_id: "",
@@ -152,29 +160,30 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Nombre</label>
                             <input
                                 type="text"
-                                value={form.siglas}
-                                onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
+                                value={form.nombre}
+                                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                                 className="
-    block w-full pl-10 pr-3 py-2.5
+    block w-full pl-3 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
     focus:ring-[#b30c25] focus:border-[#b30c25]
     sm:text-sm
   "                                  required
+                                placeholder="Ej. 100m Planos"
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad Medida</label>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
                             <input
                                 type="text"
-                                value={form.unidad_medida}
-                                onChange={(e) => setForm({ ...form, unidad_medida: e.target.value })}
+                                value={form.siglas}
+                                onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
                                 className="
-    block w-full pl-10 pr-3 py-2.5
+    block w-full pl-3 pr-3 py-2.5
     bg-white text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
@@ -204,6 +213,48 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         </select>
                     </div>
 
+                    <div>
+                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Tipo de Medición</label>
+                        <select
+                            value={form.tipo_medicion}
+                            onChange={(e) => {
+                                const newTipo = e.target.value;
+                                setForm({
+                                    ...form,
+                                    tipo_medicion: newTipo,
+                                    unidad_medida: newTipo === "TIEMPO" ? "s" : "m"
+                                });
+                            }}
+                            className="
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "                              required
+                        >
+                            <option value="TIEMPO">TIEMPO</option>
+                            <option value="DISTANCIA">DISTANCIA</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad de Medida</label>
+                        <input
+                            type="text"
+                            value={form.unidad_medida}
+                            disabled
+                            className="
+    block w-full pl-3 pr-3 py-2.5
+    bg-gray-100 text-gray-600
+    border border-gray-300 rounded-lg
+    sm:text-sm cursor-not-allowed
+  "
+                            placeholder="Auto-completado"
+                        />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Disciplina</label>
@@ -223,26 +274,46 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                                 {disciplinas.map(d => (<option key={d.id} value={d.id}>{d.nombre}</option>))}
                             </select>
                         </div>
-                
+
                     </div>
-                    <div>
-                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
-                            Fecha de Registro
-                        </label>
-                        <input
-                            type="date"
-                            value={form.fecha_registro}  // Asegúrate de que exista en tu estado 'form'
-                            onChange={(e) => setForm({ ...form, fecha_registro: e.target.value })}
-                            className="
-                                block w-full pl-3 pr-3 py-2.5
-                                bg-white text-black
-                                border border-gray-300 rounded-lg
-                                placeholder-gray-500
-                                focus:ring-[#b30c25] focus:border-[#b30c25]
-                                sm:text-sm
-                            "
-                            required
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                                Fecha de Registro
+                            </label>
+                            <input
+                                type="date"
+                                value={form.fecha_registro}
+                                onChange={(e) => setForm({ ...form, fecha_registro: e.target.value })}
+                                className="
+                                    block w-full pl-3 pr-3 py-2.5
+                                    bg-white text-black
+                                    border border-gray-300 rounded-lg
+                                    placeholder-gray-500
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm
+                                "
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                                Fecha de Prueba
+                            </label>
+                            <input
+                                type="date"
+                                value={form.fecha_prueba}
+                                onChange={(e) => setForm({ ...form, fecha_prueba: e.target.value })}
+                                className="
+                                    block w-full pl-3 pr-3 py-2.5
+                                    bg-white text-black
+                                    border border-gray-300 rounded-lg
+                                    placeholder-gray-500
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm
+                                "
+                            />
+                        </div>
                     </div>
 
                     <div className="flex gap-3 pt-6">

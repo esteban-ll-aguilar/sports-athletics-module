@@ -27,6 +27,7 @@ const PruebasPage = () => {
             setDisciplinas(Array.isArray(resDisc) ? resDisc : []);
             setBaremos(Array.isArray(resBar) ? resBar : []);
         } catch (err) {
+            console.error("Error fetching Pruebas:", err);
         } finally {
             setLoading(false);
         }
@@ -41,15 +42,17 @@ const PruebasPage = () => {
 
             // PAYLOAD CORREGIDO PARA EVITAR 422
             const payload = {
+                nombre: String(formData.nombre || "").trim(),
                 siglas: String(formData.siglas || "").trim(),
                 fecha_registro: formData.fecha_registro || fechaHoy,
+                fecha_prueba: formData.fecha_prueba || null,
                 // Validación estricta del Enum PruebaType
                 tipo_prueba: formData.tipo_prueba === "NORMAL" ? "NORMAL" : "COMPETENCIA",
+                tipo_medicion: formData.tipo_medicion || "TIEMPO",
                 unidad_medida: String(formData.unidad_medida || "").trim(),
                 estado: formData.estado === "false" || formData.estado === false ? false : true,
                 // Conversión forzada a Entero
                 tipo_disciplina_id: formData.tipo_disciplina_id ? parseInt(formData.tipo_disciplina_id, 10) : null,
-                baremo_id: formData.baremo_id ? parseInt(formData.baremo_id, 10) : null,
             };
 
             console.log("2. Enviando Payload Final:", payload);
@@ -144,14 +147,14 @@ const PruebasPage = () => {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
                     <div className="space-y-1">
                         {/* Breadcrumb Links */}
-<Link
-          to="/dashboard/pruebas"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
-        >
-          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+                        <Link
+                            to="/dashboard/pruebas"
+                            className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+                        >
+                            <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
 
-          </span>
-        </Link>
+                            </span>
+                        </Link>
                         <div>
                             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
                                 Gestión de Pruebas
@@ -248,6 +251,9 @@ const PruebasPage = () => {
                                                                 {p.siglas}
                                                             </div>
                                                             <div className="font-bold text-gray-900">
+                                                                {p.nombre}
+                                                            </div>
+                                                            <div className="text-xs text-gray-500">
                                                                 {p.tipo_prueba}
                                                             </div>
                                                         </div>

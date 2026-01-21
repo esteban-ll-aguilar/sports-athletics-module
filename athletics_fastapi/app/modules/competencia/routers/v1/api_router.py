@@ -47,3 +47,11 @@ api_competencia_router_v1.include_router(
     prefix="/registro-pruebas",
     tags=["Competencia - Registro Prueba Competencia"]
 )
+
+from app.modules.competencia.routers.v1.registro_prueba_router import router as registro_prueba_router
+
+api_competencia_router_v1.include_router(
+    registro_prueba_router,
+    prefix="/resultados-pruebas",
+    tags=["Competencia - Resultados Pruebas (Tests)"]
+)

@@ -1,26 +1,33 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
-from app.modules.competencia.domain.enums.enum import TipoClasificacion
+from typing import List, Optional
+from app.modules.competencia.domain.enums.enum import Sexo
+from app.modules.competencia.domain.schemas.item_baremo_schema import ItemBaremoRead, ItemBaremoCreate
 
-# Modelo de esquemas Pydantic para la entidad Baremo
+# Modelo de esquemas Pydantic para la entidad Baremo (Contexto)
 class BaremoBase(BaseModel):
-    valor_baremo: float
-    clasificacion: TipoClasificacion
+    sexo: Sexo
+    edad_min: int
+    edad_max: int
     estado: bool = True
 
-# Modelo para la creación de un Baremo
+# Modelo para la creación de un Baremo (incluye items)
 class BaremoCreate(BaremoBase):
-    pass
+    prueba_id: UUID
+    items: List[ItemBaremoCreate]
 
 # Modelo para la actualización de un Baremo
 class BaremoUpdate(BaseModel):
-    valor_baremo: float | None = None
-    clasificacion: TipoClasificacion | None = None
+    sexo: Sexo | None = None
+    edad_min: int | None = None
+    edad_max: int | None = None
     estado: bool | None = None
 
 # Modelo para la lectura de un Baremo
 class BaremoRead(BaremoBase):
     id: int
     external_id: UUID
+    prueba_id: int
+    items: List[ItemBaremoRead] = []
 
     model_config = ConfigDict(from_attributes=True)

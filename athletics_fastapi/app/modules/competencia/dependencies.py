@@ -10,13 +10,14 @@ from app.modules.auth.domain.enums.role_enum import RoleEnum
 # ============================
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
 from app.modules.competencia.services.baremo_service import BaremoService
-
+from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 
 async def get_baremo_service(
     session: AsyncSession = Depends(get_session)
 ) -> BaremoService:
     repo = BaremoRepository(session)
-    return BaremoService(repo)
+    prueba_repo = PruebaRepository(session)
+    return BaremoService(repo, prueba_repo)
 
 
 # ============================
@@ -48,7 +49,8 @@ async def get_prueba_service(
     session: AsyncSession = Depends(get_session)
 ) -> PruebaService:
     repo = PruebaRepository(session)
-    return PruebaService(repo)
+    tipo_disciplina_repo = TipoDisciplinaRepository(session)
+    return PruebaService(repo, tipo_disciplina_repo)
 
 
 # ============================
@@ -88,12 +90,14 @@ async def get_resultado_competencia_service(
     competencia_repo = CompetenciaRepository(session)
     atleta_repo = AtletaRepository(session)
     prueba_repo = PruebaRepository(session)
+    baremo_repo = BaremoRepository(session)
 
     return ResultadoCompetenciaService(
         resultado_repo,
         competencia_repo,
         atleta_repo,
-        prueba_repo
+        prueba_repo,
+        baremo_repo
     )
 
 
