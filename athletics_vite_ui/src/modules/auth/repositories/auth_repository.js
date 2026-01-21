@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Settings from '../../../config/enviroment';
+import { APIResponse } from '../../../core/api/schemas/api_schema';
 
 const API_URL = `${Settings.API_URL}/api/v1`;
 
@@ -16,7 +17,7 @@ class AuthRepository {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -29,7 +30,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -135,7 +136,7 @@ class AuthRepository {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

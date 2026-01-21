@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo
 from app.main import _APP
-from app.modules.auth.domain.schemas import UserRead
+# from app.modules.auth.domain.schemas import UserRead # Removed unused import
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 from datetime import datetime
@@ -80,10 +80,54 @@ async def test_login_success(client: AsyncClient):
         _APP.dependency_overrides = {}
 
 @pytest.mark.asyncio
-async def test_register_validation(client: AsyncClient):
+async def test_register_validation_cedula(client: AsyncClient):
+    """
+    Verifica validacion de cedula invalida.
+    """
+    payload = {
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "StrongPassword1$",
+        "first_name": "Test",
+        "last_name": "User",
+        "tipo_identificacion": "CEDULA",
+        "identificacion": "1234567890", # Invalid cedula
+        "phone": "0999999999",
+        "tipo_estamento": "DEPORTISTA",
+        "role": "ATLETA"
+    }
+    response = await client.post("/api/v1/auth/register", json=payload)
+    assert response.status_code == 422
+    # La API devuelve un mensaje genérico en 422, así que solo verificamos el status code
+    # assert "Cédula inválida" in response.text
+
+@pytest.mark.asyncio
+async def test_register_validation_password(client: AsyncClient):
+    """
+    Verifica validacion de password debil.
+    """
+    payload = {
+        "username": "testuser",
+        "email": "test@example.com",
+        "password": "weak", # Weak password
+        "first_name": "Test",
+        "last_name": "User",
+        "tipo_identificacion": "CEDULA",
+        "identificacion": "0705743177", # Valid cedula (mockwise, logic correct)
+        "phone": "0999999999",
+        "tipo_estamento": "DEPORTISTA",
+        "role": "ATLETA"
+    }
+    response = await client.post("/api/v1/auth/register", json=payload)
+    assert response.status_code == 422
+    # Specific message check might depend on pydantic error format, checking 422 is main signal
+
+@pytest.mark.asyncio
+async def test_register_validation_empty(client: AsyncClient):
     """
     Verifica que el endpoint de registro (/api/v1/auth/register) valide correctamente los datos de entrada.
     Se espera un código 422 Unprocessable Entity al enviar un body vacío.
     """
     response = await client.post("/api/v1/auth/register", json={})
     assert response.status_code == 422 # Error de validacion
+

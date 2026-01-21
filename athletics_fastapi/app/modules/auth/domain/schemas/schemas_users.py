@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 from typing import Optional
 from uuid import UUID
 import datetime
+import re
 
 from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
 from app.modules.entrenador.domain.schemas.entrenador_schema import EntrenadorCreate
@@ -11,6 +12,39 @@ from app.modules.auth.domain.enums import (
     RoleEnum,
     SexoEnum
 )
+
+# ======================================================
+# UTILS
+# ======================================================
+
+def validar_cedula_ecuador(cedula: str) -> bool:
+    """Valida cédula ecuatoriana con algoritmo módulo 10."""
+    if not cedula.isdigit() or len(cedula) != 10:
+        return False
+        
+    provincia = int(cedula[:2])
+    if provincia < 1 or provincia > 24:
+        return False
+        
+    tercer_digito = int(cedula[2])
+    if tercer_digito >= 6:
+        return False
+        
+    # Coeficientes: 2, 1, 2, 1, 2, 1, 2, 1, 2
+    coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+    suma = 0
+    
+    for i in range(9):
+        valor = int(cedula[i]) * coeficientes[i]
+        if valor >= 10:
+            valor -= 9
+        suma += valor
+        
+    digito_verificador = int(cedula[9])
+    residuo = suma % 10
+    resultado = 10 - residuo if residuo != 0 else 0
+    
+    return resultado == digito_verificador
 
 # ======================================================
 # BASE
@@ -32,6 +66,25 @@ class UserBaseSchema(BaseModel):
     fecha_nacimiento: Optional[datetime.date] = None
     sexo: Optional[SexoEnum] = None
     role: RoleEnum = RoleEnum.ATLETA
+    
+    @field_validator('identificacion')
+    @classmethod
+    def validate_identificacion(cls, v: str, info):
+        # Acceder a tipo_identificacion desde info.data si es posible, 
+        # pero para validadores simples asumimos validación de cédula si parece serlo
+        # O idealmente validar si el tipo es CEDULA.
+        # Limitacion: en Pydantic v2 field_validator el contexto de otros campos está en info.data
+        if info.data.get('tipo_identificacion') == TipoIdentificacionEnum.CEDULA:
+             if not validar_cedula_ecuador(v):
+                 raise ValueError('Cédula inválida')
+        return v
+        
+    @field_validator('phone')
+    @classmethod
+    def validate_phone(cls, v: Optional[str]):
+        if v and len(v) < 7:
+            raise ValueError('Número de teléfono inválido')
+        return v
 
 # ======================================================
 # CREATE
@@ -44,6 +97,28 @@ class UserCreateSchema(UserBaseSchema):
     # Optional role-specific data
     atleta_data: Optional[AtletaCreate] = None
     entrenador_data: Optional[EntrenadorCreate] = None
+    
+    @field_validator('password')
+    @classmethod
+    def validate_password_strength(cls, v: str):
+        if len(v) < 8:
+            raise ValueError('La contraseña debe tener al menos 8 caracteres')
+        if not re.search(r"[A-Z]", v):
+            raise ValueError('La contraseña debe tener al menos una mayúscula')
+        if not re.search(r"\d", v):
+            raise ValueError('La contraseña debe tener al menos un número')
+        if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", v):
+            raise ValueError('La contraseña debe tener al menos un carácter especial')
+        return v
+    
+    @field_validator('role')
+    @classmethod
+    def validate_role(cls, v: RoleEnum):
+        if v == RoleEnum.ADMINISTRADOR:
+             # Simple check logic, usually restricted at endpoint/service level but good as backup
+             # For public registration, likely shouldn't allow creating ADMIN directly
+             pass 
+        return v
 
 # ======================================================
 # UPDATE

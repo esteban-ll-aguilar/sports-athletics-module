@@ -28,6 +28,7 @@ from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
+from app.api.schemas.api_schemas import APIResponse
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -41,7 +42,7 @@ auth_router_v1 = APIRouter()
 
 @auth_router_v1.post(
     "/register",
-    response_model=UserResponseSchema,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_201_CREATED,
 )
 @limiter.limit("10/minute")
@@ -63,6 +64,12 @@ async def register(
             detail="Email ya registrado",
         )
 
+    if await repo.get_by_username(data.username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username ya registrado",
+        )
+
     password_hash = hasher.hash(data.password)
     user = await repo.create(password_hash=password_hash, user_data=data)
     # await repo.session.commit() # Removed: handled by repo
@@ -76,7 +83,11 @@ async def register(
     except Exception as e:
         logger.error(f"Error enviando email de verificación: {e}")
 
-    return UserResponseSchema.model_validate(user)
+    return APIResponse(
+        success=True,
+        message="Usuario registrado exitosamente. Verifique su correo.",
+        data=UserResponseSchema.model_validate(user)
+    )
 
 
 # ======================================================
@@ -85,7 +96,7 @@ async def register(
 
 @auth_router_v1.post(
     "/login",
-    response_model=Union[TokenPair, TwoFactorRequired],
+    response_model=APIResponse[Union[TokenPair, TwoFactorRequired]],
 )
 @limiter.limit("5/minute")
 async def login(
@@ -117,9 +128,13 @@ async def login(
             user.email,
             user.profile.username,
         )
-        return TwoFactorRequired(
-            temp_token=temp_token,
+        return APIResponse(
+            success=True,
             message="2FA requerido",
+            data=TwoFactorRequired(
+                temp_token=temp_token,
+                message="2FA requerido",
+            )
         )
 
     access = jwtm.create_access_token(
@@ -153,9 +168,13 @@ async def login(
 
     # await repo.session.commit() # Removed: handled by sessions_repo
 
-    return TokenPair(
-        access_token=access,
-        refresh_token=refresh,
+    return APIResponse(
+        success=True,
+        message="Inicio de sesión exitoso",
+        data=TokenPair(
+            access_token=access,
+            refresh_token=refresh,
+        )
     )
 
 
@@ -163,7 +182,7 @@ async def login(
 # REFRESH
 # ======================================================
 
-@auth_router_v1.post("/refresh", response_model=TokenPair)
+@auth_router_v1.post("/refresh", response_model=APIResponse[TokenPair])
 async def refresh_token(
     body: RefreshRequest,
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
@@ -201,7 +220,11 @@ async def refresh_token(
         new_access_jti=access_payload["jti"],
     )
 
-    return TokenPair(
-        access_token=access,
-        refresh_token=refresh,
+    return APIResponse(
+        success=True,
+        message="Token renovado correctamente",
+        data=TokenPair(
+            access_token=access,
+            refresh_token=refresh,
+        )
     )
