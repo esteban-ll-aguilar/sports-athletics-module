@@ -6,6 +6,16 @@ const API_URL = `${Settings.API_URL}/api/v1`;
 
 
 class AuthRepository {
+    // Helper to save tokens
+    _saveTokens(data) {
+        if (data.access_token) {
+            localStorage.setItem('access_token', data.access_token);
+        }
+        if (data.refresh_token) {
+            localStorage.setItem('refresh_token', data.refresh_token);
+        }
+    }
+
     async login(email, password) {
         try {
             const formData = new FormData();
@@ -17,7 +27,16 @@ class AuthRepository {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
             });
-            return APIResponse.fromJson(response.data);
+            const apiResponse = APIResponse.fromJson(response.data);
+
+            if (apiResponse.success && apiResponse.data) {
+                // Check if we received tokens (successful login) vs temp_token (2FA required)
+                if (apiResponse.data.access_token) {
+                    this._saveTokens(apiResponse.data);
+                }
+            }
+
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -43,7 +62,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -56,7 +75,7 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            return APIResponse.fromJson(response.data);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -136,7 +155,12 @@ class AuthRepository {
                     Authorization: `Bearer ${token}`
                 }
             });
-            return APIResponse.fromJson(response.data);
+
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -255,7 +279,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -269,7 +297,11 @@ class AuthRepository {
                     'Content-Type': 'application/json'
                 }
             });
-            return response.data;
+            const apiResponse = APIResponse.fromJson(response.data);
+            if (apiResponse.success && apiResponse.data) {
+                this._saveTokens(apiResponse.data);
+            }
+            return apiResponse;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

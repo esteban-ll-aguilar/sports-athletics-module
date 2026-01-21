@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, status, Request
+from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.domain.schemas import (
     MessageResponse,
     EmailVerificationRequest, ResendVerificationRequest,
@@ -20,12 +22,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 auth_email_router_v1 = APIRouter()
 
-
-# ============================================
-# Verificación de Email
-# ============================================
-
-@auth_email_router_v1.post("/verify", response_model=MessageResponse)
+@auth_email_router_v1.post("/verify", response_model=APIResponse[MessageResponse])
 @limiter.limit("10/hour")  # Limitar intentos de verificación
 async def verify_email(
     request: Request,
@@ -35,32 +32,41 @@ async def verify_email(
 ):
     """
     Activa la cuenta si el código es correcto a través del codigo OTP enviado por el email.
-
     """
     # Validar el código
     is_valid = await verification_service.validate_verification_code(data.email, data.code)
     
     if not is_valid:
         logger.warning(f"Intento fallido de verificación de email: {data.email}")
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Código inválido, expirado o se superaron los intentos máximos"
+            content=APIResponse(
+                success=False,
+                message="Código inválido, expirado o se superaron los intentos máximos"
+            ).model_dump()
         )
     
     # Activar usuario
     activated = await repo.activate_user(data.email)
     
     if not activated:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            content=APIResponse(
+                success=False,
+                message="Usuario no encontrado"
+            ).model_dump()
         )
     
     logger.info(f"Email verificado y usuario activado: {data.email}")
-    return MessageResponse(message="Email verificado exitosamente. Tu cuenta ha sido activada.")
+    return APIResponse(
+        success=True,
+        message="Email verificado exitosamente. Tu cuenta ha sido activada.",
+        data=MessageResponse(message="Email verificado exitosamente. Tu cuenta ha sido activada.")
+    )
 
 
-@auth_email_router_v1.post("/resend-verification", response_model=MessageResponse)
+@auth_email_router_v1.post("/resend-verification", response_model=APIResponse[MessageResponse])
 @limiter.limit("3/hour")  # Limitar reenvíos
 async def resend_verification_code(
     request: Request,
@@ -77,20 +83,30 @@ async def resend_verification_code(
     
     if not user:
         # Por seguridad, no revelar si el email existe
-        return MessageResponse(message="Si el email está registrado, recibirás un nuevo código")
+        return APIResponse(
+            success=True,
+            message="Si el email está registrado, recibirás un nuevo código",
+            data=MessageResponse(message="Si el email está registrado, recibirás un nuevo código")
+        )
     
     if user.is_active:
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Esta cuenta ya está verificada"
+            content=APIResponse(
+                success=False,
+                message="Esta cuenta ya está verificada"
+            ).model_dump()
         )
     
     # Verificar si ya existe un código activo
     if await verification_service.code_exists(data.email):
         remaining = await verification_service.get_remaining_time(data.email)
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Ya existe un código activo. Espera {remaining // 60} minutos"
+            content=APIResponse(
+                success=False,
+                message=f"Ya existe un código activo. Espera {remaining // 60} minutos"
+            ).model_dump()
         )
     
     # Generar y enviar nuevo código
@@ -103,9 +119,16 @@ async def resend_verification_code(
     except Exception as e:
         await verification_service.delete_verification_code(data.email)
         logger.error(f"Error reenviando código a {data.email}: {e}")
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error al enviar el email"
+            content=APIResponse(
+                success=False,
+                message="Error al enviar el email"
+            ).model_dump()
         )
     
-    return MessageResponse(message="Nuevo código de verificación enviado al email")
+    return APIResponse(
+        success=True,
+        message="Nuevo código de verificación enviado al email",
+        data=MessageResponse(message="Nuevo código de verificación enviado al email")
+    )

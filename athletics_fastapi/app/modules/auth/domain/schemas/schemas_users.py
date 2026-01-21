@@ -115,9 +115,7 @@ class UserCreateSchema(UserBaseSchema):
     @classmethod
     def validate_role(cls, v: RoleEnum):
         if v == RoleEnum.ADMINISTRADOR:
-             # Simple check logic, usually restricted at endpoint/service level but good as backup
-             # For public registration, likely shouldn't allow creating ADMIN directly
-             pass 
+             raise ValueError('Rol no permitido')
         return v
 
 # ======================================================

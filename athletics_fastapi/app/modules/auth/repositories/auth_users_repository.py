@@ -283,6 +283,16 @@ class AuthUsersRepository:
         return result.scalar_one_or_none()
 
     # =====================================================
+    # GET BY USERNAME
+    # =====================================================
+    async def get_by_username(self, username: str) -> Optional[UserModel]:
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.username == username)
+        )
+        return result.scalar_one_or_none()
+
+    # =====================================================
     # PAGINATED LIST
     # =====================================================
     async def get_paginated(

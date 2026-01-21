@@ -64,6 +64,7 @@ async def register(
             detail="Email ya registrado",
         )
 
+    # Check duplicate username
     if await repo.get_by_username(data.username):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
