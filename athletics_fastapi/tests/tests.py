@@ -28,7 +28,7 @@ if __name__ == "__main__":
     
     # Ejecutar pytest
     exit_code = pytest.main(args)
-    
+
     if exit_code == 0:
         print("\n✅ All tests passed!")
     else:

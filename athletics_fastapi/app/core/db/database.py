@@ -32,7 +32,7 @@ class DatabaseBase:
                 max_overflow=20,
                 pool_pre_ping=True,
                 pool_recycle=1800,
-                echo=True,  # TODO: QUITAR en producción
+                echo=_SETTINGS.debug,  
             )
             self._session_factory = async_sessionmaker(
                 self._engine, 

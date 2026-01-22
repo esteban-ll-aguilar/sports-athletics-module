@@ -50,10 +50,13 @@ class Settings(BaseSettings):
     email_host_password: str = Field(..., alias="EMAIL_HOST_PASSWORD", required=True)
 
 
+
     # Users API
     users_api_url: str = Field(..., alias="USERS_API_URL", required=True)
     users_api_email: str = Field(..., alias="USERS_API_EMAIL", required=True)
     users_api_password: str = Field(..., alias="USERS_API_PASSWORD", required=True)
+
+    debug: bool = Field(False, alias="DEBUG", required=True)
     
     #Propiedades para consumir las URLS de la base de datos
     @property

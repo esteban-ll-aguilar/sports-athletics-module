@@ -164,6 +164,46 @@ _APP.add_middleware(
 from app.api.api_v1 import router_api_v1 as api_v1_router
 
 _APP.include_router(api_v1_router)
+
+
+# Health check endpoint
+@_APP.get("/health", tags=["Health"])
+async def health_check():
+    """
+    Health check endpoint para verificar el estado de la aplicación.
+    """
+    from app.core.db.database import _db
+    from app.core.cache.redis import _redis
+    
+    status = {
+        "status": "healthy",
+        "application": "Athletics Module API",
+        "version": _SETTINGS.application_version
+    }
+    
+    # Verificar conexión a base de datos
+    try:
+        engine = _db.get_engine()
+        async with engine.begin() as conn:
+            from sqlalchemy import text
+            await conn.execute(text("SELECT 1"))
+        status["database"] = "connected"
+    except Exception as e:
+        status["database"] = f"error: {str(e)}"
+        status["status"] = "degraded"
+    
+    # Verificar conexión a Redis
+    try:
+        redis_client = _redis.get_client()
+        await redis_client.ping()
+        status["redis"] = "connected"
+    except Exception as e:
+        status["redis"] = f"error: {str(e)}"
+        status["status"] = "degraded"
+    
+    return status
+
+
 @_APP.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     return JSONResponse(
