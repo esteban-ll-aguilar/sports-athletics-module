@@ -47,13 +47,13 @@ def test_email_config():
         server.login(_SETTINGS.email_host_user, _SETTINGS.email_host_password)
         print("✅ Inicio de sesión SMTP exitoso.")
         server.quit()
-        return True
+        assert True  # Test passed
     except socket.timeout:
         print("❌ Error: Timeout conectando al servidor SMTP (10s)")
-        return False
+        assert False, "Timeout connecting to SMTP server"
     except Exception as e:
         print(f"❌ Error en configuración de Email: {e}")
-        return False
+        assert False, f"Email configuration error: {e}"
 
 async def main():
     redis_ok = await test_redis()

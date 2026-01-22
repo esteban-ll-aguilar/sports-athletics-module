@@ -10,7 +10,7 @@ from app.modules.auth.dependencies import (
     get_sessions_repo, get_jwt_manager
 )
 from app.modules.auth.domain.schemas import SessionInfo
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import pytest_asyncio
 
 # --------------------------
@@ -23,8 +23,8 @@ def mock_sessions_repo():
     # Mock return value for get_active_sessions_by_user
     session_mock = MagicMock()
     session_mock.id = "valid-id"
-    session_mock.created_at = datetime.utcnow()
-    session_mock.expires_at = datetime.utcnow() + timedelta(hours=1)
+    session_mock.created_at = datetime.now(UTC)
+    session_mock.expires_at = datetime.now(UTC) + timedelta(hours=1)
     session_mock.status = True
     session_mock.access_token = "access_token_123"
     session_mock.refresh_token = "refresh_token_123"

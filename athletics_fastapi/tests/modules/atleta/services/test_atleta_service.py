@@ -44,208 +44,194 @@ def atleta_service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
         resultado_repo=mock_resultado_repo
     )
 
-def service(mock_atleta_repo, mock_auth_repo, mock_resultado_repo):
-    return AtletaService(mock_atleta_repo, mock_auth_repo, mock_resultado_repo)
-
-@pytest.mark.asyncio
-async def test_create_atleta_success(service, mock_auth_repo, mock_atleta_repo):
-    """Verifica creación de atleta exitosa."""
-    user = MagicMock(id=1, email="test@test.com")
-    user.user_profile = MagicMock(role=RoleEnum.ATLETA)
-    mock_auth_repo.get_by_id.return_value = user
-    mock_atleta_repo.get_by_user_id.return_value = None # No existe aun
-    mock_atleta_repo.create.return_value = MagicMock(id=1, user_id=1)
-
-    data = AtletaCreate(
-        anios_experiencia=5,
-        fecha_nacimiento=date(2000, 1, 1),
-        foto_perfil=None
-    )
-
 
 # ========== TESTS - CREAR PERFIL DE ATLETA (TC-A01 a TC-A07) ==========
 
-class TestAtletaServiceCreate:
-    """Tests para crear perfil de atleta"""
+@pytest.mark.asyncio
+async def test_create_atleta_valid(atleta_service, mock_auth_repo, mock_atleta_repo):
+    """TC-A01: Crear perfil atleta válido"""
+    # Arrange
+    user = MagicMock()
+    user.id = 10
+    user_profile = MagicMock()
+    user_profile.role = RoleEnum.ATLETA
+    user.user_profile = user_profile
+    mock_auth_repo.get_by_id.return_value = user
+    mock_atleta_repo.get_by_user_id.return_value = None
 
-    @pytest.mark.asyncio
-    async def test_create_atleta_valid(self, atleta_service, mock_auth_repo, mock_atleta_repo):
-        """TC-A01: Crear perfil atleta válido"""
-        # Arrange
-        user = MagicMock()
-        user.id = 10
-        user.role = RoleEnum.ATLETA
-        mock_auth_repo.get_by_id.return_value = user
-        mock_atleta_repo.get_by_user_id.return_value = None
+    expected_atleta = MagicMock()
+    expected_atleta.id = 1
+    expected_atleta.user_id = 10
+    expected_atleta.nombres = "Juan"
+    expected_atleta.apellidos = "Perez"
+    expected_atleta.fecha_nacimiento = date(2000, 5, 15)
+    expected_atleta.especialidad = "NATACION"
+    expected_atleta.anios_experiencia = 5
+    expected_atleta.categoria = "SENIOR"
+    expected_atleta.external_id = "550e8400-e29b-41d4-a716-446655440000"
 
-        expected_atleta = MagicMock()
-        expected_atleta.id = 1
-        expected_atleta.user_id = 10
-        expected_atleta.nombres = "Juan"
-        expected_atleta.apellidos = "Perez"
-        expected_atleta.fecha_nacimiento = date(2000, 5, 15)
-        expected_atleta.especialidad = "NATACION"
-        expected_atleta.anios_experiencia = 5
-        expected_atleta.categoria = "SENIOR"
-        expected_atleta.external_id = "550e8400-e29b-41d4-a716-446655440000"
+    mock_atleta_repo.create.return_value = expected_atleta
 
-        mock_atleta_repo.create.return_value = expected_atleta
+    data = AtletaCreate(
+        nombres="Juan",
+        apellidos="Perez",
+        fecha_nacimiento=date(2000, 5, 15),
+        especialidad="NATACION",
+        anios_experiencia=5,
+        categoria="SENIOR"
+    )
 
-        data = AtletaCreate(
-            nombres="Juan",
-            apellidos="Perez",
-            fecha_nacimiento=date(2000, 5, 15),
-            especialidad="NATACION",
-            anios_experiencia=5,
-            categoria="SENIOR"
-        )
+    # Act
+    result = await atleta_service.create(data, user_id=10)
 
-        # Act
-        result = await atleta_service.create(data, user_id=10)
+    # Assert
+    assert result.id == 1
+    assert result.nombres == "Juan"
+    assert result.especialidad == "NATACION"
+    assert result.anios_experiencia == 5
+    mock_atleta_repo.create.assert_called_once()
 
-        # Assert
-        assert result.id == 1
-        assert result.nombres == "Juan"
-        assert result.especialidad == "NATACION"
-        assert result.anios_experiencia == 5
-        mock_atleta_repo.create.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_create_atleta_user_not_found(self, atleta_service, mock_auth_repo):
-        """TC-A04: Usuario no encontrado"""
-        # Arrange
-        mock_auth_repo.get_by_id.return_value = None
+@pytest.mark.asyncio
+async def test_create_atleta_user_not_found(atleta_service, mock_auth_repo):
+    """TC-A04: Usuario no encontrado"""
+    # Arrange
+    mock_auth_repo.get_by_id.return_value = None
 
-        data = AtletaCreate(
-            nombres="Juan",
-            apellidos="Perez",
-            fecha_nacimiento=date(2000, 5, 15),
-            especialidad="NATACION",
-            anios_experiencia=5,
-            categoria="SENIOR"
-        )
+    data = AtletaCreate(
+        nombres="Juan",
+        apellidos="Perez",
+        fecha_nacimiento=date(2000, 5, 15),
+        especialidad="NATACION",
+        anios_experiencia=5,
+        categoria="SENIOR"
+    )
 
-        # Act & Assert
-        with pytest.raises(HTTPException) as exc_info:
-            await atleta_service.create(data, user_id=999)
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        await atleta_service.create(data, user_id=999)
 
-        assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
-    async def test_create_atleta_not_atleta_role(self, atleta_service, mock_auth_repo):
-        """TC-A02: Validar Usuario No Atleta"""
-        # Arrange
-        user = MagicMock()
-        user.id = 10
-        user.role = RoleEnum.ENTRENADOR
-        mock_auth_repo.get_by_id.return_value = user
 
-        data = AtletaCreate(
-            nombres="Juan",
-            apellidos="Perez",
-            fecha_nacimiento=date(2000, 5, 15),
-            especialidad="NATACION",
-            anios_experiencia=5,
-            categoria="SENIOR"
-        )
+@pytest.mark.asyncio
+async def test_create_atleta_not_atleta_role(atleta_service, mock_auth_repo):
+    """TC-A02: Validar Usuario No Atleta"""
+    # Arrange
+    user = MagicMock()
+    user.id = 10
+    user.user_profile = MagicMock()
+    user.user_profile.role = RoleEnum.ENTRENADOR
+    mock_auth_repo.get_by_id.return_value = user
 
-        # Act & Assert
-        with pytest.raises(HTTPException) as exc_info:
-            await atleta_service.create(data, user_id=10)
+    data = AtletaCreate(
+        nombres="Juan",
+        apellidos="Perez",
+        fecha_nacimiento=date(2000, 5, 15),
+        especialidad="NATACION",
+        anios_experiencia=5,
+        categoria="SENIOR"
+    )
 
-        assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        await atleta_service.create(data, user_id=10)
 
-    @pytest.mark.asyncio
-    async def test_create_atleta_already_exists(self, atleta_service, mock_auth_repo, mock_atleta_repo):
-        """TC-A03: Validar Perfil Duplicado"""
-        # Arrange
-        user = MagicMock()
-        user.id = 10
-        user.role = RoleEnum.ATLETA
-        mock_auth_repo.get_by_id.return_value = user
-        mock_atleta_repo.get_by_user_id.return_value = MagicMock()  # Ya existe
+    assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
 
-        data = AtletaCreate(
-            nombres="Juan",
-            apellidos="Perez",
-            fecha_nacimiento=date(2000, 5, 15),
-            especialidad="NATACION",
-            anios_experiencia=5,
-            categoria="SENIOR"
-        )
 
-        # Act & Assert
-        with pytest.raises(HTTPException) as exc_info:
-            await atleta_service.create(data, user_id=10)
+@pytest.mark.asyncio
+async def test_create_atleta_already_exists(atleta_service, mock_auth_repo, mock_atleta_repo):
+    """TC-A03: Validar Perfil Duplicado"""
+    # Arrange
+    user = MagicMock()
+    user.id = 10
+    user.user_profile = MagicMock()
+    user.user_profile.role = RoleEnum.ATLETA
+    mock_auth_repo.get_by_id.return_value = user
+    mock_atleta_repo.get_by_user_id.return_value = MagicMock()  # Ya existe
 
-        assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
+    data = AtletaCreate(
+        nombres="Juan",
+        apellidos="Perez",
+        fecha_nacimiento=date(2000, 5, 15),
+        especialidad="NATACION",
+        anios_experiencia=5,
+        categoria="SENIOR"
+    )
+
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        await atleta_service.create(data, user_id=10)
+
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
 
 
 # ========== TESTS - VER PERFIL DE ATLETA (TC-A08 a TC-A13) ==========
 
-class TestAtletaServiceRead:
-    """Tests para leer perfil de atleta"""
+@pytest.mark.asyncio
+async def test_get_by_id_success(atleta_service, mock_atleta_repo):
+    """TC-A09: Ver perfil de otro atleta"""
+    # Arrange
+    expected_atleta = MagicMock()
+    expected_atleta.id = 5
+    expected_atleta.user_id = 12
+    expected_atleta.nombres = "Carlos"
+    expected_atleta.apellidos = "Gomez"
+    expected_atleta.especialidad = "ATLETISMO"
+    expected_atleta.anios_experiencia = 8
+    expected_atleta.categoria = "SENIOR"
 
-    @pytest.mark.asyncio
-    async def test_get_by_id_success(self, atleta_service, mock_atleta_repo):
-        """TC-A09: Ver perfil de otro atleta"""
-        # Arrange
-        expected_atleta = MagicMock()
-        expected_atleta.id = 5
-        expected_atleta.user_id = 12
-        expected_atleta.nombres = "Carlos"
-        expected_atleta.apellidos = "Gomez"
-        expected_atleta.especialidad = "ATLETISMO"
-        expected_atleta.anios_experiencia = 8
-        expected_atleta.categoria = "SENIOR"
+    mock_atleta_repo.get_by_id.return_value = expected_atleta
 
-        mock_atleta_repo.get_by_id.return_value = expected_atleta
+    # Act
+    result = await atleta_service.get_by_id(5)
 
-        # Act
-        result = await atleta_service.get_by_id(5)
+    # Assert
+    assert result.id == 5
+    assert result.nombres == "Carlos"
+    assert result.especialidad == "ATLETISMO"
+    mock_atleta_repo.get_by_id.assert_called_once_with(5)
 
-        # Assert
-        assert result.id == 5
-        assert result.nombres == "Carlos"
-        assert result.especialidad == "ATLETISMO"
-        mock_atleta_repo.get_by_id.assert_called_once_with(5)
 
-    @pytest.mark.asyncio
-    async def test_get_by_id_not_found(self, atleta_service, mock_atleta_repo):
-        """TC-A10: Perfil no encontrado"""
-        # Arrange
-        mock_atleta_repo.get_by_id.return_value = None
+@pytest.mark.asyncio
+async def test_get_by_id_not_found(atleta_service, mock_atleta_repo):
+    """TC-A10: Perfil no encontrado"""
+    # Arrange
+    mock_atleta_repo.get_by_id.return_value = None
 
-        # Act & Assert
-        with pytest.raises(HTTPException) as exc_info:
-            await atleta_service.get_by_id(9999)
+    # Act & Assert
+    with pytest.raises(HTTPException) as exc_info:
+        await atleta_service.get_by_id(9999)
 
-        assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
-    async def test_get_me_success(self, atleta_service, mock_atleta_repo):
-        """TC-A08: Ver mi perfil"""
-        # Arrange
-        expected_atleta = MagicMock()
-        expected_atleta.id = 1
-        expected_atleta.user_id = 10
-        expected_atleta.nombres = "Juan"
-        expected_atleta.apellidos = "Perez"
-        expected_atleta.especialidad = "NATACION"
-        expected_atleta.anios_experiencia = 5
 
-        mock_atleta_repo.get_by_user_id.return_value = expected_atleta
+@pytest.mark.asyncio
+async def test_get_me_success(atleta_service, mock_atleta_repo):
+    """TC-A08: Ver mi perfil"""
+    # Arrange
+    expected_atleta = MagicMock()
+    expected_atleta.id = 1
+    expected_atleta.user_id = 10
+    expected_atleta.nombres = "Juan"
+    expected_atleta.apellidos = "Perez"
+    expected_atleta.especialidad = "NATACION"
+    expected_atleta.anios_experiencia = 5
 
-        # Act
-        result = await atleta_service.get_me(10)
+    mock_atleta_repo.get_by_user_id.return_value = expected_atleta
 
-        # Assert
-        assert result.id == 1
-        assert result.nombres == "Juan"
-        mock_atleta_repo.get_by_user_id.assert_called_once_with(10)
+    # Act
+    result = await atleta_service.get_me(10)
 
-    @pytest.mark.asyncio
-    async def test_get_me_no_profile(self, atleta_service, mock_atleta_repo):
+    # Assert
+    assert result.id == 1
+    assert result.nombres == "Juan"
+    mock_atleta_repo.get_by_user_id.assert_called_once_with(10)
+
+
+@pytest.mark.asyncio
+async def test_get_me_no_profile(atleta_service, mock_atleta_repo):
         """TC-A13: Sin perfil de atleta"""
         # Arrange
         mock_atleta_repo.get_by_user_id.return_value = None
@@ -256,8 +242,9 @@ class TestAtletaServiceRead:
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
-    @pytest.mark.asyncio
-    async def test_get_all_success(self, atleta_service, mock_atleta_repo):
+
+@pytest.mark.asyncio
+async def test_get_all_success(atleta_service, mock_atleta_repo):
         """TC-A11: Listar todos los atletas"""
         # Arrange
         atleta1 = MagicMock()
@@ -279,8 +266,9 @@ class TestAtletaServiceRead:
         assert result[1].nombres == "Maria"
         mock_atleta_repo.get_all.assert_called_once_with(0, 100)
 
-    @pytest.mark.asyncio
-    async def test_get_all_pagination(self, atleta_service, mock_atleta_repo):
+
+@pytest.mark.asyncio
+async def test_get_all_pagination(atleta_service, mock_atleta_repo):
         """TC-A12: Paginación"""
         # Arrange
         atletas = [MagicMock() for _ in range(10)]
@@ -296,11 +284,8 @@ class TestAtletaServiceRead:
 
 # ========== TESTS - ACTUALIZAR PERFIL DE ATLETA (TC-A14 a TC-A18) ==========
 
-class TestAtletaServiceUpdate:
-    """Tests para actualizar perfil de atleta"""
-
-    @pytest.mark.asyncio
-    async def test_update_atleta_success(self, atleta_service, mock_atleta_repo):
+@pytest.mark.asyncio
+async def test_update_atleta_success(atleta_service, mock_atleta_repo):
         """TC-A14: Actualizar datos básicos"""
         # Arrange
         existing_atleta = MagicMock()
@@ -329,8 +314,9 @@ class TestAtletaServiceUpdate:
         assert result.anios_experiencia == 10
         mock_atleta_repo.update.assert_called_once()
 
-    @pytest.mark.asyncio
-    async def test_update_atleta_partial(self, atleta_service, mock_atleta_repo):
+
+@pytest.mark.asyncio
+async def test_update_atleta_partial(atleta_service, mock_atleta_repo):
         """TC-A16: Actualizar parcial"""
         # Arrange
         existing_atleta = MagicMock()
@@ -354,8 +340,9 @@ class TestAtletaServiceUpdate:
         # Assert
         assert result.especialidad == "ATLETISMO"
 
-    @pytest.mark.asyncio
-    async def test_update_atleta_not_found(self, atleta_service, mock_atleta_repo):
+
+@pytest.mark.asyncio
+async def test_update_atleta_not_found(atleta_service, mock_atleta_repo):
         """TC-A17: Atleta no encontrado"""
         # Arrange
         mock_atleta_repo.get_by_id.return_value = None
@@ -371,11 +358,8 @@ class TestAtletaServiceUpdate:
 
 # ========== TESTS - ELIMINAR PERFIL DE ATLETA (TC-A19 a TC-A20) ==========
 
-class TestAtletaServiceDelete:
-    """Tests para eliminar perfil de atleta"""
-
-    @pytest.mark.asyncio
-    async def test_delete_atleta_success(self, atleta_service, mock_atleta_repo):
+@pytest.mark.asyncio
+async def test_delete_atleta_success(atleta_service, mock_atleta_repo):
         """TC-A19: Eliminar perfil"""
         # Arrange
         existing_atleta = MagicMock()
@@ -390,8 +374,9 @@ class TestAtletaServiceDelete:
         # Assert
         mock_atleta_repo.delete.assert_called_once_with(existing_atleta)
 
-    @pytest.mark.asyncio
-    async def test_delete_atleta_not_found(self, atleta_service, mock_atleta_repo):
+
+@pytest.mark.asyncio
+async def test_delete_atleta_not_found(atleta_service, mock_atleta_repo):
         """TC-A20: Perfil no encontrado"""
         # Arrange
         mock_atleta_repo.get_by_id.return_value = None
@@ -405,11 +390,8 @@ class TestAtletaServiceDelete:
 
 # ========== TESTS - HISTORIAL DE COMPETENCIAS (TC-A30 a TC-A32) ==========
 
-class TestAtletaServiceHistorial:
-    """Tests para historial de competencias"""
-
-    @pytest.mark.asyncio
-    async def test_get_historial_success(self, atleta_service, mock_atleta_repo, mock_resultado_repo):
+@pytest.mark.asyncio
+async def test_get_historial_success(atleta_service, mock_atleta_repo, mock_resultado_repo):
         """TC-A30: Ver historial de competencias"""
         # Arrange
         atleta = MagicMock()
@@ -433,8 +415,9 @@ class TestAtletaServiceHistorial:
         assert len(result) == 2
         assert result[0].competencia_id == 1
 
-    @pytest.mark.asyncio
-    async def test_get_historial_empty(self, atleta_service, mock_atleta_repo, mock_resultado_repo):
+
+@pytest.mark.asyncio
+async def test_get_historial_empty(atleta_service, mock_atleta_repo, mock_resultado_repo):
         """TC-A31: Historial vacío"""
         # Arrange
         atleta = MagicMock()
@@ -452,11 +435,8 @@ class TestAtletaServiceHistorial:
 
 # ========== TESTS - ESTADÍSTICAS Y DASHBOARD (TC-A34 a TC-A37) ==========
 
-class TestAtletaServiceEstadisticas:
-    """Tests para estadísticas y dashboard"""
-
-    @pytest.mark.asyncio
-    async def test_get_estadisticas_success(self, atleta_service, mock_atleta_repo, mock_resultado_repo):
+@pytest.mark.asyncio
+async def test_get_estadisticas_success(atleta_service, mock_atleta_repo, mock_resultado_repo):
         """TC-A34: Ver estadísticas"""
         # Arrange
         atleta = MagicMock()
@@ -488,8 +468,9 @@ class TestAtletaServiceEstadisticas:
         assert result["medallas"]["bronce"] == 1
         assert result["experiencia"] == 5
 
-    @pytest.mark.asyncio
-    async def test_get_estadisticas_empty(self, atleta_service, mock_atleta_repo, mock_resultado_repo):
+
+@pytest.mark.asyncio
+async def test_get_estadisticas_empty(atleta_service, mock_atleta_repo, mock_resultado_repo):
         """TC-A35: Estadísticas vacías"""
         # Arrange
         atleta = MagicMock()

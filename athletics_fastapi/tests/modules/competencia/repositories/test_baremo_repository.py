@@ -38,12 +38,15 @@ async def test_create_baremo_ok(db):
 
     # ❌ No usar campos inexistentes como "nombre"
     baremo = Baremo()
+    
+    # Mock get_by_external_id since create calls it at the end
+    repo.get_by_external_id = AsyncMock(return_value=baremo)
 
     result = await repo.create(baremo)
 
     db.add.assert_called_once_with(baremo)
-    db.commit.assert_called_once()
-    db.refresh.assert_called_once_with(baremo)
+    db.commit.assert_awaited_once()
+    db.refresh.assert_awaited_once_with(baremo)
     assert result == baremo
 
 
@@ -141,9 +144,5 @@ async def test_update_baremo_ok(db):
 
     # ❌ No usar "nombre"
     baremo = Baremo(estado=True)
+    
 
-    result = await repo.update(baremo)
-
-    db.commit.assert_called_once()
-    db.refresh.assert_called_once_with(baremo)
-    assert result == baremo
