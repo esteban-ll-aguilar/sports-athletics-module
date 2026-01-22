@@ -43,6 +43,7 @@ import ConfirmacionEntrenamientoPage from '@modules/atleta/ui/pages/Confirmacion
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
+import HistorialMedicoPage from '@modules/entrenador/ui/pages/HistorialMedicoPage';
 
 
 // Representante
@@ -96,22 +97,23 @@ const router = createBrowserRouter([
           },
 
           // --- COMPETENCIA / PRUEBAS ROUTES ---
-        {
-  path: 'registro-pruebas',
-  element: (
-    <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />
-  ),
-  children: [
-    {
-      element: <Outlet />,   // 👈 ESTO ES CLAVE
-      children: [
-        { index: true, element: <PruebasPage /> },
-        { path: 'baremos', element: <BaremosPage /> },
-        { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-      ]
-    }
-  ],
-},
+          {
+            path: 'registro-pruebas',
+            element: (
+              <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />
+            ),
+            children: [
+              {
+                element: <Outlet />,   // 👈 ESTO ES CLAVE
+                children: [
+                  { index: true, element: <PruebasPage /> },
+                  { path: 'resultados', element: <RegistroPruebasPage /> },
+                  { path: 'baremos', element: <BaremosPage /> },
+                  { path: 'disciplinas', element: <TipoDisciplinaPage /> },
+                ]
+              }
+            ],
+          },
 
           {
             path: 'competitions',
@@ -142,6 +144,11 @@ const router = createBrowserRouter([
               { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
 
             ],
+          },
+          {
+            path: 'historial-medico',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <HistorialMedicoPage /> }],
           },
 
           // --- REPRESENTANTE ROUTES ---

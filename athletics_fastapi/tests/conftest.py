@@ -31,6 +31,10 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 # DB session
 @pytest_asyncio.fixture(scope="function")
 async def db_session():
+    """
+    Proporciona una sesión de base de datos para cada test (función).
+    Permite transacciones aisladas si se habilita el rollback.
+    """
     session_factory = _db.get_session_factory()
     async with session_factory() as session:
         yield session
