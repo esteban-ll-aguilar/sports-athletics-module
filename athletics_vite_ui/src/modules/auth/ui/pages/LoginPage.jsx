@@ -36,32 +36,38 @@ const LoginPage = () => {
             // Response is an APIResponse object { success, message, data, errors }
 
             // Check if 2FA is required (Backend returns success=true but data has temp_token instead of access_token)
-            // We can check for temp_token existence
             if (response.data && response.data.temp_token) {
-                // 2FA Requerido
                 setTempToken(response.data.temp_token);
                 setShowTwoFactorModal(true);
-                toast.success(response.data.message || '2FA Requerido');
+                toast.success(response.data.message || 'Se requiere verificación en dos pasos.');
             } else if (response.success) {
-                // Login normal exitoso (tokens already saved by authService)
-                toast.success('Inicio de sesión exitoso');
+                toast.success(response.message || 'Inicio de sesión exitoso');
                 navigate('/dashboard');
             }
         } catch (err) {
             console.error("Login error:", err);
-
-            // Extract error message from APIResponse structure if possible
+            // Manejo de errores personalizados
             let message = 'Error al iniciar sesión';
-            if (err.message) message = err.message;
-            if (err.detail) message = err.detail;
-
-            // Detectar si el error es por usuario inactivo
+            // Rate limit
+            if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
+                message = 'Demasiados intentos. Por favor, espera un minuto antes de volver a intentarlo.';
+            } else if (err.message && typeof err.message === 'string') {
+                message = err.message;
+            } else if (err.detail && typeof err.detail === 'string') {
+                message = err.detail;
+            } else if (err.errors && Array.isArray(err.errors)) {
+                // Errores de validación de Pydantic
+                message = err.errors.map(e => e.msg).join(' | ');
+            }
+            // Cédula inválida
+            if (message.toLowerCase().includes('cédula inválida')) {
+                message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
+            }
+            // Usuario inactivo
             if (message === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
-                toast.error(message);
-            } else {
-                toast.error(message);
             }
+            toast.error(message);
         } finally {
             setLoading(false);
         }

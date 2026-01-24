@@ -31,11 +31,36 @@ const RegisterAthletePage = () => {
         });
     };
 
+    // Valida cédula ecuatoriana (igual que backend)
+    const validarCedulaEcuador = (cedula) => {
+        if (!/^[0-9]{10}$/.test(cedula)) return false;
+        const provincia = parseInt(cedula.slice(0, 2), 10);
+        if (provincia < 1 || provincia > 24) return false;
+        const tercerDigito = parseInt(cedula[2], 10);
+        if (tercerDigito >= 6) return false;
+        const coef = [2,1,2,1,2,1,2,1,2];
+        let suma = 0;
+        for (let i = 0; i < 9; i++) {
+            let val = parseInt(cedula[i], 10) * coef[i];
+            if (val >= 10) val -= 9;
+            suma += val;
+        }
+        const digitoVerificador = parseInt(cedula[9], 10);
+        const residuo = suma % 10;
+        const resultado = residuo === 0 ? 0 : 10 - residuo;
+        return resultado === digitoVerificador;
+    };
+
     const validateForm = () => {
         if (formData.password !== formData.confirmPassword) return 'Las contraseñas no coinciden.';
         if (formData.password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+        if (!/[A-Z]/.test(formData.password)) return 'La contraseña debe tener al menos una mayúscula.';
+        if (!/\d/.test(formData.password)) return 'La contraseña debe tener al menos un número.';
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) return 'La contraseña debe tener al menos un carácter especial.';
         if (formData.username.length < 4) return 'El nombre de usuario debe tener al menos 4 caracteres.';
+        if (formData.tipo_identificacion === 'CEDULA' && !validarCedulaEcuador(formData.identificacion)) return 'Cédula ecuatoriana inválida.';
         if (formData.identificacion.length < 8) return 'La identificación debe tener al menos 8 caracteres.';
+        if (formData.email.length < 5 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(formData.email)) return 'Correo electrónico inválido.';
         return null;
     };
 
@@ -71,6 +96,19 @@ const RegisterAthletePage = () => {
             // Handle standardized APIResponse error if available
             if (err.response?.data?.message) {
                 msg = err.response.data.message;
+                // Si es error de duplicado, resaltar campos
+                if (msg.includes('ya existe') || msg.toLowerCase().includes('duplicate')) {
+                    if (msg.toLowerCase().includes('email')) {
+                        toast.error('El correo electrónico ya está registrado.', { id: toastId });
+                        return;
+                    }
+                    if (msg.toLowerCase().includes('identificación') || msg.toLowerCase().includes('cedula')) {
+                        toast.error('La identificación ya está registrada.', { id: toastId });
+                        return;
+                    }
+                    toast.error(msg, { id: toastId });
+                    return;
+                }
             } else if (err.response?.data?.detail) {
                 const detail = err.response.data.detail;
                 if (Array.isArray(detail)) {
@@ -115,6 +153,9 @@ const RegisterAthletePage = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Número de Identificación</label>
                         <input name="identificacion" required value={formData.identificacion} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Cédula o Pasaporte" />
+                        {formData.tipo_identificacion === 'CEDULA' && (
+                            <p className="text-xs text-gray-500 mt-1">Debe ser una cédula ecuatoriana válida de 10 dígitos.</p>
+                        )}
                     </div>
 
                     <div>
@@ -156,6 +197,9 @@ const RegisterAthletePage = () => {
                                     <span className="material-symbols-outlined text-lg">{showPassword ? 'visibility_off' : 'visibility'}</span>
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.
+                            </p>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>

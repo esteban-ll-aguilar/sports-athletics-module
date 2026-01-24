@@ -239,18 +239,42 @@ const RegisterPage = () => {
             // auth_repository probably throws the parsed error.
 
             toast.error(errorMessage);
-        } finally {
-            setLoading(false);
-        }
+            try {
+                setLoading(true);
+                const response = await authService.register(formData);
+                if (response.success) {
+                    toast.success(response.message || 'Registro exitoso. Verifica tu correo electrónico.');
+                    setShowVerificationModal(true);
+                } else {
+                    let message = response.message || 'Error en el registro';
+                    if (response.errors && Array.isArray(response.errors)) {
+                        message = response.errors.map(e => e.msg).join(' | ');
+                    }
+                    if (message.toLowerCase().includes('cédula inválida')) {
+                        message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
+                    }
+                    toast.error(message);
+                }
+            } catch (err) {
+                let message = 'Error en el registro';
+                if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
+                    message = 'Demasiados intentos. Por favor, espera un minuto antes de volver a intentarlo.';
+                } else if (err.message && typeof err.message === 'string') {
+                    message = err.message;
+                } else if (err.detail && typeof err.detail === 'string') {
+                    message = err.detail;
+                } else if (err.errors && Array.isArray(err.errors)) {
+                    message = err.errors.map(e => e.msg).join(' | ');
+                }
+                if (message.toLowerCase().includes('cédula inválida')) {
+                    message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
+                }
+                toast.error(message);
+            } finally {
+                setLoading(false);
+            }
+        };
     };
-
-    // Componente auxiliar para mostrar errores debajo de campos
-    const ErrorMessage = ({ message }) => {
-        return message ? (
-            <p className="text-red-500 text-xs font-medium mt-1">{message}</p>
-        ) : null;
-    };
-
     return (
         <div className="flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
             {/* Left Side - Image */}
@@ -569,5 +593,6 @@ const RegisterPage = () => {
         </div>
     );
 };
+
 
 export default RegisterPage;

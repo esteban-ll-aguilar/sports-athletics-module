@@ -41,17 +41,21 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
                 toast.success(response.message || 'Email verificado exitosamente');
                 onSuccess(response.message);
             } else {
-                // Should technically be caught by catch block if service throws on 400
                 const msg = response.message || 'Verificación fallida';
                 toast.error(msg);
                 setError(msg);
             }
         } catch (err) {
             let msg = 'Código inválido o expirado';
-            if (err.message) msg = err.message;
-            if (err.detail) msg = err.detail;
-
-            // Strict compliance with TC-E02 (can vary slightly but meaning is key)
+            if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
+                msg = 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.';
+            } else if (err.message && typeof err.message === 'string') {
+                msg = err.message;
+            } else if (err.detail && typeof err.detail === 'string') {
+                msg = err.detail;
+            } else if (err.errors && Array.isArray(err.errors)) {
+                msg = err.errors.map(e => e.msg).join(' | ');
+            }
             toast.error(msg);
             setError(msg);
         } finally {

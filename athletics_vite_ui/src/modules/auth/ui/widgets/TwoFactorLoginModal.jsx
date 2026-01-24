@@ -27,7 +27,16 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                 navigate('/dashboard');
             }
         } catch (err) {
-            const msg = err.detail || 'Código inválido. Inténtalo de nuevo.';
+            let msg = 'Código inválido. Inténtalo de nuevo.';
+            if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
+                msg = 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.';
+            } else if (err.message && typeof err.message === 'string') {
+                msg = err.message;
+            } else if (err.detail && typeof err.detail === 'string') {
+                msg = err.detail;
+            } else if (err.errors && Array.isArray(err.errors)) {
+                msg = err.errors.map(e => e.msg).join(' | ');
+            }
             setError(msg);
             onError && onError(msg);
         } finally {
