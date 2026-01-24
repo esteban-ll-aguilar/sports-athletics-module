@@ -26,7 +26,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
 
     useEffect(() => {
         if (editingItem) {
-            console.log("🔍 EditingItem recibido:", editingItem);
+            console.log("EditingItem recibido:", editingItem);
 
             const atletaId = editingItem.atleta_external_id || editingItem.atleta_id || "";
             const pruebaId = editingItem.prueba_external_id || editingItem.prueba_id || "";

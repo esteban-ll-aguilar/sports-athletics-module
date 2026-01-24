@@ -62,7 +62,7 @@ async def register(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email ya registrado",
         )
-
+    
     password_hash = hasher.hash(data.password)
     user = await repo.create(password_hash=password_hash, user_data=data)
     # await repo.session.commit() # Removed: handled by repo
