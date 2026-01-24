@@ -79,7 +79,7 @@ async def register(
                 data=None
             ).model_dump()
         )
-
+    
     password_hash = hasher.hash(data.password)
     user = await repo.create(password_hash=password_hash, user_data=data)
     # await repo.session.commit() # Removed: handled by repo
