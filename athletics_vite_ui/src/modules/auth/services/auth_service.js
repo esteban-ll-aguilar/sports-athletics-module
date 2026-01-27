@@ -3,12 +3,15 @@ import authRepository from '../repositories/auth_repository';
 class AuthService {
 
     async login(email, password) {
-        const data = await authRepository.login(email, password);
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
+        const response = await authRepository.login(email, password);
+        // La respuesta estandarizada pone los datos en "data"
+        const tokens = response.data;
+
+        if (tokens && tokens.access_token) {
+            localStorage.setItem('access_token', tokens.access_token);
+            localStorage.setItem('refresh_token', tokens.refresh_token);
         }
-        return data;
+        return response;
     }
 
     async register(userData) {
@@ -35,13 +38,13 @@ class AuthService {
         return await authRepository.getProfile();
     }
 
-   async updateProfile(formData) {
-    if (!(formData instanceof FormData)) {
-        throw new Error("updateProfile requiere FormData");
-    }
+    async updateProfile(formData) {
+        if (!(formData instanceof FormData)) {
+            throw new Error("updateProfile requiere FormData");
+        }
 
-    return await authRepository.updateProfile(formData);
-}
+        return await authRepository.updateProfile(formData);
+    }
 
 
     // New methods delegating to repository

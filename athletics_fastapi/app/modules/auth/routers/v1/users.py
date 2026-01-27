@@ -18,6 +18,7 @@ from app.modules.auth.domain.schemas import (
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
 from app.public.schemas import BaseResponse
+from app.utils.response_handler import ResponseHandler
 from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
@@ -40,16 +41,24 @@ async def create_user(
     user_data: UserCreateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
 ):
-    user = await repo.create_user(user_data)
+    try:
+        user = await repo.create_user(user_data)
 
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Usuario creado exitosamente",
-        status=status.HTTP_201_CREATED
-    )
+        return ResponseHandler.success_response(
+            summary="Usuario creado exitosamente",
+            message="Usuario creado exitosamente",
+            data=UserResponseSchema.model_validate(
+                user,
+                from_attributes=True
+            ).model_dump(),
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al crear usuario",
+            message=str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 # ======================================================
 # LIST USERS (PAGINATED)
@@ -104,18 +113,18 @@ async def get_current_user_profile(
     current_user: AuthUserModel = Depends(get_current_user),
 ):
     if not current_user.profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Perfil de usuario no encontrado"
+        return ResponseHandler.not_found_response(
+            entity="Perfil",
+            message="Perfil de usuario no encontrado"
         )
 
-    return BaseResponse(
+    return ResponseHandler.success_response(
+        summary="Perfil obtenido exitosamente",
+        message="Perfil obtenido exitosamente",
         data=UserWithRelationsSchema.model_validate(
             current_user.profile,
             from_attributes=True
-        ).model_dump(),
-        message="Perfil obtenido exitosamente",
-        status=status.HTTP_200_OK
+        ).model_dump()
     )
 
 # ======================================================
@@ -148,75 +157,74 @@ async def update_profile(
     Endpoint para que el usuario actual actualice su perfil.
     Acepta `multipart/form-data` para subir imagen de perfil.
     """
-    user = current_user.profile
-    if not user:
-         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Perfil no encontrado"
+    try:
+        user = current_user.profile
+        if not user:
+             return ResponseHandler.not_found_response(
+                entity="Perfil",
+                message="Perfil no encontrado"
+            )
+
+        # =========================
+        # ACTUALIZAR CAMPOS
+        # =========================
+        
+        user.username = username
+        user.first_name = first_name
+        user.last_name = last_name
+        user.phone = phone
+        user.direccion = direccion
+        user.identificacion = identificacion
+        
+        if sexo:
+            try:
+                user.sexo = SexoEnum(sexo)
+            except ValueError:
+                pass 
+                
+        if tipo_estamento:
+            try:
+                user.tipo_estamento = TipoEstamentoEnum(tipo_estamento)
+            except ValueError:
+                pass
+
+        if tipo_identificacion:
+            try:
+                user.tipo_identificacion = TipoIdentificacionEnum(tipo_identificacion)
+            except ValueError:
+                pass
+
+        if fecha_nacimiento:
+            try:
+                 user.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
+            except ValueError:
+                 pass
+
+        # =========================
+        # IMAGEN
+        # =========================
+        if profile_image:
+            file_service = FileService(base_dir="data")
+            saved_path = await file_service.save_profile_picture(profile_image)
+            user.profile_image = saved_path
+
+        await repo.commit()
+        await repo.refresh(user)
+
+        return ResponseHandler.success_response(
+            summary="Perfil actualizado correctamente",
+            message="Perfil actualizado correctamente",
+            data=UserResponseSchema.model_validate(
+                user,
+                from_attributes=True
+            ).model_dump()
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error interno al actualizar perfil",
+            message=str(e)
         )
 
-    # =========================
-    # ACTUALIZAR CAMPOS
-    # =========================
-    # Validar y convertir Enums si es necesario, o dejar que SQLAlchemy intente.
-    # Como viene de Form(), viene como string.
-    
-    user.username = username
-    user.first_name = first_name
-    user.last_name = last_name
-    user.phone = phone
-    user.direccion = direccion
-    user.identificacion = identificacion
-    
-    if sexo:
-        try:
-            user.sexo = SexoEnum(sexo)
-        except ValueError:
-            pass # O lanzar error
-            
-    if tipo_estamento:
-        try:
-            user.tipo_estamento = TipoEstamentoEnum(tipo_estamento)
-        except ValueError:
-            pass
-
-    if tipo_identificacion:
-        try:
-            user.tipo_identificacion = TipoIdentificacionEnum(tipo_identificacion)
-        except ValueError:
-            pass
-
-    if fecha_nacimiento:
-        try:
-             # Convertir string 'YYYY-MM-DD' a date object
-             user.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
-        except ValueError:
-             pass
-
-    # =========================
-    # IMAGEN
-    # =========================
-    if profile_image:
-        file_service = FileService(base_dir="data")
-        
-        # Opcional: Borrar imagen anterior si existe?
-        # if user.profile_image:
-        #     file_service.delete_file(user.profile_image)
-            
-        saved_path = await file_service.save_profile_picture(profile_image)
-        user.profile_image = saved_path
-
-    await repo.commit()
-    await repo.refresh(user)
-
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Perfil actualizado correctamente",
-        status=status.HTTP_200_OK
-    )
 # GET USER BY EXTERNAL_ID
 # ======================================================
 
@@ -231,22 +239,28 @@ async def get_user_by_external_id(
     repo: AuthUsersRepository = Depends(get_users_repo),
     _: AuthUserModel = Depends(get_current_user),  # protección JWT
 ):
-    user = await repo.get_by_external_id(external_id)
+    try:
+        user = await repo.get_by_external_id(external_id)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+        if not user:
+            return ResponseHandler.not_found_response(
+                entity="Usuario",
+                message="Usuario no encontrado"
+            )
+
+        return ResponseHandler.success_response(
+            summary="Usuario encontrado",
+            message="Usuario encontrado exitosamente",
+            data=UserResponseSchema.model_validate(
+                user,
+                from_attributes=True
+            ).model_dump()
         )
-
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Usuario encontrado exitosamente",
-        status=status.HTTP_200_OK
-    )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error interno",
+            message=str(e)
+        )
 
 # ======================================================
 # UPDATE USER BY EXTERNAL_ID
@@ -264,44 +278,49 @@ async def update_user_by_id(
     repo: AuthUsersRepository = Depends(get_users_repo),
     current_user: AuthUserModel = Depends(get_current_user),
 ):
-    # Buscar usuario (UUID o ID interno) usando el repo helper
-    user = await repo.get_by_any_id(user_id)
+    try:
+        # Buscar usuario (UUID o ID interno) usando el repo helper
+        user = await repo.get_by_any_id(user_id)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+        if not user:
+            return ResponseHandler.not_found_response(
+                entity="Usuario",
+                message="Usuario no encontrado"
+            )
+
+        from app.core.logging.logger import logger
+        
+        # 🔒 Autorización: El usuario puede editarse a sí mismo, o ser Administrador, o Entrenador editando Atleta
+        is_self = current_user.profile.id == user.id
+        
+        # Usamos .value para asegurar comparación de strings si son Enums
+        current_role = current_user.profile.role.value if hasattr(current_user.profile.role, "value") else current_user.profile.role
+        target_role = user.role.value if hasattr(user.role, "value") else user.role
+        
+        is_admin = (current_role == RoleEnum.ADMINISTRADOR.value)
+        is_coach_editing_athlete = (current_role == RoleEnum.ENTRENADOR.value and target_role == RoleEnum.ATLETA.value)
+        
+        logger.info(f"🔐 [AUTH DEBUG] Update attempt: CurrentUser(id={current_user.profile.id}, role={current_role}) -> TargetUser(id={user.id}, role={target_role})")
+        logger.info(f"🔐 [AUTH DEBUG] Checks: self={is_self}, admin={is_admin}, coach_on_athlete={is_coach_editing_athlete}")
+
+        if not (is_self or is_admin or is_coach_editing_athlete):
+             logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
+             return ResponseHandler.forbidden_response(
+                 message="No tienes permisos para editar este usuario"
+             )
+
+        updated_user = await repo.update(
+            user=user,
+            user_data=user_data
         )
 
-    from app.core.logging.logger import logger
-    
-    # 🔒 Autorización: El usuario puede editarse a sí mismo, o ser Administrador, o Entrenador editando Atleta
-    is_self = current_user.profile.id == user.id
-    
-    # Usamos .value para asegurar comparación de strings si son Enums
-    current_role = current_user.profile.role.value if hasattr(current_user.profile.role, "value") else current_user.profile.role
-    target_role = user.role.value if hasattr(user.role, "value") else user.role
-    
-    is_admin = (current_role == RoleEnum.ADMINISTRADOR.value)
-    is_coach_editing_athlete = (current_role == RoleEnum.ENTRENADOR.value and target_role == RoleEnum.ATLETA.value)
-    
-    logger.info(f"🔐 [AUTH DEBUG] Update attempt: CurrentUser(id={current_user.profile.id}, role={current_role}) -> TargetUser(id={user.id}, role={target_role})")
-    logger.info(f"🔐 [AUTH DEBUG] Checks: self={is_self}, admin={is_admin}, coach_on_athlete={is_coach_editing_athlete}")
-
-    if not (is_self or is_admin or is_coach_editing_athlete):
-         logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
-         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para editar este usuario"
+        return ResponseHandler.success_response(
+            summary="Usuario actualizado correctamente",
+            message="Usuario actualizado correctamente",
+            data=UserResponseSchema.model_validate(updated_user).model_dump()
         )
-
-    updated_user = await repo.update(
-        user=user,
-        user_data=user_data
-    )
-
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(updated_user).model_dump(),
-        message="Usuario actualizado correctamente",
-        status=status.HTTP_200_OK
-    )
+    except Exception as e:
+         return ResponseHandler.error_response(
+            summary="Error interno al actualizar usuario",
+            message=str(e)
+        )
