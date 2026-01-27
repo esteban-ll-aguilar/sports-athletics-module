@@ -1,4 +1,5 @@
 import authRepository from '../repositories/auth_repository';
+import { jwtDecode } from "jwt-decode";
 
 class AuthService {
 
@@ -10,6 +11,8 @@ class AuthService {
         if (tokens && tokens.access_token) {
             localStorage.setItem('access_token', tokens.access_token);
             localStorage.setItem('refresh_token', tokens.refresh_token);
+        } else {
+            throw response;
         }
         return response;
     }
@@ -110,16 +113,18 @@ class AuthService {
         if (!token) return false;
 
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = jwtDecode(token);
             const isExpired = payload.exp * 1000 < Date.now();
 
             if (isExpired) {
+                console.warn("Token expired, logging out.");
                 this.logout();
                 return false;
             }
 
             return true;
         } catch (error) {
+            console.error("Token validation failed:", error);
             this.logout();
             return false;
         }

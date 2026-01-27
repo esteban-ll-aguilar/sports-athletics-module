@@ -333,11 +333,19 @@ const CompetenciasPage = () => {
             } else {
               await competenciaService.create(data);
             }
-            setIsModalOpen(false);
             fetchCompetencias();
+            return true;
           } catch (error) {
             console.error("Error al guardar:", error);
-            alert("Error al guardar la competencia");
+            Swal.fire({
+              title: 'Error',
+              text: 'Error al guardar la competencia',
+              icon: 'error',
+              confirmButtonColor: '#b30c25',
+              background: '#212121',
+              color: '#fff'
+            });
+            return false;
           }
         }}
         editingCompetencia={selectedCompetencia}

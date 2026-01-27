@@ -105,9 +105,12 @@ class ExternalUsersApiService:
             import uuid
             return BaseResponse(
                 data={"external": str(uuid.uuid4()), "username": user.email},
+                summary="User created (MOCKED)",
                 message="User created (MOCKED)",
-                errors=[],
-                status=200
+                errors={},
+                status=200,
+                code="201",
+                status_code=201
             )
 
 

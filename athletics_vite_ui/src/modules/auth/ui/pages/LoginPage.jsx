@@ -49,10 +49,11 @@ const LoginPage = () => {
             console.error("Login error:", err);
 
             // Detectar si el error es por usuario inactivo
-            if (err.detail === "Usuario inactivo, por favor verifica tu email") {
+            // Detectar si el error es por usuario inactivo
+            if (err.detail === "Usuario inactivo, por favor verifica tu email" || err.message === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
             } else {
-                setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+                setError(err.detail || err.message || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
             }
         } finally {
             setLoading(false);

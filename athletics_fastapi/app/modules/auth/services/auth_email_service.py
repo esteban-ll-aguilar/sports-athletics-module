@@ -34,6 +34,11 @@ class AuthEmailService(EmailProvider):
             "Este código expira en 1 hora. "
             "Por favor ingresa este código para activar tu cuenta."
         )
+        # LOG CODE FOR DEBUGGING
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔑 VERIFICATION CODE for {to_email}: {code}")
+        
         self._send_email(to_email, subject, body)
 # ============================================
     

@@ -14,7 +14,7 @@ from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
 
-drouter = APIRouter()
+router = APIRouter()
 
 
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
