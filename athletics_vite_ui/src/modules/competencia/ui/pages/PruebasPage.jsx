@@ -64,8 +64,8 @@ const PruebasPage = () => {
                 await pruebaService.create(payload);
             }
 
-            setIsModalOpen(false);
             fetchData();
+            return true; // Éxito
 
         } catch (err) {
             console.error("3. Error del Servidor (422 Detail):", err.response?.data);
@@ -78,6 +78,7 @@ const PruebasPage = () => {
                 background: '#212121',
                 color: '#fff'
             });
+            return false; // Error
         }
     };
 

@@ -1,24 +1,14 @@
 import authRepository from '../repositories/auth_repository';
-import { APIResponse } from '../../../core/api/schemas/api_schema';
 
 class AuthService {
 
     async login(email, password) {
-        const responseCtx = await authRepository.login(email, password);
-
-        // Handle APIResponse wrapper
-        // The backend returns APIResponse<TokenPair | TwoFactorRequired>
-        // structure: { success: true, message: "...", data: { ... } }
-
-        const responseData = responseCtx.data; // The actual payload (TokenPair or TwoFactorRequired)
-
-        if (responseData && responseData.access_token) {
-            localStorage.setItem('access_token', responseData.access_token);
-            localStorage.setItem('refresh_token', responseData.refresh_token);
+        const data = await authRepository.login(email, password);
+        if (data.access_token) {
+            localStorage.setItem('access_token', data.access_token);
+            localStorage.setItem('refresh_token', data.refresh_token);
         }
-
-        // Return apiResponse to UI so it can read message/success
-        return responseCtx;
+        return data;
     }
 
     async register(userData) {
@@ -121,16 +111,18 @@ class AuthService {
         if (!token) return false;
 
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = jwtDecode(token);
             const isExpired = payload.exp * 1000 < Date.now();
 
             if (isExpired) {
+                console.warn("Token expired, logging out.");
                 this.logout();
                 return false;
             }
 
             return true;
         } catch (error) {
+            console.error("Token validation failed:", error);
             this.logout();
             return false;
         }

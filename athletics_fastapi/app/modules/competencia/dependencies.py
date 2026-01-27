@@ -96,8 +96,7 @@ async def get_resultado_competencia_service(
         resultado_repo,
         competencia_repo,
         atleta_repo,
-        prueba_repo,
-        baremo_repo
+        prueba_repo
     )
 
 

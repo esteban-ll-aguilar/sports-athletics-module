@@ -3,6 +3,7 @@ import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import Swal from "sweetalert2";
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         nombre: "",
         fecha_prueba: "",
@@ -58,6 +59,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     // Manejar creación o edición
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitting) return;
 
         const result = await Swal.fire({
             title: editingData ? '¿Desea actualizar esta prueba?' : '¿Desea crear esta prueba?',
@@ -75,18 +77,26 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         });
 
         if (result.isConfirmed) {
-            onSubmit(form);
+            setSubmitting(true);
+            try {
+                const success = await onSubmit(form);
 
-            await Swal.fire({
-                icon: 'success',
-                title: editingData ? 'Prueba actualizada' : 'Prueba creada',
-                text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
-                confirmButtonColor: '#b30c25',
-                background: '#212121',
-                color: '#fff'
-            });
-
-            onClose();
+                if (success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: editingData ? 'Prueba actualizada' : 'Prueba creada',
+                        text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
+                        confirmButtonColor: '#b30c25',
+                        background: '#212121',
+                        color: '#fff'
+                    });
+                    onClose();
+                }
+            } catch (error) {
+                console.error("Error en modal:", error);
+            } finally {
+                setSubmitting(false);
+            }
         }
     };
 
@@ -317,18 +327,30 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     </div>
 
                     <div className="flex gap-3 pt-6">
-                        <button type="button" onClick={onClose}
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
                             className="
-              flex-1 px-4 py-3 rounded-xl font-semibold
-              border border-[#332122] text-gray-400
-              hover:bg-[#242223] transition
-            "            >Cancelar</button>
-                        <button type="submit" className="
-              flex-1 px-4 py-3 rounded-xl font-semibold text-white
-              bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
-              hover:brightness-110 transition active:scale-95
-            "            >
-                            Guardar Cambios
+                                flex-1 px-4 py-3 rounded-xl font-semibold
+                                border border-[#332122] text-gray-400
+                                hover:bg-[#242223] transition
+                                disabled:opacity-50 disabled:cursor-not-allowed
+                            "
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="
+                                flex-1 px-4 py-3 rounded-xl font-semibold text-white
+                                bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
+                                hover:brightness-110 transition active:scale-95
+                                disabled:opacity-70 disabled:cursor-wait
+                            "
+                        >
+                            {submitting ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
                     </div>
                 </form>

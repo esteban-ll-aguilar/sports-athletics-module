@@ -104,9 +104,8 @@ const RegistroPruebasPage = () => {
             } else {
                 await resultadoPruebaService.create(data);
             }
-            Swal.fire("Éxito", "Registro guardado", "success");
-            setShowModal(false);
             fetchData();
+            return true;
         } catch (error) {
             console.error("Error completo:", error);
             console.error("Respuesta del servidor:", error.response?.data);
@@ -119,6 +118,7 @@ const RegistroPruebasPage = () => {
                 background: '#212121',
                 color: '#fff'
             });
+            return false;
         }
     };
 

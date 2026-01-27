@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -8,6 +8,8 @@ from slowapi.errors import RateLimitExceeded
 from app.core.config.enviroment import _SETTINGS
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
+from app.utils.response_handler import ResponseHandler
+from app.utils.response_codes import ResponseCodes
 
 import asyncio
 
@@ -136,17 +138,75 @@ _APP.mount("/data", StaticFiles(directory="data"), name="data")
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter
 
+# Handler Global para Exception (500)
 @_APP.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     from app.core.logging.logger import logger
     logger.error(f"❌ GLOBAL ERROR: {exc}", exc_info=True)
+    
+    response_data = ResponseHandler.error_response(
+        summary="Error interno del servidor",
+        message=str(exc),
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        error_code=ResponseCodes.COD_INTERNAL_ERROR
+    )
     return JSONResponse(
-        status_code=500,
-        content={"detail": "Internal Server Error", "message": str(exc)},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=response_data,
         headers={
             "Access-Control-Allow-Origin": _SETTINGS.cors_allow_origins if _SETTINGS.cors_allow_origins != "*" else "*",
             "Access-Control-Allow-Credentials": "true",
         }
+    )
+
+# Handler Global para HTTPException (4xx, etc)
+@_APP.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    # Personalizar respuesta según el código de estado
+    if exc.status_code == status.HTTP_401_UNAUTHORIZED:
+        response_data = ResponseHandler.unauthorized_response(
+            message=exc.detail
+        )
+    elif exc.status_code == status.HTTP_403_FORBIDDEN:
+        response_data = ResponseHandler.forbidden_response(
+            message=exc.detail
+        )
+    elif exc.status_code == status.HTTP_404_NOT_FOUND:
+        response_data = ResponseHandler.not_found_response(
+            entity="Recurso",
+            message=exc.detail
+        )
+    else:
+        response_data = ResponseHandler.error_response(
+            summary="Error en la solictud",
+            message=exc.detail,
+            status_code=exc.status_code
+        )
+        
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=response_data
+    )
+
+# Handler Global para RequestValidationError (422)
+@_APP.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Formatear errores de validación
+    errors = {}
+    for error in exc.errors():
+        field = ".".join(str(x) for x in error["loc"])
+        message = error["msg"]
+        errors[field] = message
+
+    response_data = ResponseHandler.validation_error_response(
+        summary="Error de validación",
+        message="Los datos enviados no son válidos",
+        errors=errors
+    )
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=response_data
     )
 
 # Agregar handler para rate limit exceeded
@@ -164,46 +224,6 @@ _APP.add_middleware(
 from app.api.api_v1 import router_api_v1 as api_v1_router
 
 _APP.include_router(api_v1_router)
-
-
-# Health check endpoint
-@_APP.get("/health", tags=["Health"])
-async def health_check():
-    """
-    Health check endpoint para verificar el estado de la aplicación.
-    """
-    from app.core.db.database import _db
-    from app.core.cache.redis import _redis
-    
-    status = {
-        "status": "healthy",
-        "application": "Athletics Module API",
-        "version": _SETTINGS.application_version
-    }
-    
-    # Verificar conexión a base de datos
-    try:
-        engine = _db.get_engine()
-        async with engine.begin() as conn:
-            from sqlalchemy import text
-            await conn.execute(text("SELECT 1"))
-        status["database"] = "connected"
-    except Exception as e:
-        status["database"] = f"error: {str(e)}"
-        status["status"] = "degraded"
-    
-    # Verificar conexión a Redis
-    try:
-        redis_client = _redis.get_client()
-        await redis_client.ping()
-        status["redis"] = "connected"
-    except Exception as e:
-        status["redis"] = f"error: {str(e)}"
-        status["status"] = "degraded"
-    
-    return status
-
-
 @_APP.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
     return JSONResponse(
