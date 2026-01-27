@@ -213,10 +213,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 _APP.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Configurar CORS
+# Configurar CORS
+# Nota: allow_origins=["*"] no funciona con allow_credentials=True.
+# Definimos orígenes explícitos para desarrollo.
+origins = _SETTINGS.cors_allow_origins.split(",") if _SETTINGS.cors_allow_origins != "*" else [
+    "http://localhost",
+    "http://localhost:5173", # Vite default
+    "http://localhost:3000", # React default
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+
 _APP.add_middleware(
     CORSMiddleware,
-    allow_origins=_SETTINGS.cors_allow_origins.split(",") if _SETTINGS.cors_allow_origins != "*" else ["*"],
-    allow_credentials=_SETTINGS.cors_allow_credentials,
+    allow_origins=origins,
+    allow_credentials=True, # _SETTINGS.cors_allow_credentials, force true for cookies
     allow_methods=_SETTINGS.cors_allow_methods.split(",") if _SETTINGS.cors_allow_methods != "*" else ["*"],
     allow_headers=_SETTINGS.cors_allow_headers.split(",") if _SETTINGS.cors_allow_headers != "*" else ["*"],
 )

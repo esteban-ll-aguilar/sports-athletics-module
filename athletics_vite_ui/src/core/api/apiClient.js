@@ -8,14 +8,22 @@ const axiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Importante para cookies
 });
+
+let accessToken = null;
+
+export const setAccessToken = (token) => {
+    accessToken = token;
+};
+
+export const getAccessToken = () => accessToken;
 
 
 axiosInstance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+        if (accessToken) {
+            config.headers.Authorization = `Bearer ${accessToken}`;
         }
         return config;
     },
@@ -25,11 +33,27 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            window.location.replace('/login');
+    async (error) => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/refresh')) {
+            originalRequest._retry = true;
+
+            try {
+                // Intentar refrescar el token (el backend leerá la cookie)
+                const response = await axiosInstance.post('/auth/refresh', {});
+
+                if (response.data.success && response.data.data.access_token) {
+                    const newAccessToken = response.data.data.access_token;
+                    setAccessToken(newAccessToken);
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return axiosInstance(originalRequest);
+                }
+            } catch (refreshError) {
+                // Si falla el refresh (token expirado o inválido), logout
+                setAccessToken(null);
+                window.location.href = '/login'; // O usar history.push si se dispone de router fuera de componente
+            }
         }
         return Promise.reject(error);
     }

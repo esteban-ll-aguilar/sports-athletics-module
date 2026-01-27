@@ -18,7 +18,7 @@ from app.modules.auth.domain.schemas import (
 
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.dependencies import get_users_repo, get_current_user
-from app.public.schemas import BaseResponse
+# from app.public.schemas import BaseResponse # Import removed
 from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
@@ -46,19 +46,19 @@ async def create_user(
     try:
         user = await repo.create_user(user_data)
 
-        return BaseResponse(
+        return APIResponse(
+            success=True,
+            message="Usuario creado exitosamente",
             data=UserResponseSchema.model_validate(
                 user,
                 from_attributes=True
-            ).model_dump(),
-            message="Usuario creado exitosamente",
-            status=status.HTTP_201_CREATED
+            ).model_dump()
         )
     except Exception as e:
-        return BaseResponse(
-            data=None,
-            message=str(e),
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        logger.error(f"Error creating user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
         )
 
 # ======================================================
@@ -123,13 +123,13 @@ async def get_current_user_profile(
             detail="Perfil de usuario no encontrado"
         )
 
-    return BaseResponse(
+    return APIResponse(
+        success=True,
+        message="Perfil obtenido exitosamente",
         data=UserWithRelationsSchema.model_validate(
             current_user.profile,
             from_attributes=True
-        ).model_dump(),
-        message="Perfil obtenido exitosamente",
-        status=status.HTTP_200_OK
+        ).model_dump()
     )
 
 # ======================================================
@@ -214,13 +214,13 @@ async def update_profile(
     await repo.commit()
     await repo.refresh(user)
 
-    return BaseResponse(
+    return APIResponse(
+        success=True,
+        message="Perfil actualizado correctamente",
         data=UserResponseSchema.model_validate(
             user,
             from_attributes=True
-        ).model_dump(),
-        message="Perfil actualizado correctamente",
-        status=status.HTTP_200_OK
+        ).model_dump()
     )
 # GET USER BY EXTERNAL_ID
 # ======================================================
@@ -250,13 +250,13 @@ async def get_user_by_external_id(
             detail="Error interno del servidor"
         )
 
-    return BaseResponse(
+    return APIResponse(
+        success=True,
+        message="Usuario encontrado exitosamente",
         data=UserResponseSchema.model_validate(
             user,
             from_attributes=True
-        ).model_dump(),
-        message="Usuario encontrado exitosamente",
-        status=status.HTTP_200_OK
+        ).model_dump()
     )
 
 # ======================================================
@@ -308,8 +308,8 @@ async def update_user_by_id(
         user_data=user_data
     )
 
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(updated_user).model_dump(),
+    return APIResponse(
+        success=True,
         message="Usuario actualizado correctamente",
-        status=status.HTTP_200_OK
+        data=UserResponseSchema.model_validate(updated_user).model_dump()
     )

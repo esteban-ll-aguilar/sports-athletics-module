@@ -1,29 +1,27 @@
-import axios from 'axios';
+import ApiClient, { setAccessToken } from '../../../core/api/apiClient';
 import Settings from '../../../config/enviroment';
 import { APIResponse } from '../../../core/api/schemas/api_schema';
 
-const API_URL = `${Settings.API_URL}/api/v1`;
+const API_REF = `/auth`;
 
 
 class AuthRepository {
     // Helper to save tokens
     _saveTokens(data) {
         if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
+            setAccessToken(data.access_token);
         }
-        if (data.refresh_token) {
-            localStorage.setItem('refresh_token', data.refresh_token);
-        }
+        // Refresh token is handled by HttpOnly cookie
     }
 
     async login(email, password) {
         try {
             // Using JSON instead of FormData
-            const response = await axios.post(`${API_URL}/auth/login`, {
+            const responseData = await ApiClient.post(`${API_REF}/login`, {
                 username: email,
                 password: password
             });
-            const apiResponse = APIResponse.fromJson(response.data);
+            const apiResponse = APIResponse.fromJson(responseData);
 
             if (apiResponse.success && apiResponse.data) {
                 // Check if we received tokens (successful login) vs temp_token (2FA required)
@@ -40,12 +38,8 @@ class AuthRepository {
 
     async register(userData) {
         try {
-            const response = await axios.post(`${API_URL}/auth/register`, userData, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            return APIResponse.fromJson(response.data);
+            const responseData = await ApiClient.post(`${API_REF}/register`, userData);
+            return APIResponse.fromJson(responseData);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -53,12 +47,8 @@ class AuthRepository {
 
     async verifyEmail(email, code) {
         try {
-            const response = await axios.post(`${API_URL}/auth/email/verify`, { email, code }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            return APIResponse.fromJson(response.data);
+            const responseData = await ApiClient.post(`${API_REF}/email/verify`, { email, code });
+            return APIResponse.fromJson(responseData);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -66,12 +56,8 @@ class AuthRepository {
 
     async resendVerification(email) {
         try {
-            const response = await axios.post(`${API_URL}/auth/email/resend-verification`, { email }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            return APIResponse.fromJson(response.data);
+            const responseData = await ApiClient.post(`${API_REF}/email/resend-verification`, { email });
+            return APIResponse.fromJson(responseData);
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -79,33 +65,27 @@ class AuthRepository {
 
     async getProfile() {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}/auth/users/me`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            // ApiClient handles authorization header automatically via interceptor
+            const responseData = await ApiClient.get(`${API_REF}/users/me`);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
     }
 
     async updateProfile(formData) {
-        const token = localStorage.getItem('access_token');
-
-        const response = await axios.put(
-            `${API_URL}/auth/users/me`,
+        // ApiClient handles authorization
+        // Note: For FormData, axios usually handles Content-Type automatically.
+        // ApiClient.put uses axiosInstance.put
+        const responseData = await ApiClient.put(
+            `${API_REF}/users/me`,
             formData,
             {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                    // ❌ NO Content-Type
-                }
+                headers: { "Content-Type": "multipart/form-data" }
             }
         );
 
-        return response.data;
+        return responseData;
     }
 
     //  Funcion para actualizar el rol de un usuario por un administrador
@@ -144,15 +124,10 @@ class AuthRepository {
     // Refresh Token
     async refreshToken() {
         try {
-            const token = localStorage.getItem('access_token');
-            const refreshToken = localStorage.getItem('refresh_token');
-            const response = await axios.post(`${API_URL}/auth/refresh`, { refresh_token: refreshToken }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            // We don't send refresh_token in body anymore, browser sends cookie.
+            const responseData = await ApiClient.post(`${API_REF}/refresh`, {});
 
-            const apiResponse = APIResponse.fromJson(response.data);
+            const apiResponse = APIResponse.fromJson(responseData);
             if (apiResponse.success && apiResponse.data) {
                 this._saveTokens(apiResponse.data);
             }
@@ -165,14 +140,9 @@ class AuthRepository {
     // Logout
     async logout() {
         try {
-            const token = localStorage.getItem('access_token');
-            const refreshToken = localStorage.getItem('refresh_token');
-            const response = await axios.post(`${API_URL}/auth/logout`, { refresh_token: refreshToken }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.post(`${API_REF}/logout`, {});
+            setAccessToken(null); // Clear memory token
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -195,15 +165,10 @@ class AuthRepository {
 
     async revokeSession(sessionId) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/sessions/revoke`, { session_id: sessionId }, { // Assuming body param, check if query param needed
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+            const responseData = await ApiClient.post(`${API_REF}/sessions/revoke`, { session_id: sessionId }, { // Assuming body param, check if query param needed
                 params: { session_id: sessionId } // Sending as query param just in case, common pattern
             });
-            return response.data;
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -211,13 +176,8 @@ class AuthRepository {
 
     async revokeAllSessions() {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/sessions/revoke-all`, {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.post(`${API_REF}/sessions/revoke-all`, {});
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -226,18 +186,13 @@ class AuthRepository {
     // Two-Factor Authentication
     async enable2FA() {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/2fa/enable`, {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const responseData = await ApiClient.post(`${API_REF}/2fa/enable`, {});
             // Backend returns APIResponse[Enable2FAResponse]
             // So response.data = {success, message, data: {secret, qr_code, backup_codes, message}}
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data; // Return the Enable2FAResponse
+            if (responseData.success && responseData.data) {
+                return responseData.data; // Return the Enable2FAResponse
             }
-            return response.data; // Return whole APIResponse for errors
+            return responseData; // Return whole APIResponse for errors
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -245,19 +200,13 @@ class AuthRepository {
 
     async verify2FA(code) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/auth/2fa/verify`, { code }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const responseData = await ApiClient.post(`${API_REF}/2fa/verify`, { code });
+
             // Backend returns APIResponse[MessageResponse]
-            // So response.data = {success, message, data: {message}}
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data; // Return MessageResponse {message}
+            if (responseData.success && responseData.data) {
+                return responseData.data; // Return MessageResponse {message}
             }
-            return response.data;
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -284,12 +233,9 @@ class AuthRepository {
     async login2FA(email, code, temp_token) {
         try {
             // Note: Backend expects Login2FARequest { email, code, temp_token }
-            const response = await axios.post(`${API_URL}/auth/2fa/login`, { email, code, temp_token }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            const apiResponse = APIResponse.fromJson(response.data);
+            const responseData = await ApiClient.post(`${API_REF}/2fa/login`, { email, code, temp_token });
+
+            const apiResponse = APIResponse.fromJson(responseData);
             if (apiResponse.success && apiResponse.data) {
                 this._saveTokens(apiResponse.data);
             }
@@ -302,12 +248,9 @@ class AuthRepository {
     async loginBackup(email, backupCode, temp_token) {
         try {
             // Note: Backend expects LoginBackupCodeRequest { email, backup_code, temp_token }
-            const response = await axios.post(`${API_URL}/auth/2fa/login-backup`, { email, backup_code: backupCode, temp_token }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            const apiResponse = APIResponse.fromJson(response.data);
+            const responseData = await ApiClient.post(`${API_REF}/2fa/login-backup`, { email, backup_code: backupCode, temp_token });
+
+            const apiResponse = APIResponse.fromJson(responseData);
             if (apiResponse.success && apiResponse.data) {
                 this._saveTokens(apiResponse.data);
             }

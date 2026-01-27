@@ -146,6 +146,26 @@ class SessionsRepository:
         )
         return result.rowcount > 0
 
+    async def update_session_after_refresh(
+        self,
+        old_refresh_jti: str,
+        new_access_jti: str,
+        new_refresh_jti: str,
+        new_expires_at: datetime
+    ) -> bool:
+        """Actualiza tokens de sesión tras un refresh exitoso, rotando el refresh token."""
+        result = await self.session.execute(
+            update(AuthUsersSessionsModel)
+            .where(AuthUsersSessionsModel.refresh_token == old_refresh_jti)
+            .values(
+                access_token=new_access_jti,
+                refresh_token=new_refresh_jti,
+                expires_at=new_expires_at
+            )
+        )
+        await self.session.commit()
+        return result.rowcount > 0
+
     async def create_or_update_session(
         self,
         user_id: uuid.UUID,

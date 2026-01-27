@@ -10,6 +10,7 @@ const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Estados para el modal de verificación
@@ -30,6 +31,7 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setError(''); // Limpiar errores previos
 
         try {
             const response = await authService.login(email, password);
@@ -43,6 +45,10 @@ const LoginPage = () => {
             } else if (response.success) {
                 toast.success(response.message || 'Inicio de sesión exitoso');
                 navigate('/dashboard');
+            } else {
+                // Caso raro donde success es false pero no lanzó excepción (depende de auth_service)
+                setError(response.message || 'Error desconocido');
+                toast.error(response.message || 'Error desconocido');
             }
         } catch (err) {
             console.error("Login error:", err);
@@ -51,9 +57,10 @@ const LoginPage = () => {
             if (err.detail === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
             } else {
-                setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
+                const errorMessage = err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.';
+                setError(errorMessage);
+                toast.error(errorMessage);
             }
-            toast.error(message);
         } finally {
             setLoading(false);
         }

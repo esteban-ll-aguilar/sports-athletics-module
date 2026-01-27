@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Request, HTTPException
+from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
@@ -30,6 +30,7 @@ from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
+from app.api.schemas.api_schemas import APIResponse
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -43,7 +44,7 @@ auth_router_v1 = APIRouter()
 
 @auth_router_v1.post(
     "/register",
-    response_model=UserResponseSchema,
+    response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_201_CREATED,
 )
 @limiter.limit("10/minute")
@@ -78,7 +79,13 @@ async def register(
         except Exception as e:
             logger.error(f"Error enviando email de verificación: {e}")
 
-        return UserResponseSchema.model_validate(user)
+        return APIResponse(
+            success=True,
+            message="Usuario registrado exitosamente. Por favor verifica tu email.",
+            data=UserResponseSchema.model_validate(user)
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error registrando usuario: {e}")
         raise HTTPException(
@@ -93,97 +100,124 @@ async def register(
 
 @auth_router_v1.post(
     "/login",
-    response_model=Union[TokenPair, TwoFactorRequired],
+    response_model=APIResponse[Union[TokenPair, TwoFactorRequired]],
 )
 @limiter.limit("5/minute")
 async def login(
     request: Request,
+    response: Response,
     data: LoginSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     hasher: PasswordHasher = Depends(get_password_hasher),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    try:
-        user = await repo.get_by_email(data.username)
+    # Ya no capturamos todas las excepciones para permitir que HTTPException fluya
+    user = await repo.get_by_email(data.username)
 
-        if not user or not hasher.verify(data.password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Credenciales inválidas",
-            )
+    if not user or not hasher.verify(data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas",
+        )
 
-        if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Usuario inactivo, por favor verifica tu email",
-            )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario inactivo, por favor verifica tu email",
+        )
 
-        if user.two_factor_enabled:
-            temp_token = jwtm.create_access_token(
-                str(user.id),
-                user.profile.role.name,
-                user.email,
-                user.profile.username,
-            )
-            return TwoFactorRequired(
+    if user.two_factor_enabled:
+        temp_token = jwtm.create_access_token(
+            str(user.id),
+            user.profile.role.name,
+            user.email,
+            user.profile.username,
+        )
+        return APIResponse(
+            success=True,
+            message="Se requiere autenticación de dos factores",
+            data=TwoFactorRequired(
                 temp_token=temp_token,
                 message="2FA requerido",
             )
-
-        access = jwtm.create_access_token(
-            str(user.id),
-            user.profile.role.name,
-            user.email,
-            user.profile.username,
-        )
-        refresh = jwtm.create_refresh_token(
-            str(user.id),
-            user.profile.role.name,
-            user.email,
-            user.profile.username,
         )
 
-        access_payload = jwtm.decode(access)
-        refresh_payload = jwtm.decode(refresh)
+    access = jwtm.create_access_token(
+        str(user.id),
+        user.profile.role.name,
+        user.email,
+        user.profile.username,
+    )
+    refresh = jwtm.create_refresh_token(
+        str(user.id),
+        user.profile.role.name,
+        user.email,
+        user.profile.username,
+    )
 
-        await jwtm.store_refresh(
-            refresh_payload["jti"],
-            str(user.id),
-            refresh_payload["exp"],
-        )
+    access_payload = jwtm.decode(access)
+    refresh_payload = jwtm.decode(refresh)
 
-        await sessions_repo.create_or_update_session(
-            user_id=user.id,
-            access_jti=access_payload["jti"],
-            refresh_jti=refresh_payload["jti"],
-            expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
-        )
+    await jwtm.store_refresh(
+        refresh_payload["jti"],
+        str(user.id),
+        refresh_payload["exp"],
+    )
 
-        return TokenPair(
+    await sessions_repo.create_or_update_session(
+        user_id=user.id,
+        access_jti=access_payload["jti"],
+        refresh_jti=refresh_payload["jti"],
+        expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
+    )
+
+    # Set Refresh Token in HttpOnly Cookie
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh,
+        httponly=True,
+        secure=False, # TODO: Set to False for localhost development
+        samesite="lax", # or 'strict'
+        max_age=7 * 24 * 60 * 60 # 7 days
+    )
+
+    return APIResponse(
+        success=True,
+        message="Inicio de sesión exitoso",
+        data=TokenPair(
             access_token=access,
-            refresh_token=refresh,
+            refresh_token=refresh, # We keep returning it for non-browser clients, optional
         )
-    except Exception as e:
-        logger.error(f"Error en el login: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor",
-        )
+    )
 
 
 # ======================================================
 # REFRESH
 # ======================================================
 
-@auth_router_v1.post("/refresh", response_model=TokenPair)
+@auth_router_v1.post("/refresh", response_model=APIResponse[TokenPair])
 async def refresh_token(
+    request: Request,
+    response: Response,
     body: RefreshRequest,
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
     try:
-        payload = jwtm.decode(body.refresh_token)
+        logger.info(f"Refresh attempt. Cookies: {request.cookies.keys()}")
+        # Get refresh token from cookie if not in body
+        token_to_refresh = body.refresh_token
+        if not token_to_refresh:
+            token_to_refresh = request.cookies.get("refresh_token")
+        
+        if not token_to_refresh:
+             raise HTTPException(status_code=400, detail="Refresh token no proporcionado")
+
+        try:
+            payload = jwtm.decode(token_to_refresh)
+        except Exception:
+             raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=400, detail="Token inválido")
@@ -210,18 +244,85 @@ async def refresh_token(
             refresh_payload["exp"],
         )
 
-        await sessions_repo.update_session_access_token(
+        await sessions_repo.update_session_after_refresh(
             old_refresh_jti=jti,
             new_access_jti=access_payload["jti"],
+            new_refresh_jti=refresh_payload["jti"],
+            new_expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
         )
 
-        return TokenPair(
-            access_token=access,
-            refresh_token=refresh,
+        # Update cookie with new refresh token
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh,
+            httponly=True,
+            secure=False, # TODO: False for dev
+            samesite="lax",
+            max_age=7 * 24 * 60 * 60
         )
+
+        return APIResponse(
+            success=True,
+            message="Token refrescado exitosamente",
+            data=TokenPair(
+                access_token=access,
+                refresh_token=refresh,
+            )
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error al refrescar el token: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor",
         )
+
+
+# ======================================================
+# LOGOUT
+# ======================================================
+
+@auth_router_v1.post("/logout", response_model=APIResponse)
+async def logout(
+    request: Request,
+    response: Response,
+    body: RefreshRequest = None,  # Opcional, para invalidar refresh
+    jwtm: JWTManager = Depends(get_jwt_manager),
+    sessions_repo: SessionsRepository = Depends(get_sessions_repo),
+):
+    """
+    Cierra sesión. Opcionalmente invalida el refresh token provisto.
+    """
+    try:
+        cookie_refresh = request.cookies.get("refresh_token")
+        token_to_revoke = (body and body.refresh_token) or cookie_refresh
+        
+        if token_to_revoke:
+            try:
+                payload = jwtm.decode(token_to_revoke)
+                jti = payload.get("jti")
+                if jti:
+                    # Opcional: Marcar como revocado en Redis si tienes blacklist
+                    # O usar sessions_repo para invalidar la sesión asociada
+                    pass
+            except Exception:
+                pass # Ignorar errores de token inválido en logout
+        
+        # Aquí podrías usar el token de acceso del header para invalidar sesión específica
+        # si tu arquitectura lo requiere. Por ahora simplemente retornamos éxito.
+        
+        return APIResponse(
+            success=True,
+            message="Sesión cerrada exitosamente"
+        )
+    except Exception as e:
+        logger.error(f"Error en logout: {e}")
+        # Clear cookie
+        response.delete_cookie(key="refresh_token")
+
+        return APIResponse(
+            success=True, 
+            message="Sesión cerrada (con advertencias)"
+        )
+

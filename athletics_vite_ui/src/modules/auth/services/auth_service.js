@@ -1,13 +1,12 @@
 import authRepository from '../repositories/auth_repository';
+import { jwtDecode } from 'jwt-decode';
+import { getAccessToken, setAccessToken } from '../../../core/api/apiClient';
 
 class AuthService {
 
     async login(email, password) {
         const data = await authRepository.login(email, password);
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
-        }
+        // data is APIResponse. authRepository handles token storage.
         return data;
     }
 
@@ -44,9 +43,25 @@ class AuthService {
     }
 
 
+    // Flag to manage concurrent refresh requests
+    _refreshPromise = null;
+
     // New methods delegating to repository
     async refreshToken() {
-        return await authRepository.refreshToken();
+        if (this._refreshPromise) {
+            return this._refreshPromise;
+        }
+
+        this._refreshPromise = (async () => {
+            try {
+                const result = await authRepository.refreshToken();
+                return result;
+            } finally {
+                this._refreshPromise = null;
+            }
+        })();
+
+        return this._refreshPromise;
     }
 
     async getSessions() {
@@ -75,23 +90,13 @@ class AuthService {
 
     async login2FA(email, code, temp_token) {
         const responseCtx = await authRepository.login2FA(email, code, temp_token);
-        const responseData = responseCtx.data;
-
-        if (responseData && responseData.access_token) {
-            localStorage.setItem('access_token', responseData.access_token);
-            localStorage.setItem('refresh_token', responseData.refresh_token);
-        }
+        // authRepository handles token setAccessToken via _saveTokens
         return responseCtx;
     }
 
     async loginBackup(email, code, temp_token) {
         const responseCtx = await authRepository.loginBackup(email, code, temp_token);
-        const responseData = responseCtx.data;
-
-        if (responseData && responseData.access_token) {
-            localStorage.setItem('access_token', responseData.access_token);
-            localStorage.setItem('refresh_token', responseData.refresh_token);
-        }
+        // authRepository handles token setAccessToken via _saveTokens
         return responseCtx;
     }
 
@@ -101,13 +106,12 @@ class AuthService {
         } catch (error) {
             console.error("Logout failed", error);
         } finally {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            setAccessToken(null);
         }
     }
 
     isAuthenticated() {
-        const token = localStorage.getItem('access_token');
+        const token = getAccessToken();
         if (!token) return false;
 
         try {
@@ -115,21 +119,32 @@ class AuthService {
             const isExpired = payload.exp * 1000 < Date.now();
 
             if (isExpired) {
-                console.warn("Token expired, logging out.");
-                this.logout();
+                // If expired in memory, we assume client interceptor will refresh or has failed.
+                // But specifically for UI checking "is logged in", validation fails.
                 return false;
             }
 
             return true;
         } catch (error) {
             console.error("Token validation failed:", error);
-            this.logout();
+            return false;
+        }
+    }
+
+    // New method to initialize app state
+    async checkAuth() {
+        if (this.isAuthenticated()) return true;
+        try {
+            // Try silent refresh (uses deduplication logic in refreshToken)
+            await this.refreshToken();
+            return !!getAccessToken(); // Check if access token was set by repository
+        } catch (e) {
             return false;
         }
     }
 
     getToken() {
-        return localStorage.getItem('access_token');
+        return getAccessToken();
     }
 }
 
