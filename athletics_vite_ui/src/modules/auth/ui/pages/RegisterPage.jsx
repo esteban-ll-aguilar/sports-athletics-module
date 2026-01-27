@@ -320,7 +320,6 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Nombre"
                                     />
-                                    <ErrorMessage message={fieldErrors.first_name} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
@@ -332,7 +331,6 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Apellido"
                                     />
-                                    <ErrorMessage message={fieldErrors.last_name} />
                                 </div>
                             </div>
 
@@ -366,7 +364,6 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0123456789"
                                     />
-                                    <ErrorMessage message={fieldErrors.identificacion} />
                                 </div>
                             </div>
 
@@ -381,7 +378,6 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0999999999"
                                     />
-                                    <ErrorMessage message={fieldErrors.phone} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
@@ -392,7 +388,6 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Tu dirección"
                                     />
-                                    <ErrorMessage message={fieldErrors.direccion} />
                                 </div>
                             </div>
                         </div>
@@ -410,7 +405,6 @@ const RegisterPage = () => {
                                     onChange={handleChange}
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
                                 />
-                                <ErrorMessage message={fieldErrors.fecha_nacimiento} />
                             </div>
 
                             <div>
@@ -479,7 +473,6 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="Nombre de usuario"
                                 />
-                                <ErrorMessage message={fieldErrors.username} />
                             </div>
 
                             <div>
@@ -493,7 +486,6 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
-                                <ErrorMessage message={fieldErrors.email} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -526,7 +518,6 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
-                                    <ErrorMessage message={fieldErrors.password} />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
@@ -557,7 +548,6 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
-                                    <ErrorMessage message={fieldErrors.confirmPassword} />
                                 </div>
                             </div>
                             <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>

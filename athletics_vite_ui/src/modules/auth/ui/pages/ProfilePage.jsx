@@ -3,6 +3,7 @@ import { User, Mail, Phone, MapPin, Calendar, CreditCard, Save, Shield, Camera }
 import { toast } from 'react-hot-toast';
 import authService from '../../services/auth_service';
 import HistorialMedicoModal from '../widgets/HistorialmedicoModal';
+import historialMedicoService from '../../services/historialMedicoService';
 import TwoFactorSettings from '../widgets/TwoFactorSettings';
 import ActiveSessionsWidget from '../widgets/ActiveSessionsWidget';
 import Settings from '../../../../config/enviroment';
@@ -12,6 +13,7 @@ const ProfilePage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [isHistorialModalOpen, setIsHistorialModalOpen] = useState(false);
     const [profileFile, setProfileFile] = useState(null);
+    const [historial, setHistorial] = useState(null);
 
 
     const [formData, setFormData] = useState({
@@ -39,9 +41,16 @@ const ProfilePage = () => {
     const fetchProfile = async () => {
         try {
             setLoading(true);
-            const response = await authService.getProfile();
-            if (response.data) {
-                const user = response.data;
+            const [profileResponse, historialResponse] = await Promise.all([
+                authService.getProfile(),
+                historialMedicoService.getMyHistorial().catch((error) => {
+                    console.error("❌ Error fetching historial:", error);
+                    return null;
+                })
+            ]);
+
+            if (profileResponse.data) {
+                const user = profileResponse.data;
                 setFormData({
                     username: user.username || '',
                     first_name: user.first_name || '',
@@ -56,10 +65,22 @@ const ProfilePage = () => {
                     sexo: user.sexo || '',
                     role: user.role || '',
                     profile_image: user.profile_image || '',
-                    user_external_id: user.external_id || '', // 🔹
-                    historial_external_id: user.historial?.external_id || null // 🔹
+                    user_external_id: user.external_id || '',
+                    historial_external_id: user.historial?.external_id || null
                 });
             }
+
+            if (historialResponse) {
+                console.log("✅ Historial loaded:", historialResponse);
+                // Check if wrapped in data (APIResponse pattern) or flat
+                const validHistorial = historialResponse.data || historialResponse;
+                setHistorial(validHistorial);
+            } else {
+                console.log("⚠️ No history found or error occurred.");
+                // Optional: Toast msg if we expected history but got none
+                // toast.error("No se pudo cargar el historial médico");
+            }
+
         } catch (err) {
             toast.error(err.message || 'No se pudo cargar la información del perfil.');
             console.error(err);
@@ -67,6 +88,7 @@ const ProfilePage = () => {
             setLoading(false);
         }
     };
+
 
 
     const handleChange = (e) => {
@@ -476,6 +498,53 @@ const ProfilePage = () => {
 
 
             </form>
+
+            {/* HISTORIAL MÉDICO SECTION */}
+            <div className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6 md:p-8">
+                <div className="flex items-center mb-6">
+                    <Shield className="text-[#b30c25] mr-2" />
+                    <h2 className="text-xl font-semibold text-white">Historial Médico</h2>
+                </div>
+
+                {historial ? (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div className="bg-[#242223] p-4 rounded-xl border border-[#332122]">
+                                <p className="text-gray-400 text-sm mb-1">Talla</p>
+                                <p className="text-2xl font-semibold">{historial.talla} m</p>
+                            </div>
+                            <div className="bg-[#242223] p-4 rounded-xl border border-[#332122]">
+                                <p className="text-gray-400 text-sm mb-1">Peso</p>
+                                <p className="text-2xl font-semibold">{historial.peso} kg</p>
+                            </div>
+                            <div className="bg-[#242223] p-4 rounded-xl border border-[#332122]">
+                                <p className="text-gray-400 text-sm mb-1">IMC</p>
+                                <p className="text-2xl font-semibold">{historial.imc}</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="border-b border-[#332122] pb-4">
+                                <p className="text-gray-400 text-sm mb-2">Alergias</p>
+                                <p className="text-white">{historial.alergias || "Ninguna"}</p>
+                            </div>
+                            <div className="border-b border-[#332122] pb-4">
+                                <p className="text-gray-400 text-sm mb-2">Enfermedades</p>
+                                <p className="text-white">{historial.enfermedades || "Ninguna"}</p>
+                            </div>
+                            <div>
+                                <p className="text-gray-400 text-sm mb-2">Enfermedades Hereditarias</p>
+                                <p className="text-white">{historial.enfermedades_hereditarias || "Ninguna"}</p>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-8 bg-[#242223] rounded-xl border border-[#332122] border-dashed">
+                        <Shield className="mx-auto h-12 w-12 text-gray-500 mb-3 opacity-50" />
+                        <p className="text-gray-400">Aún no se ha registrado el historial médico</p>
+                    </div>
+                )}
+            </div>
 
             <TwoFactorSettings />
 

@@ -88,6 +88,6 @@ class HistorialMedicoUpdate(BaseModel):
 class HistorialMedicoRead(HistorialMedicoBase):
     id: int
     external_id: UUID
-    auth_user_id: int
+    atleta_id: int
 
     model_config = ConfigDict(from_attributes=True)
