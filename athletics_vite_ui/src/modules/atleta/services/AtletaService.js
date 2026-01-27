@@ -2,25 +2,25 @@ import ApiClient from "../../../core/api/apiClient";
 
 const AtletaService = {
     getAll: async () => {
-        const response = await ApiClient.get('/atleta/');
-        console.log("AtletaService.getAll response:", response);
-        return response;
+        const data = await ApiClient.get('/atleta/');
+        console.log("AtletaService.getAll data:", data);
+        return data; // ApiClient already unwraps response.data
     },
 
     getAthletes: async (page = 1, limit = 20) => {
-        const response = await ApiClient.get(`/auth/users/list?page=${page}&size=${limit}&role=ATLETA`);
-        console.log("AtletaService.getAthletes response:", response);
-        return response;
+        const data = await ApiClient.get(`/auth/users/list?page=${page}&size=${limit}&role=ATLETA`);
+        console.log("AtletaService.getAthletes data:", data);
+        return data;
     },
 
     getHistorial: async () => {
-        const response = await ApiClient.get('/atleta/historial');
-        return response;
+        const data = await ApiClient.get('/atleta/historial');
+        return data;
     },
 
     getEstadisticas: async () => {
-        const response = await ApiClient.get('/atleta/estadisticas');
-        return response;
+        const data = await ApiClient.get('/atleta/estadisticas');
+        return data;
     }
 };
 

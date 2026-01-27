@@ -3,6 +3,7 @@ import Competencia from "../../domain/models/Competencia";
 import Swal from "sweetalert2";
 
 const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => {
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(new Competencia());
 
   useEffect(() => {
@@ -15,6 +16,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
   // Manejar creación o edición
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
 
     const result = await Swal.fire({
       title: editingCompetencia ? '¿Desea actualizar esta competencia?' : '¿Desea crear esta competencia?',
@@ -29,16 +31,24 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
     });
 
     if (result.isConfirmed) {
-      onSubmit(form);
+      setSubmitting(true);
+      try {
+        const success = await onSubmit(form);
 
-      await Swal.fire({
-        icon: 'success',
-        title: editingCompetencia ? 'Competencia actualizada' : 'Competencia creada',
-        text: `La competencia ha sido ${editingCompetencia ? 'actualizada' : 'creada'} correctamente.`,
-        confirmButtonColor: '#ec1313'
-      });
-
-      onClose();
+        if (success) {
+          await Swal.fire({
+            icon: 'success',
+            title: editingCompetencia ? 'Competencia actualizada' : 'Competencia creada',
+            text: `La competencia ha sido ${editingCompetencia ? 'actualizada' : 'creada'} correctamente.`,
+            confirmButtonColor: '#ec1313'
+          });
+          onClose();
+        }
+      } catch (error) {
+        console.error("Error Modal", error);
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
@@ -196,22 +206,26 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
             <button
               type="button"
               onClick={onClose}
+              disabled={submitting}
               className="
                 flex-1 px-4 py-3 rounded-xl font-semibold
                 border border-[#332122] text-gray-400
                 hover:bg-[#242223] transition
+                disabled:opacity-50
               "            >
               Cancelar
             </button>
             <button
               type="submit"
+              disabled={submitting}
               className="
                 flex-1 px-4 py-3 rounded-xl font-semibold text-white
                 bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
                 hover:brightness-110 transition active:scale-95
+                disabled:opacity-70 disabled:cursor-wait
               "
             >
-              {editingCompetencia ? 'Guardar Cambios' : 'Crear Competencia'}
+              {submitting ? (editingCompetencia ? 'Guardando...' : 'Creando...') : (editingCompetencia ? 'Guardar Cambios' : 'Crear Competencia')}
             </button>
           </div>
         </form>

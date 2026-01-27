@@ -7,22 +7,22 @@ class AdminService {
             url += `&role=${role}`;
         }
         const response = await apiClient.get(url);
-        return response;
+        return response.data;
     }
 
     async updateUserRole(userId, role) {
         const response = await apiClient.put(`/auth/users/${userId}/role`, { role });
-        return response;
+        return response.data;
     }
 
     async getJwtRotationInfo() {
         const response = await apiClient.get('/admin/jwt/rotation-info');
-        return response;
+        return response.data;
     }
 
     async rotateJwtSecret() {
         const response = await apiClient.post('/admin/jwt/rotate-secret');
-        return response;
+        return response.data;
     }
 
 }

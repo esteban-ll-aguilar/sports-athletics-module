@@ -44,6 +44,7 @@ from app.modules.auth.domain.schemas.schemas_auth import (
     PasswordChangeRequest,
     MessageResponse,
     UserUpdateRequest,
+    LoginSchema,
 )
 
 __all__ = [
@@ -61,6 +62,7 @@ __all__ = [
 
     # Auth
     "TokenPair",
+    "LoginSchema",
     "RefreshRequest",
     "PasswordResetRequest",
     "PasswordResetCodeValidation",

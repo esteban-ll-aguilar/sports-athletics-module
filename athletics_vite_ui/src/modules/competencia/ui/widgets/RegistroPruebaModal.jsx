@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 
 const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competencias = [], atletas = [], pruebas = [] }) => {
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         atleta_id: "",
         prueba_id: "",
@@ -62,6 +63,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitting) return;
 
         const payload = {
             atleta_id: form.atleta_id,
@@ -85,7 +87,25 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
         });
 
         if (result.isConfirmed) {
-            onSubmit(payload);
+            setSubmitting(true);
+            try {
+                const success = await onSubmit(payload);
+                if (success) {
+                    await Swal.fire({
+                        title: "Éxito",
+                        text: "Registro guardado correctamente",
+                        icon: "success",
+                        confirmButtonColor: '#b30c25',
+                        background: '#212121',
+                        color: '#fff'
+                    });
+                    onClose();
+                }
+            } catch (error) {
+                console.error("Error modal:", error);
+            } finally {
+                setSubmitting(false);
+            }
         }
     };
 
@@ -222,11 +242,20 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                     </div>
 
                     <div className="pt-4 flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-gray-400 font-bold hover:bg-[#333] transition-colors">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
+                            className="px-5 py-2.5 rounded-xl text-gray-400 font-bold hover:bg-[#333] transition-colors disabled:opacity-50"
+                        >
                             Cancelar
                         </button>
-                        <button type="submit" className="px-5 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8a0a1d] text-white font-bold transition-colors shadow-lg shadow-red-900/20">
-                            {editingItem ? 'Actualizar' : 'Guardar Resultado'}
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="px-5 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8a0a1d] text-white font-bold transition-colors shadow-lg shadow-red-900/20 disabled:opacity-70 disabled:cursor-wait"
+                        >
+                            {submitting ? 'Guardando...' : (editingItem ? 'Actualizar' : 'Guardar Resultado')}
                         </button>
                     </div>
                 </form>

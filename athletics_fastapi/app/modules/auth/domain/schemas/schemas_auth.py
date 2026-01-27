@@ -8,6 +8,12 @@ class TokenPair(BaseModel):
     token_type: str = "bearer"
 
 
+class LoginSchema(BaseModel):
+    username: str
+    password: str
+
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
 

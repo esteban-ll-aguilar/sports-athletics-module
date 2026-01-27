@@ -46,26 +46,12 @@ const LoginPage = () => {
             }
         } catch (err) {
             console.error("Login error:", err);
-            // Manejo de errores personalizados
-            let message = 'Error al iniciar sesión';
-            // Rate limit
-            if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
-                message = 'Demasiados intentos. Por favor, espera un minuto antes de volver a intentarlo.';
-            } else if (err.message && typeof err.message === 'string') {
-                message = err.message;
-            } else if (err.detail && typeof err.detail === 'string') {
-                message = err.detail;
-            } else if (err.errors && Array.isArray(err.errors)) {
-                // Errores de validación de Pydantic
-                message = err.errors.map(e => e.msg).join(' | ');
-            }
-            // Cédula inválida
-            if (message.toLowerCase().includes('cédula inválida')) {
-                message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
-            }
-            // Usuario inactivo
-            if (message === "Usuario inactivo, por favor verifica tu email") {
+
+            // Detectar si el error es por usuario inactivo
+            if (err.detail === "Usuario inactivo, por favor verifica tu email") {
                 setShowVerificationModal(true);
+            } else {
+                setError(err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.');
             }
             toast.error(message);
         } finally {

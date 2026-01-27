@@ -18,14 +18,10 @@ class AuthRepository {
 
     async login(email, password) {
         try {
-            const formData = new FormData();
-            formData.append('username', email);
-            formData.append('password', password);
-
-            const response = await axios.post(`${API_URL}/auth/login`, formData, {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
+            // Using JSON instead of FormData
+            const response = await axios.post(`${API_URL}/auth/login`, {
+                username: email,
+                password: password
             });
             const apiResponse = APIResponse.fromJson(response.data);
 

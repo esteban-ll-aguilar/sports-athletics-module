@@ -12,6 +12,7 @@ from app.modules.auth.domain.schemas import (
     TokenPair,
     RefreshRequest,
     TwoFactorRequired,
+    LoginSchema
 )
 
 from app.modules.auth.dependencies import (
@@ -29,7 +30,6 @@ from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
-from app.api.schemas.api_schemas import APIResponse
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -43,7 +43,7 @@ auth_router_v1 = APIRouter()
 
 @auth_router_v1.post(
     "/register",
-    response_model=APIResponse[UserResponseSchema],
+    response_model=UserResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 @limiter.limit("10/minute")
@@ -60,44 +60,25 @@ async def register(
     """
 
     if await repo.get_by_email(data.email):
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            content=APIResponse(
-                success=False,
-                message="Email ya registrado",
-                data=None
-            ).model_dump()
-        )
-
-    # Check duplicate username
-    if await repo.get_by_username(data.username):
-        return JSONResponse(
-            status_code=status.HTTP_409_CONFLICT,
-            content=APIResponse(
-                success=False,
-                message="Username ya registrado",
-                data=None
-            ).model_dump()
+            detail="Email ya registrado",
         )
     
-    password_hash = hasher.hash(data.password)
-    user = await repo.create(password_hash=password_hash, user_data=data)
-    # await repo.session.commit() # Removed: handled by repo
-
-    # Enviar código de verificación
-    code = verification_service.generate_verification_code()
-    await verification_service.store_verification_code(data.email, code)
-
     try:
-        email_service.send_email_verification_code(data.email, code)
-    except Exception as e:
-        logger.error(f"Error enviando email de verificación: {e}")
+        password_hash = hasher.hash(data.password)
+        user = await repo.create(password_hash=password_hash, user_data=data)
+        
+        # Enviar código de verificación
+        code = verification_service.generate_verification_code()
+        await verification_service.store_verification_code(data.email, code)
 
-    return APIResponse(
-        success=True,
-        message="Usuario registrado exitosamente. Verifique su correo.",
-        data=UserResponseSchema.model_validate(user)
-    )
+        try:
+            email_service.send_email_verification_code(data.email, code)
+        except Exception as e:
+            logger.error(f"Error enviando email de verificación: {e}")
+
+    return UserResponseSchema.model_validate(user)
 
 
 # ======================================================
@@ -106,37 +87,30 @@ async def register(
 
 @auth_router_v1.post(
     "/login",
-    response_model=APIResponse[Union[TokenPair, TwoFactorRequired]],
+    response_model=Union[TokenPair, TwoFactorRequired],
 )
 @limiter.limit("5/minute")
 async def login(
     request: Request,
-    form: OAuth2PasswordRequestForm = Depends(),
+    data: LoginSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     hasher: PasswordHasher = Depends(get_password_hasher),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    user = await repo.get_by_email(form.username)
+    try:
+        user = await repo.get_by_email(data.username)
 
     if not user or not hasher.verify(form.password, user.hashed_password):
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content=APIResponse(
-                success=False,
-                message="Credenciales inválidas",
-                data=None
-            ).model_dump()
+            detail="Credenciales inválidas",
         )
 
     if not user.is_active:
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content=APIResponse(
-                success=False,
-                message="Usuario inactivo, por favor verifica tu email",
-                data=None
-            ).model_dump()
+            detail="Usuario inactivo, por favor verifica tu email",
         )
 
     if user.two_factor_enabled:
@@ -146,53 +120,45 @@ async def login(
             user.email,
             user.profile.username,
         )
-        return APIResponse(
-            success=True,
+        return TwoFactorRequired(
+            temp_token=temp_token,
             message="2FA requerido",
-            data=TwoFactorRequired(
-                temp_token=temp_token,
-                message="2FA requerido",
-            )
         )
 
-    access = jwtm.create_access_token(
-        str(user.id),
-        user.profile.role.name,
-        user.email,
-        user.profile.username,
-    )
-    refresh = jwtm.create_refresh_token(
-        str(user.id),
-        user.profile.role.name,
-        user.email,
-        user.profile.username,
-    )
+        access = jwtm.create_access_token(
+            str(user.id),
+            user.profile.role.name,
+            user.email,
+            user.profile.username,
+        )
+        refresh = jwtm.create_refresh_token(
+            str(user.id),
+            user.profile.role.name,
+            user.email,
+            user.profile.username,
+        )
 
-    access_payload = jwtm.decode(access)
-    refresh_payload = jwtm.decode(refresh)
+        access_payload = jwtm.decode(access)
+        refresh_payload = jwtm.decode(refresh)
 
-    await jwtm.store_refresh(
-        refresh_payload["jti"],
-        str(user.id),
-        refresh_payload["exp"],
-    )
+        await jwtm.store_refresh(
+            refresh_payload["jti"],
+            str(user.id),
+            refresh_payload["exp"],
+        )
 
-    await sessions_repo.create_or_update_session(
-        user_id=user.id,
-        access_jti=access_payload["jti"],
-        refresh_jti=refresh_payload["jti"],
-        expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
-    )
+        await sessions_repo.create_or_update_session(
+            user_id=user.id,
+            access_jti=access_payload["jti"],
+            refresh_jti=refresh_payload["jti"],
+            expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
+        )
 
     # await repo.session.commit() # Removed: handled by sessions_repo
 
-    return APIResponse(
-        success=True,
-        message="Inicio de sesión exitoso",
-        data=TokenPair(
-            access_token=access,
-            refresh_token=refresh,
-        )
+    return TokenPair(
+        access_token=access,
+        refresh_token=refresh,
     )
 
 
@@ -200,63 +166,46 @@ async def login(
 # REFRESH
 # ======================================================
 
-@auth_router_v1.post("/refresh", response_model=APIResponse[TokenPair])
+@auth_router_v1.post("/refresh", response_model=TokenPair)
 async def refresh_token(
     body: RefreshRequest,
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    payload = jwtm.decode(body.refresh_token)
+    try:
+        payload = jwtm.decode(body.refresh_token)
 
     if payload.get("type") != "refresh":
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content=APIResponse(
-                success=False,
-                message="Token inválido",
-                data=None
-            ).model_dump()
-        )
+        raise HTTPException(status_code=400, detail="Token inválido")
 
-    sub = payload["sub"]
-    jti = payload["jti"]
+        sub = payload["sub"]
+        jti = payload["jti"]
 
     if await jwtm.consume_refresh(jti) != sub:
-        return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            content=APIResponse(
-                success=False,
-                message="Refresh inválido",
-                data=None
-            ).model_dump()
+        raise HTTPException(status_code=401, detail="Refresh inválido")
+
+        access = jwtm.create_access_token(
+            sub, payload["role"], payload["email"], payload["name"]
+        )
+        refresh = jwtm.create_refresh_token(
+            sub, payload["role"], payload["email"], payload["name"]
         )
 
-    access = jwtm.create_access_token(
-        sub, payload["role"], payload["email"], payload["name"]
-    )
-    refresh = jwtm.create_refresh_token(
-        sub, payload["role"], payload["email"], payload["name"]
-    )
+        access_payload = jwtm.decode(access)
+        refresh_payload = jwtm.decode(refresh)
 
-    access_payload = jwtm.decode(access)
-    refresh_payload = jwtm.decode(refresh)
-
-    await jwtm.store_refresh(
-        refresh_payload["jti"],
-        refresh_payload["sub"],
-        refresh_payload["exp"],
-    )
-
-    await sessions_repo.update_session_access_token(
-        old_refresh_jti=jti,
-        new_access_jti=access_payload["jti"],
-    )
-
-    return APIResponse(
-        success=True,
-        message="Token renovado correctamente",
-        data=TokenPair(
-            access_token=access,
-            refresh_token=refresh,
+        await jwtm.store_refresh(
+            refresh_payload["jti"],
+            refresh_payload["sub"],
+            refresh_payload["exp"],
         )
+
+        await sessions_repo.update_session_access_token(
+            old_refresh_jti=jti,
+            new_access_jti=access_payload["jti"],
+        )
+
+    return TokenPair(
+        access_token=access,
+        refresh_token=refresh,
     )
