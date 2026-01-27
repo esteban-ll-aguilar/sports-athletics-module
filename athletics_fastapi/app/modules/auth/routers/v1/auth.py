@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
@@ -78,7 +78,13 @@ async def register(
         except Exception as e:
             logger.error(f"Error enviando email de verificación: {e}")
 
-    return UserResponseSchema.model_validate(user)
+        return UserResponseSchema.model_validate(user)
+    except Exception as e:
+        logger.error(f"Error registrando usuario: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+        )
 
 
 # ======================================================
@@ -101,29 +107,29 @@ async def login(
     try:
         user = await repo.get_by_email(data.username)
 
-    if not user or not hasher.verify(form.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales inválidas",
-        )
+        if not user or not hasher.verify(data.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Credenciales inválidas",
+            )
 
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario inactivo, por favor verifica tu email",
-        )
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Usuario inactivo, por favor verifica tu email",
+            )
 
-    if user.two_factor_enabled:
-        temp_token = jwtm.create_access_token(
-            str(user.id),
-            user.profile.role.name,
-            user.email,
-            user.profile.username,
-        )
-        return TwoFactorRequired(
-            temp_token=temp_token,
-            message="2FA requerido",
-        )
+        if user.two_factor_enabled:
+            temp_token = jwtm.create_access_token(
+                str(user.id),
+                user.profile.role.name,
+                user.email,
+                user.profile.username,
+            )
+            return TwoFactorRequired(
+                temp_token=temp_token,
+                message="2FA requerido",
+            )
 
         access = jwtm.create_access_token(
             str(user.id),
@@ -154,12 +160,16 @@ async def login(
             expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
         )
 
-    # await repo.session.commit() # Removed: handled by sessions_repo
-
-    return TokenPair(
-        access_token=access,
-        refresh_token=refresh,
-    )
+        return TokenPair(
+            access_token=access,
+            refresh_token=refresh,
+        )
+    except Exception as e:
+        logger.error(f"Error en el login: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+        )
 
 
 # ======================================================
@@ -175,14 +185,14 @@ async def refresh_token(
     try:
         payload = jwtm.decode(body.refresh_token)
 
-    if payload.get("type") != "refresh":
-        raise HTTPException(status_code=400, detail="Token inválido")
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=400, detail="Token inválido")
 
         sub = payload["sub"]
         jti = payload["jti"]
 
-    if await jwtm.consume_refresh(jti) != sub:
-        raise HTTPException(status_code=401, detail="Refresh inválido")
+        if await jwtm.consume_refresh(jti) != sub:
+            raise HTTPException(status_code=401, detail="Refresh inválido")
 
         access = jwtm.create_access_token(
             sub, payload["role"], payload["email"], payload["name"]
@@ -205,7 +215,13 @@ async def refresh_token(
             new_access_jti=access_payload["jti"],
         )
 
-    return TokenPair(
-        access_token=access,
-        refresh_token=refresh,
-    )
+        return TokenPair(
+            access_token=access,
+            refresh_token=refresh,
+        )
+    except Exception as e:
+        logger.error(f"Error al refrescar el token: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor",
+        )
