@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Form, File, UploadFile
+from fastapi import APIRouter, Depends, status, Form, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional, Union
 from uuid import UUID
@@ -24,6 +24,8 @@ from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
 from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
 from app.modules.common.services.file_service import FileService
+from app.core.logging.logger import logger
+from app.api.schemas.api_schemas import APIResponse
 
 users_router_v1 = APIRouter()
 
@@ -44,14 +46,20 @@ async def create_user(
     try:
         user = await repo.create_user(user_data)
 
-    return BaseResponse(
-        data=UserResponseSchema.model_validate(
-            user,
-            from_attributes=True
-        ).model_dump(),
-        message="Usuario creado exitosamente",
-        status=status.HTTP_201_CREATED
-    )
+        return BaseResponse(
+            data=UserResponseSchema.model_validate(
+                user,
+                from_attributes=True
+            ).model_dump(),
+            message="Usuario creado exitosamente",
+            status=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        return BaseResponse(
+            data=None,
+            message=str(e),
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 # ======================================================
 # LIST USERS (PAGINATED)
@@ -161,51 +169,50 @@ async def update_profile(
             detail="Perfil no encontrado"
         )
 
-        # =========================
-        # ACTUALIZAR CAMPOS
-        # =========================
-        
-        user.username = username
-        user.first_name = first_name
-        user.last_name = last_name
-        user.phone = phone
-        user.direccion = direccion
-        user.identificacion = identificacion
-        
-        if sexo:
-            try:
-                user.sexo = SexoEnum(sexo)
-            except ValueError:
-                pass 
-                
-        if tipo_estamento:
-            try:
-                user.tipo_estamento = TipoEstamentoEnum(tipo_estamento)
-            except ValueError:
-                pass
+    # =========================
+    # ACTUALIZAR CAMPOS
+    # =========================
+    user.username = username
+    user.first_name = first_name
+    user.last_name = last_name
+    user.phone = phone
+    user.direccion = direccion
+    user.identificacion = identificacion
+    
+    if sexo:
+        try:
+            user.sexo = SexoEnum(sexo)
+        except ValueError:
+            pass 
+            
+    if tipo_estamento:
+        try:
+            user.tipo_estamento = TipoEstamentoEnum(tipo_estamento)
+        except ValueError:
+            pass
 
-        if tipo_identificacion:
-            try:
-                user.tipo_identificacion = TipoIdentificacionEnum(tipo_identificacion)
-            except ValueError:
-                pass
+    if tipo_identificacion:
+        try:
+            user.tipo_identificacion = TipoIdentificacionEnum(tipo_identificacion)
+        except ValueError:
+            pass
 
-        if fecha_nacimiento:
-            try:
-                 user.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
-            except ValueError:
-                 pass
+    if fecha_nacimiento:
+        try:
+             user.fecha_nacimiento = date.fromisoformat(fecha_nacimiento)
+        except ValueError:
+             pass
 
-        # =========================
-        # IMAGEN
-        # =========================
-        if profile_image:
-            file_service = FileService(base_dir="data")
-            saved_path = await file_service.save_profile_picture(profile_image)
-            user.profile_image = saved_path
+    # =========================
+    # IMAGEN
+    # =========================
+    if profile_image:
+        file_service = FileService(base_dir="data")
+        saved_path = await file_service.save_profile_picture(profile_image)
+        user.profile_image = saved_path
 
-        await repo.commit()
-        await repo.refresh(user)
+    await repo.commit()
+    await repo.refresh(user)
 
     return BaseResponse(
         data=UserResponseSchema.model_validate(
@@ -231,11 +238,16 @@ async def get_user_by_external_id(
 ):
     try:
         user = await repo.get_by_external_id(external_id)
-
-    if not user:
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado"
+            )
+    except Exception as e:
+        logger.error(f"Error fetching user by external_id: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
         )
 
     return BaseResponse(
@@ -266,39 +278,35 @@ async def update_user_by_id(
     try:
         # Buscar usuario (UUID o ID interno) usando el repo helper
         user = await repo.get_by_any_id(user_id)
-
-    if not user:
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Usuario no encontrado"
+            )
+    except Exception as e:
+        logger.error(f"Error fetching user by ID: {e}")
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error interno del servidor"
         )
 
-        from app.core.logging.logger import logger
-        
-        # 🔒 Autorización: El usuario puede editarse a sí mismo, o ser Administrador, o Entrenador editando Atleta
-        is_self = current_user.profile.id == user.id
-        
-        # Usamos .value para asegurar comparación de strings si son Enums
-        current_role = current_user.profile.role.value if hasattr(current_user.profile.role, "value") else current_user.profile.role
-        target_role = user.role.value if hasattr(user.role, "value") else user.role
-        
-        is_admin = (current_role == RoleEnum.ADMINISTRADOR.value)
-        is_coach_editing_athlete = (current_role == RoleEnum.ENTRENADOR.value and target_role == RoleEnum.ATLETA.value)
-        
-        logger.info(f"🔐 [AUTH DEBUG] Update attempt: CurrentUser(id={current_user.profile.id}, role={current_role}) -> TargetUser(id={user.id}, role={target_role})")
-        logger.info(f"🔐 [AUTH DEBUG] Checks: self={is_self}, admin={is_admin}, coach_on_athlete={is_coach_editing_athlete}")
+    is_self = current_user.profile.id == user.id
+    current_role = current_user.profile.role.value if hasattr(current_user.profile.role, "value") else current_user.profile.role
+    target_role = user.role.value if hasattr(user.role, "value") else user.role
+    is_admin = (current_role == RoleEnum.ADMINISTRADOR.value)
+    is_coach_editing_athlete = (current_role == RoleEnum.ENTRENADOR.value and target_role == RoleEnum.ATLETA.value)
 
     if not (is_self or is_admin or is_coach_editing_athlete):
-         logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
-         raise HTTPException(
+        logger.warning(f"🚫 [AUTH] Access denied: User {current_user.email} (Role: {current_role}) cannot update User {user.id} (Role: {target_role})")
+        raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="No tienes permisos para editar este usuario"
         )
 
-        updated_user = await repo.update(
-            user=user,
-            user_data=user_data
-        )
+    updated_user = await repo.update(
+        user=user,
+        user_data=user_data
+    )
 
     return BaseResponse(
         data=UserResponseSchema.model_validate(updated_user).model_dump(),
