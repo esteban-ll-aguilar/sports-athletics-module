@@ -120,6 +120,33 @@ class HistorialMedicoService:
             )
         return historial
 
+    async def get_by_profile_id(self, profile_id: int) -> HistorialMedico:
+        # Get atleta by profile_id (user_id in Atleta table), then get historial
+        result = await self.db.execute(
+            select(Atleta).where(Atleta.user_id == profile_id)
+        )
+        atleta = result.scalar_one_or_none()
+        
+        if not atleta:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Atleta no encontrado"
+            )
+            
+        result = await self.db.execute(
+            select(HistorialMedico).where(
+                HistorialMedico.atleta_id == atleta.id
+            )
+        )
+        historial = result.scalar_one_or_none()
+
+        if not historial:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Historial no encontrado"
+            )
+        return historial
+
     async def get_all(self, skip: int = 0, limit: int = 100):
         result = await self.db.execute(
             select(HistorialMedico).offset(skip).limit(limit)

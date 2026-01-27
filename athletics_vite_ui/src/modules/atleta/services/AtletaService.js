@@ -21,6 +21,11 @@ const AtletaService = {
     getEstadisticas: async () => {
         const response = await ApiClient.get('/atleta/estadisticas');
         return response;
+    },
+
+    getHistorialByUserId: async (userId) => {
+        const response = await ApiClient.get(`/atleta/historial-medico/user/${userId}`);
+        return response;
     }
 };
 

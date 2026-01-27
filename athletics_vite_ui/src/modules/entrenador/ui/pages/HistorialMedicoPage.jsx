@@ -8,6 +8,8 @@ const HistorialMedicoPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedHistorial, setSelectedHistorial] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -18,16 +20,17 @@ const HistorialMedicoPage = () => {
     try {
       setLoading(true);
       const response = await AtletaService.getAthletes();
-      
+
       // Mapear los datos reales del backend
-      const atletasReales = (response.items || []).map((user) => ({
+      const items = response.data?.items || [];
+      const atletasReales = items.map((user) => ({
         id: user.id,
         nombre: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,
         categoria: user.tipo_estamento || 'Sin categoría',
         estadoMedico: 'apto', // TODO: Obtener del backend cuando esté disponible
         foto: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username || user.id}`
       }));
-      
+
       setAtletas(atletasReales);
       setLoading(false);
     } catch (error) {
@@ -42,9 +45,20 @@ const HistorialMedicoPage = () => {
     setCurrentPage(1);
   };
 
-  const handleViewHistorial = (id) => {
-    toast.success('Abriendo historial médico...');
-    // TODO: Navegación a detalles del historial
+  const handleViewHistorial = async (id) => {
+    try {
+      const historial = await AtletaService.getHistorialByUserId(id);
+      setSelectedHistorial(historial);
+      setShowModal(true);
+      toast.success('Historial cargado correctamente');
+    } catch (error) {
+      console.error("Error fetching historial:", error);
+      if (error.response && error.response.status === 404) {
+        toast.error("Aún no se ha registrado el historial médico");
+      } else {
+        toast.error("Error al obtener el historial médico");
+      }
+    }
   };
 
   const getEstadoColor = (estado) => {
@@ -197,11 +211,10 @@ const HistorialMedicoPage = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`px-3 py-1 rounded font-medium transition-colors ${
-                      currentPage === page
-                        ? 'bg-red-800 text-white'
-                        : 'border border-red-900 text-gray-400 hover:border-red-800 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded font-medium transition-colors ${currentPage === page
+                      ? 'bg-red-800 text-white'
+                      : 'border border-red-900 text-gray-400 hover:border-red-800 hover:text-white'
+                      }`}
                   >
                     {page}
                   </button>
@@ -243,8 +256,80 @@ const HistorialMedicoPage = () => {
           <p className="text-gray-500 text-sm mt-1">Revisiones Pendientes</p>
         </div>
       </div>
+      {/* Modal Historial */}
+      {showModal && selectedHistorial && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <div className="bg-black border border-red-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-red-900/30 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <div className="bg-red-800 p-2 rounded-lg">
+                  <Check size={20} className="text-white" />
+                </div>
+                Historial Médico
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <Plus size={24} className="rotate-45" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
+                  <p className="text-gray-400 text-sm mb-1">Peso</p>
+                  <p className="text-xl font-bold text-white">{selectedHistorial.peso} kg</p>
+                </div>
+                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
+                  <p className="text-gray-400 text-sm mb-1">Talla</p>
+                  <p className="text-xl font-bold text-white">{selectedHistorial.talla} m</p>
+                </div>
+                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
+                  <p className="text-gray-400 text-sm mb-1">IMC</p>
+                  <p className="text-xl font-bold text-white">{selectedHistorial.imc?.toFixed(2)}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Información Médica</h3>
+                <div className="space-y-4">
+                  <div className="bg-gray-900/30 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Alergias</p>
+                    <p className="text-white">
+                      {selectedHistorial.alergias || "Ninguna reportada"}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-900/30 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Enfermedades Hereditarias</p>
+                    <p className="text-white">
+                      {selectedHistorial.enfermedades_hereditarias || "Ninguna reportada"}
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-900/30 p-4 rounded-lg">
+                    <p className="text-gray-400 text-sm mb-1">Otras Enfermedades</p>
+                    <p className="text-white">
+                      {selectedHistorial.enfermedades || "Ninguna reportada"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-red-900/30 flex justify-end">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 export default HistorialMedicoPage;

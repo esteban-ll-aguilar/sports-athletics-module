@@ -33,7 +33,7 @@ const AthletesTable = () => {
       console.log("📦 Datos recibidos de AtletaService:", response);
 
       // El backend ahora filtra por rol y devuelve PaginatedUsers
-      const athletes = response.items || [];
+      const athletes = response.data?.items || [];
 
       console.log("🏃‍♂️ Atletas filtrados:", athletes);
 
@@ -276,102 +276,102 @@ const AthletesTable = () => {
         <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
 
-          {/* Tabla */}
+            {/* Tabla */}
 
-          <table className="w-full text-left">
-            
+            <table className="w-full text-left">
 
-            <thead className="bg-[#1a1a1a] border-b border-[#332122]">
-              <tr className="bg-[#1a1a1a] border-b border-[#332122]">
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Usuario</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Apellido</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Correo</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo ID</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estamento</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Teléfono</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dirección</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones</th>
-              </tr>
-            </thead>
 
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent">
-                  <td className="px-4 py-3">{user.username}</td>
-                  <td className="px-4 py-3">{user.first_name}</td>
-                  <td className="px-4 py-3">{user.last_name}</td>
-                  <td className="px-4 py-3 flex items-center gap-2 text-gray-300">
-                    <Mail size={14} className="text-[#b30c25]" />
-                    {user.email}
-                  </td>
+              <thead className="bg-[#1a1a1a] border-b border-[#332122]">
+                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Usuario</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Apellido</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Correo</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo ID</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estamento</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Teléfono</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dirección</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones</th>
+                </tr>
+              </thead>
 
-                  <td className="px-4 py-3">{user.tipo_identificacion}</td>
-                  <td className="px-4 py-3">{user.identificacion}</td>
-                  <td className="px-4 py-3">{user.tipo_estamento}</td>
-                  <td className="px-4 py-3">{user.phone}</td>
-                  <td className="px-4 py-3">{user.direccion}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
-                        ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
-                        : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
-                        }`}
-                    >
-                      {user.is_active ? "Activo" : "Inactivo"}
-                    </span>
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent">
+                    <td className="px-4 py-3">{user.username}</td>
+                    <td className="px-4 py-3">{user.first_name}</td>
+                    <td className="px-4 py-3">{user.last_name}</td>
+                    <td className="px-4 py-3 flex items-center gap-2 text-gray-300">
+                      <Mail size={14} className="text-[#b30c25]" />
+                      {user.email}
+                    </td>
 
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="flex justify-end gap-2">
+                    <td className="px-4 py-3">{user.tipo_identificacion}</td>
+                    <td className="px-4 py-3">{user.identificacion}</td>
+                    <td className="px-4 py-3">{user.tipo_estamento}</td>
+                    <td className="px-4 py-3">{user.phone}</td>
+                    <td className="px-4 py-3">{user.direccion}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
+                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
+                          : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
+                          }`}
+                      >
+                        {user.is_active ? "Activo" : "Inactivo"}
+                      </span>
 
-                    <button
-                      onClick={() => openEditModal(user)}
-                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                      title="Editar"
-                    >
-                      <span className="material-symbols-outlined">edit</span>
-                    </button>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-end gap-2">
+
+                        <button
+                          onClick={() => openEditModal(user)}
+                          className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                          title="Editar"
+                        >
+                          <span className="material-symbols-outlined">edit</span>
+                        </button>
                       </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))}
 
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan="11" className="text-center py-10 text-gray-500">
-                    No hay atletas registrados.
-                  </td>
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td colSpan="11" className="text-center py-10 text-gray-500">
+                      No hay atletas registrados.
+                    </td>
 
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </tr>
+                )}
+              </tbody>
+            </table>
 
-          {/* Modal */}
-          {showModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* Overlay */}
-              <div
-                className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                onClick={closeModal}
-              />
-
-              {/* Modal container */}
-              <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
-                <EditUserModal
-                  asModal
-                  user={selectedUser}
-                  onClose={closeModal}
-                  onUpdated={fetchAthletes}
+            {/* Modal */}
+            {showModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                {/* Overlay */}
+                <div
+                  className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+                  onClick={closeModal}
                 />
-              </div>
-            </div>
 
-          )}
-                  </div>
+                {/* Modal container */}
+                <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
+                  <EditUserModal
+                    asModal
+                    user={selectedUser}
+                    onClose={closeModal}
+                    onUpdated={fetchAthletes}
+                  />
+                </div>
+              </div>
+
+            )}
+          </div>
 
         </div >
       </div>

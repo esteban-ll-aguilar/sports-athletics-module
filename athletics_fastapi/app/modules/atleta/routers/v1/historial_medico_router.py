@@ -62,3 +62,17 @@ async def update_historial(
 ):
     service = HistorialMedicoService(db)
     return await service.update(external_id, data)
+
+
+@router.get("/user/{user_id}", response_model=HistorialMedicoRead)
+async def get_historial_by_user(
+    user_id: int,
+    current_user: AuthUserModel = Depends(get_current_user),
+    db: AsyncSession = Depends(get_session)
+):
+    # Verificar permisos: Solo Admin o Entrenador pueden ver historial de otros
+    if current_user.profile.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.ENTRENADOR]:
+         raise HTTPException(status_code=403, detail="No tienes permisos para ver este historial")
+
+    service = HistorialMedicoService(db)
+    return await service.get_by_profile_id(user_id)
