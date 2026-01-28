@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, KeyRound, ArrowLeft, Send, CheckCircle2, RotateCcw } from 'lucide-react';
 import PasswordResetService from '../../services/PasswordResetService';
-import ThemeToggle from '../../../../shared/components/ThemeToggle';
 
 const PasswordResetPage = () => {
     const navigate = useNavigate();
@@ -120,11 +119,6 @@ const PasswordResetPage = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-linear-to-br dark:from-[#1a1a1a] dark:via-[#212121] dark:to-black px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-500">
-            {/* Absolute Theme Toggle */}
-            <div className="absolute top-4 right-4 z-50">
-                <ThemeToggle />
-            </div>
-
             <div className="max-w-md w-full relative">
 
                 {/* Decorative Elements */}

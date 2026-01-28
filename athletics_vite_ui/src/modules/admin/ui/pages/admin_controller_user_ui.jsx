@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import adminService from "../../services/adminService";
-import { Shield, Mail, UserCog, FileText } from "lucide-react";
+import { Shield, Mail, UserCog, FileText, Search, Filter } from "lucide-react";
 import EditUserModal from "./EditUserModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,11 +25,7 @@ const AdminUsersTable = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      console.log('🔵 [ADMIN CONTROLLER] Iniciando petición de usuarios con rol:', roleFilter || 'Todos');
       const response = await adminService.getUsers(1, 20, roleFilter);
-
-      console.log('🔵 [ADMIN CONTROLLER] RESPUESTA RAW:', response);
-
       const usersData = response.items || response.users || [];
       setUsers(usersData);
     } catch (err) {
@@ -42,7 +38,6 @@ const AdminUsersTable = () => {
 
   // 🎯 Usuarios filtrados (solo búsqueda y estado en frontend, rol en backend)
   const filteredUsers = useMemo(() => {
-    console.log('🔵 [ADMIN CONTROLLER] Filtrando usuarios en frontend. Total:', users.length);
     const filtered = users.filter((user) => {
       const matchesSearch =
         user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,14 +52,12 @@ const AdminUsersTable = () => {
 
       return matchesSearch && matchesStatus;
     });
-    console.log('🔵 [ADMIN CONTROLLER] Usuarios después del filtro:', filtered.length);
     return filtered;
   }, [users, searchTerm, statusFilter]);
 
-  // 📄 Exportar PDF (Vite compatible)
+  // 📄 Exportar PDF
   const exportPDF = () => {
     const doc = new jsPDF();
-
     doc.text("Listado de Usuarios del Sistema", 14, 15);
 
     autoTable(doc, {
@@ -77,7 +70,7 @@ const AdminUsersTable = () => {
         user.is_active ? "Activo" : "Inactivo",
       ]),
       styles: { fontSize: 10 },
-      headStyles: { fillColor: [79, 70, 229] }, // Indigo
+      headStyles: { fillColor: [179, 12, 37] }, // Red brand
       alternateRowStyles: { fillColor: [245, 247, 255] },
     });
 
@@ -87,8 +80,8 @@ const AdminUsersTable = () => {
   // ⏳ Loading
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[300px]">
-        <div className="animate-spin h-10 w-10 rounded-full border-t-2 border-b-2 border-indigo-600" />
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300">
+        <div className="animate-spin h-10 w-10 rounded-full border-t-2 border-b-2 border-[#b30c25]" />
       </div>
     );
   }
@@ -96,8 +89,11 @@ const AdminUsersTable = () => {
   // ❌ Error
   if (error) {
     return (
-      <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-[#121212]">
+        <div className="bg-white dark:bg-[#212121] border-l-4 border-red-500 p-6 rounded-lg shadow-lg">
+          <p className="text-gray-800 dark:text-gray-200">{error}</p>
+          <button onClick={fetchUsers} className="mt-4 text-[#b30c25] hover:underline">Reintentar</button>
+        </div>
       </div>
     );
   }
@@ -106,153 +102,146 @@ const AdminUsersTable = () => {
   const roles = Array.from(new Set(users.map((u) => u.role)));
 
   return (
-    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <Link
-          to="/dashboard/pruebas"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
-        >
-          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+        {/* Breadcrumb - Optional logic */}
 
-          </span>
-        </Link>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl font-black text-gray-100">
-              Usuarios del Sistema
-            </h1>
-
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
+                Usuarios del Sistema
+              </h1>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              Administración general de usuarios y roles.
+            </p>
           </div>
 
-          <button
-            onClick={exportPDF}
-            className="
-        group flex items-center gap-3
-        px-8 py-4 rounded-2xl
-        text-sm font-semibold text-white
-        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-        hover:brightness-110
-        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition-all duration-300
-        shadow-lg shadow-[#b30c25]/40
-        active:scale-95
-    "    >
-            <FileText size={16} />
-            Exportar PDF
-          </button>
+          <div className="flex items-center gap-3">
+            
+            <button
+              onClick={exportPDF}
+              className="
+                                group flex items-center gap-3
+                                px-6 py-3 rounded-xl
+                                text-sm font-semibold text-white
+                                bg-linear-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
+                                hover:shadow-lg hover:shadow-red-900/20 hover:-translate-y-0.5
+                                active:translate-y-0 active:shadow-none
+                                transition-all duration-300
+                            "
+            >
+              <FileText size={18} />
+              <span>Exportar PDF</span>
+            </button>
+          </div>
         </div>
 
 
         {/* Filtros */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Buscar por nombre o correo"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="
-                w-full pl-12 pr-4 py-4 rounded-2xl
-                bg-[#1f1c1d]
-                border border-[#332122]
-                text-gray-100
-                focus:border-[#b30c25]
-                focus:ring-1 focus:ring-[#b30c25]/40
-                outline-none
-              "    />
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o correo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="
+                                w-full pl-12 pr-4 py-3 rounded-xl
+                                bg-white dark:bg-[#212121]
+                                border border-gray-200 dark:border-[#332122]
+                                text-gray-900 dark:text-gray-100
+                                placeholder-gray-400 dark:placeholder-gray-500
+                                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                                outline-none transition-all shadow-sm
+                            "
+            />
+          </div>
 
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="
-              w-full px-4 py-4 rounded-2xl
-              bg-[#1f1c1d]
-              border border-[#332122]
-              text-gray-100
-              focus:border-[#b30c25]
-              focus:ring-1 focus:ring-[#b30c25]/40
-              outline-none
-            ">
-            <option value="">Todos los roles</option>
-            {roles.map((role) => (
-              <option key={role} value={role}>
-                {role}
-              </option>
-            ))}
-          </select>
-
-
+          <div className="relative">
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="
+                                w-full pl-12 pr-10 py-3 rounded-xl
+                                bg-white dark:bg-[#212121]
+                                border border-gray-200 dark:border-[#332122]
+                                text-gray-900 dark:text-gray-100
+                                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                                outline-none transition-all shadow-sm appearance-none cursor-pointer
+                            "
+            >
+              <option value="">Todos los roles</option>
+              {roles.map((role) => (
+                <option key={role} value={role}>
+                  {role}
+                </option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
+              expand_more
+            </span>
+          </div>
         </div>
 
         {/* Tabla */}
-        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
-
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
-
-                    Nombre
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
-                    Correo
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
-                                 Rol
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
-                                 Estado
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">             
-                       Acciones
-                  </th>
+              <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                <tr>
+                  {["Nombre", "Correo", "Rol", "Estado", "Acciones"].map((head) => (
+                    <th key={head} className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      {head}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#332122]">
+              <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50/30">
-                   
-                      <td className="px-6 py-5 font-bold text-gray-200">
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
+                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-200 whitespace-nowrap">
                       {user.username}
                     </td>
 
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <Mail size={14} className="mr-2 text-gray-400" />
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                        <Mail size={14} className="text-[#b30c25]" />
                         {user.email}
                       </div>
                     </td>
 
-                    <td className="px-6 py-5">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 ring-1 ring-inset ring-indigo-700/10 dark:ring-indigo-700/30">
                         <Shield size={12} className="mr-1" />
                         {user.role}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
-                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
-                          : ' bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${user.is_active
+                          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-900/30'
+                          : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-900/30'
                           }`}
                       >
                         {user.is_active ? "Activo" : "Inactivo"}
                       </span>
                     </td>
 
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setEditingUser(user)}
-                          className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                          className="p-2 text-gray-400 hover:text-[#b30c25] hover:bg-red-50 dark:hover:bg-[#332122] rounded-lg transition-colors"
                           title="Editar usuario"
                         >
-                          <span className="material-symbols-outlined">edit</span>
+                          <UserCog size={20} />
                         </button>
                       </div>
                     </td>
@@ -261,31 +250,34 @@ const AdminUsersTable = () => {
 
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td
-                      colSpan="5" className="py-20 text-center text-gray-400">
+                    <td colSpan="5" className="py-16 text-center text-gray-500 dark:text-gray-400">
                       No hay usuarios registrados.
                     </td>
                   </tr>
                 )}
               </tbody>
-
             </table>
           </div>
         </div>
       </div>
 
       {editingUser && (
-        <EditUserModal
-          user={editingUser}
-          onClose={() => setEditingUser(null)}
-          onUpdated={fetchUsers}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setEditingUser(null)}
+          />
+          <div className="relative z-10 w-full max-w-lg">
+            <EditUserModal
+              user={editingUser}
+              onClose={() => setEditingUser(null)}
+              onUpdated={fetchUsers}
+            />
+          </div>
+        </div>
       )}
     </div>
-
-
   );
-
 };
 
 export default AdminUsersTable;

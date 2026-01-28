@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Users, RefreshCw, Shield, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import adminRepository from '../../repositories/admin_repository';
-import ThemeToggle from '../../../../shared/components/ThemeToggle';
 import Swal from 'sweetalert2';
 
 const UserManagementPage = () => {
@@ -109,11 +108,6 @@ const UserManagementPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#111] p-6 transition-colors duration-300 relative">
-            {/* Theme Toggle */}
-            <div className="absolute top-6 right-6 z-10">
-                <ThemeToggle />
-            </div>
-
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">

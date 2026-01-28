@@ -5,7 +5,7 @@ import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import baremoService from "../../services/baremo_service";
 import PruebaModal from "../widgets/PruebaModal.jsx";
 import Swal from "sweetalert2";
-
+import { Search, Plus, Filter, Trophy, Activity, Calendar, Target, Edit2, Power, CheckCircle, AlertCircle } from 'lucide-react';
 
 const PruebasPage = () => {
     const [pruebas, setPruebas] = useState([]);
@@ -14,6 +14,7 @@ const PruebasPage = () => {
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPrueba, setSelectedPrueba] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -36,26 +37,20 @@ const PruebasPage = () => {
     useEffect(() => { fetchData(); }, []);
 
     const handleSubmit = async (formData) => {
-        console.log("1. Datos recibidos del Modal:", formData);
         try {
             const fechaHoy = new Date().toISOString().split('T')[0];
 
-            // PAYLOAD CORREGIDO PARA EVITAR 422
             const payload = {
                 nombre: String(formData.nombre || "").trim(),
                 siglas: String(formData.siglas || "").trim(),
                 fecha_registro: formData.fecha_registro || fechaHoy,
                 fecha_prueba: formData.fecha_prueba || null,
-                // Validación estricta del Enum PruebaType
                 tipo_prueba: formData.tipo_prueba === "NORMAL" ? "NORMAL" : "COMPETENCIA",
                 tipo_medicion: formData.tipo_medicion || "TIEMPO",
                 unidad_medida: String(formData.unidad_medida || "").trim(),
                 estado: formData.estado === "false" || formData.estado === false ? false : true,
-                // Conversión forzada a Entero
                 tipo_disciplina_id: formData.tipo_disciplina_id ? parseInt(formData.tipo_disciplina_id, 10) : null,
             };
-
-            console.log("2. Enviando Payload Final:", payload);
 
             if (selectedPrueba) {
                 payload.external_id = selectedPrueba.external_id;
@@ -65,20 +60,20 @@ const PruebasPage = () => {
             }
 
             fetchData();
-            return true; // Éxito
+            return true;
 
         } catch (err) {
-            console.error("3. Error del Servidor (422 Detail):", err.response?.data);
+            console.error("Error del Servidor:", err.response?.data);
             const detail = err.response?.data?.detail;
             Swal.fire({
                 title: 'Error',
                 text: detail ? JSON.stringify(detail) : "Error de validación",
                 icon: 'error',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
-            return false; // Error
+            return false;
         }
     };
 
@@ -96,7 +91,7 @@ const PruebasPage = () => {
             cancelButtonColor: '#6b7280',
             confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
             cancelButtonText: 'Cancelar',
-            background: '#212121',
+            background: '#1a1a1a',
             color: '#fff'
         });
 
@@ -108,7 +103,6 @@ const PruebasPage = () => {
                 estado: nuevoEstado
             });
 
-            // 🔹 Actualización visual inmediata
             setPruebas(prev =>
                 prev.map(p =>
                     p.external_id === prueba.external_id
@@ -122,7 +116,7 @@ const PruebasPage = () => {
                 text: nuevoEstado ? 'Prueba activada exitosamente' : 'Prueba desactivada exitosamente',
                 icon: 'success',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
 
@@ -133,178 +127,199 @@ const PruebasPage = () => {
                 text: 'Error al cambiar el estado de la prueba',
                 icon: 'error',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
         }
     };
 
+    const filteredPruebas = pruebas.filter(p =>
+        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.siglas.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
 
     return (
-        <div className="min-h-screen bg-[#121212] font-['Lexend'] ">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] font-['Lexend'] transition-colors duration-300">
             <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
                 {/* Cabecera y Navegación */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
                     <div className="space-y-1">
-                        {/* Breadcrumb Links */}
                         <Link
-                            to="/dashboard/pruebas"
-                            className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
+                            to="/dashboard/competencias"
+                            className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
                         >
-                            <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-
+                            <span className="group-hover:-translate-x-1 transition-transform duration-200">
+                                ← Volver
                             </span>
                         </Link>
                         <div>
-                            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
+                            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
                                 Gestión de Pruebas
                             </h1>
-                            <p className="text-gray-400 text-lg mt-2">
-                                Administra las pruebas deportivas del sistema
+                            <p className="text-gray-500 dark:text-gray-400 text-lg mt-1">
+                                Administra las pruebas deportivas del sistema.
                             </p>
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => { setSelectedPrueba(null); setIsModalOpen(true); }}
-                        className="
-        group flex items-center gap-3
-        px-8 py-4 rounded-2xl
-        text-sm font-semibold text-white
-        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-        hover:brightness-110
-        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition-all duration-300
-        shadow-lg shadow-[#b30c25]/40
-        active:scale-95
-    "                       >
-                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
-                            add
-                        </span>
-                        Nueva Prueba
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <button
+                            onClick={() => { setSelectedPrueba(null); setIsModalOpen(true); }}
+                            className="
+                                group flex items-center justify-center gap-2
+                                px-6 py-3 rounded-xl
+                                text-sm font-bold text-white
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
+                                hover:brightness-110
+                                shadow-lg shadow-red-900/20 active:scale-95
+                                transition-all duration-300
+                            "
+                        >
+                            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Nueva Prueba
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filters */}
+                <div className="mb-6">
+                    <div className="relative max-w-md">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o siglas..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="
+                                w-full pl-12 pr-4 py-3 rounded-xl 
+                                bg-white dark:bg-[#212121]
+                                border border-gray-200 dark:border-[#332122]
+                                text-gray-900 dark:text-gray-100
+                                placeholder-gray-400 dark:placeholder-gray-500
+                                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                                outline-none transition-all shadow-sm
+                            "
+                        />
+                    </div>
                 </div>
 
                 {/* Tabla de Resultados */}
-                <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead>
-                                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
+                            <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                                <tr>
+                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                         Siglas / Nombre
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
+                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                         Tipo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
+                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                         Disciplina / Baremo
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
+                                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                         Estado
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
+                                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
                                 {loading ? (
                                     <tr>
                                         <td colSpan="5" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 font-semibold">Sincronizando datos...</span>
+                                                <div className="w-8 h-8 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                                                <span className="text-gray-500 dark:text-gray-400 font-medium">Cargando pruebas...</span>
                                             </div>
                                         </td>
                                     </tr>
-                                ) : pruebas.length === 0 ? (
+                                ) : filteredPruebas.length === 0 ? (
                                     <tr>
                                         <td colSpan="5" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <span className="material-symbols-outlined text-6xl text-gray-300">
-                                                    sports_score
-                                                </span>
-                                                <span className="text-gray-400 font-semibold">No hay pruebas registradas</span>
+                                                <Trophy size={48} className="text-gray-300 dark:text-gray-600" />
+                                                <span className="text-gray-500 dark:text-gray-400 font-medium">No se encontraron pruebas.</span>
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    pruebas.map((p) => {
+                                    filteredPruebas.map((p) => {
                                         const disc = disciplinas.find(d => d.id === p.tipo_disciplina_id);
                                         const bar = baremos.find(b => b.id === p.baremo_id);
                                         return (
                                             <tr
                                                 key={p.external_id}
-                                                className={`transition-all duration-200 ${!p.estado
-                                                    ? 'bg-gray-50/70 opacity-60'
-                                                    : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
+                                                className={`transition-colors duration-200 ${!p.estado
+                                                    ? 'bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60'
+                                                    : 'hover:bg-gray-50 dark:hover:bg-[#2a2829]'
                                                     }`}                     >
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-5">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg">
+                                                        <div className="flex items-center justify-center w-10 h-10 bg-linear-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-sm">
                                                             {p.siglas?.substring(0, 2)}
                                                         </div>
                                                         <div>
-                                                            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">
+                                                            <div className="text-xs font-bold text-[#b30c25] uppercase tracking-wide">
                                                                 {p.siglas}
                                                             </div>
-                                                            <div className="font-bold text-gray-900">
+                                                            <div className="font-bold text-gray-900 dark:text-gray-100">
                                                                 {p.nombre}
                                                             </div>
-                                                            <div className="text-xs text-gray-500">
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
                                                                 {p.tipo_prueba}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold uppercase ${p.tipo_prueba === 'COMPETENCIA'
-                                                        ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200'
-                                                        : 'bg-blue-100 text-blue-700 ring-2 ring-blue-200'
+                                                <td className="px-6 py-5">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.tipo_prueba === 'COMPETENCIA'
+                                                        ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/30'
+                                                        : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30'
                                                         }`}>
                                                         {p.tipo_prueba}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-6 py-5">
                                                     <div className="space-y-1">
-                                                        <div className="text-sm font-bold text-gray-900">
+                                                        <div className="text-sm font-bold text-gray-900 dark:text-gray-200">
                                                             {disc?.nombre || 'Sin Disciplina'}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 font-medium">
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                                                             {bar ? `Clase ${bar.clasificacion} • ${bar.valor_baremo} pts` : 'Sin Baremo'}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase ${p.estado
-                                                        ? 'bg-green-900/20 text-green-400 border border-green-800'
-                                                        : 'bg-red-900/20 text-red-400 border border-red-800'
+                                                <td className="px-6 py-5 text-center">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.estado
+                                                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30'
+                                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30'
                                                         }`}>
                                                         {p.estado ? "Activo" : "Inactivo"}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-6 py-5 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <button
                                                             onClick={() => { setSelectedPrueba(p); setIsModalOpen(true); }}
-                                                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                                            title="Editar"
                                                         >
-                                                            <span className="material-symbols-outlined">edit</span>
+                                                            <Edit2 size={18} />
                                                         </button>
                                                         <button
                                                             onClick={() => toggleStatus(p)}
-                                                            className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${p.estado
-                                                                ? 'text-red-400 hover:bg-red-900/30'
-                                                                : 'text-green-400 hover:bg-green-900/30'
+                                                            className={`p-2 rounded-lg transition-colors ${p.estado
+                                                                ? 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                                                : 'text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
                                                                 }`}
                                                             title={p.estado ? 'Desactivar' : 'Activar'}
                                                         >
-                                                            <span className="material-symbols-outlined">
-                                                                {p.estado ? 'block' : 'check_circle'}
-                                                            </span>
+                                                            {p.estado ? <Power size={18} /> : <CheckCircle size={18} />}
                                                         </button>
 
                                                     </div>

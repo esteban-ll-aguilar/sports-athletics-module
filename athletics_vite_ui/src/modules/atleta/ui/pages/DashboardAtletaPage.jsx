@@ -20,11 +20,14 @@ const DashboardAtletaPage = () => {
                 AtletaService.getEstadisticas(),
                 AtletaService.getHistorial()
             ]);
-            setStats(statsData.data);
-            setHistorial(historialData.data);
+            setStats(statsData.data || { medallas: { oro: 0, plata: 0, bronce: 0 }, total_competencias: 0, experiencia: 0 });
+            setHistorial(historialData.data || []);
         } catch (error) {
             console.error("Error cargando dashboard:", error);
-            toast.error("Error al cargar los datos del dashboard");
+            // toast.error("Error al cargar los datos del dashboard"); // Optional suppress
+            // Fallback data
+            setStats({ medallas: { oro: 0, plata: 0, bronce: 0 }, total_competencias: 0, experiencia: 0 });
+            setHistorial([]);
         } finally {
             setLoading(false);
         }
@@ -32,164 +35,204 @@ const DashboardAtletaPage = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <Spinner size="xl" />
+            <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-[#121212]">
+                <Spinner size="xl" color="failure" />
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto p-4 space-y-6">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
-                Mi Dashboard Deportivo
-            </h1>
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300">
+            <div className="container mx-auto p-4 space-y-6 pt-6">
 
-            {/* Resumen de Estadísticas */}
-            {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                    <Card className="border-l-4 border-yellow-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-500 text-sm">Medallas de Oro</p>
-                                <h3 className="text-2xl font-bold text-gray-800">{stats.medallas.oro}</h3>
-                            </div>
-                            <Medal className="h-10 w-10 text-yellow-400" />
-                        </div>
-                    </Card>
-                    <Card className="border-l-4 border-gray-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-500 text-sm">Medallas de Plata</p>
-                                <h3 className="text-2xl font-bold text-gray-800">{stats.medallas.plata}</h3>
-                            </div>
-                            <Medal className="h-10 w-10 text-gray-400" />
-                        </div>
-                    </Card>
-                    <Card className="border-l-4 border-orange-400">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-500 text-sm">Medallas de Bronce</p>
-                                <h3 className="text-2xl font-bold text-gray-800">{stats.medallas.bronce}</h3>
-                            </div>
-                            <Medal className="h-10 w-10 text-orange-400" />
-                        </div>
-                    </Card>
-                    <Card className="border-l-4 border-blue-500">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-gray-500 text-sm">Total Competencias</p>
-                                <h3 className="text-2xl font-bold text-gray-800">{stats.total_competencias}</h3>
-                            </div>
-                            <Trophy className="h-10 w-10 text-blue-500" />
-                        </div>
-                    </Card>
+                {/* Header with Toggle */}
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                            Mi Dashboard Deportivo
+                        </h1>
+                        <p className="text-gray-500 dark:text-gray-400 mt-1">
+                            Resumen de tu rendimiento y competencias
+                        </p>
+                    </div>
+                </div>
 
-                    <Card className="md:col-span-2 lg:col-span-4 border-t-4 border-green-500">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <Activity className="h-8 w-8 text-green-500" />
+                {/* Resumen de Estadísticas */}
+                {stats && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        {/* Gold */}
+                        <div className="bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border-l-4 border-yellow-400 transition-colors">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <h4 className="text-lg font-semibold">Experiencia</h4>
-                                    <p className="text-gray-600">{stats.experiencia} años activos</p>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Medallas de Oro</p>
+                                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.medallas?.oro || 0}</h3>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <TrendingUp className="h-8 w-8 text-purple-500" />
-                                <div>
-                                    <h4 className="text-lg font-semibold">Rendimiento General</h4>
-                                    <p className="text-gray-600">
-                                        {stats.total_competencias > 0
-                                            ? `${Math.round(((stats.medallas.oro + stats.medallas.plata + stats.medallas.bronce) / stats.total_competencias) * 100)}% de podio`
-                                            : "Sin datos suficientes"}
-                                    </p>
+                                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                                    <Medal className="h-8 w-8 text-yellow-500" />
                                 </div>
                             </div>
                         </div>
-                    </Card>
-                </div>
-            )}
 
-            {/* Historial Reciente */}
-            <Card>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                        <Calendar className="h-6 w-6" />
-                        Historial de Competencias
-                    </h2>
-                </div>
-
-                <div className="overflow-x-auto">
-                    {historial.length > 0 ? (
-                        <Table hoverable>
-                            <Table.Head>
-                                <Table.HeadCell>Fecha</Table.HeadCell>
-                                <Table.HeadCell>Competencia</Table.HeadCell>
-                                <Table.HeadCell>Prueba</Table.HeadCell>
-                                <Table.HeadCell>Resultado</Table.HeadCell>
-                                <Table.HeadCell>Posición</Table.HeadCell>
-                                <Table.HeadCell>Estado</Table.HeadCell>
-                            </Table.Head>
-                            <Table.Body className="divide-y">
-                                {historial.map((item) => (
-                                    <Table.Row key={item.id} className="bg-white dark:border-gray-700 dark:bg-gray-800">
-                                        <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                            {new Date(item.fecha_registro).toLocaleDateString()}
-                                        </Table.Cell>
-                                        <Table.Cell>
-                                            {/* Como no tenemos el nombre de la competencia aqui directamente sin populate, 
-                            mostramos ID o un placeholder si no vino en el join. 
-                            Idealmente el backend deberia traerlo. 
-                            Asumiremos que 'observaciones' puede tener algo o simplemente mostramos 'Competencia #' + id 
-                        */}
-                                            Competencia #{item.competencia_id}
-                                        </Table.Cell>
-                                        <Table.Cell>Prueba #{item.prueba_id}</Table.Cell>
-                                        <Table.Cell>{item.resultado} {item.unidad_medida}</Table.Cell>
-                                        <Table.Cell>
-                                            <Badge color={
-                                                item.posicion_final.includes('primero') ? 'yellow' :
-                                                    item.posicion_final.includes('segundo') ? 'gray' :
-                                                        item.posicion_final.includes('tercero') ? 'orange' : 'info'
-                                            }>
-                                                {item.posicion_final.toUpperCase()}
-                                            </Badge>
-                                        </Table.Cell>
-                                        <Table.Cell>
-                                            {item.estado ? (
-                                                <Badge color="success">Validado</Badge>
-                                            ) : (
-                                                <Badge color="failure">Anulado</Badge>
-                                            )}
-                                        </Table.Cell>
-                                    </Table.Row>
-                                ))}
-                            </Table.Body>
-                        </Table>
-                    ) : (
-                        <div className="text-center py-10 text-gray-500">
-                            No hay resultados registrados aún.
+                        {/* Silver */}
+                        <div className="bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border-l-4 border-gray-400 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Medallas de Plata</p>
+                                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.medallas?.plata || 0}</h3>
+                                </div>
+                                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                    <Medal className="h-8 w-8 text-gray-400" />
+                                </div>
+                            </div>
                         </div>
-                    )}
+
+                        {/* Bronze */}
+                        <div className="bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border-l-4 border-orange-400 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Medallas de Bronce</p>
+                                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.medallas?.bronce || 0}</h3>
+                                </div>
+                                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
+                                    <Medal className="h-8 w-8 text-orange-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Total */}
+                        <div className="bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border-l-4 border-blue-500 transition-colors">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Competencias</p>
+                                    <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.total_competencias}</h3>
+                                </div>
+                                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                                    <Trophy className="h-8 w-8 text-blue-500" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Long Card */}
+                        <div className="md:col-span-2 lg:col-span-4 bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border-t-4 border-green-500 transition-colors">
+                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-full">
+                                        <Activity className="h-8 w-8 text-green-600 dark:text-green-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">Experiencia Acumulada</h4>
+                                        <p className="text-gray-500 dark:text-gray-400">{stats.experiencia} años activos en el club</p>
+                                    </div>
+                                </div>
+
+                                <div className="h-10 w-px bg-gray-200 dark:bg-gray-700 hidden md:block"></div>
+
+                                <div className="flex items-center gap-4">
+                                    <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-full">
+                                        <TrendingUp className="h-8 w-8 text-purple-600 dark:text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-gray-900 dark:text-white">Rendimiento General</h4>
+                                        <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                            {stats.total_competencias > 0
+                                                ? `${Math.round(((stats.medallas.oro + stats.medallas.plata + stats.medallas.bronce) / stats.total_competencias) * 100)}% de podio`
+                                                : "Sin datos suficientes"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Historial Reciente */}
+                <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] overflow-hidden transition-colors">
+                    <div className="p-6 border-b border-gray-200 dark:border-[#332122] flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                            <Calendar className="h-6 w-6 text-[#b30c25]" />
+                            Historial de Competencias
+                        </h2>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        {historial.length > 0 ? (
+                            <Table hoverable theme={{
+                                root: {
+                                    shadow: "none",
+                                    wrapper: "rounded-none"
+                                },
+                                body: {
+                                    cell: {
+                                        base: "px-6 py-4 dark:bg-[#212121] dark:text-white"
+                                    }
+                                }
+                            }}>
+                                <Table.Head className="bg-gray-50 dark:bg-[#2a2829] text-gray-500 dark:text-gray-400">
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Fecha</Table.HeadCell>
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Competencia</Table.HeadCell>
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Prueba</Table.HeadCell>
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Resultado</Table.HeadCell>
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Posición</Table.HeadCell>
+                                    <Table.HeadCell className="hover:bg-gray-50 dark:hover:bg-[#2a2829]">Estado</Table.HeadCell>
+                                </Table.Head>
+                                <Table.Body className="divide-y divide-gray-200 dark:divide-[#332122]">
+                                    {historial.map((item) => (
+                                        <Table.Row key={item.id} className="bg-white dark:bg-[#212121] hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
+                                            <Table.Cell className="whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                                {new Date(item.fecha_registro).toLocaleDateString()}
+                                            </Table.Cell>
+                                            <Table.Cell className="text-gray-700 dark:text-gray-300">
+                                                Competencia #{item.competencia_id}
+                                            </Table.Cell>
+                                            <Table.Cell className="text-gray-700 dark:text-gray-300">Prueba #{item.prueba_id}</Table.Cell>
+                                            <Table.Cell className="text-gray-900 dark:text-white font-mono">{item.resultado} {item.unidad_medida}</Table.Cell>
+                                            <Table.Cell>
+                                                <Badge color={
+                                                    item.posicion_final.includes('primero') ? 'warning' :
+                                                        item.posicion_final.includes('segundo') ? 'gray' :
+                                                            item.posicion_final.includes('tercero') ? 'failure' : 'info'
+                                                } className="text-xs font-bold uppercase w-fit">
+                                                    {item.posicion_final}
+                                                </Badge>
+                                            </Table.Cell>
+                                            <Table.Cell>
+                                                {item.estado ? (
+                                                    <Badge color="success" className="w-fit">Validado</Badge>
+                                                ) : (
+                                                    <Badge color="failure" className="w-fit">Anulado</Badge>
+                                                )}
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    ))}
+                                </Table.Body>
+                            </Table>
+                        ) : (
+                            <div className="text-center py-16 text-gray-500 dark:text-gray-400">
+                                <Trophy className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                                <p>No hay resultados registrados aún.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </Card>
 
-            {/* Próximas Pruebas (Placeholder visual para HU-020 'Horarios') */}
-            <Card>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Próximos Eventos</h2>
-                <Timeline>
-                    <Timeline.Item>
-                        <Timeline.Point />
-                        <Timeline.Content>
-                            <Timeline.Time>Próximamente</Timeline.Time>
-                            <Timeline.Title>Calendario de Competencias</Timeline.Title>
-                            <Timeline.Body>
-                                El módulo de calendario y horarios estará disponible en breve.
-                            </Timeline.Body>
-                        </Timeline.Content>
-                    </Timeline.Item>
-                </Timeline>
-            </Card>
+                {/* Próximas Pruebas */}
+                <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] p-8 transition-colors">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Próximos Eventos</h2>
+                    <Timeline>
+                        <Timeline.Item>
+                            <Timeline.Point icon={Calendar} />
+                            <Timeline.Content>
+                                <Timeline.Time className="text-gray-500 dark:text-gray-400">Próximamente</Timeline.Time>
+                                <Timeline.Title className="text-gray-900 dark:text-white">Calendario de Competencias</Timeline.Title>
+                                <Timeline.Body className="text-gray-600 dark:text-gray-400">
+                                    El módulo de calendario y horarios estará disponible en breve para que puedas planificar tu temporada.
+                                </Timeline.Body>
+                            </Timeline.Content>
+                        </Timeline.Item>
+                    </Timeline>
+                </div>
 
+            </div>
         </div>
     );
 };

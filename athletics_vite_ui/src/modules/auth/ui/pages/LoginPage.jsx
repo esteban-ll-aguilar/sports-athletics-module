@@ -5,7 +5,6 @@ import loginImage from '@assets/images/auth/login2.webp';
 import VerificationModal from '../widgets/VerificationModal';
 import TwoFactorLoginModal from '../widgets/TwoFactorLoginModal';
 import { toast } from 'react-hot-toast';
-import ThemeToggle from '../../../../shared/components/ThemeToggle';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -80,10 +79,6 @@ const LoginPage = () => {
     return (
         //fondo degradado//
         <div className="flex h-screen w-full bg-white dark:bg-[#1a1a1a] transition-colors duration-500">
-            {/* Absolute Theme Toggle */}
-            <div className="absolute top-4 right-4 z-50">
-                <ThemeToggle />
-            </div>
 
             <VerificationModal
                 isOpen={showVerificationModal}

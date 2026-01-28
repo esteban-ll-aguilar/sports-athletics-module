@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import { toast } from 'react-hot-toast';
-import ThemeToggle from '../../../../shared/components/ThemeToggle';
 import { User, CreditCard, Phone, MapPin, Calendar, Briefcase, Trophy, UserCircle, Mail, Lock, Fingerprint } from 'lucide-react';
 
 const RegisterPage = () => {
@@ -279,11 +278,6 @@ const RegisterPage = () => {
     };
     return (
         <div className="flex min-h-screen w-full bg-white dark:bg-[#1a1a1a] transition-colors duration-500">
-            {/* Absolute Theme Toggle */}
-            <div className="fixed top-4 right-4 z-50 lg:absolute">
-                <ThemeToggle />
-            </div>
-
             {/* Left Side - Image */}
             <div className="hidden lg:flex w-1/2 bg-gray-900 dark:bg-[#242223] text-white items-center justify-center overflow-hidden fixed h-full transition-colors duration-500">
                 <div className="absolute inset-0 z-0">

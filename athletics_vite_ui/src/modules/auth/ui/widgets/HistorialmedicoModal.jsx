@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import historialMedicoService from "../../services/historialMedicoService";
+import { Activity, Heart, Ruler, Weight, AlertCircle, Save, X, Edit3, PlusCircle } from "lucide-react";
 
 export const OPCIONES_ALERGIAS = [
     { value: "Ninguna", label: "Ninguna" },
@@ -54,7 +55,6 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
     // Cargar historial cuando el modal se abra
     useEffect(() => {
         if (isOpen) {
-            console.log("📌 Modal abierto, cargando historial...");
             loadHistorial();
         }
     }, [isOpen]);
@@ -69,10 +69,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
     const loadHistorial = async () => {
         try {
             setLoading(true);
-            console.log("🔹 Llamando a getMyHistorial...");
-
             const response = await historialMedicoService.getMyHistorial();
-            console.log("🔹 Response getMyHistorial:", response);
 
             if (response) {
                 setFormData({
@@ -99,47 +96,63 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
     // Manejo de inputs
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Guardar o actualizar historial
+    // Agregar Historial
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const imc = calcularIMC(formData.peso, formData.talla);
-
-        console.log("🔹 Datos a enviar:", { ...formData, imc, activeTab });
-
-        if (!formData.talla || !formData.peso) {
-            Swal.fire({
-                icon: "warning",
-                title: "Campos requeridos",
-                text: "Talla y peso son obligatorios",
-                confirmButtonColor: "#eab308"
-            });
-            return;
-        }
-
+        setLoading(true);
         try {
-            setLoading(true);
-            const payload = { ...formData, imc };
-            console.log("🔹 Payload final:", payload);
-
-            if (activeTab === "editar" && historial) {
-                await historialMedicoService.updateHistorial(historial.external_id, payload);
-                console.log("🔹 Historial actualizado correctamente");
-                Swal.fire("Actualizado", "Historial médico actualizado correctamente", "success");
-            } else if (activeTab === "crear") {
-                await historialMedicoService.createHistorialMedico(payload);
-                console.log("🔹 Historial creado correctamente");
-                Swal.fire("Creado", "Historial médico creado correctamente", "success");
-                await loadHistorial(); // recargar historial recién creado
-            }
-
-            onClose();
+            await historialMedicoService.createHistorial(formData);
+            Swal.fire({
+                icon: 'success',
+                title: 'Historial Creado',
+                text: 'La ficha médica se ha registrado exitosamente.',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#b30c25'
+            });
+            loadHistorial();
         } catch (error) {
-            console.error("❌ Error al guardar historial:", error);
-            Swal.fire("Error", error?.response?.data?.detail || "Ocurrió un error", "error");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo crear el historial.',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#332122'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Actualizar Historial
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        if (!historial?.id) return;
+        setLoading(true);
+        try {
+            await historialMedicoService.updateHistorial(historial.id, formData);
+            Swal.fire({
+                icon: 'success',
+                title: 'Actualizado',
+                text: 'Tu historial médico ha sido actualizado.',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#b30c25'
+            });
+            loadHistorial();
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo actualizar la información.',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#332122'
+            });
         } finally {
             setLoading(false);
         }
@@ -147,166 +160,188 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
     if (!isOpen) return null;
 
-    const isReadOnly = activeTab === "ver";
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-[#332122] shadow-2xl text-gray-900 dark:text-gray-100 overflow-hidden transition-colors duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-                {/* HEADER */}
-                <div className="px-8 py-6 bg-linear-to-r from-[#b30c25] to-[#5c0a16]">
-                    <h2 className="text-xl font-semibold text-white">
-                        Historial Médico
-                    </h2>
-                    <p className="text-sm text-red-100/80">
-                        Información clínica del atleta
-                    </p>
-                </div>
+            <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-[#332122] flex flex-col max-h-[90vh]">
 
-                {/* TABS */}
-                <div className="flex px-8 pt-6 gap-6 border-b border-gray-100 dark:border-[#332122] transition-colors">
-                    {!historial && (
-                        <TabButton active={activeTab === "crear"} onClick={() => setActiveTab("crear")}>
-                            Crear
-                        </TabButton>
-                    )}
-                    {historial && (
-                        <>
-                            <TabButton active={activeTab === "editar"} onClick={() => setActiveTab("editar")}>
-                                Editar
-                            </TabButton>
-                            <TabButton active={activeTab === "ver"} onClick={() => setActiveTab("ver")}>
-                                Ver historial
-                            </TabButton>
-                        </>
-                    )}
-                </div>
-
-                {/* BODY */}
-                <div className="px-8 py-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-[#332122] scrollbar-track-transparent">
-
-                    {(activeTab === "crear" || activeTab === "editar") && (
-                        <form onSubmit={handleSubmit} className="space-y-6">
-
-                            {/* MÉTRICAS */}
-                            <section>
-                                <h3 className="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 font-semibold">
-                                    Métricas corporales
-                                </h3>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <Input label="Talla (m)" name="talla" value={formData.talla} onChange={handleChange} />
-                                    <Input label="Peso (kg)" name="peso" value={formData.peso} onChange={handleChange} />
-                                    <Input label="IMC" value={calcularIMC(formData.peso, formData.talla)} readOnly />
-                                </div>
-                            </section>
-
-                            {/* CONDICIONES */}
-                            <section>
-                                <h3 className="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 font-semibold">
-                                    Condiciones médicas
-                                </h3>
-
-                                <div className="space-y-4">
-                                    <Select label="Alergias" name="alergias" value={formData.alergias} onChange={handleChange} options={OPCIONES_ALERGIAS} />
-                                    <Select label="Enfermedades" name="enfermedades" value={formData.enfermedades} onChange={handleChange} options={OPCIONES_ENFERMEDADES} />
-                                    <Select label="Enfermedades hereditarias" name="enfermedades_hereditarias" value={formData.enfermedades_hereditarias} onChange={handleChange} options={OPCIONES_HEREDITARIAS} />
-                                </div>
-                            </section>
-
-                            {/* FOOTER */}
-                            <div className="flex justify-between items-center pt-6 border-t border-gray-100 dark:border-[#332122] transition-colors">
-                                <button
-                                    type="button"
-                                    onClick={onClose}
-                                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"
-                                >
-                                    Cancelar
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-6 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8f091d] text-white transition font-medium shadow-lg hover:shadow-[#b30c25]/30"
-                                >
-                                    {loading ? "Guardando..." : activeTab === "editar" ? "Actualizar" : "Guardar"}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {/* VISTA SOLO LECTURA */}
-                    {activeTab === "ver" && historial && (
-                        <div className="space-y-6">
-                            {[
-                                ["Talla", historial.talla],
-                                ["Peso", historial.peso],
-                                ["IMC", historial.imc],
-                                ["Alergias", historial.alergias],
-                                ["Enfermedades", historial.enfermedades],
-                                ["Enfermedades hereditarias", historial.enfermedades_hereditarias]
-                            ].map(([label, value]) => (
-                                <div key={label} className="flex justify-between border-b border-gray-100 dark:border-[#332122] pb-2 transition-colors">
-                                    <span className="text-gray-500 dark:text-gray-400">{label}</span>
-                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{value || "—"}</span>
-                                </div>
-                            ))}
+                {/* Header */}
+                <div className="px-6 py-5 border-b border-gray-100 dark:border-[#332122] flex justify-between items-center bg-gray-50 dark:bg-[#212121]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-[#b30c25] flex items-center justify-center">
+                            <Activity size={20} />
                         </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Ficha Médica</h2>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Información clínica del atleta</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Tabs, only if history exists (or logic to switch modes) */}
+                <div className="flex border-b border-gray-100 dark:border-[#332122]">
+                    <button
+                        onClick={() => setActiveTab("crear")}
+                        className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors relative
+                            ${activeTab === "crear" ? "text-[#b30c25]" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}
+                        `}
+                    >
+                        <PlusCircle size={16} />
+                        {historial ? "Nueva Medición" : "Crear Ficha"}
+                        {activeTab === "crear" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#b30c25]" />}
+                    </button>
+                    {historial && (
+                        <button
+                            onClick={() => setActiveTab("editar")}
+                            className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 transition-colors relative
+                                ${activeTab === "editar" ? "text-[#b30c25]" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}
+                            `}
+                        >
+                            <Edit3 size={16} />
+                            Editar Ficha Actual
+                            {activeTab === "editar" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#b30c25]" />}
+                        </button>
                     )}
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto custom-scrollbar">
+                    <form onSubmit={activeTab === "crear" ? handleSubmit : handleUpdate} className="space-y-6">
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Peso */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Peso (kg)</label>
+                                <div className="relative">
+                                    <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        name="peso"
+                                        value={formData.peso}
+                                        onChange={handleChange}
+                                        className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400"
+                                        placeholder="ej. 70.5"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Talla */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Altura (m)</label>
+                                <div className="relative">
+                                    <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        name="talla"
+                                        value={formData.talla}
+                                        onChange={handleChange}
+                                        className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400"
+                                        placeholder="ej. 1.75"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* IMC Display */}
+                        {formData.peso && formData.talla && (
+                            <div className="bg-gray-50 dark:bg-[#212121] rounded-xl p-4 flex items-center justify-between border border-gray-200 dark:border-[#332122]">
+                                <div className="flex items-center gap-3">
+                                    <Heart className="text-[#b30c25]" />
+                                    <span className="font-semibold text-gray-700 dark:text-gray-300">IMC Estimado</span>
+                                </div>
+                                <span className="text-xl font-bold text-[#b30c25]">{calcularIMC(formData.peso, formData.talla)}</span>
+                            </div>
+                        )}
+
+                        <div className="space-y-4 pt-2">
+                            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-[#332122] pb-2">Antecedentes Clínicos</h3>
+
+                            {/* Alergias */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Alergias</label>
+                                <select
+                                    name="alergias"
+                                    value={formData.alergias}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
+                                >
+                                    <option value="" disabled>Seleccione una opción</option>
+                                    {OPCIONES_ALERGIAS.map((op) => (
+                                        <option key={op.value} value={op.value}>{op.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Enfermedades */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enfermedades Preexistentes</label>
+                                <select
+                                    name="enfermedades"
+                                    value={formData.enfermedades}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
+                                >
+                                    <option value="" disabled>Seleccione una opción</option>
+                                    {OPCIONES_ENFERMEDADES.map((op) => (
+                                        <option key={op.value} value={op.value}>{op.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Hereditarias */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Antecedentes Hereditarios</label>
+                                <select
+                                    name="enfermedades_hereditarias"
+                                    value={formData.enfermedades_hereditarias}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
+                                >
+                                    <option value="" disabled>Seleccione una opción</option>
+                                    {OPCIONES_HEREDITARIAS.map((op) => (
+                                        <option key={op.value} value={op.value}>{op.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="pt-4 border-t border-gray-100 dark:border-[#332122] flex gap-3">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 px-4 py-3 bg-[#b30c25] hover:bg-[#8f091d] text-white rounded-xl font-bold shadow-lg shadow-red-900/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                {loading ? (
+                                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        {activeTab === "crear" ? "Guardar Ficha" : "Actualizar Datos"}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     );
 };
-// Componentes auxiliares
-const TabButton = ({ active, children, ...props }) => (
-    <button
-        {...props}
-        className={`pb-3 text-sm font-medium border-b-2 transition ${active
-            ? "border-[#b30c25] text-[#b30c25]"
-            : "border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-            }`}
-    >
-        {children}
-    </button>
-);
 
-const Input = ({ label, readOnly = false, ...props }) => (
-    <div>
-        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
-        <input
-            readOnly={readOnly}
-            {...props}
-            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors placeholder-gray-400 disabled:opacity-70"
-        />
-    </div>
-);
-
-const Textarea = ({ label, ...props }) => (
-    <div>
-        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
-        <textarea
-            {...props}
-            rows={3}
-            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors placeholder-gray-400"
-        />
-    </div>
-);
-
-const Select = ({ label, options, ...props }) => (
-    <div>
-        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
-        <select
-            {...props}
-            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors"
-        >
-            <option value="" disabled>Seleccione una opción</option>
-            {options.map((option) => (
-                <option key={option.value} value={option.value}>
-                    {option.label}
-                </option>
-            ))}
-        </select>
-    </div>
-);
 export default HistorialMedicoModal;

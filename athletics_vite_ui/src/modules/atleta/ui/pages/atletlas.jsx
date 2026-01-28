@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import AtletaService from "../../services/AtletaService";
-import { Mail, FileText, User, UserPlus } from "lucide-react";
+import { Mail, FileText, User, UserPlus, Search, Filter } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
@@ -27,15 +27,8 @@ const AthletesTable = () => {
   const fetchAthletes = async () => {
     try {
       setLoading(true);
-      console.log("🔄 Cargando atletas desde el backend...");
       const response = await AtletaService.getAthletes();
-
-      console.log("📦 Datos recibidos de AtletaService:", response);
-
-      // El backend ahora filtra por rol y devuelve PaginatedUsers
       const athletes = response.items || [];
-
-      console.log("🏃‍♂️ Atletas filtrados:", athletes);
 
       // Asegurar que todos los campos existan
       const sanitizedAthletes = athletes.map((u) => ({
@@ -52,8 +45,6 @@ const AthletesTable = () => {
         id: u.id,
         role: u.role || "ATLETA",
       }));
-
-      console.log("✅ Atletas sanitizados para tabla:", sanitizedAthletes);
 
       setUsers(sanitizedAthletes);
     } catch (err) {
@@ -89,13 +80,10 @@ const AthletesTable = () => {
 
       return matchesSearch && matchesStatus;
     });
-
-    console.log("🔍 Usuarios filtrados por búsqueda y estado:", filtered);
     return filtered;
   }, [users, searchTerm, statusFilter]);
 
   const exportPDF = () => {
-    console.log("📄 Exportando PDF con usuarios:", filteredUsers);
     const doc = new jsPDF();
     doc.text("Listado de Atletas", 14, 15);
 
@@ -128,93 +116,107 @@ const AthletesTable = () => {
         user.is_active ? "Activo" : "Inactivo",
       ]),
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [34, 197, 94] },
+      headStyles: { fillColor: [179, 12, 37] }, // Red brand color
     });
 
     doc.save("atletas.pdf");
   };
 
   const openCreateModal = () => {
-    console.log("🟢 Abriendo modal para crear usuario");
     setSelectedUser(null);
     setShowModal(true);
   };
 
   const openEditModal = (user) => {
-    console.log("🟡 Abriendo modal para editar usuario:", user);
     setSelectedUser(user);
     setShowModal(true);
   };
 
   const closeModal = () => {
-    console.log("🔴 Cerrando modal");
     setShowModal(false);
     setSelectedUser(null);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
-        <div className="animate-spin h-10 w-10 rounded-full border-t-2 border-b-2 border-green-600" />
+      <div className="min-h-screen bg-gray-50 dark:bg-[#121212] flex items-center justify-center font-['Lexend'] transition-colors duration-300">
+        <div className="animate-spin h-12 w-12 rounded-full border-t-2 border-b-2 border-[#b30c25]" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-[#212121] rounded-2xl shadow-xl border border-[#332122] overflow-auto text-gray-200">
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-[#121212] p-8 flex justify-center items-start transition-colors duration-300">
+        <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-xl border border-gray-200 dark:border-[#332122] p-6 max-w-lg w-full text-center">
+          <div className="p-3 bg-red-100 text-red-600 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+            <span className="material-symbols-outlined">error</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Error</h3>
+          <p className="text-gray-500 dark:text-gray-400">{error}</p>
+          <button
+            onClick={fetchAthletes}
+            className="mt-6 px-4 py-2 bg-[#b30c25] text-white rounded-lg hover:bg-[#8f091d] transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* Breadcrumb */}
-        <Link to="/dashboard/atleta"
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
-        >
-          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-          </span>
-        </Link>
 
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+        {/* Header Row */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
-              Gestión de Atletas
-            </h1>
-            <p className="text-gray-400 text-lg">
+            <div className="flex items-center gap-4 mb-2">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
+                Gestión de Atletas
+              </h1>
+            </div>
+
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              Administra el listado de atletas registrados en el sistema.
             </p>
           </div>
+        </div>
 
-          <div className="flex gap-2">
-            <button
+        {/* Actions Row */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
+          <div className="w-full sm:w-auto flex gap-3">
+            {/* <button
               onClick={openCreateModal}
               className="
-        group flex items-center gap-3
-        px-8 py-4 rounded-2xl
-        text-sm font-semibold text-white
-        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-        hover:brightness-110
-        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition-all duration-300
-        shadow-lg shadow-[#b30c25]/40
-        active:scale-95
-    "      >
+                            flex items-center gap-2 justify-center
+                            px-6 py-3 rounded-xl w-full sm:w-auto
+                            text-sm font-semibold text-white
+                            bg-linear-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
+                            hover:shadow-lg hover:shadow-red-900/20 hover:-translate-y-0.5
+                            active:translate-y-0 active:shadow-none
+                            transition-all duration-300
+                            "
+            >
               <UserPlus size={18} />
               Nuevo Atleta
-            </button>
+            </button> */}
 
             <button
               onClick={exportPDF}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-            bg-[#1a1a1a] border border-[#332122] hover:bg-[#242223] transition"
+              className="
+                            flex items-center gap-2 justify-center
+                            px-4 py-3 rounded-xl w-full sm:w-auto
+                            text-sm font-medium
+                            bg-white dark:bg-[#212121]
+                            text-gray-700 dark:text-gray-300
+                            border border-gray-200 dark:border-[#332122]
+                            hover:bg-gray-50 dark:hover:bg-[#2a2829]
+                            transition-colors
+                            "
             >
-              <FileText size={16} />
+              <FileText size={18} />
               Exportar PDF
             </button>
           </div>
@@ -222,163 +224,146 @@ const AthletesTable = () => {
 
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Buscador */}
-          <div className="relative ">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 material-symbols-outlined">
-              search
-            </span>
+          <div className="col-span-1 md:col-span-2 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
               placeholder="Buscar por nombre, correo o identificación..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="
-        w-full pl-12 pr-4 py-4 rounded-2xl
-        bg-[#1f1c1d]
-        border border-[#332122]
-        text-gray-100 placeholder-gray-500
-        focus:border-[#b30c25]
-        focus:ring-1 focus:ring-[#b30c25]/40
-        outline-none transition-all
-        shadow-inner
-      "
+                            w-full pl-12 pr-4 py-3 rounded-xl
+                            bg-white dark:bg-[#212121]
+                            text-gray-900 dark:text-gray-100
+                            placeholder-gray-400 dark:placeholder-gray-500
+                            border border-gray-200 dark:border-[#332122]
+                            focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                            outline-none transition-all shadow-sm
+                            "
             />
           </div>
+
+          {/* Filtro Estado */}
           <div className="relative">
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="
-    w-full pl-12 pr-4 py-4 rounded-2xl
-    bg-[#1f1c1d]
-    border border-[#332122]
-    text-gray-100 placeholder-gray-500
-    focus:border-[#b30c25]
-    focus:ring-1 focus:ring-[#b30c25]/40
-    outline-none transition-all
-    shadow-inner
-  "            >
-              <option value="">Todos</option>
+                            w-full pl-12 pr-10 py-3 rounded-xl
+                            bg-white dark:bg-[#212121]
+                            text-gray-900 dark:text-gray-100
+                            border border-gray-200 dark:border-[#332122]
+                            focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                            outline-none transition-all shadow-sm appearance-none cursor-pointer
+                            "
+            >
+              <option value="">Todos los Estados</option>
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
             </select>
-            {/* Flecha custom */}
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 material-symbols-outlined">
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
               expand_more
             </span>
           </div>
-
         </div>
 
-        {/* CARD */}
-        <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+        {/* TABLA */}
+        <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors duration-300">
           <div className="overflow-x-auto">
-
-            {/* Tabla */}
-
-            <table className="w-full text-left">
-
-
-              <thead className="bg-[#1a1a1a] border-b border-[#332122]">
-                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Usuario</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Nombre</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Apellido</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Correo</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Tipo ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estamento</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Teléfono</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Dirección</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones</th>
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                <tr>
+                  {["Usuario", "Nombre", "Apellido", "Correo", "Tipo ID", "ID", "Estamento", "Teléfono", "Dirección", "Estado", "Acciones"].map((head) => (
+                    <th key={head} className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                      {head}
+                    </th>
+                  ))}
                 </tr>
               </thead>
 
-              <tbody>
+              <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent">
-                    <td className="px-4 py-3">{user.username}</td>
-                    <td className="px-4 py-3">{user.first_name}</td>
-                    <td className="px-4 py-3">{user.last_name}</td>
-                    <td className="px-4 py-3 flex items-center gap-2 text-gray-300">
-                      <Mail size={14} className="text-[#b30c25]" />
-                      {user.email}
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">{user.username}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.first_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{user.last_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                      <div className="flex items-center gap-2">
+                        <Mail size={14} className="text-[#b30c25]" />
+                        {user.email}
+                      </div>
                     </td>
-
-                    <td className="px-4 py-3">{user.tipo_identificacion}</td>
-                    <td className="px-4 py-3">{user.identificacion}</td>
-                    <td className="px-4 py-3">{user.tipo_estamento}</td>
-                    <td className="px-4 py-3">{user.phone}</td>
-                    <td className="px-4 py-3">{user.direccion}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-6 py-4 whitespace-nowrap text-xs">{user.tipo_identificacion}</td>
+                    <td className="px-6 py-4 whitespace-nowrap font-mono text-xs">{user.identificacion}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+                        {user.tipo_estamento}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{user.phone}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm max-w-[150px] truncate">{user.direccion}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase ${user.is_active
-                          ? 'bg-green-500/10 text-green-400 ring-1 ring-green-500/30'
-                          : 'bg-red-500/10 text-red-400 ring-1 ring-red-500/30'
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase border ${user.is_active
+                          ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-900/30'
+                          : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-900/30'
                           }`}
                       >
                         {user.is_active ? "Activo" : "Inactivo"}
                       </span>
-
                     </td>
-                    <td className="px-6 py-5">
-                      <div className="flex justify-end gap-2">
-
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                          title="Editar"
-                        >
-                          <span className="material-symbols-outlined">edit</span>
-                        </button>
-                      </div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => openEditModal(user)}
+                        className="p-2 text-gray-400 hover:text-[#b30c25] hover:bg-red-50 dark:hover:bg-[#332122] rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <span className="material-symbols-outlined text-xl">edit</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
 
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan="11" className="text-center py-10 text-gray-500">
-                      No hay atletas registrados.
+                    <td colSpan="11" className="text-center py-12 text-gray-500 dark:text-gray-400">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <User className="h-10 w-10 opacity-20" />
+                        <p>No se encontraron atletas.</p>
+                      </div>
                     </td>
-
                   </tr>
                 )}
               </tbody>
             </table>
-
-            {/* Modal */}
-            {showModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center">
-                {/* Overlay */}
-                <div
-                  className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-                  onClick={closeModal}
-                />
-
-                {/* Modal container */}
-                <div className="relative z-10 w-full max-w-6xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl">
-                  <EditUserModal
-                    asModal
-                    user={selectedUser}
-                    onClose={closeModal}
-                    onUpdated={fetchAthletes}
-                  />
-                </div>
-              </div>
-
-            )}
           </div>
+        </div>
 
-        </div >
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              onClick={closeModal}
+            />
+            <div className="relative z-10 w-full max-w-5xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              {/* We are reusing the RegisterPage component as a Modal essentially */}
+              <EditUserModal
+                asModal
+                user={selectedUser}
+                onClose={closeModal}
+                onUpdated={fetchAthletes}
+              />
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
 };
-
-
 
 export default AthletesTable;
