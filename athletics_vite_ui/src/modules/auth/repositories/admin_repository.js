@@ -1,4 +1,4 @@
-import axios from 'axios';
+import ApiClient from '../../../core/api/apiClient';
 import Settings from '../../../config/enviroment';
 import { APIResponse } from '../../../core/api/schemas/api_schema';
 
@@ -7,18 +7,13 @@ const API_URL = `${Settings.API_URL}/api/v1`;
 class AdminRepository {
     async listUsers(page = 1, size = 20, role = null) {
         try {
-            const token = localStorage.getItem('access_token');
             let url = `${API_URL}/auth/user-management/?page=${page}&size=${size}`;
             if (role) {
                 url += `&role=${role}`;
             }
-            const response = await axios.get(url, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const responseData = await ApiClient.get(url);
             // Backend should return APIResponse wrapping PaginatedUsers
-            return response.data;
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -26,19 +21,12 @@ class AdminRepository {
 
     async updateUserRole(userId, role) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(
+            const responseData = await ApiClient.put(
                 `${API_URL}/auth/user-management/${userId}/role`,
-                { role },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
+                { role }
             );
             // Backend should return APIResponse wrapping UserResponseSchema
-            return response.data;
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

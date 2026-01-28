@@ -3,22 +3,22 @@ import resultadoCompetenciaRepository from "../repositories/resultado_competenci
 const resultadoCompetenciaService = {
     async getAll() {
         const response = await resultadoCompetenciaRepository.getAll();
-        return response.data.items || response.data;
+        return response;
     },
 
     async getById(externalId) {
         const response = await resultadoCompetenciaRepository.getById(externalId);
-        return response.data;
+        return response;
     },
 
     async getByCompetencia(competenciaExternalId) {
         const response = await resultadoCompetenciaRepository.getByCompetencia(competenciaExternalId);
-        return response.data.items || response.data;
+        return response;
     },
 
     async create(data) {
         const response = await resultadoCompetenciaRepository.create(data);
-        return response.data;
+        return response;
     },
 
     async update(externalId, data) {

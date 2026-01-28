@@ -24,11 +24,12 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
   ];
 
   const unidadesMedida = [
-    { value: 'm', label: 'Metros (m)' },
-    { value: 's', label: 'Segundos (s)' },
-    { value: 'min', label: 'Minutos (min)' },
-    { value: 'km', label: 'Kilómetros (km)' },
-    { value: 'cm', label: 'Centímetros (cm)' }
+    { value: 'METROS', label: 'Metros (m)' },
+    { value: 'SEGUNDOS', label: 'Segundos (s)' },
+    { value: 'MINUTOS', label: 'Minutos (min)' },
+    { value: 'KILOMETROS', label: 'Kilómetros (km)' },
+    { value: 'CENTIMETROS', label: 'Centímetros (cm)' },
+    { value: 'PUNTOS', label: 'Puntos' }
   ];
 
   const safeValue = (value) => {
@@ -56,7 +57,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
         competencia_id: competenciaObj?.external_id ?? "",
         competencia: competenciaObj,
         resultado: safeValue(editingResultado.resultado),
-        unidad_medida: editingResultado.unidad_medida ?? "m",
+        unidad_medida: editingResultado.unidad_medida ?? "METROS",
         posicion_final: editingResultado.posicion_final ?? "participante",
         puesto_obtenido: editingResultado.puesto_obtenido ?? null,
         observaciones: editingResultado.observaciones ?? "",
@@ -79,6 +80,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
       atleta_id: form.atleta_id,
       prueba_id: form.prueba_id,
       resultado: form.resultado !== "" ? parseFloat(form.resultado) : null,
+      unidad_medida: form.unidad_medida,
       puesto_obtenido: form.puesto_obtenido !== "" ? Number(form.puesto_obtenido) : null,
       posicion_final: form.posicion_final,
       observaciones: form.observaciones,

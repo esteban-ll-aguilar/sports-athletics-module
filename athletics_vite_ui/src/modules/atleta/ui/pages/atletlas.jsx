@@ -33,7 +33,7 @@ const AthletesTable = () => {
       console.log("📦 Datos recibidos de AtletaService:", response);
 
       // El backend ahora filtra por rol y devuelve PaginatedUsers
-      const athletes = response.data?.items || [];
+      const athletes = response.items || [];
 
       console.log("🏃‍♂️ Atletas filtrados:", athletes);
 

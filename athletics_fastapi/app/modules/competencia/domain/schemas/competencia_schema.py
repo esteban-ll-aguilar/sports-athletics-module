@@ -50,6 +50,9 @@ class UnidadMedidaEnum(str, Enum):
     SEGUNDOS = "SEGUNDOS"
     METROS = "METROS"
     PUNTOS = "PUNTOS"
+    MINUTOS = "MINUTOS"
+    KILOMETROS = "KILOMETROS"
+    CENTIMETROS = "CENTIMETROS"
 
 class ResultadoCompetenciaCreate(BaseModel):
     """Schema para crear Resultado. IDs vienen como UUID desde el frontend."""

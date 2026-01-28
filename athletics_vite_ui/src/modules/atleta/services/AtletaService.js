@@ -8,9 +8,9 @@ const AtletaService = {
     },
 
     getAthletes: async (page = 1, limit = 20) => {
-        const data = await ApiClient.get(`/auth/users/list?page=${page}&size=${limit}&role=ATLETA`);
-        console.log("AtletaService.getAthletes data:", data);
-        return data;
+        const response = await ApiClient.get(`/auth/users/?page=${page}&size=${limit}&role=ATLETA`);
+        console.log("AtletaService.getAthletes data:", response);
+        return response; // ApiClient already returned response.data
     },
 
     getHistorial: async () => {

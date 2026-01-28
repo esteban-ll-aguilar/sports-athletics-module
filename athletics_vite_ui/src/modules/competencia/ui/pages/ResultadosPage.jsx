@@ -21,8 +21,20 @@ const ResultadosPage = () => {
   const fetchResultados = async () => {
     setLoading(true);
     try {
-      const data = await resultadoCompetenciaService.getAll();
-      setResultados(Array.isArray(data) ? data : data.data || []);
+      const response = await resultadoCompetenciaService.getAll();
+      console.log("ResultadosPage getAll response:", response);
+      // Backend returns { data: { items: [...] } } or flattened by service
+      let items = [];
+      if (Array.isArray(response)) {
+        items = response;
+      } else if (response.data && Array.isArray(response.data.items)) {
+        items = response.data.items;
+      } else if (response.data && Array.isArray(response.data)) {
+        items = response.data;
+      } else if (response.items && Array.isArray(response.items)) {
+        items = response.items;
+      }
+      setResultados(items);
     } catch (err) {
     } finally {
       setLoading(false);
@@ -37,12 +49,12 @@ const ResultadosPage = () => {
     }
   };
 
-  // TODO: Implementar servicios de atletas y pruebas
   const fetchAtletas = async () => {
     try {
       const response = await AtletaService.getAthletes(1, 200);
       setAtletas(response.items || []);
     } catch (err) {
+      console.error("Error fetching atletas:", err);
     }
   };
 
@@ -189,7 +201,7 @@ const ResultadosPage = () => {
 
           <button
             onClick={() => { setSelectedResultado(null); setIsModalOpen(true); }}
-           className="
+            className="
         group flex items-center gap-3
         px-8 py-4 rounded-2xl
         text-sm font-semibold text-white
@@ -201,7 +213,7 @@ const ResultadosPage = () => {
         shadow-lg shadow-[#b30c25]/40
         active:scale-95
     "              >
-                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
+            <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
               add
             </span>
             Registrar Resultado
