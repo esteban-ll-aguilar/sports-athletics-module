@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppRouter from '@core/router/AppRouter';
 import { Toaster } from 'react-hot-toast';
 import authService from '@modules/auth/services/auth_service';
+import { ThemeProvider } from './core/contexts/ThemeContext';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,10 +26,10 @@ function App() {
   }
 
   return (
-    <>
+    <ThemeProvider>
       <Toaster position="top-right" reverseOrder={false} />
       <AppRouter />
-    </>
+    </ThemeProvider>
   );
 }
 

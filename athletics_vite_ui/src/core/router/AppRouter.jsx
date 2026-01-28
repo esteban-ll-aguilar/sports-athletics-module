@@ -64,7 +64,7 @@ const router = createBrowserRouter([
   // Public Routes
   {
     path: '/',
-    element: <MainLayout />,
+    element: <Outlet />,
     children: [
       { index: true, element: <HomePage /> },
     ],

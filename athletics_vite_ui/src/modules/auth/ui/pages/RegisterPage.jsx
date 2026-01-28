@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import { toast } from 'react-hot-toast';
+import ThemeToggle from '../../../../shared/components/ThemeToggle';
+import { User, CreditCard, Phone, MapPin, Calendar, Briefcase, Trophy, UserCircle, Mail, Lock, Fingerprint } from 'lucide-react';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -276,9 +278,14 @@ const RegisterPage = () => {
         };
     };
     return (
-        <div className="flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
+        <div className="flex min-h-screen w-full bg-white dark:bg-[#1a1a1a] transition-colors duration-500">
+            {/* Absolute Theme Toggle */}
+            <div className="fixed top-4 right-4 z-50 lg:absolute">
+                <ThemeToggle />
+            </div>
+
             {/* Left Side - Image */}
-            <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
+            <div className="hidden lg:flex w-1/2 bg-gray-900 dark:bg-[#242223] text-white items-center justify-center overflow-hidden fixed h-full transition-colors duration-500">
                 <div className="absolute inset-0 z-0">
                     <img
                         src={loginImage}
@@ -296,215 +303,277 @@ const RegisterPage = () => {
             </div>
 
             {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto">
-                <div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto bg-white dark:bg-linear-to-br dark:from-[#212121] dark:to-[#242223] transition-colors duration-500">
+                <div className="w-full max-w-lg bg-white dark:bg-[#242223] rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-[#332122] transition-colors duration-500 mt-12 lg:mt-0">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white">Crear Cuenta</h2>
-                        <p className="text-gray-400 mt-2">Ingresa tus datos para registrarte</p>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">Crear Cuenta</h2>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2 transition-colors duration-300">Ingresa tus datos para registrarte</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos Personales</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 transition-colors duration-300">Datos Personales</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
-                                    <input
-                                        name="first_name"
-                                        required
-                                        value={formData.first_name}
-                                        onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="Nombre"
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Nombre</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="first_name"
+                                            required
+                                            value={formData.first_name}
+                                            onChange={handleChange}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
+                                            placeholder="Nombre"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
-                                    <input
-                                        name="last_name"
-                                        required
-                                        value={formData.last_name}
-                                        onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="Apellido"
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Apellido</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <User className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="last_name"
+                                            required
+                                            value={formData.last_name}
+                                            onChange={handleChange}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
+                                            placeholder="Apellido"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
-                                    <select
-                                        name="tipo_identificacion"
-                                        value={formData.tipo_identificacion}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
-                                    >
-                                        <option value="CEDULA">Cédula</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
-                                        <option value="RUC">RUC</option>
-                                    </select>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Tipo ID</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <CreditCard className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <select
+                                            name="tipo_identificacion"
+                                            value={formData.tipo_identificacion}
+                                            onChange={handleChange}
+                                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300"
+                                        >
+                                            <option value="CEDULA">Cédula</option>
+                                            <option value="PASAPORTE">Pasaporte</option>
+                                            <option value="RUC">RUC</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">
                                         Identificación
                                         <span className="text-xs text-gray-500 ml-1">
                                         </span>
                                     </label>
-                                    <input
-                                        name="identificacion"
-                                        required
-                                        value={formData.identificacion}
-                                        onChange={handleChange}
-                                        pattern="\d*"
-                                        inputMode="numeric"
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="0123456789"
-                                    />
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Fingerprint className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="identificacion"
+                                            required
+                                            value={formData.identificacion}
+                                            onChange={handleChange}
+                                            pattern="\d*"
+                                            inputMode="numeric"
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
+                                            placeholder="0123456789"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
-                                    <input
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        inputMode="tel"
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="0999999999"
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Teléfono</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Phone className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            inputMode="tel"
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
+                                            placeholder="0999999999"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
-                                    <input
-                                        name="direccion"
-                                        value={formData.direccion}
-                                        onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
-                                        placeholder="Tu dirección"
-                                    />
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Dirección</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <MapPin className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            name="direccion"
+                                            value={formData.direccion}
+                                            onChange={handleChange}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
+                                            placeholder="Tu dirección"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">
                                     Fecha de nacimiento
                                 </label>
-                                <input
-                                    type="date"
-                                    name="fecha_nacimiento"
-                                    required
-                                    value={formData.fecha_nacimiento}
-                                    onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
-                                />
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Calendar className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="date"
+                                        name="fecha_nacimiento"
+                                        required
+                                        value={formData.fecha_nacimiento}
+                                        onChange={handleChange}
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">
                                     Sexo
                                 </label>
-                                <select
-                                    name="sexo"
-                                    value={formData.sexo}
-                                    onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
-                                >
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <User className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <select
+                                        name="sexo"
+                                        value={formData.sexo}
+                                        onChange={handleChange}
+                                        className="
+        block w-full pl-10 pr-3 py-2.5
+        bg-gray-50 dark:bg-white text-gray-900 dark:text-black
+        border border-gray-300 rounded-lg
+        placeholder-gray-500
+        focus:ring-[#b30c25] focus:border-[#b30c25]
+        sm:text-sm transition-colors duration-300
+      "
+                                    >
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 transition-colors duration-300">Datos de Cuenta</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
-                                    <select
-                                        name="tipo_estamento"
-                                        value={formData.tipo_estamento}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
-                                    >
-                                        <option value="EXTERNOS">Externos</option>
-                                        <option value="ESTUDIANTES">Estudiante</option>
-                                        <option value="DOCENTES">Docente</option>
-                                        <option value="ADMINISTRATIVOS">Administrativo</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
-                                    <select
-                                        name="role"
-                                        value={formData.role}
-                                        onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
-                                    >
-                                        <option value="ATLETA">Atleta</option>
-                                        <option value="REPRESENTANTE">Representante</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
-                                <input
-                                    name="username"
-                                    required
-                                    value={formData.username}
-                                    onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
-                                    placeholder="Nombre de usuario"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
-                                    placeholder="correo@ejemplo.com"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Estamento</label>
                                     <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Briefcase className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <select
+                                            name="tipo_estamento"
+                                            value={formData.tipo_estamento}
+                                            onChange={handleChange}
+                                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300"
+                                        >
+                                            <option value="EXTERNOS">Externos</option>
+                                            <option value="ESTUDIANTES">Estudiante</option>
+                                            <option value="DOCENTES">Docente</option>
+                                            <option value="ADMINISTRATIVOS">Administrativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Soy un..</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Trophy className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <select
+                                            name="role"
+                                            value={formData.role}
+                                            onChange={handleChange}
+                                            className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300"
+                                        >
+                                            <option value="ATLETA">Atleta</option>
+                                            <option value="REPRESENTANTE">Representante</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Nombre de Usuario</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <UserCircle className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        name="username"
+                                        required
+                                        value={formData.username}
+                                        onChange={handleChange}
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
+                                        placeholder="Nombre de usuario"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Correo Electrónico</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Mail className="h-5 w-5 text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+                                        placeholder="correo@ejemplo.com"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Contraseña</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Lock className="h-5 w-5 text-gray-400" />
+                                        </div>
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
                                             required
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
                                             placeholder="********"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                                         >
                                             {showPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -520,21 +589,24 @@ const RegisterPage = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">Confirmar Contraseña</label>
                                     <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <Lock className="h-5 w-5 text-gray-400" />
+                                        </div>
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
                                             name="confirmPassword"
                                             required
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-gray-50 dark:bg-white text-gray-900 dark:text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm transition-colors duration-300 ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
                                             placeholder="********"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                                         >
                                             {showConfirmPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -550,7 +622,7 @@ const RegisterPage = () => {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-300 mt-1 transition-colors duration-300">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
                         </div>
 
 
@@ -572,7 +644,7 @@ const RegisterPage = () => {
                         </button>
 
                         <div className="text-center mt-4">
-                            <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-300">¿Ya tienes cuenta? </span>
                             <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                 Inicia Sesión
                             </Link>
