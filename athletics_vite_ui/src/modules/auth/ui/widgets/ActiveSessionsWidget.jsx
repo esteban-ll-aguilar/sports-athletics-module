@@ -110,14 +110,14 @@ const ActiveSessionsWidget = () => {
     }
 
     return (
-        <div className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6">
+        <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] p-6 transition-colors duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
                 <div>
-                    <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2 transition-colors">
                         <Shield className="text-[#b30c25]" size={20} />
                         Sesiones Activas
                     </h2>
-                    <p className="text-sm text-gray-400 mt-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors">
                         Gestiona los dispositivos donde has iniciado sesión.
                     </p>
                 </div>
@@ -126,7 +126,7 @@ const ActiveSessionsWidget = () => {
                     <button
                         onClick={handleRevokeAll}
                         disabled={revokingAll}
-                        className="mt-4 md:mt-0 flex items-center px-4 py-2 text-sm font-medium text-red-500 bg-[#2b1d1d] border border-red-900/30 rounded-lg hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                        className="mt-4 md:mt-0 flex items-center px-4 py-2 text-sm font-medium text-red-500 bg-red-50 dark:bg-[#2b1d1d] border border-red-100 dark:border-red-900/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/10 transition-colors disabled:opacity-50"
                     >
                         {revokingAll ? (
                             <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -139,7 +139,7 @@ const ActiveSessionsWidget = () => {
             </div>
 
             {sessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-500">
                     <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     No tienes otras sesiones activas.
                 </div>
@@ -148,24 +148,24 @@ const ActiveSessionsWidget = () => {
                     {sessions.map((session) => (
                         <div
                             key={session.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-[#332122] bg-[#242223]/50 transition-all hover:bg-[#2a2829] ${session.is_current ? 'ring-1 ring-[#b30c25]/30' : ''}`}
+                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-[#332122] bg-gray-50 dark:bg-[#242223]/50 transition-all hover:bg-white dark:hover:bg-[#2a2829] shadow-sm ${session.is_current ? 'ring-1 ring-[#b30c25]/30' : ''}`}
                         >
                             <div className="flex items-start gap-4 mb-4 sm:mb-0">
-                                <div className="p-3 bg-[#332122] rounded-full">
+                                <div className="p-3 bg-white dark:bg-[#332122] rounded-full border border-gray-100 dark:border-none shadow-sm">
                                     {getDeviceIcon()}
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h3 className="font-medium text-white">
+                                        <h3 className="font-medium text-gray-900 dark:text-white transition-colors">
                                             Sesión {session.is_current ? '(Actual)' : ''}
                                         </h3>
                                         {session.status && (
-                                            <span className="px-2 py-0.5 text-xs bg-green-900/30 text-green-400 rounded-full border border-green-900/50">
+                                            <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full border border-green-200 dark:border-green-900/50">
                                                 Activa
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1 flex flex-col gap-0.5">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-col gap-0.5 transition-colors">
                                         <span>Iniciado: {formatDate(session.created_at)}</span>
                                         <span>Expira: {formatDate(session.expires_at)}</span>
                                     </p>
@@ -177,7 +177,7 @@ const ActiveSessionsWidget = () => {
                                     <button
                                         onClick={() => handleRevoke(session.id)}
                                         disabled={revokingId === session.id}
-                                        className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-300 bg-[#332122] hover:bg-[#402a2c] hover:text-white rounded-lg transition-colors disabled:opacity-50 flex justify-center items-center"
+                                        className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#332122] hover:bg-gray-100 dark:hover:bg-[#402a2c] hover:text-gray-900 dark:hover:text-white rounded-lg transition-colors disabled:opacity-50 flex justify-center items-center border border-gray-200 dark:border-transparent"
                                     >
                                         {revokingId === session.id ? (
                                             <RefreshCw className="w-3 h-3 animate-spin mr-1" />

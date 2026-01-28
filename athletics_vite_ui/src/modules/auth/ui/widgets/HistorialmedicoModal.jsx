@@ -150,12 +150,12 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
     const isReadOnly = activeTab === "ver";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div className="bg-[#1e1e1e] w-full max-w-2xl rounded-3xl border border-[#332122] shadow-2xl text-gray-100 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-2xl rounded-3xl border border-gray-200 dark:border-[#332122] shadow-2xl text-gray-900 dark:text-gray-100 overflow-hidden transition-colors duration-300">
 
                 {/* HEADER */}
-                <div className="px-8 py-6 bg-gradient-to-r from-[#b30c25] to-[#5c0a16]">
-                    <h2 className="text-xl font-semibold">
+                <div className="px-8 py-6 bg-linear-to-r from-[#b30c25] to-[#5c0a16]">
+                    <h2 className="text-xl font-semibold text-white">
                         Historial Médico
                     </h2>
                     <p className="text-sm text-red-100/80">
@@ -164,7 +164,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* TABS */}
-                <div className="flex px-8 pt-6 gap-6 border-b border-[#332122]">
+                <div className="flex px-8 pt-6 gap-6 border-b border-gray-100 dark:border-[#332122] transition-colors">
                     {!historial && (
                         <TabButton active={activeTab === "crear"} onClick={() => setActiveTab("crear")}>
                             Crear
@@ -183,14 +183,14 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* BODY */}
-                <div className="px-8 py-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-[#332122]">
+                <div className="px-8 py-6 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-[#332122] scrollbar-track-transparent">
 
                     {(activeTab === "crear" || activeTab === "editar") && (
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* MÉTRICAS */}
                             <section>
-                                <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
+                                <h3 className="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 font-semibold">
                                     Métricas corporales
                                 </h3>
 
@@ -203,7 +203,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* CONDICIONES */}
                             <section>
-                                <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
+                                <h3 className="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 font-semibold">
                                     Condiciones médicas
                                 </h3>
 
@@ -215,11 +215,11 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                             </section>
 
                             {/* FOOTER */}
-                            <div className="flex justify-between items-center pt-6 border-t border-[#332122]">
+                            <div className="flex justify-between items-center pt-6 border-t border-gray-100 dark:border-[#332122] transition-colors">
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="text-gray-400 hover:text-white transition"
+                                    className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition"
                                 >
                                     Cancelar
                                 </button>
@@ -227,7 +227,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="px-6 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8f091d] transition font-medium"
+                                    className="px-6 py-2.5 rounded-xl bg-[#b30c25] hover:bg-[#8f091d] text-white transition font-medium shadow-lg hover:shadow-[#b30c25]/30"
                                 >
                                     {loading ? "Guardando..." : activeTab === "editar" ? "Actualizar" : "Guardar"}
                                 </button>
@@ -246,9 +246,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                                 ["Enfermedades", historial.enfermedades],
                                 ["Enfermedades hereditarias", historial.enfermedades_hereditarias]
                             ].map(([label, value]) => (
-                                <div key={label} className="flex justify-between border-b border-[#332122] pb-2">
-                                    <span className="text-gray-400">{label}</span>
-                                    <span>{value || "—"}</span>
+                                <div key={label} className="flex justify-between border-b border-gray-100 dark:border-[#332122] pb-2 transition-colors">
+                                    <span className="text-gray-500 dark:text-gray-400">{label}</span>
+                                    <span className="text-gray-900 dark:text-gray-100 font-medium">{value || "—"}</span>
                                 </div>
                             ))}
                         </div>
@@ -264,7 +264,7 @@ const TabButton = ({ active, children, ...props }) => (
         {...props}
         className={`pb-3 text-sm font-medium border-b-2 transition ${active
             ? "border-[#b30c25] text-[#b30c25]"
-            : "border-transparent text-gray-400 hover:text-white"
+            : "border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
             }`}
     >
         {children}
@@ -273,32 +273,32 @@ const TabButton = ({ active, children, ...props }) => (
 
 const Input = ({ label, readOnly = false, ...props }) => (
     <div>
-        <label className="block mb-1 text-sm text-gray-400">{label}</label>
+        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
         <input
             readOnly={readOnly}
             {...props}
-            className="w-full bg-[#242223] border border-[#332122] rounded-xl px-4 py-2.5 text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50"
+            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors placeholder-gray-400 disabled:opacity-70"
         />
     </div>
 );
 
 const Textarea = ({ label, ...props }) => (
     <div>
-        <label className="block mb-1 text-sm text-gray-400">{label}</label>
+        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
         <textarea
             {...props}
             rows={3}
-            className="w-full bg-[#242223] border border-[#332122] rounded-xl px-4 py-2.5 text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50"
+            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors placeholder-gray-400"
         />
     </div>
 );
 
 const Select = ({ label, options, ...props }) => (
     <div>
-        <label className="block mb-1 text-sm text-gray-400">{label}</label>
+        <label className="block mb-1 text-sm text-gray-600 dark:text-gray-400 transition-colors">{label}</label>
         <select
             {...props}
-            className="w-full bg-[#242223] border border-[#332122] rounded-xl px-4 py-2.5 text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50"
+            className="w-full bg-gray-50 dark:bg-[#242223] border border-gray-200 dark:border-[#332122] rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/50 transition-colors"
         >
             <option value="" disabled>Seleccione una opción</option>
             {options.map((option) => (

@@ -50,22 +50,22 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
             <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
 
             {/* Modal */}
-            <div className="relative w-full max-w-md rounded-2xl bg-[#212121] border border-[#332122] shadow-2xl p-8">
+            <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#212121] border border-gray-100 dark:border-[#332122] shadow-2xl p-8 transition-colors duration-300">
 
                 {/* Icon */}
                 <div className="flex justify-center -mt-16 mb-4">
-                    <div className="w-20 h-20 rounded-full bg-[#242223] border border-[#332122] flex items-center justify-center shadow-lg">
-                        <div className="w-14 h-14 rounded-full bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25]">
+                    <div className="w-20 h-20 rounded-full bg-white dark:bg-[#242223] border border-gray-100 dark:border-[#332122] flex items-center justify-center shadow-lg transition-colors duration-300">
+                        <div className="w-14 h-14 rounded-full bg-[#b30c25]/10 dark:bg-[rgba(179,12,37,0.15)] flex items-center justify-center text-[#b30c25]">
                             {isBackupMode ? <Key size={30} /> : <Shield size={30} />}
                         </div>
                     </div>
                 </div>
 
                 {/* Title */}
-                <h2 className="text-center text-2xl font-bold text-white">
+                <h2 className="text-center text-2xl font-bold text-gray-900 dark:text-white transition-colors">
                     {isBackupMode ? 'Código de Respaldo' : 'Verificación en Dos Pasos'}
                 </h2>
-                <p className="mt-2 text-center text-sm text-gray-400">
+                <p className="mt-2 text-center text-sm text-gray-500 dark:text-gray-400 transition-colors">
                     {isBackupMode
                         ? 'Ingresa uno de tus códigos de recuperación.'
                         : 'Introduce el código de 6 dígitos de tu app autenticadora.'}
@@ -74,11 +74,11 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                 {/* Form */}
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2 transition-colors">
                             {isBackupMode ? 'Código de Recuperación' : 'Código de Verificación'}
                         </label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500">
                                 <Lock size={18} />
                             </div>
                             <input
@@ -90,11 +90,12 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                                 required
                                 className="
                                     w-full pl-10 pr-3 py-3 rounded-lg
-                                    bg-[#242223] text-white
-                                    border border-[#332122]
+                                    bg-gray-50 dark:bg-[#242223] text-gray-900 dark:text-white
+                                    border border-gray-300 dark:border-[#332122]
                                     text-center text-xl tracking-widest font-mono
-                                    placeholder-gray-500
+                                    placeholder-gray-400 dark:placeholder-gray-500
                                     focus:outline-none focus:ring-2 focus:ring-[#b30c25]
+                                    transition-colors duration-200
                                 "
                             />
                         </div>
@@ -102,7 +103,7 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
 
                     {/* Error */}
                     {error && (
-                        <div className="bg-[rgba(179,12,37,0.15)] border border-[#b30c25] text-[#b30c25] text-sm rounded-lg p-3 text-center">
+                        <div className="bg-[#b30c25]/10 dark:bg-[rgba(179,12,37,0.15)] border border-[#b30c25] text-[#b30c25] text-sm rounded-lg p-3 text-center transition-colors">
                             {error}
                         </div>
                     )}
@@ -124,7 +125,7 @@ const TwoFactorLoginModal = ({ isOpen, tempToken, email, onSuccess, onError }) =
                     </button>
 
                     {/* Switch mode */}
-                    <div className="pt-4 border-t border-[#332122] text-center">
+                    <div className="pt-4 border-t border-gray-100 dark:border-[#332122] text-center transition-colors">
                         <button
                             type="button"
                             onClick={() => {

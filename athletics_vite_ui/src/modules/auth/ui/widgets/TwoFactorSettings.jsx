@@ -104,23 +104,23 @@ const TwoFactorSettings = () => {
     };
 
     return (
-        <div className="bg-[#212121] border border-[#332122] rounded-2xl p-6 md:p-8 mt-8 text-gray-200 shadow-xl">
+        <div className="bg-white dark:bg-[#212121] border border-gray-200 dark:border-[#332122] rounded-2xl p-6 md:p-8 mt-8 text-gray-700 dark:text-gray-200 shadow-xl transition-colors duration-300">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center
             ${isEnabled
-                            ? 'bg-[rgba(34,197,94,0.15)] text-green-500'
-                            : 'bg-[rgba(179,12,37,0.15)] text-[#b30c25]'
+                            ? 'bg-green-100 dark:bg-[rgba(34,197,94,0.15)] text-green-600 dark:text-green-500'
+                            : 'bg-red-100 dark:bg-[rgba(179,12,37,0.15)] text-red-600 dark:text-[#b30c25]'
                         }`}
                     >
                         <Shield size={24} />
                     </div>
 
                     <div>
-                        <h2 className="text-xl font-semibold text-white">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors">
                             Autenticación de Dos Factores
                         </h2>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors">
                             Protección adicional para tu cuenta
                         </p>
                     </div>
@@ -138,8 +138,8 @@ const TwoFactorSettings = () => {
 
 
             {!isEnabled && setupStep === 0 && (
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-[#242223] p-5 rounded-xl border border-[#332122]">
-                    <p className="text-gray-400 text-sm max-w-lg">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-gray-50 dark:bg-[#242223] p-5 rounded-xl border border-gray-100 dark:border-[#332122] transition-colors">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm max-w-lg transition-colors">
                         Añade una capa adicional de seguridad solicitando un código temporal al iniciar sesión.
                     </p>
 
@@ -148,7 +148,7 @@ const TwoFactorSettings = () => {
                         disabled={loading}
                         className="
             px-6 py-2 rounded-lg text-white font-medium
-            bg-gradient-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
+            bg-linear-to-r from-[#b30c25] via-[#5a0f1d] to-[#332122]
             hover:brightness-110 transition
         "
                     >
@@ -197,9 +197,9 @@ const TwoFactorSettings = () => {
                                     placeholder="000000"
                                     className="
         w-full py-3 text-center text-xl font-mono tracking-widest
-        bg-[#121212] border border-[#332122] rounded-lg
-        text-white placeholder-gray-200
-        focus:ring-2 focus:ring-[#b30c25]
+        bg-gray-100 dark:bg-[#121212] border border-gray-300 dark:border-[#332122] rounded-lg
+        text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-200
+        focus:ring-2 focus:ring-[#b30c25] focus:outline-none transition-colors
     "
                                     maxLength={6}
                                     value={verificationCode}
@@ -209,7 +209,7 @@ const TwoFactorSettings = () => {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
+                                    className=" w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122]  hover:brightness-110
                             focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 disabled:cursor-not-allowed  transition-all duration-300 shadow-lg "
 
                                 >
@@ -283,7 +283,7 @@ const TwoFactorSettings = () => {
 
             {/* DISABLE CONFIRMATION */}
             {showDisableConfirm && isEnabled && (
-                <div className="mt-6 pt-6 border-t border-gray-100 bg-red-50 p-6 rounded-xl border border-red-100">
+                <div className="mt-6 pt-6 border-t border-red-100 bg-red-50 p-6 rounded-xl">
                     <h3 className="text-lg font-bold text-red-800 mb-2">Deshabilitar 2FA</h3>
                     <p className="text-sm text-red-700 mb-4">
                         Para continuar, confirma tu contraseña y un código 2FA actual.

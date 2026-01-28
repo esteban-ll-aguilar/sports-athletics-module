@@ -101,17 +101,17 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all scale-100">
+            <div className="relative bg-white dark:bg-[#242223] rounded-2xl shadow-xl max-w-md w-full p-6 transform transition-all scale-100 border border-gray-100 dark:border-[#332122]">
                 <div className="mb-6 text-center">
-                    <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4 text-red-600">
+                    <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-[#b30c25]/20 rounded-full flex items-center justify-center mb-4 text-red-600 dark:text-[#b30c25]">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Verifica tu Correo</h3>
-                    <p className="mt-2 text-sm text-gray-500">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Verifica tu Correo</h3>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                         Hemos enviado un código de verificación a <br />
-                        <span className="font-medium text-gray-900">{email}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-200">{email}</span>
                     </p>
                 </div>
 
@@ -120,7 +120,7 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
                         <input
                             type="text"
                             placeholder="Ingresa el código de 6 dígitos"
-                            className="text-center block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 text-lg tracking-widest placeholder-gray-400"
+                            className="text-center block w-full px-4 py-3 border border-gray-300 dark:border-[#332122] rounded-lg focus:ring-red-500 focus:border-red-500 text-lg tracking-widest placeholder-gray-400 dark:placeholder-gray-600 bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white transition-colors"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
                             maxLength={6}
@@ -129,13 +129,13 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
                     </div>
 
                     {error && (
-                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center">
+                        <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg text-center border border-red-100 dark:border-red-900/30">
                             {error}
                         </div>
                     )}
 
                     {resendMessage && (
-                        <div className="p-3 bg-green-50 text-green-600 text-sm rounded-lg text-center">
+                        <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm rounded-lg text-center border border-green-100 dark:border-green-900/30">
                             {resendMessage}
                         </div>
                     )}
@@ -143,21 +143,21 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
                     <button
                         type="submit"
                         disabled={loading || code.length < 4}
-                        className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="w-full py-3 px-4 bg-red-600 hover:bg-red-700 dark:bg-[#b30c25] dark:hover:bg-[#8f091d] text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-[#b30c25] dark:focus:ring-offset-[#242223] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                         {loading ? 'Verificando...' : 'Verificar Cuenta'}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-500 mb-2">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                         ¿No recibiste el código?
                     </p>
                     <button
                         type="button"
                         onClick={handleResend}
                         disabled={resendLoading || countdown > 0}
-                        className="text-sm font-medium text-red-600 hover:text-red-500 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                        className="text-sm font-medium text-red-600 hover:text-red-500 dark:text-[#b30c25] dark:hover:text-[#d41c36] disabled:text-gray-400 dark:disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
                     >
                         {resendLoading ? 'Reenviando...' : countdown > 0 ? `Reenviar en ${countdown}s` : 'Reenviar Código'}
                     </button>
@@ -165,7 +165,7 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
 
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
