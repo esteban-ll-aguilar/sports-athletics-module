@@ -303,14 +303,18 @@ async def logout(
                 payload = jwtm.decode(token_to_revoke)
                 jti = payload.get("jti")
                 if jti:
-                    # Opcional: Marcar como revocado en Redis si tienes blacklist
-                    # O usar sessions_repo para invalidar la sesión asociada
-                    pass
+                    # Revocar la sesión en base de datos
+                    await sessions_repo.revoke_session_by_refresh_jti(jti)
             except Exception:
-                pass # Ignorar errores de token inválido en logout
+                pass # Ignorar errores de token inválido en logout, queremos borrar cookie igual
         
-        # Aquí podrías usar el token de acceso del header para invalidar sesión específica
-        # si tu arquitectura lo requiere. Por ahora simplemente retornamos éxito.
+        # Eliminar cookie explícitamente
+        response.delete_cookie(
+            key="refresh_token", 
+            httponly=True, 
+            secure=False, # Debe coincidir con como se seteo
+            samesite="lax"
+        )
         
         return APIResponse(
             success=True,
@@ -318,7 +322,7 @@ async def logout(
         )
     except Exception as e:
         logger.error(f"Error en logout: {e}")
-        # Clear cookie
+        # Clear cookie force
         response.delete_cookie(key="refresh_token")
 
         return APIResponse(
