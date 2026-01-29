@@ -30,6 +30,7 @@ const rolePermissions = {
             icon: Users,
             label: 'Gestión de Pruebas',
             children: [
+                { path: '/dashboard/registro-pruebas', label: 'Agregar Pruebas' },
                 { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos' },
                 { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
                 { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }

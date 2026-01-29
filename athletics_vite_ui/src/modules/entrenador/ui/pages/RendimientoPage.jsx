@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import { User, Activity, Trophy, TrendingUp, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import ResultadoCompetenciaService from '../../../competencia/services/resultado_competencia_service';
+import CompetenciaService from '../../../competencia/services/competencia_service';
+import PruebaService from '../../../competencia/services/prueba_service';
 import AtletaService from '../../../atleta/services/AtletaService';
+import { User, Activity, Trophy, TrendingUp, Users, AlertCircle, RefreshCw, Filter, FilterX } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 
 const RendimientoPage = () => {
@@ -12,7 +14,14 @@ const RendimientoPage = () => {
     const [loading, setLoading] = useState(true);
     const [resultados, setResultados] = useState([]);
     const [atletas, setAtletas] = useState([]);
+    const [competencias, setCompetencias] = useState([]);
+    const [pruebas, setPruebas] = useState([]);
+
+    // Filters
     const [selectedAtleta, setSelectedAtleta] = useState('');
+    const [selectedCompetencia, setSelectedCompetencia] = useState('');
+    const [selectedPrueba, setSelectedPrueba] = useState('');
+
     const [error, setError] = useState(null);
 
     // Fetch data
@@ -38,6 +47,22 @@ const RendimientoPage = () => {
                     resAtletas = resp.data || resp;
                 } catch (e) {
                     console.error("Error fetching athletes", e);
+                }
+
+                // Fetch Competitions
+                try {
+                    const resp = await CompetenciaService.getAll();
+                    setCompetencias(resp.data || resp || []);
+                } catch (e) {
+                    console.error("Error fetching competitions", e);
+                }
+
+                // Fetch Pruebas
+                try {
+                    const resp = await PruebaService.getAll();
+                    setPruebas(resp.data || resp || []);
+                } catch (e) {
+                    console.error("Error fetching pruebas", e);
                 }
 
                 const itemsResultados = resResultados.items || (Array.isArray(resResultados) ? resResultados : []);
@@ -75,11 +100,21 @@ const RendimientoPage = () => {
     }
 
     // Process data for charts
+    const getFilteredResults = () => {
+        return resultados.filter(r => {
+            const matchesCompetencia = selectedCompetencia ? String(r.competencia_id || r.competencia?.id) === String(selectedCompetencia) : true;
+            const matchesPrueba = selectedPrueba ? String(r.prueba_id || r.prueba?.id) === String(selectedPrueba) : true;
+            return matchesCompetencia && matchesPrueba;
+        });
+    };
+
     const getAthleteData = (atletaId) => {
         if (!atletaId) return [];
 
-        // Filter results for this athlete and sort by date
-        const athleteResults = resultados
+        // Filter results for this athlete AND applied filters
+        const filtered = getFilteredResults();
+
+        const athleteResults = filtered
             .filter(r => {
                 const rAtletaId = r.atleta_id || r.atleta?.id;
                 return String(rAtletaId) === String(atletaId);
@@ -186,14 +221,17 @@ const RendimientoPage = () => {
 
     const renderGeneralTab = () => {
         // Top results (simplified)
-        const sortedResults = [...resultados]
+        // Apply filters first
+        const filtered = getFilteredResults();
+
+        const sortedResults = [...filtered]
             .sort((a, b) => parseFloat(b.resultado) - parseFloat(a.resultado))
             .slice(0, 10)
             .map(r => {
                 const atleta = atletas.find(a => a.id === r.atleta_id);
                 return {
                     name: atleta ? `${atleta.first_name} ${atleta.last_name}` : 'Atleta Desconocido',
-                    resultado: r.resultado,
+                    resultado: parseFloat(r.resultado), // Ensure number
                     competencia: r.competencia?.nombre || 'Competencia',
                     unit: r.unidad_medida
                 };
@@ -245,8 +283,9 @@ const RendimientoPage = () => {
     };
 
     const renderComparativoTab = () => {
-        // Comparative logic of first 3 athletes
-        const uniqueAthleteIds = [...new Set(resultados.map(r => r.atleta_id))].slice(0, 3);
+        const filtered = getFilteredResults();
+        // Comparative logic of first 3 unique athletes in the filtered set
+        const uniqueAthleteIds = [...new Set(filtered.map(r => r.atleta_id))].slice(0, 3);
 
         if (uniqueAthleteIds.length === 0) {
             return (
@@ -368,7 +407,59 @@ const RendimientoPage = () => {
                             Análisis detallado de puntajes y evolución por fechas.
                         </p>
                     </div>
-                    
+
+                </div>
+
+                {/* Filters */}
+                <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-xl border border-gray-200 dark:border-[#332122] shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                    <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 font-bold">
+                        <Filter size={20} className="text-[#b30c25]" />
+                        <span>Filtros:</span>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-4 flex-1 w-full md:w-auto">
+                        {/* Filter Competencia */}
+                        <div className="flex-1">
+                            <select
+                                value={selectedCompetencia}
+                                onChange={(e) => setSelectedCompetencia(e.target.value)}
+                                className="w-full bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white border border-gray-200 dark:border-[#332122] rounded-lg p-2.5 focus:ring-2 focus:ring-[#b30c25] outline-none"
+                            >
+                                <option value="">Todas las Competencias</option>
+                                {competencias.map(c => (
+                                    <option key={c.id} value={c.id}>{c.nombre}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Filter Prueba */}
+                        <div className="flex-1">
+                            <select
+                                value={selectedPrueba}
+                                onChange={(e) => setSelectedPrueba(e.target.value)}
+                                className="w-full bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white border border-gray-200 dark:border-[#332122] rounded-lg p-2.5 focus:ring-2 focus:ring-[#b30c25] outline-none"
+                            >
+                                <option value="">Todas las Pruebas</option>
+                                {pruebas.map(p => (
+                                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Reset Filters */}
+                        {(selectedCompetencia || selectedPrueba) && (
+                            <button
+                                onClick={() => {
+                                    setSelectedCompetencia('');
+                                    setSelectedPrueba('');
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-[#212121] text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-[#333] transition-colors"
+                            >
+                                <FilterX size={18} />
+                                <span className="hidden md:inline">Limpiar</span>
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Tabs */}
