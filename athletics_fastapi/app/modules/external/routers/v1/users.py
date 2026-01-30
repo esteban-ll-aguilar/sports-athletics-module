@@ -1,6 +1,4 @@
-from fastapi.responses import JSONResponse
 from fastapi import APIRouter, Depends, status
-from app.modules.modules import APP_TAGS_V1
 from app.modules.external.services.external_users_api_service import ExternalUsersApiService
 from app.public.schemas import BaseResponse
 

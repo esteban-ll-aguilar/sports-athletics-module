@@ -2,7 +2,6 @@ import secrets
 import string
 from redis.asyncio import Redis
 from app.core.cache.redis import _redis
-from typing import Optional
 
 
 class PasswordResetService:

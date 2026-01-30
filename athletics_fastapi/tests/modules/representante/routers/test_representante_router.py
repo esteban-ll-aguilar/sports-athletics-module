@@ -6,7 +6,6 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
-from datetime import date
 from types import SimpleNamespace
 
 from app.modules.representante.dependencies import get_representante_service
@@ -15,7 +14,6 @@ from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 
-from app.modules.auth.domain.schemas.schemas_users import UserResponseSchema
 from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
 

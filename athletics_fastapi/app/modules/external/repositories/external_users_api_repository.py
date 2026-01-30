@@ -1,9 +1,6 @@
-import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, insert
-from fastapi import HTTPException
 from app.modules.external.domain.enums import ExternalClassTokenType
-from app.core.config.enviroment import _SETTINGS
 from app.modules.external.domain.models import ExternalTokenModel
 from datetime import datetime
 from app.core.logging.logger import logger

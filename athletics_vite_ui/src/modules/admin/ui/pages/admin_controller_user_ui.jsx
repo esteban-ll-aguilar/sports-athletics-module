@@ -30,7 +30,7 @@ const AdminUsersTable = () => {
 
       console.log('🔵 [ADMIN CONTROLLER] RESPUESTA RAW:', response);
 
-      const usersData = response.items || response.users || [];
+      const usersData = response?.items || response?.users || [];
       setUsers(usersData);
     } catch (err) {
       console.error('🔴 [ADMIN CONTROLLER] ERROR:', err);
@@ -200,14 +200,14 @@ const AdminUsersTable = () => {
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
                     Correo
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
-                                 Rol
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Rol
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">   
-                                 Estado
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Estado
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">             
-                       Acciones
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">
+                    Acciones
                   </th>
                 </tr>
               </thead>
@@ -215,8 +215,8 @@ const AdminUsersTable = () => {
               <tbody className="divide-y divide-[#332122]">
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50/30">
-                   
-                      <td className="px-6 py-5 font-bold text-gray-200">
+
+                    <td className="px-6 py-5 font-bold text-gray-200">
                       {user.username}
                     </td>
 
@@ -228,7 +228,7 @@ const AdminUsersTable = () => {
                     </td>
 
                     <td className="px-6 py-5">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs bg-indigo-500/10 text-indigo-400 ring-1 ring-indigo-500/30">
                         <Shield size={12} className="mr-1" />
                         {user.role}
                       </span>

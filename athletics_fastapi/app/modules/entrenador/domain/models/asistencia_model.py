@@ -1,14 +1,12 @@
-from sqlalchemy import Integer, String, Date, Time, ForeignKey, text, UUID as PG_UUID, Boolean, DateTime
+from sqlalchemy import Integer, String, Date, Time, ForeignKey, text, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 import datetime
 from typing import Optional
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
     from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
 
 

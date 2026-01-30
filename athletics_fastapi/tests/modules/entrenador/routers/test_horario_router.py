@@ -6,14 +6,10 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
-from datetime import datetime, time
+from datetime import time
 from fastapi import HTTPException, status
 
 from app.modules.entrenador.dependencies import get_horario_service, get_current_entrenador
-from app.modules.entrenador.services.horario_service import HorarioService
-from app.modules.auth.dependencies import get_current_user
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 @pytest.fixture
 def mock_horario_service():

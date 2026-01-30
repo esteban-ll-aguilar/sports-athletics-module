@@ -84,7 +84,7 @@ class TestEmailIntegration:
                 server.ehlo()
                 
                 # Mostrar capacidades del servidor
-                print(f"\n📧 SMTP Server Capabilities:")
+                print("\n📧 SMTP Server Capabilities:")
                 if hasattr(server, 'esmtp_features'):
                     for feature, params in server.esmtp_features.items():
                         print(f"  - {feature}: {params}")
@@ -323,7 +323,7 @@ class TestEmailIntegration:
     @pytest.mark.asyncio
     async def test_email_tls_vs_ssl(self):
         """Verifica configuración TLS vs SSL"""
-        print(f"\n📧 Email Configuration:")
+        print("\n📧 Email Configuration:")
         print(f"  - TLS Mode: {_SETTINGS.email_use_tls}")
         print(f"  - Port: {_SETTINGS.email_port}")
         

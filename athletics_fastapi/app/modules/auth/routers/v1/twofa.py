@@ -19,7 +19,6 @@ from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.core.logging.logger import logger
 from app.core.cache.redis import _redis
 from datetime import datetime, timezone
-from app.modules.modules import APP_TAGS_V1
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -268,7 +267,7 @@ async def login_with_2fa(
     if not user or not user.is_active or user.email != data.email or not user.two_factor_enabled or not user.totp_secret:
         # Verificar código falso para mantener mismo timing
         twofa_service.verify_totp_code("FAKESECRETFORTIMINGATTACK1234", data.code)
-        logger.warning(f"Intento de login 2FA con datos inválidos")
+        logger.warning("Intento de login 2FA con datos inválidos")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=APIResponse(
@@ -399,7 +398,7 @@ async def login_with_backup_code(
     if not user or not user.is_active or user.email != data.email or not user.two_factor_enabled or not user.totp_backup_codes:
         # Verificar código falso para mantener timing constante
         twofa_service.verify_backup_code('["fake"]', "XXXX-XXXX")
-        logger.warning(f"Intento de login con backup code inválido")
+        logger.warning("Intento de login con backup code inválido")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=APIResponse(

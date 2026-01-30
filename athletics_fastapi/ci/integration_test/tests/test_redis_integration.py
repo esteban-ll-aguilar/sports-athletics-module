@@ -5,7 +5,7 @@ Verifica conexión, operaciones CRUD, TTL, caché y funcionalidades avanzadas.
 import pytest
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from app.core.cache.redis import _redis
 from app.core.config.enviroment import _SETTINGS
 

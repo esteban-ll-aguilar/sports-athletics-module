@@ -5,7 +5,7 @@ Mocks de httpx para simular respuestas de la API externa.
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.modules.external.services.external_users_api_service import ExternalUsersApiService
-from app.modules.external.domain.schemas import UserExternalCreateRequest, UserExternalUpdateRequest
+from app.modules.external.domain.schemas import UserExternalCreateRequest
 
 @pytest.fixture
 def mock_repo():

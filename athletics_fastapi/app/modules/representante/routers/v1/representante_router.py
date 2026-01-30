@@ -1,10 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db.database import get_session
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserResponseSchema, UserUpdateSchema
+from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserUpdateSchema
 from app.api.schemas.api_schemas import APIResponse
 from app.modules.atleta.domain.schemas.atleta_schema import AtletaRead
 from app.modules.representante.services.representante_service import RepresentanteService

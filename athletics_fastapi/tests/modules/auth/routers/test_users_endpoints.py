@@ -1,7 +1,6 @@
 import pytest
-from httpx import AsyncClient
 from fastapi import status
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 import unittest
 from types import SimpleNamespace
 from datetime import date

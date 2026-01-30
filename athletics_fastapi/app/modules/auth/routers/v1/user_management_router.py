@@ -8,7 +8,6 @@ from app.modules.auth.domain.schemas import UserRoleUpdate, PaginatedUsers
 from app.modules.auth.domain.schemas import UserResponseSchema
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum
-from app.modules.auth.domain.schemas.schemas_auth import AdminUserUpdateRequest
 
 user_management_router_v1 = APIRouter()
 

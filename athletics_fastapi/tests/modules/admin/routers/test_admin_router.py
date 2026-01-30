@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock
 from app.modules.auth.dependencies import get_admin_user_service
 from app.modules.auth.dependencies import get_current_admin_user
 from app.modules.auth.services.admin_user_service import AdminUserService
-from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums import RoleEnum
 
 @pytest.fixture

@@ -1,7 +1,6 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import date
-from sqlalchemy.orm import selectinload
 
 from app.modules.competencia.domain.models.resultado_prueba_model import ResultadoPrueba
 from app.modules.competencia.domain.schemas.resultado_prueba_schema import (
@@ -51,7 +50,7 @@ class ResultadoPruebaService:
         
         # If not found, try to find by user.external_id (in case UUID is from auth_users)
         if not atleta:
-            logger.warning(f"⚠️ Atleta no encontrado por external_id, buscando por user UUID...")
+            logger.warning("⚠️ Atleta no encontrado por external_id, buscando por user UUID...")
             user_repo = AuthUsersRepository(self.atleta_repo.session)
             user = await user_repo.get_by_external_id(data.atleta_id)
             

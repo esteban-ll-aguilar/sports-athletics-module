@@ -3,7 +3,7 @@ Módulo de Pruebas para el Servicio de Baremos.
 Prueba la lógica de negocio asociada a la gestión de Baremos.
 """
 import pytest
-from unittest.mock import AsyncMock, Mock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
@@ -15,8 +15,6 @@ from app.modules.competencia.domain.schemas.baremo_schema import (
 )
 from app.modules.competencia.domain.schemas.item_baremo_schema import ItemBaremoCreate
 from app.modules.competencia.domain.enums.enum import Sexo
-from app.modules.competencia.domain.enums.enum import Sexo
-from app.modules.competencia.domain.schemas.item_baremo_schema import ItemBaremoCreate
 
 
 @pytest.mark.asyncio

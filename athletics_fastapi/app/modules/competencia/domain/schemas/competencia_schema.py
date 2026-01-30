@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 from uuid import UUID
 from datetime import date, datetime
-from typing import Optional, List
-from pydantic import BaseModel, Field, field_validator
+from typing import Optional
+from pydantic import field_validator
 
 # -----------------------------
 # Competencia Schemas

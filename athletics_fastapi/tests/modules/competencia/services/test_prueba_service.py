@@ -4,7 +4,7 @@ Verifica la gestión de pruebas (creación, lectura, actualización) mockeando e
 Incluye casos de éxito y manejo de errores (e.g. 404 Not Found).
 """
 import pytest
-from unittest.mock import Mock, AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from datetime import date
 from fastapi import HTTPException
 from types import SimpleNamespace
@@ -28,7 +28,6 @@ async def test_create_prueba_ok():
     prueba_repo = AsyncMock()
     tipo_disciplina_repo = AsyncMock()
     
-    from types import SimpleNamespace
     prueba_mock = SimpleNamespace()
     prueba_mock.nombre = "Prueba Test"
     prueba_mock.id = 123

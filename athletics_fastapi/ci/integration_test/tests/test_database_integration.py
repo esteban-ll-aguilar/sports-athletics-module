@@ -4,9 +4,9 @@ Verifica conexión, operaciones CRUD, transacciones y constraints.
 """
 import pytest
 import asyncio
-from sqlalchemy import text, inspect
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db.database import _db, Base
+from app.core.db.database import _db
 from app.core.config.enviroment import _SETTINGS
 
 

@@ -1,7 +1,6 @@
-from sqlalchemy import Integer, String, Boolean, UUID as PG_UUID, text
+from sqlalchemy import Integer, String, Boolean, text
 from sqlalchemy.orm import Mapped, mapped_column
 from app.core.db.database import Base
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 # Modelo de datos para la entidad TipoDisciplina

@@ -1,4 +1,3 @@
-import sys
 from app.core.config.enviroment import _SETTINGS
 
 if __name__ == '__main__':

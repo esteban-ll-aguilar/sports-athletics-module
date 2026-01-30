@@ -1,7 +1,6 @@
 """Modelo de Resultado de Prueba (Test). Separado de Competencia."""
-from sqlalchemy import Integer, String, Date, Float, Boolean, ForeignKey, DateTime, Text, text
+from sqlalchemy import Integer, String, Float, Boolean, ForeignKey, DateTime, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 import uuid
 import datetime
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
     from app.modules.competencia.domain.models.prueba_model import Prueba
     from app.modules.atleta.domain.models.atleta_model import Atleta
     from app.modules.competencia.domain.models.baremo_model import Baremo
-    from app.modules.auth.domain.models.user_model import UserModel
 
 
 class TipoPosicionPrueba(str, PyEnum):

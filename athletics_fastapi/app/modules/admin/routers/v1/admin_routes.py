@@ -2,7 +2,7 @@
 Endpoints administrativos para gestión del sistema.
 Solo accesibles por administradores.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from app.core.jwt.jwt import get_current_user
 from app.core.jwt.secret_rotation import JWTSecretRotation
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel

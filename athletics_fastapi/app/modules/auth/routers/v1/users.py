@@ -1,14 +1,10 @@
 from fastapi import APIRouter, Depends, status, Form, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
-from typing import Optional, Union
+from typing import Optional
 from uuid import UUID
 import math
-import os
-import shutil
 from datetime import date
 
 from app.modules.auth.domain.schemas import (
-    PaginatedUsers,
     PaginatedUsersWithRelations,
     UserCreateSchema,
     UserUpdateSchema,

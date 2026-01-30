@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
-from typing import List
 
 from app.modules.competencia.domain.schemas.baremo_schema import (
     BaremoCreate, BaremoRead, BaremoUpdate

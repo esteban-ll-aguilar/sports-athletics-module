@@ -5,7 +5,6 @@ Verifica health checks, autenticación, CORS y endpoints principales.
 import pytest
 from httpx import AsyncClient, ASGITransport
 from app.main import _APP
-from app.core.config.enviroment import _SETTINGS
 
 
 class TestAPIIntegration:
@@ -101,7 +100,7 @@ class TestAPIIntegration:
             
             # Verificar headers CORS
             headers = response.headers
-            print(f"\n🌐 CORS Configuration:")
+            print("\n🌐 CORS Configuration:")
             print(f"  - Allow-Origin: {headers.get('access-control-allow-origin', 'Not set')}")
             print(f"  - Allow-Methods: {headers.get('access-control-allow-methods', 'Not set')}")
             print(f"  - Allow-Headers: {headers.get('access-control-allow-headers', 'Not set')}")
@@ -251,7 +250,7 @@ class TestAPIIntegration:
                 f"Validación no funcionó, código: {response.status_code}"
             
             data = response.json()
-            print(f"\n✅ Request validation working")
+            print("\n✅ Request validation working")
             print(f"  - Error detail: {data.get('detail', 'N/A')[:100]}")
     
     @pytest.mark.asyncio
@@ -297,7 +296,7 @@ class TestAPIIntegration:
             data = response.json()
             assert "detail" in data, "Error response sin 'detail'"
             
-            print(f"\n✅ Error handling working")
+            print("\n✅ Error handling working")
             print(f"  - 404 detail: {data.get('detail')}")
     
     @pytest.mark.asyncio
@@ -347,7 +346,7 @@ class TestAPIIntegration:
             # Puede ser 200 o 404 dependiendo si hay endpoint raíz
             status = response.status_code
             
-            print(f"\n📦 API Versioning:")
+            print("\n📦 API Versioning:")
             print(f"  - /api/v1: {status}")
             
             if status != 404:

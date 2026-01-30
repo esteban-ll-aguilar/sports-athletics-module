@@ -1,4 +1,3 @@
-from app.core.config.enviroment import _SETTINGS
 from app.providers.email.email_provider import EmailProvider
 
 
