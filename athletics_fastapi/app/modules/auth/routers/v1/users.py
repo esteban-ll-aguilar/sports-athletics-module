@@ -39,6 +39,18 @@ async def create_user(
     user_data: UserCreateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
 ):
+    """
+    Crea un nuevo usuario básico.
+    
+    Esta función es similar al register pero destinada a uso interno o administrativo
+    donde se pasan todos los datos directamente.
+    
+    Args:
+        user_data: Datos del usuario a crear.
+        
+    Returns:
+        APIResponse: Usuario creado.
+    """
     try:
         user = await repo.create_user(user_data)
 
@@ -74,6 +86,17 @@ async def list_users(
     repo: AuthUsersRepository = Depends(get_users_repo),
     _: AuthUserModel = Depends(get_current_user)
 ):
+    """
+    Obtiene lista paginada de usuarios con sus relaciones (perfiles).
+    
+    Args:
+        page: Número de página.
+        page_size: Cantidad por página.
+        role: Filtro por rol (opcional).
+        
+    Returns:
+        APIResponse: Lista paginada con metadatos.
+    """
     users, total = await repo.get_paginated(
         page=page,
         size=page_size,
@@ -113,6 +136,17 @@ async def list_users(
 async def get_current_user_profile(
     current_user: AuthUserModel = Depends(get_current_user),
 ):
+    """
+    Obtiene el perfil completo del usuario actualmente autenticado.
+    
+    Incluye las relaciones cargadas (auth, entrenador, atleta, etc.).
+    
+    Args:
+        current_user: Usuario obtenido del token JWT.
+        
+    Returns:
+        APIResponse: Datos del perfil del usuario.
+    """
     if not current_user.profile:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -155,8 +189,18 @@ async def update_profile(
     repo: AuthUsersRepository = Depends(get_users_repo),
 ):
     """
-    Endpoint para que el usuario actual actualice su perfil.
-    Acepta `multipart/form-data` para subir imagen de perfil.
+    Endpoint para que el usuario actual actualice su propio perfil.
+    
+    Acepta `multipart/form-data` para permitir la subida de una nueva imagen de perfil.
+    Actualiza campos básicos y específicos del rol si aplica.
+    
+    Args:
+        username, first_name, last_name, etc.: Campos del formulario.
+        profile_image: Archivo de imagen opcional.
+        current_user: Usuario autenticado.
+        
+    Returns:
+        APIResponse: Perfil actualizado.
     """
     user = current_user.profile
     if not user:
@@ -232,6 +276,17 @@ async def get_user_by_external_id(
     repo: AuthUsersRepository = Depends(get_users_repo),
     _: AuthUserModel = Depends(get_current_user),  # protección JWT
 ):
+    """
+    Busca un usuario por su ID externo (UUID).
+    
+    Útil para integraciones con sistemas legacy o externos que usan este ID.
+    
+    Args:
+        external_id: UUID del usuario externo.
+        
+    Returns:
+        APIResponse: Usuario encontrado.
+    """
     try:
         user = await repo.get_by_external_id(external_id)
         if not user:
@@ -271,6 +326,22 @@ async def update_user_by_id(
     repo: AuthUsersRepository = Depends(get_users_repo),
     current_user: AuthUserModel = Depends(get_current_user),
 ):
+    """
+    Actualiza un usuario específico por su ID (interno o externo).
+    
+    Implementa control de acceso (RBAC):
+    - ADMIN: Puede editar a cualquiera.
+    - ENTRENADOR: Puede editar a sus Atletas (regla de negocio: 'is_coach_editing_athlete').
+    - PROPIO USUARIO: Puede editarse a sí mismo.
+    
+    Args:
+        user_id: ID del usuario a editar.
+        user_data: Datos a actualizar.
+        current_user: Quien realiza la petición.
+        
+    Returns:
+        APIResponse: Usuario actualizado.
+    """
     try:
         # Buscar usuario (UUID o ID interno) usando el repo helper
         user = await repo.get_by_any_id(user_id)

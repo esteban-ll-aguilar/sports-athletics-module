@@ -39,6 +39,15 @@ class AuthUsersRepository:
     # UPDATE PROFILE (Helpers)
     # =====================================================
     async def update_profile(self, user: UserModel):
+        """
+        Persiste los cambios realizados en el modelo de usuario (perfil).
+        
+        Args:
+            user (UserModel): Instancia del usuario modificada.
+            
+        Returns:
+            UserModel: Instancia actualizada.
+        """
         self.db.add(user)
         await self.db.commit()
         await self.db.refresh(user)
@@ -57,6 +66,22 @@ class AuthUsersRepository:
         password_hash: str,
         user_data: UserCreateSchema,
     ) -> UserModel:
+        """
+        Crea un nuevo usuario en el sistema.
+        
+        Realiza los siguientes pasos:
+        1. Crea el usuario en el servicio externo (API externa).
+        2. Crea el registro AuthUserModel (credenciales).
+        3. Crea el registro UserModel (perfil).
+        4. Crea la sub-entidad correspondiente al rol (Atleta, Entrenador, Representante).
+        
+        Args:
+            password_hash (str): Contraseña hasheada.
+            user_data (UserCreateSchema): Datos del usuario.
+            
+        Returns:
+            UserModel: El usuario creado con todas sus relaciones.
+        """
 
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService
@@ -142,6 +167,15 @@ class AuthUsersRepository:
     # GET BY ID PROFILE  ✅ CORREGIDO
     # =====================================================
     async def get_by_id_profile(self, user_id: int) -> Optional[UserModel]:
+        """
+        Obtiene un perfil de usuario por su ID interno, cargando relaciones clave.
+        
+        Args:
+            user_id (int): ID del usuario.
+            
+        Returns:
+            Optional[UserModel]: El usuario encontrado o None.
+        """
         result = await self.db.execute(
             select(UserModel)
             .where(UserModel.id == user_id)
@@ -158,6 +192,15 @@ class AuthUsersRepository:
     # GET BY ID (AUTH)
     # =====================================================
     async def get_by_id(self, user_id: int) -> Optional[AuthUserModel]:
+        """
+        Obtiene la entidad de autenticación (AuthUserModel) por ID.
+        
+        Args:
+            user_id (int): ID de autenticación.
+            
+        Returns:
+            Optional[AuthUserModel]: Usuario de autenticación encontrado.
+        """
         result = await self.db.execute(
             select(AuthUserModel)
             .where(AuthUserModel.id == user_id)
@@ -169,6 +212,15 @@ class AuthUsersRepository:
     # GET BY EXTERNAL ID
     # =====================================================
     async def get_by_external_id(self, external_id: str) -> Optional[UserModel]:
+        """
+        Busca un usuario por su ID externo (UUID del sistema legacy/externo).
+        
+        Args:
+            external_id (str): ID externo.
+            
+        Returns:
+            Optional[UserModel]: Usuario encontrado.
+        """
         result = await self.db.execute(
             select(UserModel)
             .where(UserModel.external_id == external_id)
@@ -185,6 +237,15 @@ class AuthUsersRepository:
     # GET BY ANY ID
     # =====================================================
     async def get_by_any_id(self, user_id: str) -> Optional[UserModel]:
+        """
+        Intenta obtener un usuario identificandolo ya sea por UUID externo o ID interno.
+        
+        Args:
+           user_id (str): ID que puede ser entero (interno) o UUID (externo).
+           
+        Returns:
+           Optional[UserModel]: Usuario encontrado.
+        """
         user = None
 
         # Try UUID
@@ -208,6 +269,16 @@ class AuthUsersRepository:
         user: UserModel,
         user_data: UserUpdateSchema,
     ) -> UserModel:
+        """
+        Actualiza los datos de un usuario tanto en el sistema externo como localmente.
+        
+        Args:
+            user (UserModel): Instancia actual del usuario.
+            user_data (UserUpdateSchema): Nuevos datos a aplicar.
+            
+        Returns:
+            UserModel: Usuario actualizado.
+        """
 
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService
@@ -255,6 +326,15 @@ class AuthUsersRepository:
         user: AuthUserModel,
         new_password_hash: str,
     ) -> None:
+        """
+        Actualiza la contraseña del usuario.
+        
+        Sincroniza el cambio con el servicio externo.
+        
+        Args:
+            user (AuthUserModel): Usuario a actualizar.
+            new_password_hash (str): Nuevo hash de contraseña.
+        """
 
         from app.modules.external.repositories.external_users_api_repository import ExternalUsersApiRepository
         from app.modules.external.services.external_users_api_service import ExternalUsersApiService

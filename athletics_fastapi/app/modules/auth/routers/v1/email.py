@@ -30,7 +30,16 @@ async def verify_email(
     verification_service: EmailVerificationService = Depends(get_email_verification_service)
 ):
     """
-    Activa la cuenta si el código es correcto a través del codigo OTP enviado por el email.
+    Verifica el correo electrónico mediante el código OTP enviado.
+    
+    Si el código es válido, activa la cuenta del usuario.
+    
+    Args:
+        request: Request object.
+        data: Objeto con email y código de verificación.
+        
+    Returns:
+        APIResponse: Mensaje de éxito.
     """
     # Validar el código
     is_valid = await verification_service.validate_verification_code(data.email, data.code)
@@ -75,8 +84,17 @@ async def resend_verification_code(
     verification_service: EmailVerificationService = Depends(get_email_verification_service)
 ):
     """
-    Reenvía el código de verificación de email.
-    Solo funciona si el usuario existe y no está activo aún.
+    Solicita un nuevo código de verificación de email.
+    
+    Solo funciona para usuarios registrados pero inactivos.
+    Implementa rate limiting para evitar abuso.
+    
+    Args:
+        request: Request object.
+        data: Objeto con el email.
+        
+    Returns:
+        APIResponse: Confirmación de envío (o mensaje seguro si no existe).
     """
     user = await repo.get_by_email(data.email)
     

@@ -21,9 +21,19 @@ async def list_users(
     current_user: AuthUserModel = Depends(get_current_user)
 ):
     """
-    Lista todos los usuarios con paginación.
-    - Administradores: Pueden listar todo.
-    - Entrenadores: Pueden listar Atletas.
+    Lista todos los usuarios del sistema aplicando paginación.
+    
+    Reglas de acceso (Role Based Access Control):
+    - Administradores: Pueden listar cualquier rol.
+    - Entrenadores: Solo pueden listar usuarios con rol 'ATLETA'.
+    
+    Args:
+        page: Número de página.
+        size: Tamaño de página.
+        role: Filtro opcional por rol.
+        
+    Returns:
+        PaginatedUsers: Lista paginada de usuarios.
     """
     # Verificar permisos
     if current_user.profile.role == RoleEnum.ADMINISTRADOR:
@@ -48,8 +58,17 @@ async def update_user_role(
     current_admin: AuthUserModel = Depends(get_current_admin_user)
 ):
     """
-    Actualiza el rol de un usuario.
-    Solo accesible por administradores.
+    Actualiza el rol de un usuario existente.
+    
+    Operación crítica solo permitida para Administradores.
+    Si el nuevo rol requiere una entidad asociada (ej. Atleta), se creará automáticamente.
+    
+    Args:
+        user_id: ID (UUID o entero) del usuario.
+        role_data: Nuevo rol.
+        
+    Returns:
+        UserResponseSchema: Usuario actualizado.
     """
     updated_user = await service.update_user_role(user_id, role_data.role)
     return UserResponseSchema.model_validate(updated_user)
