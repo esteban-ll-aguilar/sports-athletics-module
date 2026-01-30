@@ -1,8 +1,7 @@
-from sqlalchemy import Integer, String, Boolean, Float, ForeignKey, UUID as PG_UUID, text
+from sqlalchemy import Integer, String, Boolean, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from app.modules.competencia.domain.enums.enum import Sexo
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from typing import List, TYPE_CHECKING
 

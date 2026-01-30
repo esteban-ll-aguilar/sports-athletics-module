@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from uuid import UUID
 
 from app.modules.competencia.domain.schemas.registro_prueba_competencia_schema import (
     RegistroPruebaCompetenciaCreate,
     RegistroPruebaCompetenciaUpdate,
-    RegistroPruebaCompetenciaResponse,
-    RegistroPruebaCompetenciaList
+    RegistroPruebaCompetenciaResponse
 )
 
 from app.modules.competencia.services.registro_prueba_competencia_service import (

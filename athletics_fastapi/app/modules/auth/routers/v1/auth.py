@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
-from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from typing import Union
@@ -26,7 +24,7 @@ from app.modules.auth.dependencies import (
 
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
-from app.core.jwt.jwt import JWTManager, PasswordHasher, oauth2_scheme
+from app.core.jwt.jwt import JWTManager, PasswordHasher
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger

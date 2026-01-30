@@ -9,9 +9,7 @@ from app.main import _APP
 from app.modules.auth.dependencies import (
     get_users_repo, get_password_hasher, get_jwt_manager, get_sessions_repo
 )
-from app.modules.auth.domain.enums.role_enum import RoleEnum
 from uuid import uuid4
-from datetime import datetime
 
 # --------------------------
 # FIXTURES Y MOCKS

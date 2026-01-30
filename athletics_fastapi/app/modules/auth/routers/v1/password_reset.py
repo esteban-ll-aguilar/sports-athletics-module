@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
-from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     PasswordResetRequest, PasswordResetCodeValidation, 
-    PasswordResetComplete, MessageResponse, PasswordResetConfirm
+    PasswordResetConfirm
 )
 from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.dependencies import (
@@ -15,7 +14,6 @@ from app.core.jwt.jwt import PasswordHasher
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.password_reset_service import PasswordResetService
 from app.core.logging.logger import logger
-from app.modules.modules import APP_TAGS_V1
 from typing import Optional
 
 

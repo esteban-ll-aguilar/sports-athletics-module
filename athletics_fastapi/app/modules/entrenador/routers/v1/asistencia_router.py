@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.database import get_session
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate, RegistroAsistenciasResponse
-from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, AsistenciaResponse, ConfirmacionAsistenciaCreate
+from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, AsistenciaResponse
 from app.modules.entrenador.services.asistencia_service import AsistenciaService
 from app.modules.entrenador.repositories.registro_asistencias_repository import RegistroAsistenciasRepository
 from app.modules.entrenador.repositories.asistencia_repository import AsistenciaRepository

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 from datetime import date
-from typing import List, Optional
+from typing import List
 from app.modules.competencia.domain.enums.enum import PruebaType, TipoMedicion
 from app.modules.competencia.domain.schemas.baremo_schema import BaremoRead
 

@@ -11,8 +11,6 @@ from app.modules.auth.dependencies import (
 )
 # from app.modules.auth.domain.schemas.schemas_auth import UserRead
 from app.modules.auth.domain.enums.role_enum import RoleEnum
-from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
-from fastapi import status
 from uuid import uuid4
 
 # --------------------------

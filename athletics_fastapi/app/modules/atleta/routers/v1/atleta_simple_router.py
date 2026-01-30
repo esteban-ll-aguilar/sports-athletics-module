@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from typing import List, Any
+from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.database import get_session
 from app.modules.atleta.services.atleta_service import AtletaService

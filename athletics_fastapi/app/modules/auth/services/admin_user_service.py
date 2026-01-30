@@ -96,6 +96,7 @@ class AdminUserService:
             size=size,
             role=role
         )
+        print(f"DTO DEBUG: Users found: {len(users)}, Total: {total}")
 
         return {
             "items": users,

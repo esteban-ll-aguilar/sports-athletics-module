@@ -8,7 +8,7 @@ async def test_lifespan():
         async with _APP.router.lifespan_context(_APP) as context:
             print("✅ Lifespan context entered successfully")
         print("✅ Lifespan context exited successfully")
-    except Exception as e:
+    except Exception:
         import traceback
         traceback.print_exc()
 

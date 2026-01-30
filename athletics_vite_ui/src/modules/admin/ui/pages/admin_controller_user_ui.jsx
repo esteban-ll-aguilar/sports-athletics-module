@@ -26,7 +26,7 @@ const AdminUsersTable = () => {
     try {
       setLoading(true);
       const response = await adminService.getUsers(1, 20, roleFilter);
-      const usersData = response.items || response.users || [];
+      const usersData = response?.items || response?.users || [];
       setUsers(usersData);
     } catch (err) {
       console.error('🔴 [ADMIN CONTROLLER] ERROR:', err);
@@ -120,7 +120,7 @@ const AdminUsersTable = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            
+
             <button
               onClick={exportPDF}
               className="

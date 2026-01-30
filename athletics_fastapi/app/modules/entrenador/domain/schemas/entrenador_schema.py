@@ -1,7 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from uuid import UUID
 from typing import Optional
-from datetime import datetime
 
 class EntrenadorBase(BaseModel):
     anios_experiencia: int = Field(..., ge=0)

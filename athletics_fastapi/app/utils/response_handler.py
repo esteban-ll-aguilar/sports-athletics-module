@@ -1,5 +1,5 @@
 """Handler para respuestas estandarizadas de las APIs."""
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 from fastapi import status
 from app.utils.response_codes import ResponseCodes
 

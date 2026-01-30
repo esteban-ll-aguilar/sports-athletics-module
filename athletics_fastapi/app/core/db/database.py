@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker, AsyncSession
 from typing import AsyncGenerator
 from app.core.config.enviroment import _SETTINGS
-from functools import lru_cache
 from sqlalchemy.orm import DeclarativeBase
 
 

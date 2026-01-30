@@ -9,13 +9,12 @@ from fastapi import Depends
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.services.admin_user_service import AdminUserService
 
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.cache.redis import get_redis
 from typing import Optional
 from app.core.db.database import get_session
 from app.core.jwt.jwt import JWTManager, PasswordHasher
-from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.core.jwt.jwt import get_current_user

@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException, status
 from datetime import datetime, date, time
-import uuid
 
 from app.modules.entrenador.services.asistencia_service import AsistenciaService
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate

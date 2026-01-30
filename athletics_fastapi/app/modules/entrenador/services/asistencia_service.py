@@ -7,7 +7,7 @@ from app.modules.entrenador.repositories.horario_repository import HorarioReposi
 from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
 from app.modules.entrenador.domain.models.asistencia_model import Asistencia
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate
-from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, ConfirmacionAsistenciaCreate
+from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate
 
 class AsistenciaService:
     def __init__(

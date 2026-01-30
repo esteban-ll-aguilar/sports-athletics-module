@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from fastapi import APIRouter, Depends, status
 from uuid import UUID
 
 from ...domain.schemas.prueba_schema import PruebaCreate, PruebaUpdate, PruebaRead

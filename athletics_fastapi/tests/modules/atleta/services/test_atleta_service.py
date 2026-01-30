@@ -7,11 +7,9 @@ Cubre todos los casos de prueba: TC-A01 a TC-A37
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import date
-from uuid import uuid4
 from fastapi import HTTPException, status
 from app.modules.atleta.services.atleta_service import AtletaService
 from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.enums import RoleEnum
 
 

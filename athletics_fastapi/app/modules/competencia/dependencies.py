@@ -41,7 +41,6 @@ async def get_tipo_disciplina_service(
 # ============================
 # PRUEBA
 # ============================
-from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.services.prueba_service import PruebaService
 
 

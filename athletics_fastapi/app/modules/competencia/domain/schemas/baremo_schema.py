@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
-from typing import List, Optional
+from typing import List
 from app.modules.competencia.domain.enums.enum import Sexo
 from app.modules.competencia.domain.schemas.item_baremo_schema import ItemBaremoRead, ItemBaremoCreate
 

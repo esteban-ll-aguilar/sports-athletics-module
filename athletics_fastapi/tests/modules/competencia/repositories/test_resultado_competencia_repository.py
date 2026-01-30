@@ -4,7 +4,6 @@ Verifica persistencia y consultas personalizadas de resultados.
 """
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
 from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
 

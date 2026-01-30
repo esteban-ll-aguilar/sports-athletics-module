@@ -5,7 +5,6 @@ la base de datos y utiliza reportlab (canvas) para generar el archivo.
 """
 import sys
 from unittest.mock import MagicMock, patch
-import pytest
 
 
 # -------------------------------------------------------------------

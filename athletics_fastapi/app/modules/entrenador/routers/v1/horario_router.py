@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db.database import get_session
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 from app.modules.entrenador.domain.schemas.horario_schema import HorarioResponse, HorarioCreate
 from app.modules.entrenador.services.horario_service import HorarioService
-from app.modules.entrenador.repositories.horario_repository import HorarioRepository
-from app.modules.entrenador.repositories.entrenamiento_repository import EntrenamientoRepository
 from app.modules.entrenador.dependencies import get_current_entrenador, get_horario_service
 
 router = APIRouter(

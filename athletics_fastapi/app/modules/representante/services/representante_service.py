@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserUpdateSchema

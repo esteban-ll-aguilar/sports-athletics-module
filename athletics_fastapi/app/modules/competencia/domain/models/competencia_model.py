@@ -1,5 +1,5 @@
 """Modelo de Competencia."""
-from sqlalchemy import Integer, String, Date, Boolean, ForeignKey, DateTime, Text, text, Enum as SQLAlchemyEnum
+from sqlalchemy import Integer, String, Date, Boolean, ForeignKey, DateTime, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base

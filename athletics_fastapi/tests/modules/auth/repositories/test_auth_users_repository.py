@@ -6,7 +6,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema
 from app.modules.auth.domain.enums import RoleEnum
 from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
 from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum

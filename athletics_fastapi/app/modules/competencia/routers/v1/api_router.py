@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from app.modules.modules import APP_TAGS_V1
 
 from app.modules.competencia.routers.v1.baremo_router import router as baremo_router
 from app.modules.competencia.routers.v1.tipo_disciplina_router import router as tipo_disciplina_router
