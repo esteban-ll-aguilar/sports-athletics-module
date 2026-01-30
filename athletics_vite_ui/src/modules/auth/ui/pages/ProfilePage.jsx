@@ -506,52 +506,53 @@ const ProfilePage = () => {
 
             </form>
 
-            {/* HISTORIAL MÉDICO SECTION */}
-            <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] p-6 md:p-8 transition-colors duration-300">
-                <div className="flex items-center mb-6">
-                    <Shield className="text-[#b30c25] mr-2" />
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Historial Médico</h2>
-                </div>
-
-                {historial ? (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Talla</p>
-                                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.talla} m</p>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Peso</p>
-                                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.peso} kg</p>
-                            </div>
-                            <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">IMC</p>
-                                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.imc}</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div className="border-b border-gray-200 dark:border-[#332122] pb-4">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Alergias</p>
-                                <p className="text-gray-900 dark:text-white">{historial.alergias || "Ninguna"}</p>
-                            </div>
-                            <div className="border-b border-gray-200 dark:border-[#332122] pb-4">
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Enfermedades</p>
-                                <p className="text-gray-900 dark:text-white">{historial.enfermedades || "Ninguna"}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Enfermedades Hereditarias</p>
-                                <p className="text-gray-900 dark:text-white">{historial.enfermedades_hereditarias || "Ninguna"}</p>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center py-8 bg-gray-50 dark:bg-[#242223] rounded-xl border border-gray-200 dark:border-[#332122] border-dashed transition-colors duration-300">
-                        <Shield className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3 opacity-50" />
-                        <p className="text-gray-500 dark:text-gray-400">Aún no se ha registrado el historial médico</p>
+            {formData.role === 'ATLETA' && (
+                <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] p-6 md:p-8 transition-colors duration-300">
+                    <div className="flex items-center mb-6">
+                        <Shield className="text-[#b30c25] mr-2" />
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Historial Médico</h2>
                     </div>
-                )}
-            </div>
+
+                    {historial ? (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Talla</p>
+                                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.talla} m</p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Peso</p>
+                                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.peso} kg</p>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">IMC</p>
+                                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.imc}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div className="border-b border-gray-200 dark:border-[#332122] pb-4">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Alergias</p>
+                                    <p className="text-gray-900 dark:text-white">{historial.alergias || "Ninguna"}</p>
+                                </div>
+                                <div className="border-b border-gray-200 dark:border-[#332122] pb-4">
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Enfermedades</p>
+                                    <p className="text-gray-900 dark:text-white">{historial.enfermedades || "Ninguna"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Enfermedades Hereditarias</p>
+                                    <p className="text-gray-900 dark:text-white">{historial.enfermedades_hereditarias || "Ninguna"}</p>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center py-8 bg-gray-50 dark:bg-[#242223] rounded-xl border border-gray-200 dark:border-[#332122] border-dashed transition-colors duration-300">
+                            <Shield className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3 opacity-50" />
+                            <p className="text-gray-500 dark:text-gray-400">Aún no se ha registrado el historial médico</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <TwoFactorSettings />
 
