@@ -54,10 +54,13 @@ class ExternalUsersApiService:
         """
         response_data = response.json()
         return BaseResponse(
-            data=response_data.get("data"),
-            message=response_data.get("message"),
-            errors=response_data.get("errors"),
-            status=200 if response_data.get("status") == "success" else 404
+            summary=response_data.get("message", "Operation processed"),
+            status_code=200 if response_data.get("status") == "success" else 400,
+            errors=response_data.get("errors") if isinstance(response_data.get("errors"), dict) else {},
+            message=response_data.get("message", ""),
+            data=response_data.get("data") if isinstance(response_data.get("data"), dict) else {},
+            status=200 if response_data.get("status") == "success" else 400,
+            code="COD_OK" if response_data.get("status") == "success" else "COD_ERROR"
         )
     
     async def fetch_and_store_token(self) -> tuple[str, str]:

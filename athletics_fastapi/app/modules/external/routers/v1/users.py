@@ -14,13 +14,16 @@ async def update_token(service: ExternalUsersApiService = Depends(get_external_u
     token, external_id = await service.fetch_and_store_token()
 
     return BaseResponse(
+        summary="Token actualizado",
+        status_code=status.HTTP_200_OK,
+        errors={},
+        message="Token actualizado correctamente",
         data={
             "token": token,
             "external_id": external_id
         },
-        message="Token actualizado correctamente",
-        errors=[],
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
+        code="COD_OK"
     )
 
 
