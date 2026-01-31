@@ -141,6 +141,16 @@ _APP.mount("/data", StaticFiles(directory="data"), name="data")
 
 
 
+
+# Health check endpoint
+@_APP.get("/health", tags=["Health"])
+async def health_check():
+    return {
+        "status": "ok",
+        "message": "Service is healthy",
+        "version": _SETTINGS.application_version
+    }
+
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter
 
