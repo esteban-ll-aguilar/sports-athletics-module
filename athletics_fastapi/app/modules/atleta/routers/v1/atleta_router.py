@@ -41,6 +41,11 @@ async def create_atleta(
     current_user: AuthUserModel = Depends(get_current_user),
     service: AtletaService = Depends(get_atleta_service),
 ): 
+    """
+    Endpoint para crear un nuevo perfil de atleta.
+    
+    Requiere que el usuario autenticado tenga el rol ATLETA.
+    """ 
     return await service.create(data, current_user.id)
 
 
@@ -52,6 +57,9 @@ async def get_my_atleta(
     current_user: AuthUserModel = Depends(get_current_user),
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Obtiene los datos del perfil de atleta del usuario actual.
+    """
     return await service.get_me(current_user.id)
 
 
@@ -62,6 +70,10 @@ async def get_my_historial(
     current_user: AuthUserModel = Depends(get_current_user),
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Obtiene el historial de competencias del atleta autenticado.
+    Retorna una lista de resultados donde participó el atleta.
+    """
     return await service.get_historial(current_user.id)
 
 
@@ -72,6 +84,10 @@ async def get_my_estadisticas(
     current_user: AuthUserModel = Depends(get_current_user),
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Calcula y retorna estadísticas del atleta autenticado.
+    Incluye conteo de medallas, total de competencias y años de experiencia.
+    """
     return await service.get_estadisticas(current_user.id)
 
 
@@ -83,6 +99,9 @@ async def get_atleta(
     atleta_id: int,
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Obtiene los datos públicos de un atleta específico por su ID.
+    """
     return await service.get_by_id(atleta_id)
 
 
@@ -95,6 +114,9 @@ async def list_atletas(
     limit: int = 100,
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Lista todos los atletas registrados en el sistema, con paginación.
+    """
     return await service.get_all(skip, limit)
 
 
@@ -107,6 +129,9 @@ async def update_atleta(
     data: AtletaUpdate,
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Actualiza los datos de un atleta existente.
+    """
     return await service.update(atleta_id, data)
 
 
@@ -118,4 +143,7 @@ async def delete_atleta(
     atleta_id: int,
     service: AtletaService = Depends(get_atleta_service),
 ):
+    """
+    Elimina físicamente un perfil de atleta.
+    """
     await service.delete(atleta_id)

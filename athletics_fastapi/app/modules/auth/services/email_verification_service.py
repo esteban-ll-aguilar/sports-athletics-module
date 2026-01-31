@@ -14,12 +14,29 @@ class EmailVerificationService:
         self.max_attempts = 5
 
     def generate_verification_code(self, length: int = 6) -> str:
-        """Genera un código de verificación aleatorio."""
+        """
+        Genera un código de verificación numérico aleatorio.
+        
+        Args:
+           length (int): Longitud del código (por defecto 6).
+           
+        Returns:
+           str: Código generado.
+        """
         alphabet = string.digits  # Solo dígitos para códigos de email
         return "".join(secrets.choice(alphabet) for _ in range(length))
 
     async def store_verification_code(self, email: str, code: str) -> None:
-        """Almacena un código de verificación en Redis con expiración de 1 hora."""
+        """
+        Almacena un código de verificación en Redis asociado a un email.
+        
+        El código tiene un tiempo de expiración definido en self.expiry_seconds.
+        Los intentos se inicializan en 0.
+        
+        Args:
+            email (str): Email del usuario.
+            code (str): Código a almacenar.
+        """
         key = f"email_verification:{email.lower()}"
         data = {
             "code": code,
@@ -33,7 +50,19 @@ class EmailVerificationService:
         await pipe.execute()
 
     async def validate_verification_code(self, email: str, code: str) -> bool:
-        """Valida y consume un código de verificación."""
+        """
+        Valida si el código proporcionado coincide con el almacenado para el email.
+        
+        Controla el número de intentos fallidos. Si se excede el máximo, el código se invalida.
+        Si la validación es exitosa, el código se consume (se elimina).
+        
+        Args:
+            email (str): Email a validar.
+            code (str): Código proporcionado por el usuario.
+            
+        Returns:
+            bool: True si el código es válido, False en caso contrario.
+        """
         key = f"email_verification:{email.lower()}"
         
         # Obtener datos del código
@@ -60,17 +89,38 @@ class EmailVerificationService:
         return False
 
     async def delete_verification_code(self, email: str) -> None:
-        """Elimina un código de verificación."""
+        """
+        Elimina manualmente cualquier código de verificación activo para el email.
+        
+        Args:
+            email (str): Email del usuario.
+        """
         key = f"email_verification:{email.lower()}"
         await self.redis.delete(key)
 
     async def code_exists(self, email: str) -> bool:
-        """Verifica si existe un código activo para el email."""
+        """
+        Verifica si existe un código activo y no expirado para el email.
+        
+        Args:
+            email (str): Email a consultar.
+            
+        Returns:
+            bool: True si existe código.
+        """
         key = f"email_verification:{email.lower()}"
         return await self.redis.exists(key) > 0
 
     async def get_remaining_time(self, email: str) -> Optional[int]:
-        """Obtiene el tiempo restante (en segundos) para un código."""
+        """
+        Obtiene el tiempo restante de validez del código en segundos.
+        
+        Args:
+            email (str): Email a consultar.
+            
+        Returns:
+            Optional[int]: Segundos restantes o None si no hay código.
+        """
         key = f"email_verification:{email.lower()}"
         ttl = await self.redis.ttl(key)
         return ttl if ttl > 0 else None

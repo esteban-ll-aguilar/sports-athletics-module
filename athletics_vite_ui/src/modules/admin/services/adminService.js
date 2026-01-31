@@ -7,7 +7,7 @@ class AdminService {
             url += `&role=${role}`;
         }
         const response = await apiClient.get(url);
-        return response.data;
+        return response;
     }
 
     async updateUserRole(userId, role) {

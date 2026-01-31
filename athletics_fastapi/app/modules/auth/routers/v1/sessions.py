@@ -31,8 +31,15 @@ async def get_my_sessions(
     sessions_repo: SessionsRepository = Depends(get_sessions_repo)
 ):
     """
-    Obtiene todas las sesiones activas del usuario autenticado.
-    Útil para que el usuario vea desde dónde está conectado.
+    Obtiene una lista de todas las sesiones activas del usuario.
+    
+    Permite al usuario visualizar desde qué dispositivos o navegadores tiene sesiones abiertas.
+    
+    Args:
+        current_user: Usuario autenticado.
+        
+    Returns:
+        APIResponse: Lista de sesiones con detalles (fecha creación, último acceso, etc.).
     """
     sessions = await sessions_repo.get_active_sessions_by_user(current_user.id)
     
@@ -64,8 +71,16 @@ async def revoke_session(
     jwtm: JWTManager = Depends(get_jwt_manager)
 ):
     """
-    Revoca una sesión específica del usuario.
-    Útil para cerrar sesión remota desde otro dispositivo.
+    Revoca (cierra) una sesión específica remotamente.
+    
+    Invalida el refresh token asociado y elimina la sesión de la base de datos.
+    
+    Args:
+        data: ID de la sesión a revocar.
+        current_user: Usuario autenticado.
+        
+    Returns:
+        APIResponse: Confirmación de éxito.
     """
     # Verificar que la sesión pertenece al usuario
     sessions = await sessions_repo.get_active_sessions_by_user(current_user.id)
@@ -124,8 +139,15 @@ async def revoke_all_sessions(
     jwtm: JWTManager = Depends(get_jwt_manager)
 ):
     """
-    Revoca TODAS las sesiones del usuario excepto la actual.
-    Útil si el usuario sospecha que su cuenta fue comprometida.
+    Cierra sesión en TODOS los dispositivos (excepto el actual, opcionalmente, aunque aquí revoca todo).
+    
+    Medida de seguridad para casos de robo de cuenta o dispositivo perdido.
+    
+    Args:
+        current_user: Usuario autenticado.
+        
+    Returns:
+        APIResponse: Número de sesiones cerradas.
     """
     sessions = await sessions_repo.get_active_sessions_by_user(current_user.id)
     

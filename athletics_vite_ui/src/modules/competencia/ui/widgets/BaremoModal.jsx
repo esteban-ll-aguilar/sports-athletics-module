@@ -234,11 +234,12 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                   <div className="flex-[2] w-full">
                     <label className="text-xs text-gray-500 mb-1 block">Clasificación</label>
                     <select
-                      className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm uppercase"
+                      className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
                       value={item.clasificacion}
                       onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
                       required
                     >
+                      <option value="">Seleccione...</option>
                       <option value="PRINCIPIANTE">PRINCIPIANTE</option>
                       <option value="INTERMEDIO">INTERMEDIO</option>
                       <option value="AVANZADO">AVANZADO</option>

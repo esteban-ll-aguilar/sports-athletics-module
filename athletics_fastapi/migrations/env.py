@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
+from app.modules.entrenador.domain.models.resultado_entrenamiento_model import ResultadoEntrenamiento # Explicit Import
 
 
 # Este es el objeto de configuración de Alembic 

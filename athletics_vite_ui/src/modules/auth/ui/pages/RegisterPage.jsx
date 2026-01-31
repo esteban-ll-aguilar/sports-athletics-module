@@ -45,11 +45,34 @@ const RegisterPage = () => {
     };
 
     const validateIdentificacion = (value, tipo) => {
-        if (!value) return 'La identificación debe ser numérica';
+        if (!value) return 'La identificación es requerida';
         if (!/^\d+$/.test(value)) return 'La identificación solo debe contener números';
-        if (tipo === 'CEDULA' && value.length !== 10) return 'La cédula debe tener exactamente 10 caracteres numéricos';
+
+        if (tipo === 'CEDULA') {
+            if (value.length !== 10) return 'La cédula debe tener 10 dígitos';
+
+            // Validación de Cédula Ecuatoriana
+            const digits = value.split('').map(Number);
+            const province = Number(value.substring(0, 2));
+            const thirdDigit = digits[2];
+
+            if (province < 1 || province > 24) return 'Cédula inválida (código de provincia)';
+            if (thirdDigit >= 6) return 'Cédula inválida (tercer dígito)';
+
+            const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+            let sum = 0;
+            for (let i = 0; i < 9; i++) {
+                let val = digits[i] * coef[i];
+                if (val >= 10) val -= 9;
+                sum += val;
+            }
+            const verifyDigit = sum % 10 === 0 ? 0 : 10 - (sum % 10);
+            if (verifyDigit !== digits[9]) return 'Cédula inválida (dígito verificador)';
+        }
+
+        if (tipo === 'RUC' && value.length !== 13) return 'El RUC debe tener 13 dígitos';
         if (tipo === 'PASAPORTE' && value.length < 5) return 'El pasaporte debe tener al menos 5 caracteres';
-        if (tipo === 'RUC' && value.length !== 13) return 'El RUC debe tener exactamente 13 caracteres numéricos';
+
         return '';
     };
 
@@ -57,7 +80,7 @@ const RegisterPage = () => {
         if (!value) return '';
 
         // Verificar si hay caracteres inválidos antes de limpiar
-        if (!/^[0-9+\-() ]*$/.test(value)) {
+        if (!/^\d+$/.test(value)) {
             return 'El teléfono solo debe contener números';
         }
 
@@ -70,7 +93,10 @@ const RegisterPage = () => {
     };
 
     const validateFechaNacimiento = (value) => {
-        if (!value) return 'La fecha de nacimiento es requerida';
+        if (!value) return 'La fecha a nacimiento es requerida';
+        const date = new Date(value);
+        const today = new Date();
+        if (date > today) return 'La fecha no puede estar en el futuro';
         return '';
     };
 
@@ -124,8 +150,8 @@ const RegisterPage = () => {
         else if (name === 'phone') {
             // Validar ANTES de filtrar para detectar caracteres inválidos
             newErrors[name] = validatePhone(value);
-            // Luego filtrar para guardar solo números y caracteres válidos
-            processedValue = value.replace(/[^0-9+\-() ]/g, '');
+            // Luego filtrar para guardar solo números
+            processedValue = value.replace(/\D/g, '');
         }
         // Validación de nombre
         else if (name === 'first_name') {
@@ -320,9 +346,7 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Nombre"
                                     />
-                                    {fieldErrors.first_name && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>
-                                    )}
+                                    {fieldErrors.first_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
@@ -334,9 +358,7 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Apellido"
                                     />
-                                    {fieldErrors.last_name && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>
-                                    )}
+                                    {fieldErrors.last_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>}
                                 </div>
                             </div>
 
@@ -358,40 +380,54 @@ const RegisterPage = () => {
                                     <label className="block text-sm font-medium text-gray-400 mb-1">
                                         Identificación
                                         <span className="text-xs text-gray-500 ml-1">
+                                            (Numérico)
                                         </span>
                                     </label>
                                     <input
-                                        type="number"
                                         name="identificacion"
                                         required
                                         value={formData.identificacion}
                                         onChange={handleChange}
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+                                            if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                                                e.preventDefault();
+                                            }
+                                        }}
                                         pattern="\d*"
                                         inputMode="numeric"
+                                        maxLength={formData.tipo_identificacion === 'CEDULA' ? 10 : formData.tipo_identificacion === 'RUC' ? 13 : 20}
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0123456789"
                                     />
-                                    {fieldErrors.identificacion && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>
-                                    )}
+                                    {fieldErrors.identificacion && <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">
+                                        Teléfono
+                                        <span className="text-xs text-gray-500 ml-1">
+                                            (Numérico)
+                                        </span>
+                                    </label>
                                     <input
-                                        type="number"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
-                                        inputMode="numeric"
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+                                            if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        maxLength={10}
+                                        inputMode="tel"
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0999999999"
                                     />
-                                    {fieldErrors.phone && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>
-                                    )}
+                                    {fieldErrors.phone && <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
@@ -402,9 +438,7 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Tu dirección"
                                     />
-                                    {fieldErrors.direccion && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>
-                                    )}
+                                    {fieldErrors.direccion && <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>}
                                 </div>
                             </div>
                         </div>
@@ -422,9 +456,7 @@ const RegisterPage = () => {
                                     onChange={handleChange}
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
                                 />
-                                {fieldErrors.fecha_nacimiento && (
-                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>
-                                )}
+                                {fieldErrors.fecha_nacimiento && <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>}
                             </div>
 
                             <div>
@@ -436,13 +468,13 @@ const RegisterPage = () => {
                                     value={formData.sexo}
                                     onChange={handleChange}
                                     className="
-                                    block w-full pl-10 pr-3 py-2.5
-                                    bg-white text-black
-                                    border border-gray-300 rounded-lg
-                                    placeholder-gray-500
-                                    focus:ring-[#b30c25] focus:border-[#b30c25]
-                                    sm:text-sm
-                                "
+    block w-full pl-10 pr-3 py-2.5
+    bg-white text-black
+    border border-gray-300 rounded-lg
+    placeholder-gray-500
+    focus:ring-[#b30c25] focus:border-[#b30c25]
+    sm:text-sm
+  "
                                 >
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -493,9 +525,7 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="Nombre de usuario"
                                 />
-                                {fieldErrors.username && (
-                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>
-                                )}
+                                {fieldErrors.username && <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>}
                             </div>
 
                             <div>
@@ -509,9 +539,7 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
-                                {fieldErrors.email && (
-                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>
-                                )}
+                                {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -544,9 +572,6 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
-                                    {fieldErrors.password && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>
-                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
@@ -577,12 +602,11 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
-                                    {fieldErrors.confirmPassword && (
-                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>
-                                    )}
                                 </div>
                             </div>
                             <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
+                            {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
                         </div>
 
 

@@ -16,13 +16,24 @@ class TwoFactorService:
         self.hasher = CryptContext(schemes=["argon2"], deprecated="auto")
     
     def generate_secret(self) -> str:
-        """Genera un secret aleatorio para TOTP."""
+        """
+        Genera un secret aleatorio (base32) para configurar TOTP.
+        
+        Returns:
+            str: Secret key.
+        """
         return pyotp.random_base32()
     
     def get_totp_uri(self, secret: str, user_email: str) -> str:
         """
-        Genera la URI para el código QR.
-        Esta URI se puede usar con apps como Google Authenticator, Authy, etc.
+        Genera la URI estandarizada (otpauth://) para configurar aplicaciones de autenticación.
+        
+        Args:
+            secret (str): Secret key del usuario.
+            user_email (str): Email del usuario (como identificador).
+            
+        Returns:
+            str: URI de aprovisionamiento.
         """
         totp = pyotp.TOTP(secret)
         return totp.provisioning_uri(
@@ -32,8 +43,14 @@ class TwoFactorService:
     
     def generate_qr_code(self, secret: str, user_email: str) -> str:
         """
-        Genera un código QR como imagen base64.
-        El usuario puede escanear este QR con su app de autenticación.
+        Genera un código QR en formato imagen Base64 listo para mostrarse en el frontend.
+        
+        Args:
+            secret (str): Secret key.
+            user_email (str): Email del usuario.
+            
+        Returns:
+            str: Data URL de la imagen (data:image/png;base64,...).
         """
         uri = self.get_totp_uri(secret, user_email)
         
@@ -59,8 +76,17 @@ class TwoFactorService:
     
     def verify_totp_code(self, secret: str, code: str) -> bool:
         """
-        Verifica si el código TOTP es válido.
-        Permite una ventana de ±1 período (30 segundos) para compensar desfases de tiempo.
+        Verifica si un código TOTP proporcionado es válido para el secreto dado.
+        
+        Permite una ventana de tolerancia de ±30 segundos (valid_window=1) para
+        compensar pequeñas desincronizaciones de reloj entre servidor y cliente.
+        
+        Args:
+            secret (str): Secret key almacenado.
+            code (str): Código de 6 dígitos ingresado por el usuario.
+            
+        Returns:
+            bool: True si es válido.
         """
         if not secret or not code:
             return False
@@ -82,8 +108,15 @@ class TwoFactorService:
     
     def get_backup_codes(self, count: int = 10) -> list[str]:
         """
-        Genera códigos de respaldo para cuando el usuario no tenga acceso a su app.
-        Cada código es de un solo uso.
+        Genera una lista de códigos de respaldo de un solo uso.
+        
+        Estos códigos permiten el acceso cuando el usuario pierde su dispositivo 2FA.
+        
+        Args:
+            count (int): Cantidad de códigos a generar.
+            
+        Returns:
+            list[str]: Lista de códigos en texto plano (ej. "ABCD-1234").
         """
         import secrets
         import string
@@ -100,16 +133,29 @@ class TwoFactorService:
     
     def hash_backup_codes(self, codes: list[str]) -> str:
         """
-        Hashea los códigos de respaldo y los retorna como JSON.
-        Los códigos hasheados se guardarán en la BD.
+        Hashea una lista de códigos de respaldo para almacenamiento seguro.
+        
+        Args:
+            codes (list[str]): Lista de códigos en texto plano.
+            
+        Returns:
+            str: String JSON conteniendo la lista de hashes.
         """
         hashed = [self.hasher.hash(code) for code in codes]
         return json.dumps(hashed)
     
     def verify_backup_code(self, backup_codes_json: Optional[str], code: str) -> bool:
         """
-        Verifica si un código de respaldo es válido.
-        Retorna True si el código coincide con alguno de los códigos hasheados.
+        Verifica si un código ingresado coincide con alguno de los códigos de respaldo almacenados.
+        
+        Esta función solo verifica la validez, no elimina el código usado (eso lo hace remove_used_backup_code).
+        
+        Args:
+            backup_codes_json (Optional[str]): JSON string con los hashes guardados.
+            code (str): Código ingresado por el usuario.
+            
+        Returns:
+            bool: True si el código es válido.
         """
         if not backup_codes_json or not code:
             return False
@@ -125,8 +171,14 @@ class TwoFactorService:
     
     def remove_used_backup_code(self, backup_codes_json: str, used_code: str) -> str:
         """
-        Elimina un código de respaldo usado de la lista.
-        Retorna el JSON actualizado sin el código usado.
+        Elimina el hash correspondiente a un código usado de la lista almacenada.
+        
+        Args:
+            backup_codes_json (str): JSON string original con los hashes.
+            used_code (str): El código en texto plano que se acaba de usar.
+            
+        Returns:
+            str: Nuevo JSON string con el código eliminado.
         """
         try:
             hashed_codes = json.loads(backup_codes_json)

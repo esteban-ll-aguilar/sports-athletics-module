@@ -78,7 +78,8 @@ const LoginPage = () => {
 
     return (
         //fondo degradado//
-        <div className="flex h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
+        <div className="flex h-screen w-full bg-white dark:bg-[#1a1a1a] transition-colors duration-500">
+
             <VerificationModal
                 isOpen={showVerificationModal}
                 onClose={() => setShowVerificationModal(false)}
@@ -95,7 +96,7 @@ const LoginPage = () => {
             />
 
             {/* Left Side - Image & Text */}
-            <div className="hidden lg:flex w-1/2 relative text-white items-center justify-center overflow-hidden bg-[#242223]">
+            <div className="hidden lg:flex w-1/2 relative text-white items-center justify-center overflow-hidden bg-gray-900 dark:bg-[#242223]">
                 <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent">
                     {/* Placeholder for the image from the design. Using a generic athletic image for now. */}
                     <img
@@ -107,10 +108,10 @@ const LoginPage = () => {
                 </div>
 
                 <div className="relative z-10 p-12 text-center max-w-lg">
-                    <h1 className="text-4xl font-extrabold mb-4 tracking-wide">
+                    <h1 className="text-4xl font-extrabold mb-4 tracking-wide text-white">
                         Alcanza tu máximo potencial
                     </h1>
-                    <p className="text-lg text-gray-300">
+                    <p className="text-lg text-gray-200 dark:text-gray-300">
                         Gestiona tus entrenamientos, sigue tu progreso y conéctate con tu equipo.
                     </p>
 
@@ -118,17 +119,17 @@ const LoginPage = () => {
             </div>
 
             {/* Right Side - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-linear-to-br from-[#212121] to-[#242223]">
-                <div className="w-full max-w-md bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-white dark:bg-linear-to-br dark:from-[#212121] dark:to-[#242223] transition-colors duration-500">
+                <div className="w-full max-w-md bg-white dark:bg-[#242223] rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-[#332122] transition-colors duration-500">
                     <div className="text-center mb-8">
-                        <div className="mx-auto w-14 h-14 bg-linear-to-br from-[#b30c25] to-[#362022] rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
+                        <div className="mx-auto w-14 h-14 bg-linear-to-br from-[#b30c25] to-[#80091b] dark:to-[#362022] rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
                             {/* Simple Icon */}
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1.001A3.75 3.75 0 0012 18z" />
                             </svg>
                         </div>
-                        <h2 className="text-2xl font-bold text-white">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white transition-colors duration-300">
                             Inicia Sesión en tu Cuenta
                         </h2>
                     </div>
@@ -136,12 +137,12 @@ const LoginPage = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">
                                 Correo Electrónico
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500 dark:text-gray-400">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                                     </svg>
                                 </div>
@@ -151,11 +152,11 @@ const LoginPage = () => {
                                     required
                                     className="
     block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
+    bg-gray-50 dark:bg-white text-gray-900 dark:text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
     focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
+    sm:text-sm transition-colors duration-300
   "
                                     placeholder="Ingresa tu correo electrónico"
                                     value={email}
@@ -165,12 +166,12 @@ const LoginPage = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1 transition-colors duration-300">
                                 Contraseña
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-500 dark:text-gray-400">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                                     </svg>
                                 </div>
@@ -180,18 +181,18 @@ const LoginPage = () => {
                                     required
                                     className="
     block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
+    bg-gray-50 dark:bg-white text-gray-900 dark:text-black
     border border-gray-300 rounded-lg
     placeholder-gray-500
     focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
+    sm:text-sm transition-colors duration-300
   "                                    placeholder="Ingresa tu contraseña"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                                 <button
                                     type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-600"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
                                     {showPassword ? (
@@ -227,7 +228,7 @@ const LoginPage = () => {
                         </button>
 
                         <div className="text-center mt-4">
-                            <span className="text-sm text-gray-400">¿No tienes cuenta? </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">¿No tienes cuenta? </span>
                             <Link to="/register" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                 Regístrate aquí
                             </Link>

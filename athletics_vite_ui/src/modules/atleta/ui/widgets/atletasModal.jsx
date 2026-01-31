@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Swal from "sweetalert2";
-import { Shield, UserPlus } from "lucide-react";
+import { Shield, UserPlus, Mail, Lock, User, Phone, MapPin, CreditCard, Building } from "lucide-react";
 import authService from "../../../auth/services/auth_service";
 
 const ROLES = [
@@ -67,6 +67,9 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
           icon: "success",
           title: "Atleta creado",
           text: "El atleta ha sido registrado correctamente",
+          background: '#1a1a1a',
+          color: '#fff',
+          confirmButtonColor: '#b30c25'
         });
       } else {
         // ✏️ EDITAR USUARIO
@@ -92,6 +95,9 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
           icon: "success",
           title: "Usuario actualizado",
           text: "Los cambios se guardaron correctamente",
+          background: '#1a1a1a',
+          color: '#fff',
+          confirmButtonColor: '#b30c25'
         });
       }
 
@@ -111,172 +117,182 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl w-full max-w-lg p-6 space-y-6">
-        <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-          {isCreateMode ? <UserPlus /> : <Shield />}
-          {isCreateMode ? "Crear Atleta" : "Editar Usuario"}
-        </h3>
+  const InputField = ({ icon: Icon, ...props }) => (
+    <div className="relative w-full">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+      <input
+        {...props}
+        className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122] 
+        text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
+        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
+      />
+    </div>
+  );
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+  const SelectField = ({ icon: Icon, children, ...props }) => (
+    <div className="relative w-full text-gray-900 dark:text-gray-100">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+      <select
+        {...props}
+        className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122] 
+        rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-8 appearance-none
+        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all cursor-pointer`}
+      >
+        {children}
+      </select>
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 material-symbols-outlined">expand_more</span>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      <div className="relative z-10 bg-white dark:bg-[#1a1a1a] rounded-2xl w-full max-w-lg p-6 space-y-6 shadow-2xl border border-gray-200 dark:border-[#332122] transition-colors">
+
+        {/* Header */}
+        <div className="flex justify-between items-center border-b border-gray-100 dark:border-[#332122] pb-4">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            {isCreateMode ? <UserPlus className="text-[#b30c25]" /> : <Shield className="text-[#b30c25]" />}
+            {isCreateMode ? "Crear Atleta" : "Editar Usuario"}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
           {/* Usuario */}
-          <input
-            placeholder="Usuario"
+          <InputField
+            icon={User}
+            placeholder="Nombre de Usuario"
             value={formData.username}
-            onChange={(e) =>
-              setFormData({ ...formData, username: e.target.value })
-            }
-            className="w-full rounded-lg border px-4 py-2"
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
             required
           />
 
           {/* Correo */}
-          <input
+          <InputField
+            icon={Mail}
             type="email"
-            placeholder="Correo"
+            placeholder="Correo Electrónico"
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            className="w-full rounded-lg border px-4 py-2"
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
           />
 
           {/* Password SOLO CREAR */}
           {isCreateMode && (
-            <input
+            <InputField
+              icon={Lock}
               type="password"
               placeholder="Contraseña"
               value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="w-full rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
             />
           )}
 
           {/* Nombre y Apellido */}
-          <div className="flex gap-2">
-            <input
+          <div className="flex gap-3">
+            <InputField
               placeholder="Nombre"
               value={formData.first_name}
-              onChange={(e) =>
-                setFormData({ ...formData, first_name: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
               required
             />
-            <input
+            <InputField
               placeholder="Apellido"
               value={formData.last_name}
-              onChange={(e) =>
-                setFormData({ ...formData, last_name: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
               required
             />
           </div>
 
           {/* Identificación y Tipo */}
-          <div className="flex gap-2">
-            <select
-              value={formData.tipo_identificacion}
-              onChange={(e) =>
-                setFormData({ ...formData, tipo_identificacion: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
-              required
-            >
-              {TIPO_IDENTIFICACION.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-            <input
-              placeholder="Identificación"
-              value={formData.identificacion}
-              onChange={(e) =>
-                setFormData({ ...formData, identificacion: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
-              required
-            />
+          <div className="flex gap-3">
+            <div className="w-1/2">
+              <SelectField
+                value={formData.tipo_identificacion}
+                onChange={(e) => setFormData({ ...formData, tipo_identificacion: e.target.value })}
+                required
+              >
+                {TIPO_IDENTIFICACION.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </SelectField>
+            </div>
+            <div className="w-1/2">
+              <InputField
+                icon={CreditCard}
+                placeholder="Identificación"
+                value={formData.identificacion}
+                onChange={(e) => setFormData({ ...formData, identificacion: e.target.value })}
+                required
+              />
+            </div>
           </div>
 
           {/* Tipo Estamento */}
-          <select
+          <SelectField
+            icon={Building}
             value={formData.tipo_estamento}
-            onChange={(e) =>
-              setFormData({ ...formData, tipo_estamento: e.target.value })
-            }
-            className="w-full rounded-lg border px-4 py-2"
+            onChange={(e) => setFormData({ ...formData, tipo_estamento: e.target.value })}
             required
           >
             {TIPO_ESTAMENTO.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
-          </select>
+          </SelectField>
 
           {/* Teléfono y Dirección */}
-          <div className="flex gap-2">
-            <input
+          <div className="space-y-4">
+            <InputField
+              icon={Phone}
               placeholder="Teléfono"
               value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
-            <input
+            <InputField
+              icon={MapPin}
               placeholder="Dirección"
               value={formData.direccion}
-              onChange={(e) =>
-                setFormData({ ...formData, direccion: e.target.value })
-              }
-              className="w-1/2 rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
             />
           </div>
 
           {/* Rol SOLO EDITAR */}
           {!isCreateMode && (
-            <select
+            <SelectField
+              icon={Shield}
               value={formData.role}
-              onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
-              }
-              className="w-full rounded-lg border px-4 py-2"
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             >
               {ROLES.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
+                <option key={r.value} value={r.value}>{r.label}</option>
               ))}
-            </select>
+            </SelectField>
           )}
 
           {/* Estado SOLO EDITAR */}
           {!isCreateMode && (
             <button
               type="button"
-              onClick={() =>
-                setFormData((p) => ({ ...p, is_active: !p.is_active }))
-              }
-              className="flex justify-between items-center border rounded-lg px-4 py-3 w-full"
+              onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
+              className={`flex justify-between items-center border rounded-xl px-4 py-3 w-full transition-colors
+                ${formData.is_active ? 'border-green-200 bg-green-50 dark:bg-green-900/10' : 'border-red-200 bg-red-50 dark:bg-red-900/10'}
+                dark:border-opacity-30
+              `}
             >
-              <span>
-                {formData.is_active ? "Usuario activo" : "Usuario inactivo"}
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {formData.is_active ? "Usuario Activo" : "Usuario Inactivo"}
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-xs ${
-                  formData.is_active
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
+                className={`px-3 py-1 rounded-full text-xs font-bold uppercase
+                  ${formData.is_active ? "bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-300"}
+                `}
               >
                 {formData.is_active ? "Activo" : "Inactivo"}
               </span>
@@ -284,24 +300,20 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
           )}
 
           {/* Acciones */}
-          <div className="flex justify-end gap-3 mt-4">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-[#332122]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-lg"
+              className="px-5 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 text-white rounded-lg"
               disabled={loading}
+              className="px-6 py-2.5 bg-[#b30c25] hover:bg-[#8f091d] text-white rounded-xl font-medium shadow-lg hover:shadow-red-900/20 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {loading
-                ? "Guardando..."
-                : isCreateMode
-                ? "Crear Atleta"
-                : "Guardar Cambios"}
+              {loading ? "Guardando..." : isCreateMode ? "Crear Atleta" : "Guardar Cambios"}
             </button>
           </div>
         </form>
@@ -311,4 +323,3 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
 };
 
 export default EditUserModal;
-

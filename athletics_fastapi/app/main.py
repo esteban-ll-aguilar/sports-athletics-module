@@ -65,17 +65,21 @@ async def lifespan(app: FastAPI):
     # Tarea de limpieza de sesiones expiradas
     async def cleanup_sessions_periodically():
         """Limpia sesiones expiradas cada hora."""
-        while True:
-            await asyncio.sleep(3600)  # Cada hora
-            try:
-                async with _db.get_session_factory()() as session:
-                    repo = SessionsRepository(session)
-                    count = await repo.cleanup_expired_sessions()
-                    await session.commit()
-                    if count > 0:
-                        logger.info(f"🧹 Cleaned up {count} expired sessions")
-            except Exception as e:
-                logger.error(f"❌ Error cleaning sessions: {e}")
+        try:
+            while True:
+                await asyncio.sleep(3600)  # Cada hora
+                try:
+                    async with _db.get_session_factory()() as session:
+                        repo = SessionsRepository(session)
+                        count = await repo.cleanup_expired_sessions()
+                        await session.commit()
+                        if count > 0:
+                            logger.info(f"🧹 Cleaned up {count} expired sessions")
+                except Exception as e:
+                    logger.error(f"❌ Error cleaning sessions: {e}")
+        except asyncio.CancelledError:
+             logger.info("🛑 Cleanup task cancelled")
+             return
     
     # Iniciar tarea de limpieza
     cleanup_task = asyncio.create_task(cleanup_sessions_periodically())

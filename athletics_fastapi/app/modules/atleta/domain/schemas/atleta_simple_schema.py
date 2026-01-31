@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
+import uuid
 
 class UserSimpleSchema(BaseModel):
     id: int
@@ -12,6 +13,7 @@ class UserSimpleSchema(BaseModel):
 
 class AtletaSimpleResponse(BaseModel):
     id: int
+    external_id: uuid.UUID
     anios_experiencia: Optional[int] = 0
     user_id: int
     user: Optional[UserSimpleSchema] = None

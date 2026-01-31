@@ -10,6 +10,15 @@ class EntrenamientoRepository:
         self.session = session
 
     async def create(self, entrenamiento: Entrenamiento) -> Entrenamiento:
+        """
+        Crea un entrenamiento y carga sus horarios asociados.
+        
+        Args:
+            entrenamiento (Entrenamiento): Objeto a persistir.
+            
+        Returns:
+            Entrenamiento: El objeto persistido con horarios cargados.
+        """
         self.session.add(entrenamiento)
         await self.session.commit()
         # Explicitly reload with eager loading for requirements of the response schema
@@ -31,6 +40,17 @@ class EntrenamientoRepository:
         return result.scalars().first()
 
     async def get_all_by_entrenador(self, entrenador_id: int) -> List[Entrenamiento]:
+        """
+        Recupera todos los entrenamientos de un entrenador.
+        
+        Incluye la carga de horarios y datos del entrenador (user).
+        
+        Args:
+            entrenador_id (int): ID del entrenador.
+            
+        Returns:
+            List[Entrenamiento]: Lista de entrenamientos.
+        """
         from sqlalchemy.orm import selectinload
         result = await self.session.execute(
             select(Entrenamiento)
@@ -44,7 +64,31 @@ class EntrenamientoRepository:
         )
         return result.scalars().all()
 
+    async def get_by_external_id(self, external_id: str) -> Optional[Entrenamiento]:
+        """
+        Obtiene un entrenamiento por su ID externo (UUID).
+        """
+        from sqlalchemy.orm import selectinload
+        result = await self.session.execute(
+            select(Entrenamiento)
+            .where(Entrenamiento.external_id == external_id)
+            .options(
+                selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user),
+                selectinload(Entrenamiento.horarios)
+            )
+        )
+        return result.scalars().first()
+
     async def get_by_id(self, entrenamiento_id: int) -> Optional[Entrenamiento]:
+        """
+        Obtiene un entrenamiento por ID.
+        
+        Args:
+            entrenamiento_id (int): ID del entrenamiento.
+            
+        Returns:
+            Optional[Entrenamiento]: Entrenamiento encontrado.
+        """
         from sqlalchemy.orm import selectinload
         result = await self.session.execute(
             select(Entrenamiento)
@@ -57,6 +101,16 @@ class EntrenamientoRepository:
         return result.scalars().first()
     
     async def get_by_id_and_entrenador(self, entrenamiento_id: int, entrenador_id: int) -> Optional[Entrenamiento]:
+        """
+        Busca un entrenamiento específico validando que pertenezca al entrenador dado.
+        
+        Args:
+            entrenamiento_id (int): ID del entrenamiento.
+            entrenador_id (int): ID del entrenador propietario.
+            
+        Returns:
+            Optional[Entrenamiento]: El entrenamiento si coincide.
+        """
         from sqlalchemy.orm import selectinload
         result = await self.session.execute(
             select(Entrenamiento)
@@ -70,6 +124,15 @@ class EntrenamientoRepository:
         return result.scalars().first()
 
     async def update(self, entrenamiento: Entrenamiento) -> Entrenamiento:
+        """
+        Guarda los cambios de un entrenamiento.
+        
+        Args:
+            entrenamiento (Entrenamiento): Objeto modificado.
+            
+        Returns:
+            Entrenamiento: Objeto actualizado y recargado.
+        """
         self.session.add(entrenamiento)
         await self.session.commit()
         
@@ -84,5 +147,11 @@ class EntrenamientoRepository:
         return result.scalars().first()
 
     async def delete(self, entrenamiento: Entrenamiento) -> None:
+        """
+        Elimina un entrenamiento de la base de datos.
+        
+        Args:
+            entrenamiento (Entrenamiento): Objeto a eliminar.
+        """
         await self.session.delete(entrenamiento)
         await self.session.commit()

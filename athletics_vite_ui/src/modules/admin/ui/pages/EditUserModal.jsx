@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield } from "lucide-react";
+import { Shield, User, Mail, Activity, Lock } from "lucide-react";
 import authService from "../../../auth/services/auth_service";
 
 const ROLES = [
@@ -48,152 +48,150 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-      <div className="w-full max-w-lg bg-[#212121] rounded-2xl shadow-2xl border border-[#332122]">
+  const InputField = ({ icon: Icon, ...props }) => (
+    <div className="relative w-full">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+      <input
+        {...props}
+        className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+        text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
+        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
+      />
+    </div>
+  );
 
-  {/* HEADER */}
-        <div className="px-6 py-5 border-b border-[#332122] flex items-center justify-between bg-[#1a1a1a] rounded-t-2xl">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+
+      <div className="relative z-10 w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#332122] flex flex-col max-h-[90vh]">
+
+        {/* HEADER */}
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-[#332122] flex items-center justify-between rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[rgba(179,12,37,0.15)] text-[#b30c25] flex items-center justify-center">
-              <Shield size={18} />
+            <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-[#b30c25] flex items-center justify-center">
+              <Shield size={20} />
             </div>
-            <h2 className="text-lg font-black text-gray-100">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               Editar Usuario
             </h2>
           </div>
 
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-7 space-y-6">
-          
-          
-          
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
+
           {/* Usuario */}
-          <div>
-            <label className="block text-sm font-bold mb-2 text-gray-300">
-              Usuario
-            </label>
-            <input
+          <div className="space-y-1">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</label>
+            <InputField
+              icon={User}
+              placeholder="Nombre de usuario"
               value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
- className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  " required             />
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              required
+            />
           </div>
 
           {/* Correo */}
-          <div>
-            <label className="block text-sm font-bold mb-2 text-gray-300">
-              Correo
-            </label>
-            <input
+          <div className="space-y-1">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Correo Electrónico</label>
+            <InputField
+              icon={Mail}
               type="email"
+              placeholder="ejemplo@correo.com"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
- className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  " required             />
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
           </div>
 
           {/* Rol */}
-          <div>
-            <label className="block text-sm font-bold mb-2 text-gray-300">
-              Rol
-            </label>
+          <div className="space-y-1">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Rol del Sistema</label>
             <div className="relative">
               <Shield
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <select
                 value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
-                }
- className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  " required            >
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="
+                    w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+                    text-gray-900 dark:text-gray-100 rounded-xl py-2.5 pl-10 pr-10 appearance-none cursor-pointer
+                    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all
+                "
+                required
+              >
                 {ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
                     {r.label}
                   </option>
                 ))}
               </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
+                expand_more
+              </span>
             </div>
           </div>
 
           {/* Estado */}
-          <button
-            type="button"
-            onClick={() =>
-              setFormData((p) => ({ ...p, is_active: !p.is_active }))
-            }
-            className="flex w-full items-center justify-between rounded-xl border px-6 py-5 hover:bg-gray-50 active:scale-[0.98] transition"
-          >
-            <div className="text-left">
-              <p className="block text-xs font-black uppercase tracking-widest text-gray-400">
-                Estado del usuario
-              </p>
-              <p className="text-xs text-gray-500">
-                {formData.is_active ? "Activo" : "Inactivo"}
-              </p>
-            </div>
-            <span
-              className={`text-sm font-bold font-black uppercase tracking-widest${
-                formData.is_active
-                  ? "bg-green-100 text-green-400"
-                  : "bg-red-100 text-red-400"
-              }`}
+          <div className="space-y-1">
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</label>
+            <button
+              type="button"
+              onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
+              className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-colors
+                    ${formData.is_active
+                  ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/30'
+                  : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30'}
+                `}
             >
-              {formData.is_active ? "Activo" : "Inactivo"}
-            </span>
-          </button>
+              <div className="flex items-center gap-3">
+                <Activity size={18} className={formData.is_active ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'} />
+                <div className="text-left">
+                  <p className={`text-sm font-medium ${formData.is_active ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                    {formData.is_active ? "Usuario Activo" : "Usuario Inactivo"}
+                  </p>
+                </div>
+              </div>
 
-          {/* Acciones */}
-          <div className="flex justify-end gap-3 pt-2">
+              <div className={`w-10 h-6 flex items-center rounded-full p-1 duration-300 ease-in-out ${formData.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${formData.is_active ? 'translate-x-4' : ''}`}></div>
+              </div>
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-[#332122] mt-2">
             <button
               type="button"
               onClick={onClose}
-className="
-              flex-1 px-4 py-3 rounded-xl font-semibold
-              border border-[#332122] text-gray-400
-              hover:bg-[#242223] transition
-            "               disabled={loading}
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors"
+              disabled={loading}
             >
               Cancelar
             </button>
             <button
               type="submit"
- className="
-              flex-1 px-4 py-3 rounded-xl font-semibold text-white
-              bg-gradient-to-r from-[#b30c25] to-[#5a0f1d]
-              hover:brightness-110 transition active:scale-95
-            "              disabled={loading}
+              className="
+                        flex-1 px-4 py-2.5 rounded-xl text-white font-medium
+                        bg-linear-to-r from-[#b30c25] to-[#80091b]
+                        hover:shadow-lg hover:shadow-red-900/20 active:scale-95
+                        disabled:opacity-70 disabled:cursor-not-allowed
+                        transition-all duration-300
+                    "
+              disabled={loading}
             >
-              {loading ? "Guardando..." : "Guardar"}
+              {loading ? "Guardando..." : "Guardar Cambios"}
             </button>
           </div>
         </form>

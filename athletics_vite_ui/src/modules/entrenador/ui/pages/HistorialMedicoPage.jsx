@@ -79,12 +79,7 @@ const HistorialMedicoPage = () => {
     a.categoria.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Cálculo de estadísticas
-  const stats = {
-    apto: atletas.filter(a => a.estadoMedico === 'apto').length,
-    lesionado: atletas.filter(a => a.estadoMedico === 'lesionado').length,
-    en_revision: atletas.filter(a => a.estadoMedico === 'en_revision').length,
-  };
+
 
   // Paginación
   const totalPages = Math.ceil(filteredAtletas.length / itemsPerPage);
@@ -107,35 +102,29 @@ const HistorialMedicoPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Directorio de Atletas - Historial Médico</h1>
-          <p className="text-gray-500 mt-1">Administra y consulta los registros médicos de tu plantilla.</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Directorio de Atletas - Historial Médico</h1>
+          <p className="text-gray-500 dark:text-gray-500 mt-1">Administra y consulta los registros médicos de tu plantilla.</p>
         </div>
-        <button
-          onClick={() => toast.info('Función de nuevo atleta en desarrollo')}
-          className="flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors font-medium"
-        >
-          <Plus size={20} />
-          Nuevo Atleta
-        </button>
+
       </div>
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-3 text-gray-500" size={20} />
+        <Search className="absolute left-3 top-3 text-gray-400" size={20} />
         <input
           type="text"
           placeholder="Buscar atleta por nombre o equipo..."
           value={searchTerm}
           onChange={handleSearch}
-          className="w-full pl-10 pr-4 py-2 bg-black border border-red-900 rounded-lg text-gray-400 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-800"
+          className="w-full pl-10 pr-4 py-2 bg-white dark:bg-black border border-gray-200 dark:border-red-900 rounded-lg text-gray-900 dark:text-gray-400 placeholder-gray-500 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-600 dark:focus:ring-red-800"
         />
       </div>
 
       {/* Table */}
       {filteredAtletas.length === 0 ? (
-        <div className="bg-black border border-red-900 rounded-lg shadow p-12 text-center">
-          <AlertCircle className="mx-auto text-gray-600 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-white mb-2">No hay atletas</h3>
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-red-900 rounded-lg shadow p-12 text-center">
+          <AlertCircle className="mx-auto text-gray-400 dark:text-gray-600 mb-4" size={48} />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No hay atletas</h3>
           <p className="text-gray-500">
             {searchTerm
               ? 'No se encontraron resultados para tu búsqueda'
@@ -143,46 +132,39 @@ const HistorialMedicoPage = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-black border border-red-900 rounded-lg shadow overflow-hidden">
+        <div className="bg-white dark:bg-black border border-gray-200 dark:border-red-900 rounded-lg shadow overflow-hidden">
           <table className="w-full">
-            <thead className="bg-black border-b border-red-900/30">
+            <thead className="bg-gray-50 dark:bg-black border-b border-gray-200 dark:border-red-900/30">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">ATLETA</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">CATEGORÍA / EQUIPO</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white">ESTADO MÉDICO</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-white">ACCIONES</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">ATLETA</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white">CATEGORÍA / EQUIPO</th>
+
+                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">ACCIONES</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-red-900/20">
+            <tbody className="divide-y divide-gray-200 dark:divide-red-900/20">
               {paginatedAtletas.map((atleta) => {
-                const estado = getEstadoColor(atleta.estadoMedico);
-                const IconEstado = estado.icon;
                 return (
-                  <tr key={atleta.id} className="hover:bg-black/50 transition-colors">
+                  <tr key={atleta.id} className="hover:bg-gray-50 dark:hover:bg-black/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img
                           src={atleta.foto}
                           alt={atleta.nombre}
-                          className="w-10 h-10 rounded-full"
+                          className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800"
                         />
                         <div>
-                          <p className="text-sm font-medium text-white">{atleta.nombre}</p>
-                          <p className="text-xs text-gray-600">ID: PATH-1281</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{atleta.nombre}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-600">ID: PATH-1281</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">{atleta.categoria}</td>
-                    <td className="px-6 py-4">
-                      <div className={`flex items-center gap-2 w-fit px-3 py-1 rounded-full ${estado.bg}`}>
-                        <IconEstado size={16} className={estado.text} />
-                        <span className={`text-sm font-medium ${estado.text}`}>{estado.label}</span>
-                      </div>
-                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{atleta.categoria}</td>
+
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleViewHistorial(atleta.id)}
-                        className="px-4 py-2 bg-red-800 text-white text-sm font-medium rounded hover:bg-red-900 transition-colors inline-flex items-center gap-2"
+                        className="px-4 py-2 bg-red-600 dark:bg-red-800 text-white text-sm font-medium rounded hover:bg-red-700 dark:hover:bg-red-900 transition-colors inline-flex items-center gap-2"
                       >
                         VER HISTORIAL
                       </button>
@@ -195,7 +177,7 @@ const HistorialMedicoPage = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="bg-black px-6 py-4 flex items-center justify-between border-t border-red-900/30">
+            <div className="bg-white dark:bg-black px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-red-900/30">
               <p className="text-sm text-gray-500">
                 Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredAtletas.length)} de {filteredAtletas.length} atletas
               </p>
@@ -203,7 +185,7 @@ const HistorialMedicoPage = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded bg-black border border-red-900 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-900/20 hover:text-white transition-colors"
+                  className="px-3 py-1 rounded bg-white dark:bg-black border border-gray-300 dark:border-red-900 text-gray-500 dark:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-red-900/20 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   &lt;
                 </button>
@@ -212,8 +194,8 @@ const HistorialMedicoPage = () => {
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 rounded font-medium transition-colors ${currentPage === page
-                      ? 'bg-red-800 text-white'
-                      : 'border border-red-900 text-gray-400 hover:border-red-800 hover:text-white'
+                      ? 'bg-red-600 dark:bg-red-800 text-white'
+                      : 'border border-gray-300 dark:border-red-900 text-gray-500 dark:text-gray-400 hover:border-red-600 dark:hover:border-red-800 hover:text-red-600 dark:hover:text-white'
                       }`}
                   >
                     {page}
@@ -222,7 +204,7 @@ const HistorialMedicoPage = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded bg-black border border-red-900 text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-900/20 hover:text-white transition-colors"
+                  className="px-3 py-1 rounded bg-white dark:bg-black border border-gray-300 dark:border-red-900 text-gray-500 dark:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-red-900/20 hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   &gt;
                 </button>
@@ -232,44 +214,21 @@ const HistorialMedicoPage = () => {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-black border border-red-900 rounded-lg p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <Check className="text-green-500" size={32} />
-          </div>
-          <p className="text-2xl font-bold text-white">{stats.apto}</p>
-          <p className="text-gray-500 text-sm mt-1">Atletas Aptos</p>
-        </div>
-        <div className="bg-black border border-red-900 rounded-lg p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <AlertTriangle className="text-red-500" size={32} />
-          </div>
-          <p className="text-2xl font-bold text-white">{stats.lesionado}</p>
-          <p className="text-gray-500 text-sm mt-1">En Rehabilitación</p>
-        </div>
-        <div className="bg-black border border-red-900 rounded-lg p-6 text-center">
-          <div className="flex justify-center mb-3">
-            <Clock className="text-yellow-500" size={32} />
-          </div>
-          <p className="text-2xl font-bold text-white">{stats.en_revision}</p>
-          <p className="text-gray-500 text-sm mt-1">Revisiones Pendientes</p>
-        </div>
-      </div>
+
       {/* Modal Historial */}
       {showModal && selectedHistorial && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-          <div className="bg-black border border-red-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-red-900/30 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <div className="bg-red-800 p-2 rounded-lg">
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-black border border-gray-200 dark:border-red-900 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 dark:border-red-900/30 flex justify-between items-center bg-gray-50 dark:bg-black">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="bg-red-600 dark:bg-red-800 p-2 rounded-lg">
                   <Check size={20} className="text-white" />
                 </div>
                 Historial Médico
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
               >
                 <Plus size={24} className="rotate-45" />
               </button>
@@ -277,40 +236,40 @@ const HistorialMedicoPage = () => {
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
-                  <p className="text-gray-400 text-sm mb-1">Peso</p>
-                  <p className="text-xl font-bold text-white">{selectedHistorial.peso} kg</p>
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-red-900/20">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Peso</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{selectedHistorial.peso} kg</p>
                 </div>
-                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
-                  <p className="text-gray-400 text-sm mb-1">Talla</p>
-                  <p className="text-xl font-bold text-white">{selectedHistorial.talla} m</p>
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-red-900/20">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Talla</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{selectedHistorial.talla} m</p>
                 </div>
-                <div className="bg-gray-900/50 p-4 rounded-lg border border-red-900/20">
-                  <p className="text-gray-400 text-sm mb-1">IMC</p>
-                  <p className="text-xl font-bold text-white">{selectedHistorial.imc?.toFixed(2)}</p>
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-red-900/20">
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">IMC</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">{selectedHistorial.imc?.toFixed(2)}</p>
                 </div>
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-white mb-3">Información Médica</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Información Médica</h3>
                 <div className="space-y-4">
-                  <div className="bg-gray-900/30 p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm mb-1">Alergias</p>
-                    <p className="text-white">
+                  <div className="bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-100 dark:border-none">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Alergias</p>
+                    <p className="text-gray-900 dark:text-white">
                       {selectedHistorial.alergias || "Ninguna reportada"}
                     </p>
                   </div>
 
-                  <div className="bg-gray-900/30 p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm mb-1">Enfermedades Hereditarias</p>
-                    <p className="text-white">
+                  <div className="bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-100 dark:border-none">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Enfermedades Hereditarias</p>
+                    <p className="text-gray-900 dark:text-white">
                       {selectedHistorial.enfermedades_hereditarias || "Ninguna reportada"}
                     </p>
                   </div>
 
-                  <div className="bg-gray-900/30 p-4 rounded-lg">
-                    <p className="text-gray-400 text-sm mb-1">Otras Enfermedades</p>
-                    <p className="text-white">
+                  <div className="bg-gray-50 dark:bg-gray-900/30 p-4 rounded-lg border border-gray-100 dark:border-none">
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">Otras Enfermedades</p>
+                    <p className="text-gray-900 dark:text-white">
                       {selectedHistorial.enfermedades || "Ninguna reportada"}
                     </p>
                   </div>
@@ -318,10 +277,10 @@ const HistorialMedicoPage = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-red-900/30 flex justify-end">
+            <div className="p-6 border-t border-gray-200 dark:border-red-900/30 flex justify-end bg-gray-50 dark:bg-black rounded-b-lg">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-white rounded hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
               >
                 Cerrar
               </button>
