@@ -103,24 +103,6 @@ const TipoDisciplinaPage = () => {
     <div className="min-h-screen bg-[#121212] font-['Lexend'] text-gray-200 px-6 py-8">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
-        {/* Breadcrumb */}
-        <Link
-          to="/dashboard/pruebas"
-          className="
-  group inline-flex items-center gap-2 px-4 py-2 mb-8
-  bg-[#242223] border border-[#332122]
-  rounded-xl text-gray-300 font-semibold
-  hover:border-[#b30c25] hover:text-[#b30c25]
-  transition-all duration-200 hover:shadow-lg
-"
-        >
-          <span className="material-symbols-outlined text-lg transition-transform duration-200 group-hover:-translate-x-1">
-            arrow_back
-          </span>
-          Volver a Gestión de Pruebas
-        </Link>
-
-
         {/* Cabecera */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-2">

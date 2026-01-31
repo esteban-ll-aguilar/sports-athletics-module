@@ -109,18 +109,6 @@ const BaremosPage = () => {
   return (
     <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-
-        {/* Breadcrumb Navigation */}
-        <Link
-          to="/dashboard/pruebas"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
-        >
-          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-            arrow_back
-          </span>
-          Volver a Gestión de Pruebas
-        </Link>
-
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-1">
