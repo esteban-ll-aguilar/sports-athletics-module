@@ -23,8 +23,14 @@ async def crear_competencia(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Crear una nueva competencia."""
+    """Crear una nueva competencia. Administradores y Entrenadores."""
     try:
+        # Validar permisos
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+             return ResponseHandler.forbidden_response(
+                 message="No tienes permisos para crear competencias"
+             )
+
         nueva_competencia = await service.create(data, current_user.id)
         return ResponseHandler.success_response(
             summary="Competencia creado con exito",
@@ -46,9 +52,20 @@ async def listar_competencias(
     service: CompetenciaService = Depends(get_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todas las competencias del entrenador."""
+    """Listar todas las competencias. Administradores ven todas, Entrenadores solo las suyas."""
     try:
-        competencias = await service.get_all(incluir_inactivos, current_user.id)
+        entrenador_id = current_user.id
+        
+        # Obtener rol como string de forma segura
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        # Si es admin o entrenador, ve todo (entrenador_id=None)
+        # Entrenadores también deben ver todas las competencias para participar.
+        if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
+            entrenador_id = None
+            
+        competencias = await service.get_all(incluir_inactivos, entrenador_id)
         if not competencias:
              return ResponseHandler.success_response(
                 summary="No hay competencias registradas",
@@ -110,13 +127,12 @@ async def actualizar_competencia(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Actualizar una competencia (solo rol ENTRENADOR)."""
+    """Actualizar una competencia (Admin o Entrenador propietario)."""
     try:
-        # Validación de rol manual ya que el servicio no lo hace contextualmente (aunque podría)
-        # O dejamos que el servicio maneje lógica. Aquí seguiremos la lógica previa.
-        if current_user.profile.role != RoleEnum.ENTRENADOR:
+        # Validación de rol
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
              return ResponseHandler.forbidden_response(
-                 message="Solo los entrenadores pueden modificar competencias"
+                 message="Solo administradores y entrenadores pueden modificar competencias"
              )
 
         competencia_actualizada = await service.update(external_id, data)
@@ -149,11 +165,11 @@ async def eliminar_competencia(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Eliminar una competencia (solo rol ENTRENADOR)."""
+    """Eliminar una competencia (Admin o Entrenador)."""
     try:
-        if current_user.profile.role != RoleEnum.ENTRENADOR:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
             return ResponseHandler.forbidden_response(
-                message="Solo los entrenadores pueden eliminar competencias"
+                message="Solo administradores y entrenadores pueden eliminar competencias"
             )
             
         await service.delete(external_id)

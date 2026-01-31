@@ -158,24 +158,24 @@ const ConfirmacionEntrenamientoPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#111] flex items-center justify-center font-['Inter']">
+            <div className="min-h-screen bg-gray-50 dark:bg-[#111] flex items-center justify-center font-['Inter'] transition-colors duration-300">
                 <div className="flex flex-col items-center gap-4">
                     <span className="material-symbols-outlined text-4xl text-red-600 animate-spin">refresh</span>
-                    <p className="text-gray-400">Cargando tu próximo entrenamiento...</p>
+                    <p className="text-gray-500 dark:text-gray-400">Cargando tu próximo entrenamiento...</p>
                 </div>
             </div>
         );
     }
 
-    if (!currentRegistro) {
+    if (!currentRegistro && !loading) {
         return (
-            <div className="min-h-screen bg-[#111] text-white p-6 font-['Inter'] flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-[#111] text-gray-900 dark:text-white p-6 font-['Inter'] flex items-center justify-center transition-colors duration-300">
                 <div className="text-center space-y-4 max-w-md">
-                    <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span className="material-symbols-outlined text-4xl text-gray-500">calendar_today</span>
+                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span className="material-symbols-outlined text-4xl text-gray-400 dark:text-gray-500">calendar_today</span>
                     </div>
                     <h2 className="text-2xl font-bold">Sin entrenamientos programados</h2>
-                    <p className="text-gray-400">No tienes sesiones próximas asignadas. Consulta con tu entrenador.</p>
+                    <p className="text-gray-500 dark:text-gray-400">No tienes sesiones próximas asignadas. Consulta con tu entrenador.</p>
                     <button onClick={() => navigate('/dashboard')} className="text-red-500 font-semibold hover:text-red-400 mt-4 inline-block">
                         Volver al Dashboard
                     </button>
@@ -185,10 +185,12 @@ const ConfirmacionEntrenamientoPage = () => {
     }
 
     // Unpack Data for Current View
-    const entrenamiento = currentRegistro.horario?.entrenamiento || {};
-    const horario = currentRegistro.horario || {};
+    // Need safeguards in case data is partial during transitions
+    const validRegistro = currentRegistro || {};
+    const entrenamiento = validRegistro.horario?.entrenamiento || {};
+    const horario = validRegistro.horario || {};
     const entrenador = entrenamiento.entrenador?.user || {};
-    const asistencias = currentRegistro.asistencias || [];
+    const asistencias = validRegistro.asistencias || [];
 
     // --- Statistics & Status (Per Enrollment) ---
     const trainingDateStr = entrenamiento.fecha_entrenamiento?.toString();
@@ -204,8 +206,7 @@ const ConfirmacionEntrenamientoPage = () => {
         ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/${entrenador.profile_image}`
         : `https://ui-avatars.com/api/?name=${coachName}&background=random`;
 
-    // ... Date Formats (omitted for brevity in replacement, focusing on changes) ...
-    // Note: Re-injecting Date Formats to ensure context validity if replacing large chunk.
+    // Date Format
     let formattedDateCap = "Fecha no disponible";
     if (trainingDateStr) {
         const [year, month, day] = trainingDateStr.split('-');
@@ -218,9 +219,6 @@ const ConfirmacionEntrenamientoPage = () => {
         if (!timeStr) return "-";
         return timeStr.substring(0, 5);
     };
-
-    const hasNext = registro && recordIndex < registro.length - 1;
-    const hasPrev = registro && recordIndex > 0;
 
     const handleRechazar = async () => {
         if (!currentRegistro) return;
@@ -251,10 +249,7 @@ const ConfirmacionEntrenamientoPage = () => {
     };
 
 
-
-    // ... existing helpers ...
-
-    // Toggle View
+    // Helpers
     const selectSession = (index) => {
         setRecorIndex(index);
         setViewMode('detail');
@@ -266,13 +261,13 @@ const ConfirmacionEntrenamientoPage = () => {
 
     // Render List View
     const renderListView = () => {
-        if (!registro || registro.length === 0) return null; // Should be handled by empty state check above if primary, but safe guard
+        if (!registro || registro.length === 0) return null;
 
         return (
             <div className="max-w-7xl mx-auto px-6 py-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">Próximos Entrenamientos</h1>
-                    <p className="text-gray-400">Selecciona una sesión para ver detalles o confirmar asistencia.</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Próximos Entrenamientos</h1>
+                    <p className="text-gray-500 dark:text-gray-400">Selecciona una sesión para ver detalles o confirmar asistencia.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -296,44 +291,44 @@ const ConfirmacionEntrenamientoPage = () => {
                             <div
                                 key={reg.id}
                                 onClick={() => selectSession(index)}
-                                className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 hover:border-gray-600 hover:bg-[#222] transition-all cursor-pointer group relative overflow-hidden"
+                                className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-gray-800 hover:border-red-200 dark:hover:border-gray-600 shadow-sm hover:shadow-lg dark:shadow-none transition-all cursor-pointer group relative overflow-hidden"
                             >
                                 {/* Status Stripe */}
-                                <div className={`absolute top-0 left-0 w-1 h-full ${confirmed ? 'bg-green-500' : rejected ? 'bg-red-500' : 'bg-gray-700'}`}></div>
+                                <div className={`absolute top-0 left-0 w-1 h-full ${confirmed ? 'bg-green-500' : rejected ? 'bg-red-500' : 'bg-gray-300 dark:bg-gray-700'}`}></div>
 
                                 <div className="pl-3">
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex flex-col">
-                                            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{dayName}</span>
-                                            <span className="text-xl font-bold text-white capitalize">{dateStr}</span>
+                                            <span className="text-gray-400 dark:text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{dayName}</span>
+                                            <span className="text-xl font-bold text-gray-900 dark:text-white capitalize">{dateStr}</span>
                                         </div>
                                         {confirmed ? (
                                             <span className="material-symbols-outlined text-green-500">check_circle</span>
                                         ) : rejected ? (
                                             <span className="material-symbols-outlined text-red-500">cancel</span>
                                         ) : (
-                                            <span className="material-symbols-outlined text-gray-600 group-hover:text-white transition-colors">chevron_right</span>
+                                            <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 group-hover:text-red-500 dark:group-hover:text-white transition-colors">chevron_right</span>
                                         )}
                                     </div>
 
-                                    <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">{ent.tipo_entrenamiento || "Entrenamiento"}</h3>
+                                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2 line-clamp-1">{ent.tipo_entrenamiento || "Entrenamiento"}</h3>
 
-                                    <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
+                                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm mb-4">
                                         <span className="material-symbols-outlined text-base">schedule</span>
                                         {formatTime(hor.hora_inicio)} - {formatTime(hor.hora_fin)}
                                     </div>
 
-                                    <div className="flex items-center gap-3 pt-4 border-t border-gray-800">
-                                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                        <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                                             {coach.profile_image ? (
                                                 <img src={`${import.meta.env.VITE_API_URL}/${coach.profile_image}`} className="w-full h-full object-cover" />
                                             ) : (
-                                                <span className="text-xs font-bold">{coach.first_name?.charAt(0)}</span>
+                                                <span className="text-xs font-bold text-gray-600 dark:text-gray-300">{coach.first_name?.charAt(0)}</span>
                                             )}
                                         </div>
                                         <div className="text-sm">
-                                            <p className="text-gray-300 font-medium">{coach.first_name || "Entrenador"}</p>
-                                            <p className="text-gray-500 text-xs">Coach</p>
+                                            <p className="text-gray-700 dark:text-gray-300 font-medium">{coach.first_name || "Entrenador"}</p>
+                                            <p className="text-gray-400 dark:text-gray-500 text-xs">Coach</p>
                                         </div>
                                     </div>
                                 </div>
@@ -346,15 +341,15 @@ const ConfirmacionEntrenamientoPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#111] text-white font-['Inter'] pb-12">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#111] text-gray-900 dark:text-white font-['Inter'] pb-12 transition-colors duration-300">
             {/* Header / Breadcrumb */}
-            <div className="border-b border-gray-800 bg-[#111] sticky top-0 z-20">
+            <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#111] sticky top-0 z-20 transition-colors">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <span className="hover:text-white cursor-pointer" onClick={() => navigate('/dashboard')}>Inicio</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span className="hover:text-red-600 dark:hover:text-white cursor-pointer" onClick={() => navigate('/dashboard')}>Inicio</span>
                         <span className="material-symbols-outlined text-sm">chevron_right</span>
                         <span
-                            className={`cursor-pointer ${viewMode === 'list' ? 'text-white font-medium' : 'hover:text-white'}`}
+                            className={`cursor-pointer ${viewMode === 'list' ? 'text-gray-900 dark:text-white font-medium' : 'hover:text-red-600 dark:hover:text-white'}`}
                             onClick={backToList}
                         >
                             Mis Horarios
@@ -362,7 +357,7 @@ const ConfirmacionEntrenamientoPage = () => {
                         {viewMode === 'detail' && (
                             <>
                                 <span className="material-symbols-outlined text-sm">chevron_right</span>
-                                <span className="text-white font-medium">Detalle</span>
+                                <span className="text-gray-900 dark:text-white font-medium">Detalle</span>
                             </>
                         )}
                     </div>
@@ -373,18 +368,18 @@ const ConfirmacionEntrenamientoPage = () => {
                 <div className="max-w-7xl mx-auto px-6 py-8 animate-fade-in">
                     <button
                         onClick={backToList}
-                        className="mb-6 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                        className="mb-6 flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
                         Volver a la lista
                     </button>
 
-                    {/* Copied Detail View Content */}
+                    {/* Detail View Content */}
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                         <div>
-                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-3 ${isConfirmed ? 'bg-green-500/10 border-green-500/20 text-green-500' :
-                                isRejected ? 'bg-gray-700/50 border-gray-600 text-gray-400' :
-                                    'bg-red-500/10 border-red-500/20 text-red-500'
+                            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold uppercase tracking-wider mb-3 ${isConfirmed ? 'bg-green-50 border-green-200 text-green-600 dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-500' :
+                                isRejected ? 'bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-700/50 dark:border-gray-600 dark:text-gray-400' :
+                                    'bg-red-50 border-red-200 text-red-600 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-500'
                                 }`}>
                                 <span className={`w-2 h-2 rounded-full ${isConfirmed ? 'bg-green-500' :
                                     isRejected ? 'bg-gray-500' :
@@ -392,15 +387,15 @@ const ConfirmacionEntrenamientoPage = () => {
                                     }`}></span>
                                 {isConfirmed ? 'Listo para entrenar' : isRejected ? 'No asistirás' : 'Acción Requerida'}
                             </div>
-                            <h1 className="text-4xl font-extrabold tracking-tight mb-2">Tu Horario</h1>
-                            <p className="text-gray-400">Detalles de tu sesión programada.</p>
+                            <h1 className="text-4xl font-extrabold tracking-tight mb-2 text-gray-900 dark:text-white">Tu Horario</h1>
+                            <p className="text-gray-500 dark:text-gray-400">Detalles de tu sesión programada.</p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                         {/* Main Card */}
                         <div className="xl:col-span-2">
-                            <div className="bg-[#1a1a1a] rounded-4xl overflow-hidden border border-gray-800 shadow-2xl relative group transition-all duration-300">
+                            <div className="bg-white dark:bg-[#1a1a1a] rounded-4xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-xl dark:shadow-2xl relative group transition-all duration-300">
 
                                 {/* Hero Section */}
                                 <div className="relative h-[500px] lg:h-[400px] flex flex-col lg:flex-row">
@@ -411,7 +406,7 @@ const ConfirmacionEntrenamientoPage = () => {
                                                 {horario.name || "Entrenamiento"}
                                             </span>
                                         </div>
-                                        <div className="absolute inset-0 bg-gray-900/20 z-10"></div>
+                                        <div className="absolute inset-0 bg-gray-900/10 dark:bg-gray-900/20 z-10"></div>
                                         <img
                                             src={gymHero}
                                             alt="Gym"
@@ -420,60 +415,60 @@ const ConfirmacionEntrenamientoPage = () => {
                                     </div>
 
                                     {/* Info Half */}
-                                    <div className="lg:w-7/12 p-8 lg:p-10 flex flex-col justify-between relative bg-linear-to-b from-[#1a1a1a] to-[#151515]">
+                                    <div className="lg:w-7/12 p-8 lg:p-10 flex flex-col justify-between relative bg-linear-to-b from-white to-gray-50 dark:from-[#1a1a1a] dark:to-[#151515] transition-colors">
 
                                         <div>
                                             <div className="flex justify-between items-start mb-6">
                                                 <div>
-                                                    <p className="text-red-500 text-xs font-bold uppercase tracking-[0.2em] mb-2">Tipo de Entrenamiento</p>
-                                                    <h2 className="text-3xl lg:text-3xl font-bold leading-tight text-white mb-2">
+                                                    <p className="text-red-600 dark:text-red-500 text-xs font-bold uppercase tracking-[0.2em] mb-2">Tipo de Entrenamiento</p>
+                                                    <h2 className="text-3xl lg:text-3xl font-bold leading-tight text-gray-900 dark:text-white mb-2">
                                                         {entrenamiento.tipo_entrenamiento || "Sesión General"}
                                                     </h2>
                                                     {entrenamiento.descripcion && (
-                                                        <p className="text-gray-400 text-sm italic line-clamp-2">{entrenamiento.descripcion}</p>
+                                                        <p className="text-gray-500 dark:text-gray-400 text-sm italic line-clamp-2">{entrenamiento.descripcion}</p>
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col items-center">
-                                                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-700 to-gray-600 flex items-center justify-center p-[2px] mb-1 overflow-hidden">
+                                                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center p-[2px] mb-1 overflow-hidden shadow-sm">
                                                         <img src={coachImage} className="w-full h-full object-cover rounded-full" alt="Coach" />
                                                     </div>
-                                                    <span className="text-[10px] text-gray-400 font-medium text-center leading-tight max-w-[80px]">{coachName}</span>
+                                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium text-center leading-tight max-w-[80px]">{coachName}</span>
                                                 </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
                                                 <div>
-                                                    <div className="flex items-center gap-2 text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
+                                                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
                                                         <span className="material-symbols-outlined text-lg">calendar_month</span>
                                                         Fecha
                                                     </div>
-                                                    <p className="text-white font-medium capitalize">{formattedDateCap}</p>
+                                                    <p className="text-gray-900 dark:text-white font-medium capitalize">{formattedDateCap}</p>
                                                 </div>
 
                                                 <div>
-                                                    <div className="flex items-center gap-2 text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
+                                                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
                                                         <span className="material-symbols-outlined text-lg">schedule</span>
                                                         Horario
                                                     </div>
-                                                    <p className="text-white font-medium">
+                                                    <p className="text-gray-900 dark:text-white font-medium">
                                                         {formatTime(horario.hora_inicio)} - {formatTime(horario.hora_fin)}
                                                     </p>
                                                 </div>
 
                                                 <div className="col-span-2">
-                                                    <div className="flex items-center gap-2 text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
+                                                    <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 mb-1 text-xs font-bold uppercase tracking-wide">
                                                         <span className="material-symbols-outlined text-lg">location_on</span>
                                                         Ubicación
                                                     </div>
-                                                    <p className="text-white font-medium">Centro de Alto Rendimiento, Sector B</p>
+                                                    <p className="text-gray-900 dark:text-white font-medium">Centro de Alto Rendimiento, Sector B</p>
                                                 </div>
                                             </div>
 
                                             {/* Note Section */}
-                                            <div className="bg-[#252525] rounded-xl p-4 border border-gray-800 relative">
-                                                <span className="material-symbols-outlined absolute top-3 right-3 text-gray-700 text-xl">format_quote</span>
-                                                <p className="text-[#888] text-xs font-bold uppercase mb-1">Nota del día</p>
-                                                <p className="text-gray-300 text-sm leading-relaxed italic">
+                                            <div className="bg-white dark:bg-[#252525] rounded-xl p-4 border border-gray-100 dark:border-gray-800 relative shadow-sm dark:shadow-none">
+                                                <span className="material-symbols-outlined absolute top-3 right-3 text-gray-200 dark:text-gray-700 text-xl">format_quote</span>
+                                                <p className="text-gray-400 dark:text-[#888] text-xs font-bold uppercase mb-1">Nota del día</p>
+                                                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed italic">
                                                     {entrenamiento.descripcion
                                                         ? `"${entrenamiento.descripcion}"`
                                                         : "\"Recodar llegar 15 minutos antes para el calentamiento grupal.\""}
@@ -484,23 +479,23 @@ const ConfirmacionEntrenamientoPage = () => {
                                 </div>
 
                                 {/* Actions Footer */}
-                                <div className="bg-[#151515] p-6 lg:px-10 lg:py-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-6">
-                                    <p className="text-gray-300 font-medium text-sm">¿ASISTIRÁS A ESTA SESIÓN?</p>
+                                <div className="bg-gray-50 dark:bg-[#151515] p-6 lg:px-10 lg:py-8 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-6 transition-colors">
+                                    <p className="text-gray-500 dark:text-gray-300 font-medium text-sm">¿ASISTIRÁS A ESTA SESIÓN?</p>
                                     <div className="flex gap-4 w-full sm:w-auto">
                                         {isConfirmed ? (
-                                            <div className="flex-1 sm:flex-none border border-green-500/30 bg-green-500/10 text-green-500 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-default">
+                                            <div className="flex-1 sm:flex-none border border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-500 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-default">
                                                 <span className="material-symbols-outlined">check_circle</span>
                                                 Asistencia Confirmada
                                             </div>
                                         ) : isRejected ? (
                                             <>
-                                                <div className="flex-1 sm:flex-none border border-gray-700 bg-gray-800 text-gray-400 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-default">
+                                                <div className="flex-1 sm:flex-none border border-gray-300 dark:border-gray-700 bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 cursor-default">
                                                     <span className="material-symbols-outlined">cancel</span>
                                                     No Asistirás
                                                 </div>
                                                 <button
                                                     onClick={handleConfirmar}
-                                                    className="flex-1 sm:flex-none px-6 py-3 text-sm text-gray-500 hover:text-white underline hover:no-underline"
+                                                    className="flex-1 sm:flex-none px-6 py-3 text-sm text-gray-500 hover:text-red-500 dark:hover:text-white underline hover:no-underline"
                                                 >
                                                     Cambiar a "SÍ Asistiré"
                                                 </button>
@@ -509,7 +504,7 @@ const ConfirmacionEntrenamientoPage = () => {
                                             <>
                                                 <button
                                                     onClick={handleRechazar}
-                                                    className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-bold text-gray-400 hover:text-white hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm border border-transparent hover:border-gray-700"
+                                                    className="flex-1 sm:flex-none px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 text-sm border border-transparent hover:border-gray-300 dark:hover:border-gray-700"
                                                 >
                                                     <span className="material-symbols-outlined text-lg">cancel</span>
                                                     No puedo asistir
@@ -533,35 +528,35 @@ const ConfirmacionEntrenamientoPage = () => {
                             </div>
                         </div>
 
-                        {/* Sidebar Widgets - Keeping static for now as requested unless meaningful dynamic data is available */}
+                        {/* Sidebar Widgets */}
                         <div className="space-y-6">
                             {/* Asistencia del Equipo */}
-                            <div className="bg-[#1a1a1a] rounded-3xl p-6 border border-gray-800">
+                            <div className="bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-colors">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
                                         <span className="material-symbols-outlined text-green-500">groups</span>
                                     </div>
-                                    <h3 className="font-bold text-lg">Asistencia del Equipo</h3>
+                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">Asistencia del Equipo</h3>
                                 </div>
-                                <p className="text-gray-400 text-sm mb-4">Compañeros listos para entrenar.</p>
+                                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Compañeros listos para entrenar.</p>
 
                                 <div className="flex -space-x-3 overflow-hidden py-2 pl-1 h-14 items-center">
                                     {teamStats.loading ? (
-                                        <span className="text-xs text-gray-500 animate-pulse">Cargando...</span>
+                                        <span className="text-xs text-gray-400 animate-pulse">Cargando...</span>
                                     ) : (
                                         <>
                                             {teamStats.avatars.map((initial, i) => (
-                                                <div key={i} className="w-10 h-10 rounded-full border-2 border-[#1a1a1a] bg-gray-700 flex items-center justify-center text-xs font-bold text-white">
+                                                <div key={i} className="w-10 h-10 rounded-full border-2 border-white dark:border-[#1a1a1a] bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-700 dark:text-white">
                                                     {initial}
                                                 </div>
                                             ))}
                                             {teamStats.count > 0 && (
-                                                <div className="w-10 h-10 rounded-full border-2 border-[#1a1a1a] bg-green-600 flex items-center justify-center text-xs font-bold text-white relative z-10">
+                                                <div className="w-10 h-10 rounded-full border-2 border-white dark:border-[#1a1a1a] bg-green-600 flex items-center justify-center text-xs font-bold text-white relative z-10">
                                                     +{teamStats.count}
                                                 </div>
                                             )}
                                             {teamStats.count === 0 && teamStats.avatars.length === 0 && (
-                                                <span className="text-xs text-gray-500 italic">Se el primero en confirmar</span>
+                                                <span className="text-xs text-gray-400 italic">Se el primero en confirmar</span>
                                             )}
                                         </>
                                     )}
@@ -569,16 +564,16 @@ const ConfirmacionEntrenamientoPage = () => {
                             </div>
 
                             {/* Nutrición */}
-                            <div className="bg-[#1a1a1a] rounded-3xl p-6 border border-gray-800">
+                            <div className="bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-colors">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
                                         <span className="material-symbols-outlined text-red-500">restaurant</span>
                                     </div>
-                                    <h3 className="font-bold text-lg">Nutrición Previa</h3>
+                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">Nutrición Previa</h3>
                                 </div>
                                 <div className="space-y-3">
-                                    <p className="text-gray-400 text-sm leading-relaxed">
-                                        <strong className="text-white block mb-1">Recomendado:</strong>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                                        <strong className="text-gray-900 dark:text-white block mb-1">Recomendado:</strong>
                                         40g de carbohidratos complejos 90 min antes.
                                     </p>
                                     <button className="text-red-500 text-sm font-bold hover:underline">Ver Plan de Comidas</button>
@@ -586,18 +581,18 @@ const ConfirmacionEntrenamientoPage = () => {
                             </div>
 
                             {/* Clima */}
-                            <div className="bg-[#1a1a1a] rounded-3xl p-6 border border-gray-800">
+                            <div className="bg-white dark:bg-[#1a1a1a] rounded-3xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm dark:shadow-none transition-colors">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
                                         <span className="material-symbols-outlined text-blue-500">thermostat</span>
                                     </div>
-                                    <h3 className="font-bold text-lg">Clima y Entorno</h3>
+                                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">Clima y Entorno</h3>
                                 </div>
-                                <div className="space-y-2 text-sm text-gray-400">
+                                <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
                                     <p>Sesión interior.</p>
-                                    <div className="flex justify-between items-center py-2 border-t border-gray-800">
+                                    <div className="flex justify-between items-center py-2 border-t border-gray-100 dark:border-gray-800">
                                         <span>Temperatura</span>
-                                        <span className="text-white font-mono">20°C</span>
+                                        <span className="text-gray-900 dark:text-white font-mono">20°C</span>
                                     </div>
                                 </div>
                             </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import RepresentanteService from '../../services/RepresentanteService';
+import { User, Mail, Lock, Phone, MapPin, Hash, Eye, EyeOff, Save, X, ArrowLeft, UserPlus, CreditCard } from 'lucide-react';
 
 const RegisterAthletePage = () => {
     const navigate = useNavigate();
@@ -15,8 +16,7 @@ const RegisterAthletePage = () => {
         last_name: '',
         tipo_identificacion: 'CEDULA',
         identificacion: '',
-        tipo_estamento: 'EXTERNOS', // Default to EXTERNOS or let them choose?
-        // Role is handled by backend (forced to ATLETA)
+        tipo_estamento: 'EXTERNOS',
         phone: '',
         direccion: ''
     });
@@ -31,14 +31,13 @@ const RegisterAthletePage = () => {
         });
     };
 
-    // Valida cédula ecuatoriana (igual que backend)
     const validarCedulaEcuador = (cedula) => {
         if (!/^[0-9]{10}$/.test(cedula)) return false;
         const provincia = parseInt(cedula.slice(0, 2), 10);
         if (provincia < 1 || provincia > 24) return false;
         const tercerDigito = parseInt(cedula[2], 10);
         if (tercerDigito >= 6) return false;
-        const coef = [2,1,2,1,2,1,2,1,2];
+        const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
         let suma = 0;
         for (let i = 0; i < 9; i++) {
             let val = parseInt(cedula[i], 10) * coef[i];
@@ -75,10 +74,7 @@ const RegisterAthletePage = () => {
         setLoading(true);
         const toastId = toast.loading("Registrando atleta...");
         try {
-            // Remove confirmPassword
             const { confirmPassword, ...dataToSend } = formData;
-
-            // Force role just in case frontend logic leaks, but backend handles it
             dataToSend.role = 'ATLETA';
 
             const response = await RepresentanteService.registerChildAthlete(dataToSend);
@@ -93,10 +89,8 @@ const RegisterAthletePage = () => {
             console.error("Error creating athlete:", err);
             let msg = "Error al registrar atleta";
 
-            // Handle standardized APIResponse error if available
             if (err.response?.data?.message) {
                 msg = err.response.data.message;
-                // Si es error de duplicado, resaltar campos
                 if (msg.includes('ya existe') || msg.toLowerCase().includes('duplicate')) {
                     if (msg.toLowerCase().includes('email')) {
                         toast.error('El correo electrónico ya está registrado.', { id: toastId });
@@ -123,121 +117,247 @@ const RegisterAthletePage = () => {
         }
     };
 
-    return (
-        <div className="p-6 max-w-4xl mx-auto bg-white rounded-xl shadow-md mt-6">
-            <div className="mb-6 border-b pb-4">
-                <h1 className="text-2xl font-bold text-gray-800">Registrar Nuevo Atleta (Hijo)</h1>
-                <p className="text-gray-500">Ingresa los datos del atleta que deseas registrar bajo tu representación.</p>
+    const InputField = ({ label, icon: Icon, type = "text", ...props }) => (
+        <div className="space-y-1.5 w-full">
+            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+            <div className="relative">
+                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+                <input
+                    type={type}
+                    {...props}
+                    className={`
+                        w-full ${Icon ? 'pl-10' : 'pl-3'} pr-3 py-3 rounded-xl
+                        bg-gray-50 dark:bg-[#1a1a1a]
+                        border border-gray-200 dark:border-[#332122]
+                        text-gray-900 dark:text-white
+                        placeholder-gray-400 dark:placeholder-gray-500
+                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                        outline-none transition-all
+                    `}
+                />
             </div>
+        </div>
+    );
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* Personal Data */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input name="first_name" required value={formData.first_name} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Nombre del atleta" />
+    return (
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] p-6 transition-colors duration-300 font-['Lexend']">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 rounded-xl bg-white dark:bg-[#212121] text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white border border-gray-200 dark:border-[#332122] shadow-sm transition-all"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <div>
+                            <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Registrar Atleta</h1>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ingresa los datos del atleta bajo tu representación.</p>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
-                        <input name="last_name" required value={formData.last_name} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Apellido del atleta" />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Identificación</label>
-                        <select name="tipo_identificacion" value={formData.tipo_identificacion} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500">
-                            <option value="CEDULA">Cédula</option>
-                            <option value="PASAPORTE">Pasaporte</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Número de Identificación</label>
-                        <input name="identificacion" required value={formData.identificacion} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Cédula o Pasaporte" />
-                        {formData.tipo_identificacion === 'CEDULA' && (
-                            <p className="text-xs text-gray-500 mt-1">Debe ser una cédula ecuatoriana válida de 10 dígitos.</p>
-                        )}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                        <input name="phone" value={formData.phone} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Opcional" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                        <input name="direccion" value={formData.direccion} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Dirección de residencia" />
-                    </div>
+                    
                 </div>
 
-                {/* Account Data */}
-                <div className="border-t pt-6">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Datos de la Cuenta</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario</label>
-                            <input name="username" required value={formData.username} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="Usuario único" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
-                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500" placeholder="correo@ejemplo.com" />
-                        </div>
+                <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-xl border border-gray-200 dark:border-[#332122] overflow-hidden">
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    name="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 pr-10"
-                                    placeholder="********"
-                                />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
-                                    <span className="material-symbols-outlined text-lg">{showPassword ? 'visibility_off' : 'visibility'}</span>
-                                </button>
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-[#332122]">
+                                <UserPlus className="text-[#b30c25]" size={24} />
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Información Personal</h3>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Mínimo 8 caracteres, una mayúscula, un número y un carácter especial.
-                            </p>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar Contraseña</label>
-                            <input
-                                type="password"
-                                name="confirmPassword"
-                                required
-                                value={formData.confirmPassword}
-                                onChange={handleChange}
-                                className="block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"
-                                placeholder="********"
-                            />
-                        </div>
-                    </div>
-                </div>
 
-                <div className="flex justify-end pt-6">
-                    <button
-                        type="button"
-                        onClick={() => navigate(-1)}
-                        className="mr-4 px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md shadow-red-200 disabled:opacity-70 flex items-center"
-                    >
-                        {loading ? (
-                            <span className="flex items-center gap-2">
-                                <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                                Registrando...
-                            </span>
-                        ) : "Registrar Atleta"}
-                    </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputField
+                                    label="Nombre"
+                                    icon={User}
+                                    name="first_name"
+                                    required
+                                    value={formData.first_name}
+                                    onChange={handleChange}
+                                    placeholder="Ej: Juan"
+                                />
+                                <InputField
+                                    label="Apellido"
+                                    icon={User}
+                                    name="last_name"
+                                    required
+                                    value={formData.last_name}
+                                    onChange={handleChange}
+                                    placeholder="Ej: Pérez"
+                                />
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Tipo de Identificación</label>
+                                    <div className="relative">
+                                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <select
+                                            name="tipo_identificacion"
+                                            value={formData.tipo_identificacion}
+                                            onChange={handleChange}
+                                            className="
+                                                w-full pl-10 pr-8 py-3 rounded-xl
+                                                bg-gray-50 dark:bg-[#1a1a1a]
+                                                border border-gray-200 dark:border-[#332122]
+                                                text-gray-900 dark:text-white
+                                                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                                                outline-none transition-all appearance-none
+                                            "
+                                        >
+                                            <option value="CEDULA">Cédula</option>
+                                            <option value="PASAPORTE">Pasaporte</option>
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <InputField
+                                        label="Número de Identificación"
+                                        icon={Hash}
+                                        name="identificacion"
+                                        required
+                                        value={formData.identificacion}
+                                        onChange={handleChange}
+                                        placeholder="Cédula o Pasaporte"
+                                    />
+                                    {formData.tipo_identificacion === 'CEDULA' && (
+                                        <p className="text-[10px] text-gray-400 pl-1">Debe ser una cédula ecuatoriana válida.</p>
+                                    )}
+                                </div>
+
+                                <InputField
+                                    label="Teléfono"
+                                    icon={Phone}
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder="(Opcional)"
+                                />
+                                <InputField
+                                    label="Dirección"
+                                    icon={MapPin}
+                                    name="direccion"
+                                    value={formData.direccion}
+                                    onChange={handleChange}
+                                    placeholder="Dirección de residencia"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-[#332122]">
+                                <Lock className="text-[#b30c25]" size={24} />
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Credenciales de Acceso</h3>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <InputField
+                                    label="Nombre de Usuario"
+                                    icon={User}
+                                    name="username"
+                                    required
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    placeholder="Usuario único para login"
+                                />
+                                <InputField
+                                    label="Correo Electrónico"
+                                    icon={Mail}
+                                    type="email"
+                                    name="email"
+                                    required
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="correo@ejemplo.com"
+                                />
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Contraseña</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            name="password"
+                                            required
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            className="
+                                                w-full pl-10 pr-10 py-3 rounded-xl
+                                                bg-gray-50 dark:bg-[#1a1a1a]
+                                                border border-gray-200 dark:border-[#332122]
+                                                text-gray-900 dark:text-white
+                                                placeholder-gray-400 dark:placeholder-gray-500
+                                                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                                                outline-none transition-all
+                                            "
+                                            placeholder="********"
+                                        />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-gray-400 pl-1">
+                                        Mín. 8 caracteres, 1 mayúscula, 1 número y 1 especial.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Confirmar Contraseña</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            required
+                                            value={formData.confirmPassword}
+                                            onChange={handleChange}
+                                            className="
+                                                w-full pl-10 pr-3 py-3 rounded-xl
+                                                bg-gray-50 dark:bg-[#1a1a1a]
+                                                border border-gray-200 dark:border-[#332122]
+                                                text-gray-900 dark:text-white
+                                                placeholder-gray-400 dark:placeholder-gray-500
+                                                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                                                outline-none transition-all
+                                            "
+                                            placeholder="********"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-4 pt-6 mt-8 border-t border-gray-100 dark:border-[#332122]">
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="px-6 py-3 rounded-xl font-bold bg-white dark:bg-[#212121] border border-gray-200 dark:border-[#332122] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="
+                                    px-8 py-3 rounded-xl font-bold text-white
+                                    bg-linear-to-r from-[#b30c25] to-[#80091b]
+                                    hover:brightness-110 shadow-lg shadow-red-900/20
+                                    active:scale-95 transition-all
+                                    disabled:opacity-70 disabled:cursor-not-allowed
+                                    flex items-center gap-2
+                                "
+                            >
+                                {loading && <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                                {loading ? "Registrando..." : "Registrar Atleta"}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     );
 };

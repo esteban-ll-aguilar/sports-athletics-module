@@ -6,6 +6,7 @@ import PruebaRepository from "../../services/prueba_service";
 import baremoService from "../../services/baremo_service";
 import RegistroPruebaModal from "../widgets/RegistroPruebaModal";
 import Swal from "sweetalert2";
+import { Plus, Search, Filter, Calendar, User, Trophy, Activity, Clipboard, CheckCircle, Power, Edit2, AlertCircle } from 'lucide-react';
 
 const RegistroPruebasPage = () => {
     const [resultados, setResultados] = useState([]);
@@ -17,6 +18,7 @@ const RegistroPruebasPage = () => {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Cargar Datos
     const fetchData = async () => {
@@ -35,10 +37,6 @@ const RegistroPruebasPage = () => {
             setPruebas(Array.isArray(resPruebas) ? resPruebas : resPruebas?.data || []);
             setBaremos(Array.isArray(resBaremos) ? resBaremos : resBaremos?.data || []);
             setCompetencias(Array.isArray(resComp) ? resComp : resComp.data || []);
-
-            // Debug: Check data structure
-            console.log("📊 Atletas data:", resAtletas.items?.[0]);
-            console.log("📊 Resultado data:", resResultados[0]);
         } catch (error) {
             console.error("Error cargando datos:", error);
         } finally {
@@ -50,22 +48,17 @@ const RegistroPruebasPage = () => {
 
     // Helpers para resolver Nombres
     const getAtletaName = (atletaId, atletaUserId) => {
-        // If backend provides atleta_user_id, use it to find the user
         if (atletaUserId) {
             const user = atletas.find(x => x.id === atletaUserId || x.auth_user_id === atletaUserId);
             if (user && user.first_name && user.last_name) {
                 return `${user.first_name} ${user.last_name}`;
             }
         }
-
-        // Fallback: try other matching strategies
         const a = atletas.find(x =>
             x.id === atletaId ||
             x.external_id === atletaId ||
             x.auth_user_id === atletaId
         );
-
-        // Last resort: try by index
         const atletaByIndex = !a && atletaId <= atletas.length ? atletas[atletaId - 1] : null;
         const atleta = a || atletaByIndex;
 
@@ -86,17 +79,14 @@ const RegistroPruebasPage = () => {
     const getPruebaUnit = (id) => {
         const p = pruebas.find(x => x.id === id || x.external_id === id);
         if (!p) return "";
-
-        // Return unit based on tipo_medicion
         if (p.tipo_medicion === "TIEMPO") {
-            return "s"; // segundos
+            return "SEGUNDOS";
         } else if (p.tipo_medicion === "DISTANCIA") {
-            return "m"; // metros
+            return "METROS";
         }
         return p.unidad_medida || "";
     };
 
-    // Manejadores
     const handleSave = async (data) => {
         try {
             if (selectedItem) {
@@ -108,14 +98,13 @@ const RegistroPruebasPage = () => {
             return true;
         } catch (error) {
             console.error("Error completo:", error);
-            console.error("Respuesta del servidor:", error.response?.data);
             const errorMsg = error.response?.data?.detail || error.message || "No se pudo guardar";
             Swal.fire({
                 title: "Error",
                 text: errorMsg,
                 icon: "error",
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
             return false;
@@ -123,29 +112,18 @@ const RegistroPruebasPage = () => {
     };
 
     const handleEdit = (row) => {
-        console.log("🔧 handleEdit - Row data:", row);
-
-        // Strategy 1: If backend provides atleta_user_id, use it to find the user
         let atleta = null;
         if (row.atleta_user_id) {
             atleta = atletas.find(a => a.id === row.atleta_user_id || a.auth_user_id === row.atleta_user_id);
-            console.log("🔧 Strategy 1 (atleta_user_id) - Atleta encontrado:", atleta);
         }
-
-        // Strategy 2: Try to find by numeric ID match
         if (!atleta) {
             atleta = atletas.find(a => a.id === row.atleta_id);
-            console.log("🔧 Strategy 2 (direct ID) - Atleta encontrado:", atleta);
         }
-
-        // Strategy 3: Fallback to index-based (atleta.id 1 = first user)
         if (!atleta && row.atleta_id <= atletas.length) {
             atleta = atletas[row.atleta_id - 1];
-            console.log("🔧 Strategy 3 (index) - Atleta encontrado:", atleta);
         }
 
         const prueba = pruebas.find(p => p.id === row.prueba_id);
-        console.log("🔧 handleEdit - Prueba encontrada:", prueba);
 
         const enrichedRow = {
             ...row,
@@ -153,85 +131,169 @@ const RegistroPruebasPage = () => {
             prueba_external_id: prueba?.external_id || row.prueba_id
         };
 
-        console.log("🔧 handleEdit - Enriched row:", enrichedRow);
-
         setSelectedItem(enrichedRow);
         setShowModal(true);
     };
 
 
     const handleDelete = async (item) => {
-        // Logic to toggle status
+        const nuevoEstado = !item.estado;
         try {
-            await resultadoPruebaService.update(item.external_id, { ...item, estado: !item.estado });
+            await resultadoPruebaService.update(item.external_id, { ...item, estado: nuevoEstado });
             fetchData();
-        } catch (e) { Swal.fire("Error", "No se pudo cambiar estado", "error"); }
+            Swal.fire({
+                title: 'Actualizado',
+                text: `Estado cambiado a ${nuevoEstado ? 'Activo' : 'Inactivo'}`,
+                icon: 'success',
+                confirmButtonColor: '#b30c25',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+        } catch (e) {
+            Swal.fire({
+                title: 'Error',
+                text: "No se pudo cambiar estado",
+                icon: 'error',
+                confirmButtonColor: '#b30c25',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#121212] p-6 font-['Lexend'] text-gray-200">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] p-6 font-['Lexend'] text-gray-900 dark:text-gray-200 transition-colors duration-300">
             <div className="max-w-7xl mx-auto space-y-6">
 
                 {/* Header */}
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-4xl font-black text-white">Resultados de Pruebas</h1>
-                        <p className="text-gray-400">Vista detallada de registros (ID, Atleta, Baremo, Marca)</p>
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
+                            Resultados de Pruebas
+                        </h1>
+                        <p className="text-gray-500 dark:text-gray-400 text-lg mt-1">
+                            Vista detallada de los registros y marcas de los atletas.
+                        </p>
                     </div>
-                    <button
-                        onClick={() => { setSelectedItem(null); setShowModal(true); }}
-                        className="bg-[#b30c25] hover:bg-[#8a0a1d] text-white px-6 py-3 rounded-xl font-bold transition-all"
-                    >
-                        + Nuevo Resultado
-                    </button>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                        <button
+                            onClick={() => { setSelectedItem(null); setShowModal(true); }}
+                            className="
+                                group flex items-center justify-center gap-2
+                                px-6 py-3 rounded-xl
+                                text-sm font-bold text-white
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
+                                hover:brightness-110
+                                shadow-lg shadow-red-900/20 active:scale-95
+                                transition-all duration-300
+                            "
+                        >
+                            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Nuevo Resultado
+                        </button>
+                    </div>
                 </div>
 
-                {/* Tabla Estilo RAW (Como la imagen) */}
-                <div className="bg-[#1e1e1e] rounded-xl border border-[#333] overflow-hidden shadow-xl">
+                {/* Search Bar (Optional, added for UI consistency) */}
+                <div className="relative max-w-md">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Buscar por atleta o prueba..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="
+                            w-full pl-12 pr-4 py-3 rounded-xl 
+                            bg-white dark:bg-[#212121]
+                            border border-gray-200 dark:border-[#332122]
+                            text-gray-900 dark:text-gray-100
+                            placeholder-gray-400 dark:placeholder-gray-500
+                             focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                            outline-none transition-all shadow-sm
+                        "
+                    />
+                </div>
+
+                {/* Tabla */}
+                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="bg-[#2a2a2a] text-gray-400 font-bold uppercase tracking-wider">
+                            <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
                                 <tr>
-                                    <th className="px-4 py-3 border-b border-[#333]">ID</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Atleta (FK)</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Prueba (FK)</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Baremo (FK)</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Marca Utilizada</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Clasificación Final</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Fecha</th>
-                                    <th className="px-4 py-3 border-b border-[#333]">Estado</th>
-                                    <th className="px-4 py-3 border-b border-[#333] text-right">Acciones</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atleta</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Baremo</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marca</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Clasif.</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fecha</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Estado</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[#333]">
+                            <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
                                 {loading ? (
-                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500">Cargando...</td></tr>
+                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando datos...</td></tr>
                                 ) : resultados.length === 0 ? (
-                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500">No hay datos</td></tr>
+                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Clipboard size={32} />
+                                            <span>No hay resultados registrados</span>
+                                        </div>
+                                    </td></tr>
                                 ) : (
-                                    resultados.map(row => (
-                                        <tr key={row.id} className="hover:bg-[#252525] transition-colors">
-                                            <td className="px-4 py-3 text-gray-500">#{row.id}</td>
-                                            <td className="px-4 py-3 font-medium text-white">{getAtletaName(row.atleta_id, row.atleta_user_id)}</td>
-                                            <td className="px-4 py-3 text-gray-300">{getPruebaName(row.prueba_id)}</td>
-                                            <td className="px-4 py-3 text-gray-400">{getBaremoInfo(row.baremo_id)}</td>
-                                            <td className="px-4 py-3 font-mono text-[#b30c25] font-bold">{row.marca_obtenida} {getPruebaUnit(row.prueba_id)}</td>
-                                            <td className="px-4 py-3">
-                                                <span className="px-2 py-1 bg-[#333] rounded text-xs font-bold text-white border border-[#444]">
+                                    resultados.filter(r =>
+                                        !searchTerm ||
+                                        getAtletaName(r.atleta_id, r.atleta_user_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        getPruebaName(r.prueba_id).toLowerCase().includes(searchTerm.toLowerCase())
+                                    ).map(row => (
+                                        <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
+                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-500">#{row.id}</td>
+                                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                                                <User size={16} className="text-gray-400" />
+                                                {getAtletaName(row.atleta_id, row.atleta_user_id)}
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
+                                                <div className="flex items-center gap-2">
+                                                    <Activity size={16} className="text-gray-400" />
+                                                    {getPruebaName(row.prueba_id)}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{getBaremoInfo(row.baremo_id)}</td>
+                                            <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.marca_obtenida} {getPruebaUnit(row.prueba_id)}</td>
+                                            <td className="px-6 py-4">
+                                                <span className="px-2.5 py-1 bg-gray-100 dark:bg-[#333] rounded-lg text-xs font-bold text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#444]">
                                                     {row.clasificacion_final}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-gray-400">
-                                                {row.fecha ? new Date(row.fecha).toLocaleDateString() + ' ' + new Date(row.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
+                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar size={14} />
+                                                    {row.fecha ? new Date(row.fecha).toLocaleDateString() : '-'}
+                                                </div>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`text-xs px-2 py-1 rounded-full border ${row.estado ? 'bg-green-900/30 border-green-800 text-green-400' : 'bg-red-900/30 border-red-800 text-red-400'}`}>
-                                                    {row.estado ? 'TRUE' : 'FALSE'}
+                                            <td className="px-6 py-4 text-center">
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border
+                                                    ${row.estado
+                                                        ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-900/30'
+                                                        : 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-900/30'
+                                                    }`}>
+                                                    {row.estado ? "Activo" : "Inactivo"}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <button onClick={() => handleEdit(row)} className="text-blue-400 hover:text-blue-300 mr-2">Editar</button>
-                                                <button onClick={() => handleDelete(row)} className="text-red-400 hover:text-red-300">{row.estado ? 'Desactivar' : 'Activar'}</button>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <button onClick={() => handleEdit(row)} className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button onClick={() => handleDelete(row)} className={`p-2 rounded-lg transition-colors ${row.estado
+                                                        ? 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                                        : 'text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                                        }`}>
+                                                        {row.estado ? <Power size={16} /> : <CheckCircle size={16} />}
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

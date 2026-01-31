@@ -18,7 +18,7 @@ async def create_horario(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Crea un nuevo horario para un entrenamiento específico.
+    Agrega un nuevo horario (día, horas) a un entrenamiento existente.
     """
     return await service.create_horario(entrenamiento_id, horario_data, current_entrenador.id)
 
@@ -29,7 +29,7 @@ async def list_horarios(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Lista todos los horarios de un entrenamiento específico.
+    Obtiene todos los horarios definidos para un entrenamiento.
     """
     return await service.get_horarios_by_entrenamiento(entrenamiento_id, current_entrenador.id)
 
@@ -40,6 +40,6 @@ async def delete_horario(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Elimina un horario por su ID.
+    Elimina físicamente un horario.
     """
     await service.delete_horario(id, current_entrenador.id)

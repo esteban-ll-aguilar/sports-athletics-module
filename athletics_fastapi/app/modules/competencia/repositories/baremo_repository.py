@@ -5,20 +5,28 @@ from app.modules.competencia.domain.models.baremo_model import Baremo
 
 # Modelo de repositorio para la entidad Baremo
 class BaremoRepository:
-    # Inicializador del repositorio con la sesión de la base de datos
+    """
+    Repositorio encargado de la persistencia y recuperación de la entidad Baremo.
+
+    Implementa el patrón Repository para desacoplar la lógica de acceso a datos
+    del resto de la aplicación. Utiliza SQLAlchemy en modo asíncrono y permite
+    operaciones CRUD, así como búsquedas contextuales especializadas.
+    """
+
     def __init__(self, session: AsyncSession):
+        """
+        Inicializa el repositorio con una sesión asíncrona de base de datos.
+        """
         self.session = session
 
     # Crear un nuevo Baremo en la base de datos
     async def create(self, baremo: Baremo | dict) -> Baremo:
+        """  Crea y persiste un nuevo Baremo en la base de datos.
+        Acepta tanto una instancia del modelo Baremo como un diccionario
+        con los datos necesarios. En caso de recibir un diccionario,
+        se construye internamente la entidad Baremo.
+        """
         if isinstance(baremo, dict):
-            # Exclude 'items' from the main dict if it's there, as we might need to handle them separately
-            # or rely on SQLAlchemy's ability if configured. 
-            # Assuming for now 'items' are handled by the Service or not passed here directly as dicts for simple kwargs
-            # STRICT FIX: To avoid complications, let's assume we just save the baremo context first.
-            # If the user sends items in the payload, the Service should handle creating them.
-            # BUT, the crash is READ.
-            # So regardless of how it's saved, we must RETURN a loaded object.
             baremo = Baremo(**baremo)
 
         self.session.add(baremo)
@@ -30,6 +38,12 @@ class BaremoRepository:
 
     # Obtener todos los Baremos activos de la base de datos
     async def get_all(self, incluir_inactivos: bool = True):
+        """
+        Obtiene todos los Baremo registrados en la base de datos.
+        Permite filtrar opcionalmente los registros inactivos y realiza
+        carga anticipada de la relación `items` para evitar problemas
+        de lazy loading en contextos asíncronos.
+        """
         from sqlalchemy.orm import selectinload
         query = select(Baremo).options(selectinload(Baremo.items))
 

@@ -19,10 +19,21 @@ class SessionsRepository:
         refresh_jti: str,
         expires_at: datetime
     ) -> AuthUsersSessionsModel:
-        """Crea una nueva sesión en la base de datos."""
+        """
+        Crea una nueva sesión activa en la base de datos.
+        
+        Args:
+            user_id (uuid.UUID): ID del usuario.
+            access_jti (str): JTI del Access Token.
+            refresh_jti (str): JTI del Refresh Token.
+            expires_at (datetime): Fecha de expiración de la sesión.
+            
+        Returns:
+            AuthUsersSessionsModel: La sesión creada.
+        """
         session = AuthUsersSessionsModel(
             user_id=user_id,
-            access_token=access_jti,  # Guardamos solo el JTI, no el token completo
+            access_token=access_jti,
             refresh_token=refresh_jti,
             status=True,
             expires_at=expires_at
@@ -55,7 +66,15 @@ class SessionsRepository:
         return result.scalars().all()
 
     async def revoke_session_by_refresh_jti(self, refresh_jti: str) -> bool:
-        """Revoca una sesión por su refresh JTI."""
+        """
+        Revoca (invalida) una sesión buscando por el JTI del refresh token.
+        
+        Args:
+            refresh_jti (str): Identificador único del refresh token.
+            
+        Returns:
+            bool: True si se revocó alguna sesión.
+        """
         result = await self.session.execute(
             update(AuthUsersSessionsModel)
             .where(AuthUsersSessionsModel.refresh_token == refresh_jti)
@@ -75,7 +94,17 @@ class SessionsRepository:
         return result.rowcount > 0
 
     async def revoke_all_user_sessions(self, user_id: uuid.UUID) -> int:
-        """Revoca todas las sesiones de un usuario."""
+        """
+        Revoca todas las sesiones activas de un usuario.
+        
+        Útil para casos de seguridad comprometida o cambio de contraseña.
+        
+        Args:
+            user_id (uuid.UUID): ID del usuario.
+            
+        Returns:
+            int: Número de sesiones revocadas.
+        """
         result = await self.session.execute(
             update(AuthUsersSessionsModel)
             .where(
@@ -153,7 +182,20 @@ class SessionsRepository:
         new_refresh_jti: str,
         new_expires_at: datetime
     ) -> bool:
-        """Actualiza tokens de sesión tras un refresh exitoso, rotando el refresh token."""
+        """
+        Actualiza los tokens de una sesión tras un refresco exitoso (Token Rotation).
+        
+        Reemplaza el antiguo refresh token y access token con los nuevos generados.
+        
+        Args:
+            old_refresh_jti (str): JTI del refresh token usado.
+            new_access_jti (str): Nuevo JTI de acceso.
+            new_refresh_jti (str): Nuevo JTI de refresco.
+            new_expires_at (datetime): Nueva fecha de expiración.
+            
+        Returns:
+           bool: True si se actualizó correctamente.
+        """
         result = await self.session.execute(
             update(AuthUsersSessionsModel)
             .where(AuthUsersSessionsModel.refresh_token == old_refresh_jti)

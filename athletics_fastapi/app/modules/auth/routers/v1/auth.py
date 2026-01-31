@@ -55,7 +55,17 @@ async def register(
     verification_service: EmailVerificationService = Depends(get_email_verification_service),
 ):
     """
-    Registra un nuevo usuario (INACTIVO hasta verificación de email).
+    Registra un nuevo usuario en el sistema.
+    
+    El usuario se crea con estado inactivo hasta que verifique su correo electrónico.
+    Se envía un código de verificación al email proporcionado.
+    
+    Args:
+        request: Request object.
+        data: Datos de registro (email, contraseña, etc.).
+        
+    Returns:
+        APIResponse: Confirmación de registro y datos del usuario (sin credenciales sensibles).
     """
 
     if await repo.get_by_email(data.email):
@@ -110,6 +120,21 @@ async def login(
     hasher: PasswordHasher = Depends(get_password_hasher),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
+    """
+    Inicia sesión en el sistema.
+    
+    Verifica credenciales del usuario.
+    Si 2FA está habilitado, retorna un token temporal y un indicador de requerimiento de 2FA.
+    Si no, retorna el par de tokens (Access y Refresh) y establece la cookie de refresh.
+    
+    Args:
+        request: Request object.
+        response: Response object (para setear cookie).
+        data: Credenciales de login.
+        
+    Returns:
+        APIResponse[Union[TokenPair, TwoFactorRequired]]: Tokens o requerimiento de 2FA.
+    """
     # Ya no capturamos todas las excepciones para permitir que HTTPException fluya
     user = await repo.get_by_email(data.username)
 
@@ -202,6 +227,20 @@ async def refresh_token(
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
+    """
+    Renueva el Access Token utilizando un Refresh Token válido.
+    
+    Busca el refresh token en el body o en la cookie HttpOnly.
+    Implementa rotación de refresh tokens para seguridad, invalidando el anterior.
+    
+    Args:
+        request: Request object.
+        response: Response object (para actualizar cookie).
+        body: Cuerpo de la petición (opcional con refresh token).
+        
+    Returns:
+        APIResponse[TokenPair]: Nuevos access y refresh tokens.
+    """
     try:
         logger.info(f"Refresh attempt. Cookies: {request.cookies.keys()}")
         # Get refresh token from cookie if not in body
@@ -290,7 +329,17 @@ async def logout(
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
 ):
     """
-    Cierra sesión. Opcionalmente invalida el refresh token provisto.
+    Cierra la sesión del usuario.
+    
+    Revoca el refresh token especificado y elimina la cookie de sesión.
+    
+    Args:
+        request: Request object.
+        response: Response object (para eliminar cookie).
+        body: Datos de logout (opcional).
+        
+    Returns:
+        APIResponse: Mensaje de éxito.
     """
     try:
         cookie_refresh = request.cookies.get("refresh_token")

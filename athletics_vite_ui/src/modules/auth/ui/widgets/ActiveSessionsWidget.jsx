@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Smartphone, Trash2, AlertTriangle, Monitor, Shield } from 'lucide-react';
+import { RefreshCw, Smartphone, Trash2, AlertTriangle, Monitor, Shield, Laptop } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import authService from '../../services/auth_service';
 import Swal from 'sweetalert2';
@@ -26,7 +26,6 @@ const ActiveSessionsWidget = () => {
         } catch (error) {
             console.error(error);
             const msg = error.message || error.detail || 'No se pudo obtener las sesiones activas';
-            // Only toast if it's not a standard cancellation or 401 redirect
             toast.error(msg);
         } finally {
             setLoading(false);
@@ -61,8 +60,11 @@ const ActiveSessionsWidget = () => {
             cancelButtonColor: '#332122',
             confirmButtonText: 'Sí, cerrar todas',
             cancelButtonText: 'Cancelar',
-            background: '#242223', // Matches dark mode
-            color: '#fff'
+            background: '#1a1a1a',
+            color: '#fff',
+            customClass: {
+                popup: 'dark:bg-[#1a1a1a] dark:text-white dark:border dark:border-[#332122]'
+            }
         });
 
         if (!result.isConfirmed) return;
@@ -72,7 +74,6 @@ const ActiveSessionsWidget = () => {
             const response = await authService.revokeAllSessions();
             if (response.success) {
                 toast.success(response.message || 'Se revocaron todas las sesiones exitosamente');
-                // Re-fetch to see only the current one potentially, or just filter locally if we knew distinct IDs
                 fetchSessions();
             } else {
                 toast.error(response.message || 'Error al revocar sesiones');
@@ -92,33 +93,31 @@ const ActiveSessionsWidget = () => {
     };
 
     const getDeviceIcon = (userAgent) => {
-        // Simple heuristic - backend usually doesn't send UserAgent in this specific SessionInfo schema yet 
-        // but if we updated it we could. For now generic Monitor/Smartphone
-        return <Monitor className="w-5 h-5 text-gray-400" />;
+        const ua = userAgent?.toLowerCase() || '';
+        if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
+            return <Smartphone className="w-5 h-5 text-gray-500 dark:text-gray-400" />;
+        }
+        return <Laptop className="w-5 h-5 text-gray-500 dark:text-gray-400" />;
     };
 
     if (loading) {
         return (
-            <div className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6 animate-pulse">
-                <div className="h-6 bg-[#332122] rounded w-1/3 mb-4"></div>
-                <div className="space-y-3">
-                    <div className="h-16 bg-[#332122] rounded"></div>
-                    <div className="h-16 bg-[#332122] rounded"></div>
-                </div>
+            <div className="flex justify-center items-center py-12">
+                <RefreshCw className="w-8 h-8 text-[#b30c25] animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="bg-[#212121] rounded-2xl shadow-sm border border-[#332122] p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] overflow-hidden transition-colors duration-300">
+            <div className="px-6 py-5 border-b border-gray-200 dark:border-[#332122] flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                        <Shield className="text-[#b30c25]" size={20} />
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-[#b30c25]" />
                         Sesiones Activas
-                    </h2>
-                    <p className="text-sm text-gray-400 mt-1">
-                        Gestiona los dispositivos donde has iniciado sesión.
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Gestiona los dispositivos donde tu cuenta está iniciada.
                     </p>
                 </div>
 
@@ -126,76 +125,94 @@ const ActiveSessionsWidget = () => {
                     <button
                         onClick={handleRevokeAll}
                         disabled={revokingAll}
-                        className="mt-4 md:mt-0 flex items-center px-4 py-2 text-sm font-medium text-red-500 bg-[#2b1d1d] border border-red-900/30 rounded-lg hover:bg-red-900/10 transition-colors disabled:opacity-50"
+                        className="
+                            flex items-center gap-2 px-4 py-2 rounded-lg 
+                            text-sm font-semibold text-red-600 dark:text-red-400 
+                            bg-red-50 dark:bg-red-900/10 hover:bg-red-100 dark:hover:bg-red-900/30 
+                            transition-colors disabled:opacity-50
+                        "
                     >
                         {revokingAll ? (
-                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            <RefreshCw className="w-4 h-4 animate-spin" />
                         ) : (
-                            <Trash2 className="w-4 h-4 mr-2" />
+                            <AlertTriangle className="w-4 h-4" />
                         )}
-                        Cerrar todas las sesiones
+                        Cerrar todas las demás
                     </button>
                 )}
             </div>
 
-            {sessions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                    <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    No tienes otras sesiones activas.
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {sessions.map((session) => (
-                        <div
-                            key={session.id}
-                            className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-[#332122] bg-[#242223]/50 transition-all hover:bg-[#2a2829] ${session.is_current ? 'ring-1 ring-[#b30c25]/30' : ''}`}
-                        >
-                            <div className="flex items-start gap-4 mb-4 sm:mb-0">
-                                <div className="p-3 bg-[#332122] rounded-full">
-                                    {getDeviceIcon()}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-medium text-white">
-                                            Sesión {session.is_current ? '(Actual)' : ''}
-                                        </h3>
-                                        {session.status && (
-                                            <span className="px-2 py-0.5 text-xs bg-green-900/30 text-green-400 rounded-full border border-green-900/50">
-                                                Activa
-                                            </span>
-                                        )}
+            <div className="p-0">
+                {sessions.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                        No se encontraron sesiones activas.
+                    </div>
+                ) : (
+                    <ul className="divide-y divide-gray-200 dark:divide-[#332122]">
+                        {sessions.map((session) => (
+                            <li key={session.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-[#212121] transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group">
+                                <div className="flex items-start gap-4">
+                                    <div className="
+                                        w-12 h-12 rounded-xl bg-gray-100 dark:bg-[#242223] 
+                                        flex items-center justify-center shrink-0 
+                                        border border-gray-200 dark:border-[#332122] group-hover:border-[#b30c25]/30
+                                    ">
+                                        {getDeviceIcon(session.user_agent)}
                                     </div>
-                                    <p className="text-xs text-gray-400 mt-1 flex flex-col gap-0.5">
-                                        <span>Iniciado: {formatDate(session.created_at)}</span>
-                                        <span>Expira: {formatDate(session.expires_at)}</span>
-                                    </p>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-md" title={session.user_agent}>
+                                                {session.user_agent ? (session.user_agent.length > 50 ? session.user_agent.substring(0, 50) + '...' : session.user_agent) : 'Dispositivo Desconocido'}
+                                            </p>
+                                            {session.is_current && (
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                                    Este dispositivo
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                            <span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">IP:</span> {session.ip_address}
+                                            </span>
+                                            <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
+                                            <span>
+                                                <span className="font-semibold text-gray-700 dark:text-gray-300">Último acceso:</span> {formatDate(session.last_activity)}
+                                            </span>
+                                        </p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                            Creada: {formatDate(session.created_at)}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center gap-2">
                                 {!session.is_current && (
                                     <button
                                         onClick={() => handleRevoke(session.id)}
                                         disabled={revokingId === session.id}
-                                        className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-gray-300 bg-[#332122] hover:bg-[#402a2c] hover:text-white rounded-lg transition-colors disabled:opacity-50 flex justify-center items-center"
+                                        className="
+                                            flex items-center justify-center gap-2 px-4 py-2 rounded-lg ml-16 sm:ml-0
+                                            text-sm font-medium text-gray-600 dark:text-gray-400 
+                                            hover:text-red-600 dark:hover:text-white 
+                                            hover:bg-red-50 dark:hover:bg-red-900/20 
+                                            transition-all disabled:opacity-50
+                                        "
+                                        title="Cerrar sesión"
                                     >
                                         {revokingId === session.id ? (
-                                            <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
                                         ) : (
-                                            "Cerrar Sesión"
+                                            <>
+                                                <Trash2 className="w-4 h-4" />
+                                                <span className="sm:hidden">Cerrar Sesión</span>
+                                            </>
                                         )}
                                     </button>
                                 )}
-                                {session.is_current && (
-                                    <span className="text-xs text-gray-500 italic px-4">
-                                        Dispositivo Actual
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </div>
     );
 };

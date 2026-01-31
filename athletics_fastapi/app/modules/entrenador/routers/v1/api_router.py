@@ -8,6 +8,9 @@ from app.modules.entrenador.routers.v1.entrenamiento_router import router as ent
 from app.modules.entrenador.routers.v1.horario_router import router as horario_router
 from app.modules.entrenador.routers.v1.asistencia_router import router as asistencia_router
 
+from app.modules.entrenador.routers.v1.resultado_entrenamiento_router import router as resultado_entrenamiento_router
+
+api_entrenador_router_v1.include_router(resultado_entrenamiento_router)
 api_entrenador_router_v1.include_router(entrenamiento_router)
 api_entrenador_router_v1.include_router(horario_router)
 api_entrenador_router_v1.include_router(asistencia_router)

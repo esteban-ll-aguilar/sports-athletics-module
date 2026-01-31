@@ -6,6 +6,11 @@ import AsistenciaService from '../../services/AsistenciaService';
 import AtletaService from '../../../atleta/services/AtletaService';
 import AsistenciaHistoryModal from '../components/AsistenciaHistoryModal';
 import InscribirAtletaModal from '../components/InscribirAtletaModal';
+import {
+    ArrowLeft, Download, Users, CheckCircle, Clock, XCircle,
+    Calendar, UserPlus, Trash2, Eye, Check, X, AlertCircle,
+    User
+} from 'lucide-react';
 
 const GestionAsistenciaPage = () => {
     const { id } = useParams();
@@ -171,7 +176,6 @@ const GestionAsistenciaPage = () => {
     const hasAttendedToday = (asistencias) => {
         if (!asistencias || asistencias.length === 0) return false;
         const today = new Date().toISOString().split('T')[0];
-        // FIX: Check STRICTLY for explicit true boolean
         return asistencias.some(a => a.fecha_asistencia === today && a.asistio === true);
     };
 
@@ -184,8 +188,11 @@ const GestionAsistenciaPage = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-                <div className="text-white text-xl">Cargando...</div>
+            <div className="min-h-screen bg-gray-50 dark:bg-[#121212] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Cargando gestión...</span>
+                </div>
             </div>
         );
     }
@@ -198,34 +205,43 @@ const GestionAsistenciaPage = () => {
     const presentes = inscritos.filter(r => hasAttendedToday(r.asistencias)).length;
 
     return (
-        <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend'] p-6 md:p-10 pb-20">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] p-6 md:p-10 pb-20 transition-colors duration-300">
             <div className="max-w-7xl mx-auto space-y-8">
 
-                {/* Header */}
+                {/* Top Navigation & Info */}
                 <div className="flex flex-col gap-6">
-                    <button
-                        onClick={() => navigate('/dashboard/entrenamientos')}
-                        className="text-gray-400 hover:text-white flex items-center gap-2 w-fit transition-colors group"
-                    >
-                        <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                        Volver
-                    </button>
-
-                    <div className="flex items-center gap-2 text-sm">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                        <span className="text-green-500 font-bold uppercase tracking-wider text-xs">Sesión Activa</span>
+                    <div className="flex justify-between items-center">
+                        <button
+                            onClick={() => navigate('/dashboard/entrenamientos')}
+                            className="text-gray-500 dark:text-gray-400 hover:text-[#b30c25] hover:dark:text-white flex items-center gap-2 w-fit transition-colors group px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-[#212121]"
+                        >
+                            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-semibold">Volver</span>
+                        </button>
                     </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-100 mb-2">{entrenamiento.tipo_entrenamiento}</h1>
-                            <p className="text-gray-400 font-medium flex items-center gap-2">
-                                <span className="bg-gray-800 text-white px-2 py-0.5 rounded text-xs uppercase">{selectedHorario?.name}</span>
-                                {selectedHorario?.hora_inicio} - {selectedHorario?.hora_fin}
-                            </p>
+
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-[#212121] p-6 rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122]">
+                        <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
+                                <span className="text-green-600 dark:text-green-500 font-bold uppercase tracking-wider text-xs">Sesión Activa</span>
+                            </div>
+                            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+                                {entrenamiento.tipo_entrenamiento}
+                            </h1>
+                            <div className="flex items-center gap-4 text-gray-600 dark:text-gray-400 font-medium text-sm">
+                                <span className="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg">
+                                    <Clock size={16} />
+                                    {selectedHorario?.name}
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    {selectedHorario?.hora_inicio} - {selectedHorario?.hora_fin}
+                                </span>
+                            </div>
                         </div>
-                        <button className="flex items-center gap-2 bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 text-white px-6 py-3 rounded-xl transition-all border border-gray-800 hover:border-gray-700 text-sm font-bold">
-                            <span className="material-symbols-outlined">download</span>
+                        <button className="flex items-center gap-2 bg-white dark:bg-[#2a2829] border border-gray-200 dark:border-[#332122] hover:bg-gray-50 dark:hover:bg-[#332122] text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-xl transition-all text-sm font-bold shadow-sm">
+                            <Download size={18} />
                             Exportar Reporte
                         </button>
                     </div>
@@ -233,60 +249,64 @@ const GestionAsistenciaPage = () => {
 
                 {/* Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 shadow-lg">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-500/10 rounded-lg">
-                                <span className="material-symbols-outlined text-blue-500">groups</span>
-                            </div>
-                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Total Registrados</p>
+                    {/* Total */}
+                    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#332122] shadow-sm flex items-center justify-between">
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Total Registrados</p>
+                            <p className="text-3xl font-black text-gray-900 dark:text-white">{totalRoster}</p>
                         </div>
-                        <p className="text-4xl font-bold text-white">{totalRoster}</p>
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-xl text-blue-600 dark:text-blue-500">
+                            <Users size={24} />
+                        </div>
                     </div>
 
-                    <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 shadow-lg relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-1 h-full bg-green-500/50"></div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-green-500/10 rounded-lg">
-                                <span className="material-symbols-outlined text-green-500">check_circle</span>
-                            </div>
-                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Confirmados</p>
+                    {/* Confirmados */}
+                    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#332122] shadow-sm flex items-center justify-between relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-1 h-full bg-green-500"></div>
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Confirmados</p>
+                            <p className="text-3xl font-black text-gray-900 dark:text-white">{confirmados}</p>
                         </div>
-                        <p className="text-4xl font-bold text-white">{confirmados}</p>
+                        <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-xl text-green-600 dark:text-green-500">
+                            <CheckCircle size={24} />
+                        </div>
                     </div>
 
-                    <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 shadow-lg relative overflow-hidden">
+                    {/* Presentes */}
+                    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#332122] shadow-sm flex items-center justify-between relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-1 h-full bg-green-400"></div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-green-400/10 rounded-lg">
-                                <span className="material-symbols-outlined text-green-400">task_alt</span>
-                            </div>
-                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Presentes</p>
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Presentes</p>
+                            <p className="text-3xl font-black text-gray-900 dark:text-white">{presentes}</p>
                         </div>
-                        <p className="text-4xl font-bold text-white">{presentes}</p>
+                        <div className="p-3 bg-green-50 dark:bg-green-400/10 rounded-xl text-green-500 dark:text-green-400">
+                            <Check size={24} />
+                        </div>
                     </div>
 
-                    <div className="bg-[#1a1a1a] rounded-2xl p-6 border border-gray-800 shadow-lg relative overflow-hidden">
+                    {/* Ausentes */}
+                    <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 border border-gray-200 dark:border-[#332122] shadow-sm flex items-center justify-between relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-1 h-full bg-red-500"></div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-red-500/10 rounded-lg">
-                                <span className="material-symbols-outlined text-red-500">cancel</span>
-                            </div>
-                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider">Ausentes</p>
+                        <div>
+                            <p className="text-gray-500 text-xs uppercase font-bold tracking-wider mb-1">Ausentes</p>
+                            <p className="text-3xl font-black text-gray-900 dark:text-white">{totalRoster - presentes}</p>
                         </div>
-                        <p className="text-4xl font-bold text-white">{totalRoster - presentes}</p>
+                        <div className="p-3 bg-red-50 dark:bg-red-900/10 rounded-xl text-red-600 dark:text-red-500">
+                            <XCircle size={24} />
+                        </div>
                     </div>
                 </div>
 
                 {/* Horarios + Button */}
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-end border-b border-gray-800 pb-6">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-end border-b border-gray-200 dark:border-[#332122] pb-6">
                     <div className="flex gap-2 flex-wrap">
                         {horarios.map(h => (
                             <button
                                 key={h.id}
                                 onClick={() => setSelectedHorario(h)}
                                 className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all border ${selectedHorario?.id === h.id
-                                    ? 'bg-white text-black border-white shadow-lg shadow-white/10'
-                                    : 'bg-[#1a1a1a] border-gray-800 text-gray-500 hover:text-white hover:border-gray-600'
+                                    ? 'bg-[#b30c25] text-white border-[#b30c25] shadow-md shadow-red-900/20'
+                                    : 'bg-white dark:bg-[#1a1a1a] border-gray-200 dark:border-[#332122] text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                                     }`}
                             >
                                 {h.name || "Sin nombre"}
@@ -297,40 +317,40 @@ const GestionAsistenciaPage = () => {
                         onClick={() => setShowInscribirModal(true)}
                         className="flex items-center justify-center gap-2 bg-[#E50914] hover:bg-[#b00710] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-red-900/20 text-sm uppercase tracking-wide hover:scale-105 active:scale-95"
                     >
-                        <span className="material-symbols-outlined">person_add</span>
+                        <UserPlus size={18} />
                         Inscribir Atleta
                     </button>
                 </div>
 
                 {/* Tabla */}
-                <div className="bg-[#1a1a1a] rounded-3xl border border-gray-800 overflow-hidden shadow-2xl shadow-black/50">
+                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] overflow-hidden shadow-xl">
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-[#111] text-gray-500 text-xs uppercase font-bold tracking-wider">
+                            <thead className="bg-gray-50 dark:bg-[#111] text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider border-b border-gray-200 dark:border-[#332122]">
                                 <tr>
-                                    <th className="px-6 py-5 text-left border-b border-gray-800">Información del Atleta</th>
-                                    <th className="px-6 py-5 text-center border-b border-gray-800">Confirmación Atleta</th>
-                                    <th className="px-6 py-5 text-center border-b border-gray-800">Hora Confirmación</th>
-                                    <th className="px-6 py-5 text-center border-b border-gray-800">Estado Asistencia</th>
-                                    <th className="px-6 py-5 text-right border-b border-gray-800">Acciones</th>
+                                    <th className="px-6 py-5 text-left">Información del Atleta</th>
+                                    <th className="px-6 py-5 text-center">Confirmación Atleta</th>
+                                    <th className="px-6 py-5 text-center">Hora Confirmación</th>
+                                    <th className="px-6 py-5 text-center">Estado Asistencia</th>
+                                    <th className="px-6 py-5 text-right">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-800">
+                            <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
                                 {isEnrollmentLoading ? (
                                     <tr><td colSpan="5" className="p-20 text-center text-gray-500">
                                         <div className="flex flex-col items-center gap-3">
-                                            <div className="w-8 h-8 border-2 border-gray-700 border-t-red-600 rounded-full animate-spin"></div>
-                                            <p className="font-medium text-xs uppercase tracking-wide">Cargando...</p>
+                                            <div className="w-8 h-8 border-2 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                                            <p className="font-medium text-xs uppercase tracking-wide">Cargando inscritos...</p>
                                         </div>
                                     </td></tr>
                                 ) : inscritos.length === 0 ? (
                                     <tr><td colSpan="5" className="p-20 text-center text-gray-500">
                                         <div className="flex flex-col items-center gap-4">
-                                            <div className="w-16 h-16 rounded-full bg-gray-800/50 flex items-center justify-center">
-                                                <span className="material-symbols-outlined text-3xl text-gray-600">group_off</span>
+                                            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                                <Users size={32} className="text-gray-400" />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-white mb-1">Sin Inscripciones</p>
+                                                <p className="font-bold text-gray-900 dark:text-white mb-1">Sin Inscripciones</p>
                                                 <p className="text-xs">No hay atletas inscritos en este horario.</p>
                                             </div>
                                         </div>
@@ -348,18 +368,18 @@ const GestionAsistenciaPage = () => {
                                         // Lógica Confirmación (Atleta)
                                         let confText = "Sin Respuesta";
                                         let confColor = "gray";
-                                        let confIcon = "help";
+                                        let confIcon = AlertCircle;
                                         let horaConf = "-";
 
                                         if (asistencia) {
                                             if (asistencia.atleta_confirmo === true) {
                                                 confText = "Confirmado";
                                                 confColor = "green";
-                                                confIcon = "check_circle";
+                                                confIcon = CheckCircle;
                                             } else if (asistencia.atleta_confirmo === false) {
                                                 confText = "No Asistirá";
                                                 confColor = "red";
-                                                confIcon = "cancel";
+                                                confIcon = XCircle;
                                             }
 
                                             if (asistencia.fecha_confirmacion) {
@@ -370,47 +390,49 @@ const GestionAsistenciaPage = () => {
                                         }
 
                                         // Lógica Estado (Entrenador)
-                                        // Binary: Presente (Green) or Ausente (Red)
                                         let estadoText = "Ausente";
                                         let estadoColor = "red";
-                                        let estadoIcon = "cancel";
+                                        let estadoIcon = XCircle;
 
                                         if (asistencia && asistencia.asistio) {
                                             estadoText = "Presente";
                                             estadoColor = "green";
-                                            estadoIcon = "check_circle";
+                                            estadoIcon = CheckCircle;
                                         }
 
                                         // Acciones
                                         const actionsDisabled = loading;
 
-                                        /* Colores dinámicos para badges (Tailwind no permite interpolación completa segura en JIT si no está safelisted, mejor hardcodear clases o mapping) */
-                                        const getBadgeClasses = (color) => {
-                                            if (color === 'green') return "bg-green-500/10 text-green-500 border-green-500/20";
-                                            if (color === 'red') return "bg-red-500/10 text-red-500 border-red-500/20";
-                                            return "bg-gray-800 text-gray-400 border-gray-700";
+                                        /* Estilos dinámicos para badges */
+                                        const getBadgeStyles = (color) => {
+                                            if (color === 'green') return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-500 dark:border-green-900/30";
+                                            if (color === 'red') return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-500 dark:border-red-900/30";
+                                            return "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700";
                                         };
 
                                         return (
-                                            <tr key={registro.id} className="hover:bg-white/5 transition-colors group">
+                                            <tr key={registro.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white font-bold border border-gray-700 group-hover:border-gray-500 transition-colors">
+                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center text-gray-600 dark:text-white font-bold border border-gray-200 dark:border-gray-700 shadow-sm">
                                                             {atleta?.user?.first_name?.charAt(0) || "A"}
                                                         </div>
                                                         <div>
-                                                            <div className="font-bold text-white">
+                                                            <div className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                                                 {atleta?.user?.first_name} {atleta?.user?.last_name}
                                                             </div>
-                                                            <div className="text-xs text-gray-500 font-medium tracking-wider">{atleta?.user?.identificacion}</div>
+                                                            <div className="text-xs text-gray-500 dark:text-gray-400 font-medium tracking-wider flex items-center gap-1">
+                                                                <User size={10} />
+                                                                {atleta?.user?.identificacion}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
 
                                                 {/* Confirmación Atleta */}
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getBadgeClasses(confColor)}`}>
-                                                        <span className="material-symbols-outlined text-sm">{confIcon}</span>
+                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getBadgeStyles(confColor)}`}>
+                                                        <confIcon size={14} />
                                                         {confText}
                                                     </span>
                                                 </td>
@@ -422,8 +444,8 @@ const GestionAsistenciaPage = () => {
 
                                                 {/* Estado Entrenador (Asistió) */}
                                                 <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getBadgeClasses(estadoColor)}`}>
-                                                        <span className="material-symbols-outlined text-sm">{estadoIcon}</span>
+                                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${getBadgeStyles(estadoColor)}`}>
+                                                        <estadoIcon size={14} />
                                                         {estadoText}
                                                     </span>
                                                 </td>
@@ -432,37 +454,35 @@ const GestionAsistenciaPage = () => {
                                                     <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                                                         <button
                                                             onClick={() => openHistory(registro)}
-                                                            className="p-2 text-gray-500 hover:text-white hover:bg-gray-700 rounded-lg transition-all"
+                                                            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:text-white dark:hover:bg-gray-700 rounded-lg transition-all"
                                                             title="Ver Historial"
                                                         >
-                                                            <span className="material-symbols-outlined">visibility</span>
+                                                            <Eye size={18} />
                                                         </button>
 
                                                         {attended ? (
-                                                            /* Si ya asistió, mostrar opción para marcar Ausente */
                                                             <button
                                                                 onClick={() => handleMarcarAusente(asistencia)}
                                                                 disabled={actionsDisabled}
-                                                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 hover:border-red-500 rounded-lg font-bold text-xs uppercase tracking-wide transition-all"
+                                                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200 rounded-lg font-bold text-xs uppercase tracking-wide transition-all
+                                                                dark:bg-red-500/10 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:border-red-500/20"
                                                                 title="Marcar Ausente"
                                                             >
-                                                                <span className="material-symbols-outlined text-sm">close</span>
+                                                                <X size={14} />
                                                                 Ausente
                                                             </button>
                                                         ) : (
-                                                            /* Si NO asistió, mostrar opción para marcar Presente */
-                                                            /* Constraint: Solo permitir si no ha rechazado explícitamente (atleta_confirmo !== false) */
                                                             <div className="relative group/btn">
                                                                 <button
                                                                     onClick={() => handlemarcarPresente(registro.id, asistencia)}
                                                                     disabled={actionsDisabled || (asistencia && asistencia.atleta_confirmo === false)}
                                                                     className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide transition-all ${(asistencia && asistencia.atleta_confirmo === false)
-                                                                        ? 'bg-gray-800 text-gray-600 border border-gray-700 cursor-not-allowed'
-                                                                        : 'bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-900/20'
+                                                                        ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600 dark:border-gray-700'
+                                                                        : 'bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/20'
                                                                         }`}
                                                                     title={asistencia && asistencia.atleta_confirmo === false ? "Atleta indicó que no asistirá" : "Marcar Presente"}
                                                                 >
-                                                                    <span className="material-symbols-outlined text-sm">check</span>
+                                                                    <Check size={14} />
                                                                     Asistió
                                                                 </button>
                                                             </div>
@@ -470,10 +490,10 @@ const GestionAsistenciaPage = () => {
 
                                                         <button
                                                             onClick={() => handleEliminarInscripcion(registro.id)}
-                                                            className="p-2 text-gray-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
                                                             title="Eliminar Inscripción"
                                                         >
-                                                            <span className="material-symbols-outlined">delete</span>
+                                                            <Trash2 size={18} />
                                                         </button>
                                                     </div>
                                                 </td>

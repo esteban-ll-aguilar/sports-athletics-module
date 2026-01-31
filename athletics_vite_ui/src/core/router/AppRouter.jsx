@@ -45,6 +45,7 @@ import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntre
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
 import HistorialMedicoPage from '@modules/entrenador/ui/pages/HistorialMedicoPage';
 import RendimientoPage from '@modules/entrenador/ui/pages/RendimientoPage';
+import ResultadosEntrenamientoPage from '@modules/entrenador/ui/pages/ResultadosEntrenamientoPage';
 
 
 // Representante
@@ -64,7 +65,7 @@ const router = createBrowserRouter([
   // Public Routes
   {
     path: '/',
-    element: <MainLayout />,
+    element: <Outlet />,
     children: [
       { index: true, element: <HomePage /> },
     ],
@@ -105,7 +106,7 @@ const router = createBrowserRouter([
             ),
             children: [
               {
-                element: <Outlet />,   // 👈 ESTO ES CLAVE
+                element: <Outlet />,
                 children: [
                   { index: true, element: <PruebasPage /> },
                   { path: 'resultados', element: <RegistroPruebasPage /> },
@@ -142,7 +143,9 @@ const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
             children: [
               { index: true, element: <GestionEntrenamientosPage /> },
+              { path: 'resultados', element: <ResultadosEntrenamientoPage /> },
               { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
+              { path: ':id/resultados', element: <ResultadosEntrenamientoPage /> },
 
             ],
           },

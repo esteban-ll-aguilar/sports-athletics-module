@@ -3,10 +3,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 import uuid
 
-# Modelo de datos para ItemBaremo (Rangos del Baremo)
 class ItemBaremo(Base):
+    """
+    Representa un rango específico de rendimiento dentro de un Baremo.
+    
+    Esta entidad define los umbrales (marcas) que un atleta debe alcanzar para obtener
+    una clasificación determinada (ej. 'Excelente', 'Promedio', o puntajes numéricos).
+    """
     __tablename__ = "item_baremo"
-
+    # Identificadores
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     external_id: Mapped[uuid.UUID] = mapped_column(
         default=uuid.uuid4,
@@ -16,7 +21,7 @@ class ItemBaremo(Base):
         server_onupdate=text("gen_random_uuid()")
     )
     
-    # FK
+    # Llaves foraneas
     baremo_id: Mapped[int] = mapped_column(Integer, ForeignKey("baremo.id"), nullable=False)
     
     clasificacion: Mapped[str] = mapped_column(String, nullable=False)
@@ -24,5 +29,5 @@ class ItemBaremo(Base):
     marca_maxima: Mapped[float] = mapped_column(Float, nullable=False)
     estado: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    # Relationships
+    # Relaciones
     baremo: Mapped["Baremo"] = relationship("Baremo", back_populates="items")

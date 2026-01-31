@@ -40,15 +40,27 @@ async def crear_resultado(
         )
 
 
+from app.modules.auth.domain.enums import RoleEnum
+
 @router.get("", response_model=BaseResponse)
 async def listar_resultados(
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todos los resultados del entrenador (filtra por estado y entrenador)."""
+    """Listar todos los resultados. Administradores ven todo, Entrenadores tambien."""
     try:
-        resultados = await service.get_all(incluir_inactivos, current_user.id)
+        entrenador_id = current_user.id
+        
+        # Obtener rol como string de forma segura
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+
+        # Entrenadores y Admins ven todo
+        if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
+            entrenador_id = None
+            
+        resultados = await service.get_all(incluir_inactivos, entrenador_id)
         if not resultados:
              return ResponseHandler.success_response(
                 summary="No hay resultados de competencia registrados",

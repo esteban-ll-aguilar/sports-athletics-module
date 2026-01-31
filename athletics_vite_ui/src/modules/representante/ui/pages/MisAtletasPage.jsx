@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RepresentanteService from '../../services/RepresentanteService';
 import { toast } from 'react-hot-toast';
+import { Users, Plus, Edit, Activity, User, Phone, MapPin, Hash, Briefcase, Search, X, Save } from 'lucide-react';
 
 const MisAtletasPage = () => {
     const navigate = useNavigate();
@@ -16,7 +17,6 @@ const MisAtletasPage = () => {
         try {
             setLoading(true);
             const response = await RepresentanteService.getMyAthletes();
-            // response is standardized as { success: true, message: "...", data: [...] }
             if (response.success) {
                 setAthletes(response.data || []);
             } else {
@@ -87,7 +87,7 @@ const MisAtletasPage = () => {
             if (response.success) {
                 toast.success(response.message || "Información actualizada correctamente.", { id: toastId });
                 setShowEditModal(false);
-                fetchAthletes(); // Refresh list
+                fetchAthletes();
             } else {
                 toast.error(response.message || "Error al actualizar.", { id: toastId });
             }
@@ -105,175 +105,222 @@ const MisAtletasPage = () => {
         });
     };
 
-    if (loading && !showEditModal) { // Only show full loading if not in modal flow (though verified loading state usage)
+    if (loading && !showEditModal) {
         return (
-            <div className="flex justify-center p-12">
-                <span className="material-symbols-outlined animate-spin text-4xl text-red-600">progress_activity</span>
+            <div className="flex flex-col justify-center items-center h-[60vh] gap-4">
+                <div className="w-12 h-12 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Cargando atletas...</span>
             </div>
         );
     }
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                {/* Header content */}
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Mis Atletas</h1>
-                    <p className="text-gray-500">Gestiona los atletas que tienes registrados.</p>
+        <div className="p-6 min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div>
+                        <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Mis Atletas</h1>
+                        <p className="mt-2 text-gray-500 dark:text-gray-400">Gestiona los atletas que tienes registrados bajo tu representación.</p>
+                    </div>
+                    <div className="flex gap-4 items-center w-full md:w-auto">
+                        <button
+                            onClick={() => navigate('/dashboard/representante/register-athlete')}
+                            className="flex items-center justify-center gap-2 bg-linear-to-r from-[#b30c25] to-[#80091b] text-white px-6 py-3 rounded-xl hover:brightness-110 transition-all shadow-lg shadow-red-900/20 active:scale-95 font-bold w-full md:w-auto"
+                        >
+                            <Plus size={20} />
+                            Registrar Atleta
+                        </button>
+                    </div>
                 </div>
-                <button
-                    onClick={() => navigate('/dashboard/representante/register-athlete')}
-                    className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors shadow-sm"
-                >
-                    <span className="material-symbols-outlined">add</span>
-                    Registrar Atleta
-                </button>
+
+                {/* Content */}
+                {athletes.length === 0 && !loading ? (
+                    <div className="text-center py-20 bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] flex flex-col items-center">
+                        <div className="bg-gray-50 dark:bg-[#2a2829] w-24 h-24 rounded-full flex items-center justify-center mb-6">
+                            <Users size={48} className="text-gray-400 dark:text-gray-500" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">No tienes atletas registrados</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2 mb-8 max-w-sm">Registra a tus hijos o representados para gestionar sus entrenamientos y competencias.</p>
+                        <button
+                            onClick={() => navigate('/dashboard/representante/register-athlete')}
+                            className="text-[#b30c25] font-bold hover:text-red-700 hover:underline flex items-center gap-2"
+                        >
+                            <Plus size={18} />
+                            Registrar mi primer atleta
+                        </button>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {athletes.map((atleta) => (
+                            <div key={atleta.id} className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] overflow-hidden hover:shadow-xl transition-all duration-300 group">
+                                <div className="p-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-[#b30c25]/20 dark:to-[#80091b]/20 flex items-center justify-center text-[#b30c25] font-black text-xl shadow-inner">
+                                            {atleta.user?.first_name?.charAt(0) || 'A'}
+                                        </div>
+                                        <div className="overflow-hidden">
+                                            <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate" title={`${atleta.user?.first_name} ${atleta.user?.last_name}`}>
+                                                {atleta.user?.first_name} {atleta.user?.last_name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+                                                <User size={12} />
+                                                {atleta.user?.username}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-[#332122] grid grid-cols-2 gap-4 text-sm">
+                                        <div className="space-y-1">
+                                            <span className="flex items-center gap-1.5 text-gray-400 text-xs font-semibold uppercase tracking-wider">
+                                                <Hash size={12} />
+                                                Identificación
+                                            </span>
+                                            <span className="font-semibold text-gray-700 dark:text-gray-300 block truncate" title={atleta.user?.identificacion}>
+                                                {atleta.user?.identificacion}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="flex items-center gap-1.5 text-gray-400 text-xs font-semibold uppercase tracking-wider">
+                                                <Activity size={12} />
+                                                Experiencia
+                                            </span>
+                                            <span className="font-semibold text-gray-700 dark:text-gray-300 block">
+                                                {atleta.anios_experiencia} años
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 dark:bg-[#1a1a1a] px-6 py-4 flex justify-between items-center border-t border-gray-100 dark:border-[#332122]">
+                                    <button
+                                        onClick={() => handleEditClick(atleta.id)}
+                                        className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold flex items-center gap-2 transition-colors"
+                                    >
+                                        <Edit size={16} />
+                                        Editar
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/dashboard/representante/atleta/${atleta.id}`)}
+                                        className="text-sm text-[#b30c25] hover:text-[#80091b] dark:hover:text-red-400 font-bold flex items-center gap-2 transition-colors"
+                                    >
+                                        <Activity size={16} />
+                                        Rendimiento
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {athletes.length === 0 && !loading ? (
-                <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100">
-                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span className="material-symbols-outlined text-4xl text-gray-400">groups</span>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900">No tienes atletas registrados</h3>
-                    <p className="text-gray-500 mt-2 mb-6 max-w-sm mx-auto">Registra a tus hijos o representados para gestionar sus entrenamientos.</p>
-                    <button
-                        onClick={() => navigate('/dashboard/representante/register-athlete')}
-                        className="text-red-600 font-medium hover:text-red-700 hover:underline"
-                    >
-                        Registrar mi primer atleta
-                    </button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {athletes.map((atleta) => (
-                        <div key={atleta.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                            <div className="p-5">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-xl">
-                                        {atleta.user?.first_name?.charAt(0) || 'A'}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900">{atleta.user?.first_name} {atleta.user?.last_name}</h3>
-                                        <p className="text-sm text-gray-500">{atleta.user?.email}</p>
-                                    </div>
-                                </div>
-                                <div className="mt-4 pt-4 border-t border-gray-50 grid grid-cols-2 gap-4 text-sm">
-                                    <div>
-                                        <span className="block text-gray-400 text-xs">Identificación</span>
-                                        <span className="font-medium text-gray-700">{atleta.user?.identificacion}</span>
-                                    </div>
-                                    <div>
-                                        <span className="block text-gray-400 text-xs">Experiencia</span>
-                                        <span className="font-medium text-gray-700">{atleta.anios_experiencia} años</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-gray-50 px-5 py-3 flex justify-end gap-2">
-                                <button
-                                    onClick={() => handleEditClick(atleta.id)}
-                                    className="text-sm text-gray-600 hover:text-blue-600 font-medium flex items-center gap-1"
-                                >
-                                    <span className="material-symbols-outlined text-base">edit</span>
-                                    Editar
-                                </button>
-                                <button
-                                    onClick={() => navigate(`/dashboard/representante/atleta/${atleta.id}`)}
-                                    className="text-sm text-gray-600 hover:text-red-600 font-medium flex items-center gap-1"
-                                >
-                                    <span className="material-symbols-outlined text-base">monitoring</span>
-                                    Ver Rendimiento
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
+            {/* Edit Modal */}
             {showEditModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold dark:text-white">Editar Información del Atleta</h2>
-                            <button onClick={() => setShowEditModal(false)} className="text-gray-500 hover:text-gray-700">
-                                <span className="material-symbols-outlined">close</span>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-[#212121] rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-200 dark:border-[#332122] max-h-[90vh] overflow-y-auto transform transition-all animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100 dark:border-[#332122] sticky top-0 bg-white dark:bg-[#212121] z-10">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Editar Información</h2>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Actualiza los datos del atleta.</p>
+                            </div>
+                            <button onClick={() => setShowEditModal(false)} className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#332122] rounded-full transition-all">
+                                <X size={20} />
                             </button>
                         </div>
-                        <form onSubmit={handleUpdate} className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
-                                    <input
-                                        type="text"
-                                        name="first_name"
-                                        value={editFormData.first_name}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+
+                        <form onSubmit={handleUpdate} className="p-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nombre</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            name="first_name"
+                                            value={editFormData.first_name}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label>
-                                    <input
-                                        type="text"
-                                        name="last_name"
-                                        value={editFormData.last_name}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Apellido</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            name="last_name"
+                                            value={editFormData.last_name}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Identificación</label>
-                                    <input
-                                        type="text"
-                                        name="identificacion"
-                                        value={editFormData.identificacion}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Identificación</label>
+                                    <div className="relative">
+                                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            name="identificacion"
+                                            value={editFormData.identificacion}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        value={editFormData.phone}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Teléfono</label>
+                                    <div className="relative">
+                                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            value={editFormData.phone}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Dirección</label>
-                                    <input
-                                        type="text"
-                                        name="direccion"
-                                        value={editFormData.direccion}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+                                <div className="md:col-span-2 space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Dirección</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="text"
+                                            name="direccion"
+                                            value={editFormData.direccion}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Años de Experiencia</label>
-                                    <input
-                                        type="number"
-                                        name="anios_experiencia"
-                                        value={editFormData.anios_experiencia}
-                                        onChange={handleChange}
-                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
-                                    />
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Años de Experiencia</label>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <input
+                                            type="number"
+                                            name="anios_experiencia"
+                                            value={editFormData.anios_experiencia}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+
+                            <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-[#332122] mt-6">
                                 <button
                                     type="button"
-                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
                                     onClick={() => setShowEditModal(false)}
+                                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-[#1a1a1a] text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-[#2a2829] transition-all"
                                 >
                                     Cancelar
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    className="flex-1 px-4 py-3 bg-linear-to-r from-[#b30c25] to-[#80091b] text-white rounded-xl font-bold hover:brightness-110 shadow-lg shadow-red-900/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                                 >
+                                    <Save size={18} />
                                     Guardar Cambios
                                 </button>
                             </div>

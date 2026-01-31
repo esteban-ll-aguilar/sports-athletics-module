@@ -11,12 +11,28 @@ class PasswordResetService:
         self.max_attempts = 3
 
     def generate_reset_code(self, length: int = 6) -> str:
-        """Genera un código de reset aleatorio usando secrets (más seguro que random)."""
+        """
+        Genera un código de restablecimiento aleatorio alfanumérico.
+        
+        Args:
+           length (int): Longitud del código.
+           
+        Returns:
+           str: Código generado.
+        """
         alphabet = string.ascii_uppercase + string.digits
         return "".join(secrets.choice(alphabet) for _ in range(length))
 
     async def store_reset_code(self, email: str, code: str) -> None:
-        """Almacena un código de reset en Redis con expiración de 5 minutos."""
+        """
+        Almacena un código de restablecimiento en Redis.
+        
+        El código expira después de self.expiry_seconds.
+        
+        Args:
+            email (str): Email del usuario.
+            code (str): Código a almacenar.
+        """
         key = f"password_reset:{email}"
         data = {
             "code": code,
@@ -30,7 +46,18 @@ class PasswordResetService:
         await pipe.execute()
 
     async def validate_reset_code_only(self, email: str, code: str) -> bool:
-        """Valida un código de reset sin consumirlo. Solo para verificación."""
+        """
+        Valida que el código sea correcto SIN consumirlo y SIN contar intentos.
+        
+        Útil para verificaciones intermedias donde no se quiere invalidar el código aún.
+        
+        Args:
+            email (str): Email del usuario.
+            code (str): Código a verificar.
+            
+        Returns:
+            bool: True si coincide.
+        """
         key = f"password_reset:{email}"
         
         # Obtener datos del código
@@ -50,7 +77,16 @@ class PasswordResetService:
         return stored_code == code
 
     async def validate_reset_code(self, email: str, code: str) -> bool:
-        """Valida un código de reset. Retorna True si es válido."""
+        """
+        Valida un código de reset, incrementa intentos y lo consume si es correcto.
+        
+        Args:
+            email (str): Email del usuario.
+            code (str): Código a validar.
+            
+        Returns:
+            bool: True si el código es válido.
+        """
         key = f"password_reset:{email}"
         
         # Obtener datos del código
@@ -77,7 +113,19 @@ class PasswordResetService:
         return False
 
     async def consume_reset_code(self, email: str, code: str) -> bool:
-        """Consume un código de reset después de validación exitosa."""
+        """
+        Verifica y consume un código de reset (similar a validate_reset_code).
+        
+        Diferencia semántica: esta función está explícitamente destinada a ser usada
+        cuando el usuario efectivamente realiza la acción de resetear la contraseña.
+        
+        Args:
+            email (str): Email del usuario.
+            code (str): Código a consumir.
+            
+        Returns:
+            bool: True si fue consumido exitosamente.
+        """
         key = f"password_reset:{email}"
         
         # Obtener datos del código
@@ -103,11 +151,24 @@ class PasswordResetService:
         return False
 
     async def delete_reset_code(self, email: str) -> None:
-        """Elimina un código de reset."""
+        """
+        Elimina el código de reset asociado a un email.
+        
+        Args:
+            email (str): Email del usuario.
+        """
         key = f"password_reset:{email}"
         await self.redis.delete(key)
 
     async def code_exists(self, email: str) -> bool:
-        """Verifica si existe un código activo para el email."""
+        """
+        Verifica si existe un código de reset activo para el email.
+        
+        Args:
+            email (str): Email del usuario.
+            
+        Returns:
+            bool: True si existe.
+        """
         key = f"password_reset:{email}"
         return await self.redis.exists(key) > 0
