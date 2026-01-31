@@ -152,7 +152,7 @@ class ExternalUsersApiService:
             status=200 if response.json().get("status") == "success" else 404
         )
 
-    async def search_user_by_dni(self, user_dni: int) -> BaseResponse:
+    async def search_user_by_dni(self, user_dni: str) -> BaseResponse:
         await self._ensure_token()
         headers = {
             **self.headers,

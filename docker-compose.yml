@@ -150,7 +150,26 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
 
+  # ============================================
+  # Frontend (Vite UI)
+  # ============================================
+  frontend:
+    build:
+      context: ./athletics_vite_ui
+      dockerfile: Dockerfile
+    image: athletics_vite_ui:latest
+    container_name: vite-ui
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    restart: unless-stopped
+
 volumes:
   mariadb_data:
   postgres_data:
   redis_data:
+
+

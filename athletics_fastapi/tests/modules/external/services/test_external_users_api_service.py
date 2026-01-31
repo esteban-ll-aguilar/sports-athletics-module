@@ -92,6 +92,6 @@ async def test_search_user_by_dni_success(service, mock_repo):
 
     with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_response
-        response = await service.search_user_by_dni(123)
+        response = await service.search_user_by_dni("0705743177")
     
     assert response.data["external"] == "uuid"
