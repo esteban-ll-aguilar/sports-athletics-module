@@ -9,7 +9,6 @@ from app.main import _APP
 from app.modules.auth.dependencies import (
     get_sessions_repo, get_jwt_manager
 )
-from app.modules.auth.domain.schemas import SessionInfo
 from datetime import datetime, timedelta, UTC
 import pytest_asyncio
 

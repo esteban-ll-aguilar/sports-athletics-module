@@ -3,10 +3,9 @@ Módulo de Pruebas para el Servicio de Resultados de Competencia.
 Verifica la lógica de negocio para registrar y consultar resultados de los atletas en competencias.
 """
 import pytest
-from uuid import uuid4, UUID
+from uuid import uuid4
 from types import SimpleNamespace
 from unittest.mock import Mock, AsyncMock
-from datetime import date
 from fastapi import HTTPException
 
 from app.modules.competencia.services.resultado_competencia_service import (

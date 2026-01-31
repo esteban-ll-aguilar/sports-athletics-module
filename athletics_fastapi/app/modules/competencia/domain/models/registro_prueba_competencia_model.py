@@ -1,15 +1,12 @@
-from sqlalchemy import Integer, Boolean, ForeignKey, UUID as PG_UUID, text, Float, Date
+from sqlalchemy import Integer, ForeignKey, text, Float, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid
 from typing import TYPE_CHECKING
-from enum import Enum as PyEnum
 
 
 # 👇 SOLO para tipado (evita import circular)
 if TYPE_CHECKING:
-    from app.modules.competencia.domain.models.competencia_model import Competencia
     from app.modules.competencia.domain.models.prueba_model import Prueba
     from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 

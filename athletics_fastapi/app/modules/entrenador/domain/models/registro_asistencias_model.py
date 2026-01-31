@@ -1,15 +1,12 @@
-from sqlalchemy import Integer, String, ForeignKey, Boolean, UUID as PG_UUID, text
+from sqlalchemy import Integer, ForeignKey, text
 from typing import List, TYPE_CHECKING
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
 if TYPE_CHECKING:
     from app.modules.atleta.domain.models.atleta_model import Atleta
     from app.modules.entrenador.domain.models.asistencia_model import Asistencia
-    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
-    from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
 
 
 class RegistroAsistencias(Base):

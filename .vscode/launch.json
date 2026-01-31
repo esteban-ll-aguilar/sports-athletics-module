@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI: Debug Run.py",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/athletics_fastapi/run.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/athletics_fastapi",
+            "python": "${workspaceFolder}/athletics_fastapi/venv/Scripts/python.exe"
+        },
+        {
+            "name": "FastAPI: Debug Uvicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:_APP",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8080",
+                "--reload"
+            ],
+            "cwd": "${workspaceFolder}/athletics_fastapi",
+            "python": "${workspaceFolder}/athletics_fastapi/venv/Scripts/python.exe",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/athletics_fastapi"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

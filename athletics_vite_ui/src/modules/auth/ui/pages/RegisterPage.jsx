@@ -320,6 +320,9 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Nombre"
                                     />
+                                    {fieldErrors.first_name && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
@@ -331,6 +334,9 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Apellido"
                                     />
+                                    {fieldErrors.last_name && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -355,6 +361,7 @@ const RegisterPage = () => {
                                         </span>
                                     </label>
                                     <input
+                                        type="number"
                                         name="identificacion"
                                         required
                                         value={formData.identificacion}
@@ -364,6 +371,9 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0123456789"
                                     />
+                                    {fieldErrors.identificacion && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -371,13 +381,17 @@ const RegisterPage = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
                                     <input
+                                        type="number"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
-                                        inputMode="tel"
+                                        inputMode="numeric"
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0999999999"
                                     />
+                                    {fieldErrors.phone && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
@@ -388,6 +402,9 @@ const RegisterPage = () => {
                                         className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Tu dirección"
                                     />
+                                    {fieldErrors.direccion && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -405,6 +422,9 @@ const RegisterPage = () => {
                                     onChange={handleChange}
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
                                 />
+                                {fieldErrors.fecha_nacimiento && (
+                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>
+                                )}
                             </div>
 
                             <div>
@@ -416,13 +436,13 @@ const RegisterPage = () => {
                                     value={formData.sexo}
                                     onChange={handleChange}
                                     className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
+                                    block w-full pl-10 pr-3 py-2.5
+                                    bg-white text-black
+                                    border border-gray-300 rounded-lg
+                                    placeholder-gray-500
+                                    focus:ring-[#b30c25] focus:border-[#b30c25]
+                                    sm:text-sm
+                                "
                                 >
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
@@ -473,6 +493,9 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="Nombre de usuario"
                                 />
+                                {fieldErrors.username && (
+                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>
+                                )}
                             </div>
 
                             <div>
@@ -486,6 +509,9 @@ const RegisterPage = () => {
                                     className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
+                                {fieldErrors.email && (
+                                    <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -518,6 +544,9 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    {fieldErrors.password && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
@@ -548,6 +577,9 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && (
+                                        <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>
+                                    )}
                                 </div>
                             </div>
                             <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>

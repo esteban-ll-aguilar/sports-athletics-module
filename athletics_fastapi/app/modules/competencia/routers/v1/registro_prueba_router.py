@@ -1,9 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from uuid import UUID
-from typing import List
 
-from app.core.jwt.jwt import get_current_user
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 from app.modules.competencia.domain.schemas.resultado_prueba_schema import (
     ResultadoPruebaCreate,

@@ -3,7 +3,7 @@ import qrcode
 import io
 import base64
 import json
-from typing import Tuple, Optional
+from typing import Optional
 from passlib.context import CryptContext
 
 

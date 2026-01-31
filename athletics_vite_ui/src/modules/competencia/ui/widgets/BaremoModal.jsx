@@ -233,14 +233,16 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                   </div>
                   <div className="flex-[2] w-full">
                     <label className="text-xs text-gray-500 mb-1 block">Clasificación</label>
-                    <input
-                      type="text"
+                    <select
                       className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm uppercase"
                       value={item.clasificacion}
                       onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
-                      placeholder="Ej: AVANZADO"
                       required
-                    />
+                    >
+                      <option value="PRINCIPIANTE">PRINCIPIANTE</option>
+                      <option value="INTERMEDIO">INTERMEDIO</option>
+                      <option value="AVANZADO">AVANZADO</option>
+                    </select>
                   </div>
                   <button
                     type="button"

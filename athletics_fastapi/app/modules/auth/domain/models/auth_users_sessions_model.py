@@ -2,7 +2,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, ForeignKey, Boolean, DateTime, String, text, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
-import datetime, uuid
+import datetime
+import uuid
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

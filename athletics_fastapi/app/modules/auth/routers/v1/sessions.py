@@ -14,7 +14,6 @@ from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, get_current_user
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.core.logging.logger import logger
-from app.modules.modules import APP_TAGS_V1
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)

@@ -1,7 +1,6 @@
 """Modelo de Resultado de Competencia corregido para usar auth_users como atleta."""
 from sqlalchemy import Integer, String, Date, Float, Boolean, ForeignKey, DateTime, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 import uuid
 import datetime
