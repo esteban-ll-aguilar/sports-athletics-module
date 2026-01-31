@@ -5,7 +5,7 @@ Verifica la lógica de negocio para registrar y consultar resultados de los atle
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock, AsyncMock, patch
 from fastapi import HTTPException
 
 from app.modules.competencia.services.resultado_competencia_service import (
@@ -241,3 +241,180 @@ async def test_count():
     result = await service.count()
 
     assert result == 5
+
+
+@pytest.mark.asyncio
+async def test_create_resultado_atleta_not_found_by_external_id_but_by_user():
+    """
+    Verifica creación cuando atleta no se encuentra por external_id pero sí por user external_id.
+    """
+    repo = Mock()
+    repo.create = AsyncMock()
+    repo.session = Mock()
+
+    competencia_repo = Mock()
+    atleta_repo = Mock()
+    prueba_repo = Mock()
+    user_repo_mock = Mock()
+
+    competencia = SimpleNamespace(id=1)
+    atleta = SimpleNamespace(id=2, user_id=10)
+    prueba = SimpleNamespace(id=3)
+    user = SimpleNamespace(id=10)
+
+    competencia_repo.get_by_external_id = AsyncMock(return_value=competencia)
+    atleta_repo.get_by_external_id = AsyncMock(return_value=None)  # Not found by external_id
+    atleta_repo.get_by_user_id = AsyncMock(return_value=atleta)  # Found by user_id
+    prueba_repo.get_by_external_id = AsyncMock(return_value=prueba)
+
+    # Mock the AuthUsersRepository
+    with patch('app.modules.auth.repositories.auth_users_repository.AuthUsersRepository') as mock_auth_repo_class:
+        mock_auth_repo_class.return_value = user_repo_mock
+        user_repo_mock.get_by_external_id = AsyncMock(return_value=user)
+
+        resultado_fake = SimpleNamespace(resultado=10.5)
+        repo.create.return_value = resultado_fake
+
+        service = ResultadoCompetenciaService(
+            repo, competencia_repo, atleta_repo, prueba_repo
+        )
+
+        data = ResultadoCompetenciaCreate(
+            competencia_id=uuid4(),
+            atleta_id=uuid4(),
+            prueba_id=uuid4(),
+            resultado=10.5,
+            unidad_medida="SEGUNDOS",
+            posicion_final="1",
+            puesto_obtenido=1,
+            observaciones="Excelente",
+            estado=True
+        )
+
+        result = await service.create(data, entrenador_id=1)
+
+        assert result == resultado_fake
+
+
+@pytest.mark.asyncio
+async def test_create_resultado_atleta_not_found():
+    """
+    Verifica error cuando atleta no se encuentra ni por external_id ni por user.
+    """
+    repo = Mock()
+    repo.session = Mock()
+
+    competencia_repo = Mock()
+    atleta_repo = Mock()
+    prueba_repo = Mock()
+    user_repo_mock = Mock()
+
+    competencia = SimpleNamespace(id=1)
+    prueba = SimpleNamespace(id=3)
+
+    competencia_repo.get_by_external_id = AsyncMock(return_value=competencia)
+    atleta_repo.get_by_external_id = AsyncMock(return_value=None)
+    prueba_repo.get_by_external_id = AsyncMock(return_value=prueba)
+
+    with patch('app.modules.auth.repositories.auth_users_repository.AuthUsersRepository') as mock_auth_repo_class:
+        mock_auth_repo_class.return_value = user_repo_mock
+        user_repo_mock.get_by_external_id = AsyncMock(return_value=None)  # User not found
+
+        service = ResultadoCompetenciaService(
+            repo, competencia_repo, atleta_repo, prueba_repo
+        )
+
+        data = ResultadoCompetenciaCreate(
+            competencia_id=uuid4(),
+            atleta_id=uuid4(),
+            prueba_id=uuid4(),
+            resultado=10.5,
+            unidad_medida="SEGUNDOS",
+            posicion_final="1",
+            puesto_obtenido=1,
+            observaciones="Excelente",
+            estado=True
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            await service.create(data, entrenador_id=1)
+
+        assert exc_info.value.status_code == 404
+        assert "Atleta no encontrado" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_create_resultado_prueba_not_found():
+    """
+    Verifica error cuando prueba no se encuentra.
+    """
+    repo = Mock()
+
+    competencia_repo = Mock()
+    atleta_repo = Mock()
+    prueba_repo = Mock()
+
+    competencia = SimpleNamespace(id=1)
+    atleta = SimpleNamespace(id=2, user_id=10)
+
+    competencia_repo.get_by_external_id = AsyncMock(return_value=competencia)
+    atleta_repo.get_by_external_id = AsyncMock(return_value=atleta)
+    prueba_repo.get_by_external_id = AsyncMock(return_value=None)
+
+    service = ResultadoCompetenciaService(
+        repo, competencia_repo, atleta_repo, prueba_repo
+    )
+
+    data = ResultadoCompetenciaCreate(
+        competencia_id=uuid4(),
+        atleta_id=uuid4(),
+        prueba_id=uuid4(),
+        resultado=10.5,
+        unidad_medida="SEGUNDOS",
+        posicion_final="1ro",
+        puesto_obtenido=1,
+        observaciones="Excelente",
+        estado=True
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await service.create(data, entrenador_id=1)
+
+    assert exc_info.value.status_code == 404
+    assert "Prueba no encontrada" in exc_info.value.detail
+
+
+@pytest.mark.asyncio
+async def test_get_all():
+    """
+    Verifica obtención de todos los resultados.
+    """
+    repo = Mock()
+    repo.get_all = AsyncMock(return_value=[])
+
+    service = ResultadoCompetenciaService(
+        repo, Mock(), Mock(), Mock()
+    )
+
+    result = await service.get_all()
+
+    assert result == []
+    repo.get_all.assert_called_once_with(True, None)
+
+
+@pytest.mark.asyncio
+async def test_get_all_with_params():
+    """
+    Verifica obtención de todos los resultados con parámetros.
+    """
+    repo = Mock()
+    repo.get_all = AsyncMock(return_value=[])
+
+    service = ResultadoCompetenciaService(
+        repo, Mock(), Mock(), Mock()
+    )
+
+    result = await service.get_all(incluir_inactivos=False, entrenador_id=1)
+
+    assert result == []
+    repo.get_all.assert_called_once_with(False, 1)
