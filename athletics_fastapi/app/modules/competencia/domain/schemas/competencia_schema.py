@@ -9,6 +9,7 @@ from pydantic import field_validator
 # Competencia Schemas
 # -----------------------------
 class CompetenciaBase(BaseModel):
+    """Información base compartida para una competencia."""
     nombre: str = Field(..., min_length=1, max_length=255)
     descripcion: Optional[str] = None
     fecha: date
@@ -16,7 +17,7 @@ class CompetenciaBase(BaseModel):
     estado: bool = True
 
 class CompetenciaCreate(CompetenciaBase):
-    """Schema para crear Competencia."""
+    """Esquema de entrada para registrar una nueva competencia."""
     pass
 
 class CompetenciaUpdate(BaseModel):
@@ -39,6 +40,7 @@ class CompetenciaRead(CompetenciaBase):
 # Resultado Competencia Schemas
 # -----------------------------
 class ResultadoCompetenciaBase(BaseModel):
+    """Datos fundamentales de un desempeño individual."""
     resultado: float
     unidad_medida: str = "METROS"
     posicion_final: str
@@ -47,6 +49,7 @@ class ResultadoCompetenciaBase(BaseModel):
     estado: bool = True
 
 class UnidadMedidaEnum(str, Enum):
+    """Define las unidades físicas permitidas para los resultados deportivos."""
     SEGUNDOS = "SEGUNDOS"
     METROS = "METROS"
     PUNTOS = "PUNTOS"
@@ -55,8 +58,10 @@ class UnidadMedidaEnum(str, Enum):
     CENTIMETROS = "CENTIMETROS"
 
 class ResultadoCompetenciaCreate(BaseModel):
-    """Schema para crear Resultado. IDs vienen como UUID desde el frontend."""
-    # IDs externos (UUIDs)
+    """
+    Esquema para crear un resultado. 
+    Se espera que el cliente envíe UUIDs (external_id) para las relaciones.
+    """
     competencia_id: UUID
     atleta_id: UUID
     prueba_id: UUID
@@ -75,6 +80,7 @@ class ResultadoCompetenciaCreate(BaseModel):
     @field_validator('resultado')
     @classmethod
     def validar_resultado_positivo(cls, v):
+        """Asegura que la marca deportiva no sea un valor negativo."""
         if v < 0:
             raise ValueError('El resultado no puede ser negativo')
         return v
@@ -82,12 +88,13 @@ class ResultadoCompetenciaCreate(BaseModel):
     @field_validator('puesto_obtenido')
     @classmethod
     def validar_puesto(cls, v):
-        # Si el valor es None, no validamos nada (porque es Optional)
+        """Valida que el puesto, de existir, sea un número natural positivo."""
         if v is not None and v <= 0:
             raise ValueError('El puesto obtenido debe ser mayor a 0')
         return v
 
 class ResultadoCompetenciaUpdate(BaseModel):
+    """Esquema para actualizaciones parciales de una competencia."""
     resultado: Optional[float] = None
     unidad_medida: Optional[str] = None
     posicion_final: Optional[str] = None
@@ -96,6 +103,7 @@ class ResultadoCompetenciaUpdate(BaseModel):
     estado: Optional[bool] = None
 
 class ResultadoCompetenciaRead(ResultadoCompetenciaBase):
+    """Esquema de salida con datos de auditoría e identidad interna."""
     id: int
     external_id: UUID
     competencia_id: int   # ✅ IDs internos como int
