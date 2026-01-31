@@ -3,9 +3,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import LoginPage from '../../modules/auth/ui/pages/LoginPage'
 import authService from '../../modules/auth/services/auth_service'
 import { BrowserRouter } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 
 // Mocks
 vi.mock('../../modules/auth/services/auth_service')
+vi.mock('react-hot-toast', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn()
+    }
+}))
+
 const mockNavigate = vi.fn()
 
 vi.mock('react-router-dom', async () => {
@@ -17,7 +25,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 // Mocks para imagenes
-vi.mock('@assets/images/auth/login.webp', () => ({ default: 'login-image.webp' }))
+vi.mock('@assets/images/auth/login2.webp', () => ({ default: 'login-image.webp' }))
 
 describe('LoginPage', () => {
     beforeEach(() => {
@@ -43,7 +51,7 @@ describe('LoginPage', () => {
 
     it('navigates to dashboard on successful login', async () => {
         renderComponent()
-        authService.login.mockResolvedValue({}) // Simula éxito
+        authService.login.mockResolvedValue({ success: true, message: 'Login exitoso' })
 
         const emailInput = screen.getByLabelText(/correo electrónico/i)
         const passwordInput = screen.getByLabelText(/contraseña/i)
@@ -56,6 +64,7 @@ describe('LoginPage', () => {
         await waitFor(() => {
             expect(authService.login).toHaveBeenCalledWith('test@example.com', 'password123')
             expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+            expect(toast.success).toHaveBeenCalled()
         })
     })
 
@@ -79,7 +88,7 @@ describe('LoginPage', () => {
     it('shows error message on failed login', async () => {
         renderComponent()
         const errorMessage = 'Credenciales inválidas'
-        authService.login.mockRejectedValue({ detail: errorMessage }) // Simula error
+        authService.login.mockRejectedValue({ detail: errorMessage })
 
         const emailInput = screen.getByLabelText(/correo electrónico/i)
         const passwordInput = screen.getByLabelText(/contraseña/i)
@@ -90,7 +99,7 @@ describe('LoginPage', () => {
         fireEvent.click(submitButton)
 
         await waitFor(() => {
-            expect(screen.getByText(errorMessage)).toBeInTheDocument()
+            expect(toast.error).toHaveBeenCalledWith(errorMessage)
         })
     })
 

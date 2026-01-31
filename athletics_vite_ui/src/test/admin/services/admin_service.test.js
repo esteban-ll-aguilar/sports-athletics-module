@@ -16,13 +16,13 @@ describe('AdminService', () => {
 
             const result = await adminService.getUsers(1, 10)
 
-            expect(apiClient.get).toHaveBeenCalledWith('/admin/users/users/?page=1&size=10')
+            expect(apiClient.get).toHaveBeenCalledWith('/auth/users/?page=1&size=10')
             expect(result).toEqual(mockResponse)
         })
 
         it('should use default params', async () => {
             await adminService.getUsers()
-            expect(apiClient.get).toHaveBeenCalledWith('/admin/users/users/?page=1&size=20')
+            expect(apiClient.get).toHaveBeenCalledWith('/auth/users/?page=1&size=20')
         })
     })
 
@@ -31,11 +31,12 @@ describe('AdminService', () => {
             const userId = 123
             const role = 'ADMIN'
             const mockResponse = { success: true }
-            apiClient.put.mockResolvedValue(mockResponse)
+            // Service accesses response.data, so we mock nested object
+            apiClient.put.mockResolvedValue({ data: mockResponse })
 
             const result = await adminService.updateUserRole(userId, role)
 
-            expect(apiClient.put).toHaveBeenCalledWith(`/admin/users/${userId}/role`, { role })
+            expect(apiClient.put).toHaveBeenCalledWith(`/auth/users/${userId}/role`, { role })
             expect(result).toEqual(mockResponse)
         })
 

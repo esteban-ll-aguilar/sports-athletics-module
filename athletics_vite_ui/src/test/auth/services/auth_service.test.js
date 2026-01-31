@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import authService from '../../../modules/auth/services/auth_service'
 import authRepository from '../../../modules/auth/repositories/auth_repository'
+import { setAccessToken, getAccessToken } from '../../../core/api/apiClient'
 
 // Mock del repositorio
 vi.mock('../../../modules/auth/repositories/auth_repository')
@@ -8,7 +9,7 @@ vi.mock('../../../modules/auth/repositories/auth_repository')
 describe('AuthService', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        localStorage.clear()
+        setAccessToken(null)
     })
 
     afterEach(() => {
@@ -16,7 +17,7 @@ describe('AuthService', () => {
     })
 
     describe('login', () => {
-        it('should store tokens on successful login', async () => {
+        it('should call repository login', async () => {
             const mockResponse = {
                 access_token: 'mock_access_token',
                 refresh_token: 'mock_refresh_token',
@@ -28,8 +29,6 @@ describe('AuthService', () => {
 
             expect(authRepository.login).toHaveBeenCalledWith('test@test.com', 'password')
             expect(result).toEqual(mockResponse)
-            expect(localStorage.getItem('access_token')).toBe('mock_access_token')
-            expect(localStorage.getItem('refresh_token')).toBe('mock_refresh_token')
         })
 
         it('should propagate error on failed login', async () => {
@@ -37,24 +36,24 @@ describe('AuthService', () => {
             authRepository.login.mockRejectedValue(error)
 
             await expect(authService.login('wrong@test.com', 'wrongpass')).rejects.toThrow('Invalid credentials')
-            expect(localStorage.getItem('access_token')).toBeNull()
         })
     })
 
     describe('logout', () => {
-        it('should remove tokens from localStorage', () => {
-            localStorage.setItem('access_token', 'token')
-            localStorage.setItem('refresh_token', 'refresh')
+        it('should call repository logout and clear token', async () => {
+            setAccessToken('token')
+            authRepository.logout.mockResolvedValue()
 
-            authService.logout()
+            await authService.logout()
 
-            expect(localStorage.getItem('access_token')).toBeNull()
-            expect(localStorage.getItem('refresh_token')).toBeNull()
+            expect(authRepository.logout).toHaveBeenCalled()
+            expect(getAccessToken()).toBeNull()
         })
     })
 
     describe('isAuthenticated', () => {
         it('should return false if no token exists', () => {
+            setAccessToken(null)
             expect(authService.isAuthenticated()).toBe(false)
         })
 
@@ -64,34 +63,25 @@ describe('AuthService', () => {
             const payload = btoa(JSON.stringify({ exp: futureExp })) // Base64 basic encode
             const token = `header.${payload}.signature`
 
-            localStorage.setItem('access_token', token)
+            setAccessToken(token)
 
             expect(authService.isAuthenticated()).toBe(true)
         })
 
-        it('should return false and logout if token is expired', () => {
+        it('should return false if token is expired', () => {
             // Token con expiración en el pasado (1 hora)
             const pastExp = Math.floor(Date.now() / 1000) - 3600
             const payload = btoa(JSON.stringify({ exp: pastExp }))
             const token = `header.${payload}.signature`
 
-            localStorage.setItem('access_token', token)
-
-            // Espiar logout para verificar que se llama
-            const logoutSpy = vi.spyOn(authService, 'logout')
+            setAccessToken(token)
 
             expect(authService.isAuthenticated()).toBe(false)
-            expect(logoutSpy).toHaveBeenCalled()
-            expect(localStorage.getItem('access_token')).toBeNull()
         })
 
         it('should return false if token is malformed', () => {
-            localStorage.setItem('access_token', 'invalid_token_string')
-
-            const logoutSpy = vi.spyOn(authService, 'logout')
-
+            setAccessToken('invalid_token_string')
             expect(authService.isAuthenticated()).toBe(false)
-            expect(logoutSpy).toHaveBeenCalled()
         })
     })
 
@@ -167,12 +157,13 @@ describe('AuthService', () => {
 
     describe('updateProfile', () => {
         it('should call repository updateProfile', async () => {
-            const userData = { name: 'New Name' }
+            const formData = new FormData()
+            formData.append('name', 'New Name')
             authRepository.updateProfile.mockResolvedValue({ success: true })
 
-            await authService.updateProfile(userData)
+            await authService.updateProfile(formData)
 
-            expect(authRepository.updateProfile).toHaveBeenCalledWith(userData)
+            expect(authRepository.updateProfile).toHaveBeenCalledWith(formData)
         })
     })
 })

@@ -3,9 +3,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import RegisterPage from '../../modules/auth/ui/pages/RegisterPage'
 import authService from '../../modules/auth/services/auth_service'
 import { BrowserRouter } from 'react-router-dom'
+import { toast } from 'react-hot-toast'
 
 // Mocks
 vi.mock('../../modules/auth/services/auth_service')
+vi.mock('react-hot-toast', () => ({
+    toast: {
+        success: vi.fn(),
+        error: vi.fn()
+    }
+}))
+
 const mockNavigate = vi.fn()
 
 vi.mock('react-router-dom', async () => {
@@ -17,7 +25,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 // Mock assets
-vi.mock('@assets/images/auth/login.webp', () => ({ default: 'login-image.webp' }))
+vi.mock('@assets/images/auth/login2.webp', () => ({ default: 'login-image.webp' }))
 
 describe('RegisterPage', () => {
     beforeEach(() => {
@@ -59,6 +67,7 @@ describe('RegisterPage', () => {
         fireEvent.change(container.querySelector('input[name="last_name"]'), { target: { value: 'Last' } })
         fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '0123456789' } })
         fireEvent.change(container.querySelector('input[name="email"]'), { target: { value: 'email@test.com' } })
+        fireEvent.change(container.querySelector('input[name="fecha_nacimiento"]'), { target: { value: '2000-01-01' } })
 
         fireEvent.click(submitButton)
 
@@ -78,8 +87,9 @@ describe('RegisterPage', () => {
         fireEvent.change(container.querySelector('input[name="username"]'), { target: { value: 'testuser' } })
         fireEvent.change(container.querySelector('input[name="first_name"]'), { target: { value: 'Test' } })
         fireEvent.change(container.querySelector('input[name="last_name"]'), { target: { value: 'User' } })
-        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1234567890' } })
+        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1710034065' } })
         fireEvent.change(container.querySelector('input[name="email"]'), { target: { value: 'test@example.com' } })
+        fireEvent.change(container.querySelector('input[name="fecha_nacimiento"]'), { target: { value: '2000-01-01' } })
 
         fireEvent.change(container.querySelector('input[name="password"]'), { target: { value: 'Password123!' } })
         fireEvent.change(container.querySelector('input[name="confirmPassword"]'), { target: { value: 'Password123!' } })
@@ -89,6 +99,7 @@ describe('RegisterPage', () => {
         await waitFor(() => {
             expect(authService.register).toHaveBeenCalled()
             expect(mockNavigate).toHaveBeenCalledWith('/login')
+            expect(toast.success).toHaveBeenCalled()
         })
     })
 
@@ -103,8 +114,9 @@ describe('RegisterPage', () => {
         fireEvent.change(container.querySelector('input[name="username"]'), { target: { value: 'testuser' } })
         fireEvent.change(container.querySelector('input[name="first_name"]'), { target: { value: 'Test' } })
         fireEvent.change(container.querySelector('input[name="last_name"]'), { target: { value: 'User' } })
-        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1234567890' } })
+        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1710034065' } })
         fireEvent.change(container.querySelector('input[name="email"]'), { target: { value: 'test@example.com' } })
+        fireEvent.change(container.querySelector('input[name="fecha_nacimiento"]'), { target: { value: '2000-01-01' } })
 
         fireEvent.change(container.querySelector('input[name="password"]'), { target: { value: 'Password123!' } })
         fireEvent.change(container.querySelector('input[name="confirmPassword"]'), { target: { value: 'Password123!' } })
@@ -130,8 +142,9 @@ describe('RegisterPage', () => {
         fireEvent.change(container.querySelector('input[name="username"]'), { target: { value: 'testuser' } })
         fireEvent.change(container.querySelector('input[name="first_name"]'), { target: { value: 'Test' } })
         fireEvent.change(container.querySelector('input[name="last_name"]'), { target: { value: 'User' } })
-        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1234567890' } })
+        fireEvent.change(container.querySelector('input[name="identificacion"]'), { target: { value: '1710034065' } })
         fireEvent.change(container.querySelector('input[name="email"]'), { target: { value: 'test@example.com' } })
+        fireEvent.change(container.querySelector('input[name="fecha_nacimiento"]'), { target: { value: '2000-01-01' } })
 
         fireEvent.change(container.querySelector('input[name="password"]'), { target: { value: 'Password123!' } })
         fireEvent.change(container.querySelector('input[name="confirmPassword"]'), { target: { value: 'Password123!' } })
@@ -139,7 +152,7 @@ describe('RegisterPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /registrarse/i }))
 
         await waitFor(() => {
-            expect(screen.getByText(errorMessage)).toBeInTheDocument()
+            expect(toast.error).toHaveBeenCalledWith(errorMessage)
         })
     })
 })

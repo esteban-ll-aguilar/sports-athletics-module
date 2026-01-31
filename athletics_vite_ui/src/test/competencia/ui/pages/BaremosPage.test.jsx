@@ -1,18 +1,33 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
-import BaremosPage from '../../../../modules/baremo/ui/pages/BaremosPage'
-import baremoService from '../../../../modules/baremo/services/baremo_service'
+import BaremosPage from '../../../../modules/competencia/ui/pages/BaremosPage'
+import baremoService from '../../../../modules/competencia/services/baremo_service'
+import pruebaService from '../../../../modules/competencia/services/prueba_service'
+import Swal from 'sweetalert2'
 
 // Mocks
-vi.mock('../../../../modules/baremo/services/baremo_service')
-vi.mock('../../../../modules/baremo/ui/widgets/BaremoModal', () => ({
+vi.mock('../../../../modules/competencia/services/baremo_service')
+vi.mock('../../../../modules/competencia/services/prueba_service')
+vi.mock('sweetalert2', () => ({
+    default: {
+        fire: vi.fn()
+    }
+}))
+
+vi.mock('../../../../modules/competencia/ui/widgets/BaremoModal', () => ({
     default: ({ isOpen, onClose, onSubmit, editingBaremo }) => {
         if (!isOpen) return null
         return (
             <div data-testid="baremo-modal">
                 <button onClick={onClose}>Cancelar</button>
-                <button onClick={() => onSubmit({ valor_baremo: 50, clasificacion: 'A', estado: true })}>
+                <button onClick={() => onSubmit({
+                    prueba_id: 'p1',
+                    sexo: 'M',
+                    edad_min: 10,
+                    edad_max: 12,
+                    estado: true
+                })}>
                     Guardar
                 </button>
             </div>
@@ -29,16 +44,27 @@ describe('BaremosPage', () => {
     const mockBaremos = [
         {
             external_id: '1',
-            valor_baremo: 10,
-            clasificacion: 'A',
+            prueba_id: 'p1',
+            sexo: 'M',
+            edad_min: 18,
+            edad_max: 25,
+            items: [],
             estado: true
         },
         {
             external_id: '2',
-            valor_baremo: 5,
-            clasificacion: 'B',
+            prueba_id: 'p2',
+            sexo: 'F',
+            edad_min: 20,
+            edad_max: 30,
+            items: [1, 2],
             estado: false
         }
+    ]
+
+    const mockPruebas = [
+        { external_id: 'p1', nombre: '100m', tipo_medicion: 'TIEMPO' },
+        { external_id: 'p2', nombre: 'Salto', tipo_medicion: 'METROS' }
     ]
 
     const renderComponent = () => {
@@ -50,7 +76,8 @@ describe('BaremosPage', () => {
     }
 
     it('renders loading state initially', () => {
-        baremoService.getAll.mockReturnValue(new Promise(() => {}))
+        baremoService.getAll.mockReturnValue(new Promise(() => { }))
+        pruebaService.getAll.mockReturnValue(new Promise(() => { }))
         renderComponent()
 
         expect(screen.getByText(/cargando baremos/i)).toBeInTheDocument()
@@ -58,18 +85,21 @@ describe('BaremosPage', () => {
 
     it('renders baremos list', async () => {
         baremoService.getAll.mockResolvedValue(mockBaremos)
+        pruebaService.getAll.mockResolvedValue(mockPruebas)
         renderComponent()
 
         await waitFor(() => {
-            expect(screen.getByText('10')).toBeInTheDocument()
-            expect(screen.getByText('5')).toBeInTheDocument()
-            expect(screen.getByText('Activo')).toBeInTheDocument()
-            expect(screen.getByText('Inactivo')).toBeInTheDocument()
+            expect(screen.getByText('Baremo Simple')).toBeInTheDocument()
+            expect(screen.getByText('Baremo Compuesto')).toBeInTheDocument()
+            expect(screen.getByText('Masculino')).toBeInTheDocument()
+            expect(screen.getByText('Femenino')).toBeInTheDocument()
+            expect(screen.getByText('18 - 25 años')).toBeInTheDocument()
         })
     })
 
     it('shows empty state when no baremos exist', async () => {
         baremoService.getAll.mockResolvedValue([])
+        pruebaService.getAll.mockResolvedValue(mockPruebas)
         renderComponent()
 
         await waitFor(() => {
@@ -79,6 +109,7 @@ describe('BaremosPage', () => {
 
     it('opens modal to create new baremo', async () => {
         baremoService.getAll.mockResolvedValue([])
+        pruebaService.getAll.mockResolvedValue(mockPruebas)
         renderComponent()
 
         await waitFor(() => {
@@ -91,10 +122,11 @@ describe('BaremosPage', () => {
 
     it('opens modal to edit baremo', async () => {
         baremoService.getAll.mockResolvedValue(mockBaremos)
+        pruebaService.getAll.mockResolvedValue(mockPruebas)
         renderComponent()
 
         await waitFor(() => {
-            expect(screen.getByText('10')).toBeInTheDocument()
+            expect(screen.getByText('Baremo Simple')).toBeInTheDocument()
         })
 
         const editButton = screen.getAllByTitle('Editar')[0]
@@ -105,9 +137,10 @@ describe('BaremosPage', () => {
 
     it('handles status toggle', async () => {
         baremoService.getAll.mockResolvedValue(mockBaremos)
+        pruebaService.getAll.mockResolvedValue(mockPruebas)
         baremoService.update.mockResolvedValue(true)
 
-        global.confirm = vi.fn(() => true)
+        Swal.fire.mockResolvedValue({ isConfirmed: true })
 
         renderComponent()
 
