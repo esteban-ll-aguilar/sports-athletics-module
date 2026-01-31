@@ -122,10 +122,11 @@ const UserManagementPage = () => {
                 <div className="bg-white dark:bg-[#212121] rounded-2xl p-6 mb-6 border border-gray-200 dark:border-[#332122] shadow-sm transition-colors duration-300">
                     <div className="flex flex-col md:flex-row gap-4 items-end">
                         <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors">
+                            <label htmlFor="role-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors">
                                 Filtrar por Rol
                             </label>
                             <select
+                                id="role-filter"
                                 value={roleFilter}
                                 onChange={(e) => {
                                     setRoleFilter(e.target.value);

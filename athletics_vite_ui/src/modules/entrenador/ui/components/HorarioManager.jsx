@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
+import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 import HorarioService from '../../services/HorarioService';
 import { X, Clock, Plus, Trash2, Calendar, AlertCircle } from 'lucide-react';
 
 const HorarioManager = ({ show, onClose, entrenamiento }) => {
+    const baseId = useId();
     const [horarios, setHorarios] = useState([]);
     const [loading, setLoading] = useState(false);
     const [newHorario, setNewHorario] = useState({ name: '', hora_inicio: '', hora_fin: '' });
@@ -70,8 +72,17 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
     if (!show) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300">
-            <div className="bg-white dark:bg-[#1a1a1a] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200 dark:border-[#332122]">
+        <dialog
+            open={show}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm w-full h-full border-none outline-none overflow-y-auto"
+        >
+            <button
+                type="button"
+                className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+                onClick={onClose}
+                aria-label="Cerrar modal"
+            />
+            <div className="relative bg-white dark:bg-[#1a1a1a] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 border border-gray-200 dark:border-[#332122]">
                 <div className="p-6 border-b border-gray-200 dark:border-[#332122] bg-gray-50 dark:bg-[#111] flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -98,8 +109,9 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
                         </div>
                         <form onSubmit={handleAdd} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Nombre / Turno</label>
+                                <label htmlFor={`${baseId}-name`} className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Nombre / Turno</label>
                                 <input
+                                    id={`${baseId}-name`}
                                     type="text"
                                     placeholder="Ej. Matutino, Grupo A..."
                                     value={newHorario.name}
@@ -116,8 +128,9 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Inicio</label>
+                                    <label htmlFor={`${baseId}-start`} className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Inicio</label>
                                     <input
+                                        id={`${baseId}-start`}
                                         type="time"
                                         value={newHorario.hora_inicio}
                                         onChange={(e) => setNewHorario({ ...newHorario, hora_inicio: e.target.value })}
@@ -127,14 +140,15 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
                                         border border-gray-200 dark:border-[#332122]
                                         text-gray-900 dark:text-white
                                         text-sm focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none
-                                        dark:[color-scheme:dark]
+                                        dark:scheme-dark
                                     "
                                         required
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Fin</label>
+                                    <label htmlFor={`${baseId}-end`} className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1.5">Fin</label>
                                     <input
+                                        id={`${baseId}-end`}
                                         type="time"
                                         value={newHorario.hora_fin}
                                         onChange={(e) => setNewHorario({ ...newHorario, hora_fin: e.target.value })}
@@ -144,7 +158,7 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
                                         border border-gray-200 dark:border-[#332122]
                                         text-gray-900 dark:text-white
                                         text-sm focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none
-                                        dark:[color-scheme:dark]
+                                        dark:scheme-dark
                                     "
                                         required
                                     />
@@ -212,8 +226,18 @@ const HorarioManager = ({ show, onClose, entrenamiento }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </dialog>
     );
+};
+
+HorarioManager.propTypes = {
+    show: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    entrenamiento: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        tipo_entrenamiento: PropTypes.string,
+        fecha_entrenamiento: PropTypes.string
+    })
 };
 
 export default HorarioManager;

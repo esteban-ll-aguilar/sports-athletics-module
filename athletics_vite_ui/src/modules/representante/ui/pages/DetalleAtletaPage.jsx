@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import RepresentanteService from '../../services/RepresentanteService';
-import { Trophy, Medal, ArrowLeft, Calendar, Activity, TrendingUp, Clock, AlertCircle } from 'lucide-react';
+import { Trophy, Medal, ArrowLeft, Activity, TrendingUp, Clock, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DetalleAtletaPage = () => {
@@ -202,42 +202,50 @@ const DetalleAtletaPage = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
                                 {historial.length > 0 ? (
-                                    historial.map((item) => (
-                                        <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
-                                            <td className="px-6 py-5 whitespace-nowrap font-medium text-gray-900 dark:text-white">
-                                                {new Date(item.fecha_registro).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                                            </td>
-                                            <td className="px-6 py-5 text-gray-600 dark:text-gray-400">
-                                                <span className="font-semibold block text-gray-800 dark:text-gray-200 mb-0.5">Competencia #{item.competencia_id}</span>
-                                            </td>
-                                            <td className="px-6 py-5 text-gray-600 dark:text-gray-400">
-                                                Prueba #{item.prueba_id}
-                                            </td>
-                                            <td className="px-6 py-5 font-mono font-bold text-[#b30c25]">
-                                                {item.resultado} <span className="text-xs text-gray-500 font-normal ml-0.5">{item.unidad_medida}</span>
-                                            </td>
-                                            <td className="px-6 py-5 text-center">
-                                                <span className={`
-                                                    inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border capitalize
-                                                    ${item.posicion_final === 'primero' ? 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50' :
-                                                        item.posicion_final === 'segundo' ? 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/30 dark:text-gray-300 dark:border-gray-600/50' :
-                                                            item.posicion_final === 'tercero' ? 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/50' :
-                                                                'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30'}
-                                                `}>
-                                                    {item.posicion_final}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-5 text-center">
-                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${item.estado
-                                                    ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
-                                                    : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30'
-                                                    }`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full ${item.estado ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                                                    {item.estado ? 'Validado' : 'Anulado'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))
+                                    historial.map((item) => {
+                                        const getPosicionStyles = (posicion) => {
+                                            const styles = {
+                                                primero: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-900/50',
+                                                segundo: 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/30 dark:text-gray-300 dark:border-gray-600/50',
+                                                tercero: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-900/50'
+                                            };
+                                            return styles[posicion] || 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-900/30';
+                                        };
+
+                                        return (
+                                            <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
+                                                <td className="px-6 py-5 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                                                    {new Date(item.fecha_registro).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                                                </td>
+                                                <td className="px-6 py-5 text-gray-600 dark:text-gray-400">
+                                                    <span className="font-semibold block text-gray-800 dark:text-gray-200 mb-0.5">Competencia #{item.competencia_id}</span>
+                                                </td>
+                                                <td className="px-6 py-5 text-gray-600 dark:text-gray-400">
+                                                    Prueba #{item.prueba_id}
+                                                </td>
+                                                <td className="px-6 py-5 font-mono font-bold text-[#b30c25]">
+                                                    {item.resultado} <span className="text-xs text-gray-500 font-normal ml-0.5">{item.unidad_medida}</span>
+                                                </td>
+                                                <td className="px-6 py-5 text-center">
+                                                    <span className={`
+                                                        inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border capitalize
+                                                        ${getPosicionStyles(item.posicion_final)}
+                                                    `}>
+                                                        {item.posicion_final}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-5 text-center">
+                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${item.estado
+                                                        ? 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900/30'
+                                                        : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30'
+                                                        }`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${item.estado ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                                                        {item.estado ? 'Validado' : 'Anulado'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 ) : (
                                     <tr>
                                         <td colSpan="6" className="py-20 text-center">

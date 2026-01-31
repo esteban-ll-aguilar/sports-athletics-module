@@ -1,7 +1,26 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Competencia from "../../domain/models/Competencia";
 import Swal from "sweetalert2";
-import { Edit3, PlusCircle, Trophy, Calendar, MapPin, FileText, ToggleLeft, ToggleRight, X } from "lucide-react";
+import { Edit3, PlusCircle, Trophy, Calendar, MapPin, FileText, X } from "lucide-react";
+
+const InputField = ({ icon: Icon, id, ...props }) => (
+  <div className="relative w-full">
+    {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+    <input
+      {...props}
+      id={id}
+      className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+    text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
+    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
+    />
+  </div>
+);
+
+InputField.propTypes = {
+  icon: PropTypes.elementType,
+  id: PropTypes.string.isRequired
+};
 
 const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => {
   const [submitting, setSubmitting] = useState(false);
@@ -89,23 +108,12 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
     }
   };
 
-  const InputField = ({ icon: Icon, ...props }) => (
-    <div className="relative w-full">
-      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
-      <input
-        {...props}
-        className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
-        text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
-        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
-      />
-    </div>
-  );
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div
         className="absolute inset-0 transition-opacity"
         onClick={onClose}
+        role="presentation"
       />
       <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#332122] flex flex-col max-h-[90vh]">
         {/* HEADER */}
@@ -120,7 +128,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
               </h2>
             </div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="Cerrar modal">
             <X size={20} />
           </button>
         </div>
@@ -129,10 +137,11 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
 
           {/* CAMPO NOMBRE */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <label htmlFor="comp-nombre" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
               Nombre de la Competencia <span className="text-red-500">*</span>
             </label>
             <InputField
+              id="comp-nombre"
               icon={Trophy}
               type="text"
               name="nombre"
@@ -146,8 +155,9 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
           {/* CAMPOS FECHA Y LUGAR */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Fecha del Evento <span className="text-red-500">*</span></label>
+              <label htmlFor="comp-fecha" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Fecha del Evento <span className="text-red-500">*</span></label>
               <InputField
+                id="comp-fecha"
                 icon={Calendar}
                 type="date"
                 name="fecha"
@@ -157,8 +167,9 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
               />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Lugar <span className="text-red-500">*</span></label>
+              <label htmlFor="comp-lugar" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Lugar <span className="text-red-500">*</span></label>
               <InputField
+                id="comp-lugar"
                 icon={MapPin}
                 type="text"
                 name="lugar"
@@ -172,10 +183,11 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
 
           {/* CAMPO DESCRIPCIÓN */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Descripción (Opcional)</label>
+            <label htmlFor="comp-descripcion" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Descripción (Opcional)</label>
             <div className="relative w-full">
               <FileText className="absolute left-3 top-3 text-gray-400" size={18} />
               <textarea
+                id="comp-descripcion"
                 name="descripcion"
                 value={form.descripcion}
                 onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
@@ -198,8 +210,11 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
             </div>
 
             <button
+              id="comp-estado-toggle"
               type="button"
               onClick={toggleEstado}
+              aria-pressed={form.estado}
+              aria-label={form.estado ? "Desactivar competencia" : "Activar competencia"}
               className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-300 focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'
                 }`}
             >
@@ -242,6 +257,20 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
       </div >
     </div >
   );
+};
+
+CompetenciaModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  editingCompetencia: PropTypes.shape({
+    id: PropTypes.number,
+    nombre: PropTypes.string,
+    fecha: PropTypes.string,
+    lugar: PropTypes.string,
+    descripcion: PropTypes.string,
+    estado: PropTypes.bool
+  })
 };
 
 export default CompetenciaModal;

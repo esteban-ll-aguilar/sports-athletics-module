@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ArrowLeft, Plus, Search, Dumbbell, Calendar, User, Ruler, Clock, Star, FileText, Edit, Trash2, Filter } from 'lucide-react';
+import { ArrowLeft, Plus, Search, Dumbbell, Ruler, Clock, Star, Edit, Trash2, Filter } from 'lucide-react';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import resultadoEntrenamientoService from '../../services/resultado_entrenamiento_service';
 import atletaService from '../../../atleta/services/AtletaService';
@@ -98,9 +98,12 @@ const ResultadosEntrenamientoPage = () => {
     const filteredResults = allResultados.filter(r => {
         // 1. Text Search (Athlete Name)
         const resultAthlete = atletas.find(a => a.id === r.atleta_id);
-        const name = resultAthlete?.user
-            ? `${resultAthlete.user.first_name} ${resultAthlete.user.last_name}`
-            : (resultAthlete ? `Atleta ${resultAthlete.id}` : '');
+        let name = '';
+        if (resultAthlete?.user) {
+            name = `${resultAthlete.user.first_name} ${resultAthlete.user.last_name}`;
+        } else if (resultAthlete) {
+            name = `Atleta ${resultAthlete.id}`;
+        }
         const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase());
 
         // 2. Entrenamiento Filter (if active)
@@ -156,7 +159,7 @@ const ResultadosEntrenamientoPage = () => {
                             className="
                                 flex items-center gap-2 px-6 py-3 rounded-xl
                                 text-sm font-bold text-white
-                                bg-gradient-to-r from-[#b30c25] to-[#80091b]
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
                                 hover:brightness-110 shadow-lg shadow-red-900/20
                                 active:scale-95 transition-all
                             "
@@ -232,8 +235,8 @@ const ResultadosEntrenamientoPage = () => {
                             <div key={res.id} className="bg-white dark:bg-[#212121] p-5 rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm hover:shadow-md transition-all group relative">
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2a2829] flex items-center justify-center">
-                                            <User size={20} className="text-gray-500" />
+                                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center text-gray-600 dark:text-white font-bold border border-gray-200 dark:border-gray-700 shadow-sm">
+                                            {athlete?.user?.first_name ? athlete.user.first_name.charAt(0).toUpperCase() : '?'}
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-gray-900 dark:text-white">

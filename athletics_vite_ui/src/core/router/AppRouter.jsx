@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom';
 
 // Layouts
-import MainLayout from '@shared/components/MainLayout';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 
 // Páginas públicas

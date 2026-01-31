@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RepresentanteService from '../../services/RepresentanteService';
 import { toast } from 'react-hot-toast';
-import { Users, Plus, Edit, Activity, User, Phone, MapPin, Hash, Briefcase, Search, X, Save } from 'lucide-react';
+import { Users, Activity, Plus, User, Hash, Edit } from 'lucide-react';
 
 const MisAtletasPage = () => {
     const navigate = useNavigate();
+    const baseId = useId();
     const [athletes, setAthletes] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -156,7 +157,7 @@ const MisAtletasPage = () => {
                             <div key={atleta.id} className="bg-white dark:bg-[#212121] rounded-2xl shadow-sm border border-gray-200 dark:border-[#332122] overflow-hidden hover:shadow-xl transition-all duration-300 group">
                                 <div className="p-6">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-50 to-red-100 dark:from-[#b30c25]/20 dark:to-[#80091b]/20 flex items-center justify-center text-[#b30c25] font-black text-xl shadow-inner">
+                                        <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-red-50 to-gray-100 dark:from-[#b30c25]/10 dark:to-[#1a1a1a] flex items-center justify-center text-[#b30c25] font-black text-xl shadow-inner">
                                             {atleta.user?.first_name?.charAt(0) || 'A'}
                                         </div>
                                         <div className="overflow-hidden">
@@ -229,10 +230,11 @@ const MisAtletasPage = () => {
                         <form onSubmit={handleUpdate} className="p-6 space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nombre</label>
+                                    <label htmlFor={`${baseId}-first_name`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nombre</label>
                                     <div className="relative">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-first_name`}
                                             type="text"
                                             name="first_name"
                                             value={editFormData.first_name}
@@ -242,10 +244,11 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Apellido</label>
+                                    <label htmlFor={`${baseId}-last_name`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Apellido</label>
                                     <div className="relative">
                                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-last_name`}
                                             type="text"
                                             name="last_name"
                                             value={editFormData.last_name}
@@ -255,10 +258,11 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Identificación</label>
+                                    <label htmlFor={`${baseId}-identificacion`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Identificación</label>
                                     <div className="relative">
                                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-identificacion`}
                                             type="text"
                                             name="identificacion"
                                             value={editFormData.identificacion}
@@ -268,10 +272,11 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Teléfono</label>
+                                    <label htmlFor={`${baseId}-phone`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Teléfono</label>
                                     <div className="relative">
                                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-phone`}
                                             type="text"
                                             name="phone"
                                             value={editFormData.phone}
@@ -281,10 +286,11 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                                 <div className="md:col-span-2 space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Dirección</label>
+                                    <label htmlFor={`${baseId}-direccion`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Dirección</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-direccion`}
                                             type="text"
                                             name="direccion"
                                             value={editFormData.direccion}
@@ -294,10 +300,11 @@ const MisAtletasPage = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Años de Experiencia</label>
+                                    <label htmlFor={`${baseId}-experiencia`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Años de Experiencia</label>
                                     <div className="relative">
                                         <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
+                                            id={`${baseId}-experiencia`}
                                             type="number"
                                             name="anios_experiencia"
                                             value={editFormData.anios_experiencia}

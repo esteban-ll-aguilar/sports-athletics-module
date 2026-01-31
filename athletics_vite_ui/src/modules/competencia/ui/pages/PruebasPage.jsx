@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import pruebaService from "../../services/prueba_service";
-import tipoDisciplinaService from "../../services/tipo_disciplina_service";
-import baremoService from "../../services/baremo_service";
 import PruebaModal from "../widgets/PruebaModal.jsx";
 import Swal from "sweetalert2";
-import { Search, Plus, Filter, Trophy, Activity, Calendar, Target, Edit2, Power, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, PlusCircle, Edit3, Power, CheckCircle } from 'lucide-react';
 
 const PruebasPage = () => {
     const [pruebas, setPruebas] = useState([]);
-    const [disciplinas, setDisciplinas] = useState([]);
-    const [baremos, setBaremos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPrueba, setSelectedPrueba] = useState(null);
@@ -19,14 +15,8 @@ const PruebasPage = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [resPruebas, resDisc, resBar] = await Promise.all([
-                pruebaService.getAll(),
-                tipoDisciplinaService.getAll(),
-                baremoService.getAll()
-            ]);
+            const resPruebas = await pruebaService.getAll();
             setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
-            setDisciplinas(Array.isArray(resDisc) ? resDisc : []);
-            setBaremos(Array.isArray(resBar) ? resBar : []);
         } catch (err) {
             console.error("Error fetching Pruebas:", err);
         } finally {
@@ -138,13 +128,131 @@ const PruebasPage = () => {
         p.siglas.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const getTipoPruebaStyles = (tipo) => {
+        if (tipo === 'COMPETENCIA') {
+            return 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/30';
+        }
+        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30';
+    };
+
+    const getEstadoStyles = (estado) => {
+        if (estado) {
+            return 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30';
+        }
+        return 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30';
+    };
+
+    const renderTableBody = () => {
+        if (loading) {
+            return [
+                <tr key="loading-row">
+                    <td colSpan="5" className="py-20 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-12 h-12 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Cargando pruebas...</span>
+                        </div>
+                    </td>
+                </tr>
+            ];
+        }
+
+        if (filteredPruebas.length === 0) {
+            return [
+                <tr key="no-results-row">
+                    <td colSpan="5" className="py-20 text-center">
+                        <div className="flex flex-col items-center text-gray-400 space-y-3">
+                            <div className="bg-gray-50 dark:bg-[#1a1a1a] p-4 rounded-full border border-gray-100 dark:border-[#332122]">
+                                <Search size={40} />
+                            </div>
+                            <p className="text-lg font-medium">No se encontraron pruebas</p>
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="text-[#b30c25] hover:underline font-bold"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            ];
+        }
+
+        return filteredPruebas.map((p) => (
+            <tr
+                key={p.id}
+                className={`transition-colors duration-200 ${!p.estado
+                    ? 'bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60'
+                    : 'hover:bg-gray-50 dark:hover:bg-[#2a2829]'
+                    }`}
+            >
+                <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#212121] flex items-center justify-center text-gray-500 font-black text-sm">
+                            {p.siglas?.substring(0, 2)}
+                        </div>
+                        <div>
+                            <div className="text-xs font-bold text-[#b30c25] uppercase tracking-wide">
+                                {p.siglas}
+                            </div>
+                            <div className="font-bold text-gray-900 dark:text-gray-100">
+                                {p.nombre}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTipoPruebaStyles(p.tipo_prueba)}`}>
+                        {p.tipo_prueba}
+                    </span>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                        <span className="text-sm text-gray-900 dark:text-gray-200 font-bold uppercase">
+                            {p.tipo_medicion}
+                        </span>
+                        <span className="text-[10px] text-gray-500">
+                            {p.unidad_medida}
+                        </span>
+                    </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoStyles(p.estado)}`}>
+                        {p.estado ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                        <button
+                            onClick={() => {
+                                setSelectedPrueba(p);
+                                setIsModalOpen(true);
+                            }}
+                            className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                            title="Editar prueba"
+                        >
+                            <Edit3 size={18} />
+                        </button>
+                        <button
+                            onClick={() => toggleStatus(p)}
+                            className={`p-2 rounded-lg transition-colors ${p.estado
+                                ? 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                : 'text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                }`}
+                            title={p.estado ? 'Desactivar' : 'Activar'}
+                        >
+                            {p.estado ? <Power size={18} /> : <CheckCircle size={18} />}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        ));
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] font-['Lexend'] transition-colors duration-300">
-            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-
-                {/* Cabecera y Navegación */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
+        <div className="p-6 md:p-8 min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300 font-['Lexend']">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-1">
                         <Link
                             to="/dashboard/competencias"
@@ -154,186 +262,64 @@ const PruebasPage = () => {
                                 ← Volver
                             </span>
                         </Link>
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
-                                Gestión de Pruebas
-                            </h1>
-                            <p className="text-gray-500 dark:text-gray-400 text-lg mt-1">
-                                Administra las pruebas deportivas del sistema.
-                            </p>
-                        </div>
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                            Catálogo de Pruebas
+                        </h1>
+                        <p className="mt-1 text-gray-500 dark:text-gray-400">
+                            Gestiona las disciplinas y pruebas técnicas del sistema.
+                        </p>
                     </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                        <button
-                            onClick={() => { setSelectedPrueba(null); setIsModalOpen(true); }}
-                            className="
-                                group flex items-center justify-center gap-2
-                                px-6 py-3 rounded-xl
-                                text-sm font-bold text-white
-                                bg-linear-to-r from-[#b30c25] to-[#80091b]
-                                hover:brightness-110
-                                shadow-lg shadow-red-900/20 active:scale-95
-                                transition-all duration-300
-                            "
-                        >
-                            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-                            Nueva Prueba
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => {
+                            setSelectedPrueba(null);
+                            setIsModalOpen(true);
+                        }}
+                        className="flex items-center justify-center gap-2 bg-linear-to-r from-[#b30c25] to-[#80091b] text-white px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-red-900/20 active:scale-95 transition-all font-bold w-full md:w-auto"
+                    >
+                        <PlusCircle size={20} />
+                        Nueva Prueba
+                    </button>
                 </div>
 
-                {/* Filters */}
-                <div className="mb-6">
-                    <div className="relative max-w-md">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                {/* Filters/Actions */}
+                <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm flex flex-col md:flex-row gap-4 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
                             placeholder="Buscar por nombre o siglas..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="
-                                w-full pl-12 pr-4 py-3 rounded-xl 
-                                bg-white dark:bg-[#212121]
-                                border border-gray-200 dark:border-[#332122]
-                                text-gray-900 dark:text-gray-100
-                                placeholder-gray-400 dark:placeholder-gray-500
-                                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
-                                outline-none transition-all shadow-sm
-                            "
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-[#332122] rounded-xl text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-[#b30c25] outline-none transition-all placeholder-gray-400"
                         />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Total: {filteredPruebas.length}</span>
                     </div>
                 </div>
 
-                {/* Tabla de Resultados */}
-                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
+                {/* Table */}
+                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-xl overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
-                                <tr>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        Siglas / Nombre
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        Tipo
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        Disciplina / Baremo
-                                    </th>
-                                    <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        Estado
-                                    </th>
-                                    <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                                        Acciones
-                                    </th>
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/50 dark:bg-[#212121]/50 border-b border-gray-200 dark:border-[#332122]">
+                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Medición</th>
+                                    <th className="px-6 py-4 text-center text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="5" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-8 h-8 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 dark:text-gray-400 font-medium">Cargando pruebas...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : filteredPruebas.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <Trophy size={48} className="text-gray-300 dark:text-gray-600" />
-                                                <span className="text-gray-500 dark:text-gray-400 font-medium">No se encontraron pruebas.</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredPruebas.map((p) => {
-                                        const disc = disciplinas.find(d => d.id === p.tipo_disciplina_id);
-                                        const bar = baremos.find(b => b.id === p.baremo_id);
-                                        return (
-                                            <tr
-                                                key={p.external_id}
-                                                className={`transition-colors duration-200 ${!p.estado
-                                                    ? 'bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60'
-                                                    : 'hover:bg-gray-50 dark:hover:bg-[#2a2829]'
-                                                    }`}                     >
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex items-center justify-center w-10 h-10 bg-linear-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-sm">
-                                                            {p.siglas?.substring(0, 2)}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs font-bold text-[#b30c25] uppercase tracking-wide">
-                                                                {p.siglas}
-                                                            </div>
-                                                            <div className="font-bold text-gray-900 dark:text-gray-100">
-                                                                {p.nombre}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                                {p.tipo_prueba}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.tipo_prueba === 'COMPETENCIA'
-                                                        ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/30'
-                                                        : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30'
-                                                        }`}>
-                                                        {p.tipo_prueba}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <div className="space-y-1">
-                                                        <div className="text-sm font-bold text-gray-900 dark:text-gray-200">
-                                                            {disc?.nombre || 'Sin Disciplina'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                                            {bar ? `Clase ${bar.clasificacion} • ${bar.valor_baremo} pts` : 'Sin Baremo'}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-5 text-center">
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${p.estado
-                                                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30'
-                                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30'
-                                                        }`}>
-                                                        {p.estado ? "Activo" : "Inactivo"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-5 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button
-                                                            onClick={() => { setSelectedPrueba(p); setIsModalOpen(true); }}
-                                                            className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                                            title="Editar"
-                                                        >
-                                                            <Edit2 size={18} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => toggleStatus(p)}
-                                                            className={`p-2 rounded-lg transition-colors ${p.estado
-                                                                ? 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
-                                                                : 'text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
-                                                                }`}
-                                                            title={p.estado ? 'Desactivar' : 'Activar'}
-                                                        >
-                                                            {p.estado ? <Power size={18} /> : <CheckCircle size={18} />}
-                                                        </button>
-
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
+                            <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
+                                {renderTableBody()}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+            {/* Modal */}
             <PruebaModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

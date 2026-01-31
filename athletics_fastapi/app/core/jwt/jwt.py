@@ -25,6 +25,14 @@ from app.core.jwt.secret_rotation import JWTSecretRotation
 pwd_ctx = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
 
+# ============================
+# Error Messages Constants
+# ============================
+ERROR_SESSION_EXPIRED = "Sesión expirada"
+ERROR_INVALID_TOKEN = "Token inválido"
+ERROR_INVALID_OR_EXPIRED_TOKEN = "Token inválido o expirado"
+ERROR_UNAUTHORIZED_USER = "Usuario no autorizado"
+
 
 class PasswordHasher:
     def hash(self, password: str) -> str:
@@ -108,7 +116,7 @@ class JWTManager:
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido o expirado",
+            detail=ERROR_INVALID_OR_EXPIRED_TOKEN,
         )
 
     # ============================
@@ -135,7 +143,7 @@ class JWTManager:
         if not self.redis:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Sesión expirada",
+                detail=ERROR_SESSION_EXPIRED,
             )
 
         ttl = max(0, exp_ts - int(time.time()))
@@ -144,7 +152,7 @@ class JWTManager:
         except RedisError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Sesión expirada",
+                detail=ERROR_SESSION_EXPIRED,
             )
 
     async def consume_refresh(self, jti: str) -> Optional[str]:
@@ -173,15 +181,15 @@ async def get_current_user(
     payload = jwtm.decode(token)
 
     if payload.get("type") != "access":
-        raise HTTPException(status_code=401, detail="Token inválido")
+        raise HTTPException(status_code=401, detail=ERROR_INVALID_TOKEN)
 
     jti = payload.get("jti")
     if not jti or await jwtm.is_revoked(jti):
-        raise HTTPException(status_code=401, detail="Sesión expirada")
+        raise HTTPException(status_code=401, detail=ERROR_SESSION_EXPIRED)
 
     user_id = payload.get("sub")
     if not user_id:
-        raise HTTPException(status_code=401, detail="Token inválido")
+        raise HTTPException(status_code=401, detail=ERROR_INVALID_TOKEN)
 
     # ⚠️ user_id se guarda como string → convertir a int
     # Importar UserModel aquí para evitar ciclos si es necesario, o asegura que está arriba
@@ -201,6 +209,6 @@ async def get_current_user(
     user = result.scalar_one_or_none()
 
     if not user or not user.is_active:
-        raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        raise HTTPException(status_code=401, detail=ERROR_UNAUTHORIZED_USER)
 
     return user

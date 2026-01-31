@@ -1,11 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import RepresentanteService from '../../services/RepresentanteService';
-import { User, Mail, Lock, Phone, MapPin, Hash, Eye, EyeOff, Save, X, ArrowLeft, UserPlus, CreditCard } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Hash, Eye, EyeOff, ArrowLeft, UserPlus, CreditCard } from 'lucide-react';
+import PropTypes from 'prop-types';
+
+const InputField = ({ label, icon: Icon, type = "text", id, ...props }) => (
+    <div className="space-y-1.5 w-full">
+        <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+            <input
+                id={id}
+                type={type}
+                {...props}
+                className={`
+                    w-full ${Icon ? 'pl-10' : 'pl-3'} pr-3 py-3 rounded-xl
+                    bg-gray-50 dark:bg-[#1a1a1a]
+                    border border-gray-200 dark:border-[#332122]
+                    text-gray-900 dark:text-white
+                    placeholder-gray-400 dark:placeholder-gray-500
+                    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                    outline-none transition-all
+                `}
+            />
+        </div>
+    </div>
+);
+
+InputField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    type: PropTypes.string,
+    id: PropTypes.string.isRequired
+};
 
 const RegisterAthletePage = () => {
     const navigate = useNavigate();
+    const baseId = useId();
 
     const [formData, setFormData] = useState({
         username: '',
@@ -117,27 +149,7 @@ const RegisterAthletePage = () => {
         }
     };
 
-    const InputField = ({ label, icon: Icon, type = "text", ...props }) => (
-        <div className="space-y-1.5 w-full">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
-                <input
-                    type={type}
-                    {...props}
-                    className={`
-                        w-full ${Icon ? 'pl-10' : 'pl-3'} pr-3 py-3 rounded-xl
-                        bg-gray-50 dark:bg-[#1a1a1a]
-                        border border-gray-200 dark:border-[#332122]
-                        text-gray-900 dark:text-white
-                        placeholder-gray-400 dark:placeholder-gray-500
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all
-                    `}
-                />
-            </div>
-        </div>
-    );
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#121212] p-6 transition-colors duration-300 font-['Lexend']">
@@ -156,7 +168,7 @@ const RegisterAthletePage = () => {
                             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Ingresa los datos del atleta bajo tu representación.</p>
                         </div>
                     </div>
-                    
+
                 </div>
 
                 <div className="bg-white dark:bg-[#212121] rounded-2xl shadow-xl border border-gray-200 dark:border-[#332122] overflow-hidden">
@@ -172,6 +184,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Nombre"
                                     icon={User}
+                                    id={`${baseId}-first_name`}
                                     name="first_name"
                                     required
                                     value={formData.first_name}
@@ -181,6 +194,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Apellido"
                                     icon={User}
+                                    id={`${baseId}-last_name`}
                                     name="last_name"
                                     required
                                     value={formData.last_name}
@@ -189,10 +203,11 @@ const RegisterAthletePage = () => {
                                 />
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Tipo de Identificación</label>
+                                    <label htmlFor={`${baseId}-tipo_identificacion`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Tipo de Identificación</label>
                                     <div className="relative">
                                         <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <select
+                                            id={`${baseId}-tipo_identificacion`}
                                             name="tipo_identificacion"
                                             value={formData.tipo_identificacion}
                                             onChange={handleChange}
@@ -218,6 +233,7 @@ const RegisterAthletePage = () => {
                                     <InputField
                                         label="Número de Identificación"
                                         icon={Hash}
+                                        id={`${baseId}-identificacion`}
                                         name="identificacion"
                                         required
                                         value={formData.identificacion}
@@ -232,6 +248,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Teléfono"
                                     icon={Phone}
+                                    id={`${baseId}-phone`}
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
@@ -240,6 +257,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Dirección"
                                     icon={MapPin}
+                                    id={`${baseId}-direccion`}
                                     name="direccion"
                                     value={formData.direccion}
                                     onChange={handleChange}
@@ -258,6 +276,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Nombre de Usuario"
                                     icon={User}
+                                    id={`${baseId}-username`}
                                     name="username"
                                     required
                                     value={formData.username}
@@ -267,6 +286,7 @@ const RegisterAthletePage = () => {
                                 <InputField
                                     label="Correo Electrónico"
                                     icon={Mail}
+                                    id={`${baseId}-email`}
                                     type="email"
                                     name="email"
                                     required
@@ -276,10 +296,11 @@ const RegisterAthletePage = () => {
                                 />
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Contraseña</label>
+                                    <label htmlFor={`${baseId}-password`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Contraseña</label>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
+                                            id={`${baseId}-password`}
                                             type={showPassword ? "text" : "password"}
                                             name="password"
                                             required
@@ -306,10 +327,11 @@ const RegisterAthletePage = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Confirmar Contraseña</label>
+                                    <label htmlFor={`${baseId}-confirmPassword`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Confirmar Contraseña</label>
                                     <div className="relative">
                                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <input
+                                            id={`${baseId}-confirmPassword`}
                                             type="password"
                                             name="confirmPassword"
                                             required

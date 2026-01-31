@@ -4,8 +4,6 @@ from app.core.db.database import Base
 import uuid
 from typing import TYPE_CHECKING, List
 
-if TYPE_CHECKING:
-    pass
 
 
 class Horario(Base):

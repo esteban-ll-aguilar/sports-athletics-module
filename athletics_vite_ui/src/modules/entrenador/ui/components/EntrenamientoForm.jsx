@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import { X, Dumbbell, AlignLeft, Calendar, PlusCircle, Clock, Trash2 } from 'lucide-react';
 
 const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
+    const baseId = useId();
     const [formData, setFormData] = useState({
         tipo_entrenamiento: '',
         descripcion: '',
@@ -126,16 +127,19 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                 <form onSubmit={handleSubmit} className="p-6 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
                     {/* General Info */}
                     <div className="space-y-5">
-                        <h3 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-[#332122] pb-2 flex items-center gap-2">
-                            <Dumbbell size={14} /> Información General
+                        <h3 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-[#332122] pb-2 flex items-center gap-2 relative">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#332122] rounded-full shadow-sm sm:mb-px">
+                                <Dumbbell size={14} /> Información General
+                            </div>
                         </h3>
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                            <label htmlFor={`${baseId}-tipo`} className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
                                 Tipo de Entrenamiento <span className="text-[#b30c25]">*</span>
                             </label>
                             <div className="relative">
                                 <Dumbbell className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input
+                                    id={`${baseId}-tipo`}
                                     type="text"
                                     name="tipo_entrenamiento"
                                     placeholder="Ej. Resistencia, Fuerza..."
@@ -155,12 +159,13 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                            <label htmlFor={`${baseId}-desc`} className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
                                 Descripción <span className="text-[#b30c25]">*</span>
                             </label>
                             <div className="relative">
                                 <AlignLeft className="absolute left-3 top-4 text-gray-400" size={18} />
                                 <textarea
+                                    id={`${baseId}-desc`}
                                     name="descripcion"
                                     placeholder="Detalles del entrenamiento..."
                                     required
@@ -180,12 +185,13 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
+                            <label htmlFor={`${baseId}-fecha`} className="block text-sm font-bold mb-2 text-gray-700 dark:text-gray-300">
                                 Fecha <span className="text-[#b30c25]">*</span>
                             </label>
                             <div className="relative">
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                 <input
+                                    id={`${baseId}-fecha`}
                                     type="date"
                                     name="fecha_entrenamiento"
                                     value={formData.fecha_entrenamiento}
@@ -198,7 +204,7 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                                         text-gray-900 dark:text-white
                                         focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
                                         outline-none transition-all
-                                        dark:[color-scheme:dark]
+                                        dark:scheme-dark
                                     "
                                 />
                             </div>
@@ -227,69 +233,75 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {formData.horarios.map((horario, index) => (
-                                    <div key={index} className="flex flex-col sm:flex-row gap-3 items-end bg-gray-50 dark:bg-[#1f1c1d] p-4 rounded-xl border border-gray-200 dark:border-[#332122] animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm">
-                                        <div className="flex-1 w-full">
-                                            <label className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Turno</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Ej. Mañana"
-                                                value={horario.name}
-                                                onChange={(e) => handleHorarioChange(index, 'name', e.target.value)}
-                                                className="
-                                                    w-full px-3 py-2 rounded-lg
-                                                    bg-white dark:bg-[#111]
-                                                    border border-gray-200 dark:border-[#332122]
-                                                    text-gray-900 dark:text-white
-                                                    text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
-                                                "
-                                                required
-                                            />
+                                {formData.horarios.map((horario, index) => {
+                                    const horarioRowId = `${baseId}-h-${index}`;
+                                    return (
+                                        <div key={`horario-${index}-${horario.name}`} className="flex flex-col sm:flex-row gap-3 items-end bg-gray-50 dark:bg-[#1f1c1d] p-4 rounded-xl border border-gray-200 dark:border-[#332122] animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm">
+                                            <div className="flex-1 w-full">
+                                                <label htmlFor={`${horarioRowId}-name`} className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Turno</label>
+                                                <input
+                                                    id={`${horarioRowId}-name`}
+                                                    type="text"
+                                                    placeholder="Ej. Mañana"
+                                                    value={horario.name}
+                                                    onChange={(e) => handleHorarioChange(index, 'name', e.target.value)}
+                                                    className="
+                                                        w-full px-3 py-2 rounded-lg
+                                                        bg-white dark:bg-[#111]
+                                                        border border-gray-200 dark:border-[#332122]
+                                                        text-gray-900 dark:text-white
+                                                        text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
+                                                    "
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-32">
+                                                <label htmlFor={`${horarioRowId}-start`} className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Inicio</label>
+                                                <input
+                                                    id={`${horarioRowId}-start`}
+                                                    type="time"
+                                                    value={horario.hora_inicio}
+                                                    onChange={(e) => handleHorarioChange(index, 'hora_inicio', e.target.value)}
+                                                    className="
+                                                         w-full px-3 py-2 rounded-lg
+                                                        bg-white dark:bg-[#111]
+                                                        border border-gray-200 dark:border-[#332122]
+                                                        text-gray-900 dark:text-white
+                                                        text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
+                                                        dark:scheme-dark
+                                                    "
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="w-full sm:w-32">
+                                                <label htmlFor={`${horarioRowId}-end`} className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Fin</label>
+                                                <input
+                                                    id={`${horarioRowId}-end`}
+                                                    type="time"
+                                                    value={horario.hora_fin}
+                                                    onChange={(e) => handleHorarioChange(index, 'hora_fin', e.target.value)}
+                                                    className="
+                                                         w-full px-3 py-2 rounded-lg
+                                                        bg-white dark:bg-[#111]
+                                                        border border-gray-200 dark:border-[#332122]
+                                                        text-gray-900 dark:text-white
+                                                        text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
+                                                        dark:scheme-dark
+                                                    "
+                                                    required
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveHorario(index)}
+                                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors h-[38px] w-[38px] flex items-center justify-center sm:mb-px"
+                                                title="Quitar"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
                                         </div>
-                                        <div className="w-full sm:w-32">
-                                            <label className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Inicio</label>
-                                            <input
-                                                type="time"
-                                                value={horario.hora_inicio}
-                                                onChange={(e) => handleHorarioChange(index, 'hora_inicio', e.target.value)}
-                                                className="
-                                                     w-full px-3 py-2 rounded-lg
-                                                    bg-white dark:bg-[#111]
-                                                    border border-gray-200 dark:border-[#332122]
-                                                    text-gray-900 dark:text-white
-                                                    text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
-                                                    dark:[color-scheme:dark]
-                                                "
-                                                required
-                                            />
-                                        </div>
-                                        <div className="w-full sm:w-32">
-                                            <label className="block text-xs font-bold mb-1.5 text-gray-500 dark:text-gray-400 uppercase">Fin</label>
-                                            <input
-                                                type="time"
-                                                value={horario.hora_fin}
-                                                onChange={(e) => handleHorarioChange(index, 'hora_fin', e.target.value)}
-                                                className="
-                                                     w-full px-3 py-2 rounded-lg
-                                                    bg-white dark:bg-[#111]
-                                                    border border-gray-200 dark:border-[#332122]
-                                                    text-gray-900 dark:text-white
-                                                    text-sm focus:ring-1 focus:ring-[#b30c25] outline-none
-                                                    dark:[color-scheme:dark]
-                                                "
-                                                required
-                                            />
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveHorario(index)}
-                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors h-[38px] w-[38px] flex items-center justify-center sm:mb-[1px]"
-                                            title="Quitar"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -315,7 +327,7 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                             disabled={isLoading}
                             className="
                                 flex-1 px-6 py-3.5 rounded-xl font-bold text-white
-                                bg-gradient-to-r from-[#b30c25] to-[#80091b]
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
                                 hover:brightness-110 shadow-lg shadow-red-900/20 
                                 transition active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed
                                 flex items-center justify-center gap-2

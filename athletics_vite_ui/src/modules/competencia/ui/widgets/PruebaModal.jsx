@@ -1,7 +1,70 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import Swal from "sweetalert2";
 import { X, Type, Calendar, Info, Activity, Ruler, Hash, Target } from "lucide-react";
+
+const InputField = ({ label, icon: Icon, id, ...props }) => (
+    <div className="space-y-1">
+        <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <input
+                {...props}
+                id={id}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
+                bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm
+            `}
+            />
+        </div>
+    </div>
+);
+
+InputField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    id: PropTypes.string.isRequired
+};
+
+const SelectField = ({ label, icon: Icon, id, children, ...props }) => (
+    <div className="space-y-1">
+        <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <select
+                {...props}
+                id={id}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
+                 bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm appearance-none
+            `}
+            >
+                {children}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </div>
+    </div>
+);
+
+SelectField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    id: PropTypes.string.isRequired,
+    children: PropTypes.node
+};
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     const [submitting, setSubmitting] = useState(false);
@@ -141,57 +204,17 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         }
     };
 
-    const InputField = ({ label, icon: Icon, ...props }) => (
-        <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-                <input
-                    {...props}
-                    className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
-                        bg-white dark:bg-[#212121] 
-                        border border-gray-300 dark:border-[#332122]
-                        text-gray-900 dark:text-gray-100
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all sm:text-sm
-                    `}
-                />
-            </div>
-        </div>
-    );
-
-    const SelectField = ({ label, icon: Icon, children, ...props }) => (
-        <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-                <select
-                    {...props}
-                    className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
-                         bg-white dark:bg-[#212121] 
-                        border border-gray-300 dark:border-[#332122]
-                        text-gray-900 dark:text-gray-100
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all sm:text-sm appearance-none
-                    `}
-                >
-                    {children}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
-            </div>
-        </div>
-    );
-
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="absolute inset-0 transition-opacity" onClick={onClose} />
+        <dialog
+            open={isOpen}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm w-full h-full border-none outline-none"
+        >
+            <button
+                type="button"
+                className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+                onClick={onClose}
+                aria-label="Cerrar modal"
+            />
             <div className="relative w-full max-w-xl rounded-2xl bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#332122] shadow-2xl flex flex-col max-h-[90vh]">
 
                 {/* Header */}
@@ -234,6 +257,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <InputField
                             label="Nombre"
+                            id="pr-nombre"
                             icon={Type}
                             type="text"
                             value={form.nombre}
@@ -243,6 +267,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         />
                         <InputField
                             label="Siglas"
+                            id="pr-siglas"
                             icon={Hash}
                             type="text"
                             value={form.siglas}
@@ -255,6 +280,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <SelectField
                             label="Tipo de Prueba"
+                            id="pr-tipo"
                             icon={Target}
                             value={form.tipo_prueba}
                             onChange={(e) => setForm({ ...form, tipo_prueba: e.target.value })}
@@ -266,6 +292,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
                         <SelectField
                             label="Tipo de Medición"
+                            id="pr-medicion"
                             icon={Ruler}
                             value={form.tipo_medicion}
                             onChange={(e) => {
@@ -286,6 +313,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <InputField
                             label="Unidad de Medida"
+                            id="pr-unidad"
                             icon={Info}
                             type="text"
                             value={form.unidad_medida}
@@ -295,6 +323,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         />
                         <SelectField
                             label="Disciplina"
+                            id="pr-disciplina"
                             icon={Activity}
                             value={form.tipo_disciplina_id}
                             onChange={(e) => setForm({ ...form, tipo_disciplina_id: e.target.value })}
@@ -308,6 +337,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     <div className="grid grid-cols-2 gap-4">
                         <InputField
                             label="Fecha de Registro"
+                            id="pr-fecha-reg"
                             icon={Calendar}
                             type="date"
                             value={form.fecha_registro}
@@ -316,6 +346,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                         />
                         <InputField
                             label="Fecha de Prueba"
+                            id="pr-fecha-pru"
                             icon={Calendar}
                             type="date"
                             value={form.fecha_prueba}
@@ -353,8 +384,26 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     </div>
                 </form>
             </div>
-        </div>
+        </dialog>
     );
+};
+
+PruebaModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+    editingData: PropTypes.shape({
+        external_id: PropTypes.string,
+        nombre: PropTypes.string,
+        siglas: PropTypes.string,
+        fecha_prueba: PropTypes.string,
+        tipo_prueba: PropTypes.string,
+        tipo_medicion: PropTypes.string,
+        unidad_medida: PropTypes.string,
+        estado: PropTypes.bool,
+        tipo_disciplina_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        fecha_registro: PropTypes.string
+    })
 };
 
 export default PruebaModal;

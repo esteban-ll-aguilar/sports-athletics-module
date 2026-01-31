@@ -4,7 +4,6 @@ import { Shield, Mail, UserCog, FileText, Search, Filter } from "lucide-react";
 import EditUserModal from "./EditUserModal";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Link } from "react-router-dom";
 
 
 const AdminUsersTable = () => {
@@ -263,9 +262,10 @@ const AdminUsersTable = () => {
 
       {editingUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+          <button
+            className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm transition-opacity cursor-default"
             onClick={() => setEditingUser(null)}
+            aria-label="Cerrar modal"
           />
           <div className="relative z-10 w-full max-w-lg">
             <EditUserModal

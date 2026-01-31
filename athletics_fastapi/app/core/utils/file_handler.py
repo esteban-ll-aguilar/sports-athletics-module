@@ -9,6 +9,11 @@ from datetime import datetime
 UPLOAD_DIRECTORY = os.getenv("UPLOAD_DIRECTORY", "uploads")
 
 
+class FileHandlerError(Exception):
+    """Excepción personalizada para errores en el manejo de archivos."""
+    pass
+
+
 async def upload_file_to_cloud(
     file: UploadFile,
     folder: str = "general",
@@ -49,7 +54,7 @@ async def upload_file_to_cloud(
         return relative_path
         
     except Exception as e:
-        raise Exception(f"Error al guardar archivo: {str(e)}")
+        raise FileHandlerError(f"Error al guardar archivo: {str(e)}")
 
 
 async def delete_file(file_path: str) -> bool:
@@ -60,8 +65,7 @@ async def delete_file(file_path: str) -> bool:
             return True
         return False
     except Exception as e:
-        print(f"Error al eliminar archivo: {e}")
-        return False
+        raise FileHandlerError(f"Error al eliminar archivo: {str(e)}")
 
 
 def get_file_url(file_path: str, base_url: str = "") -> str:

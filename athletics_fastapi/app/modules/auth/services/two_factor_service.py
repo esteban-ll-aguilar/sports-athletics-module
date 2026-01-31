@@ -95,9 +95,11 @@ class TwoFactorService:
             totp = pyotp.TOTP(secret)
             # valid_window=1 permite códigos del período anterior y siguiente
             return totp.verify(code, valid_window=1)
-        except Exception:
+        except Exception as e:
+            from app.core.logging.logger import logger
+            logger.error(f"Error verificando código TOTP: {e}")
             return False
-    
+
     def get_current_code(self, secret: str) -> str:
         """
         Obtiene el código actual (útil para testing).
@@ -166,7 +168,9 @@ class TwoFactorService:
                 if self.hasher.verify(code, hashed_code):
                     return True
             return False
-        except Exception:
+        except Exception as e:
+            from app.core.logging.logger import logger
+            logger.error(f"Error verificando código de respaldo: {e}")
             return False
     
     def remove_used_backup_code(self, backup_codes_json: str, used_code: str) -> str:
@@ -188,7 +192,9 @@ class TwoFactorService:
                 if not self.hasher.verify(used_code, hashed_code)
             ]
             return json.dumps(remaining_codes)
-        except Exception:
+        except Exception as e:
+            from app.core.logging.logger import logger
+            logger.error(f"Error eliminando código de respaldo usado: {e}")
             return backup_codes_json
 
 

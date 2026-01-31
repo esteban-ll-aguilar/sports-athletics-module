@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AtletaService from '../../services/AtletaService';
-import { Table, Card, Spinner, Badge, Timeline } from 'flowbite-react';
-import { Trophy, Medal, MapPin, Calendar, Activity, TrendingUp } from 'lucide-react';
+import { Table, Spinner, Badge, Timeline } from 'flowbite-react';
+import { Trophy, Medal, Calendar, Activity, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DashboardAtletaPage = () => {
@@ -23,8 +23,7 @@ const DashboardAtletaPage = () => {
             setStats(statsData.data || { medallas: { oro: 0, plata: 0, bronce: 0 }, total_competencias: 0, experiencia: 0 });
             setHistorial(historialData.data || []);
         } catch (error) {
-            console.error("Error cargando dashboard:", error);
-            // toast.error("Error al cargar los datos del dashboard"); // Optional suppress
+            toast.error("Error al cargar los datos del dashboard"); // Optional suppress
             // Fallback data
             setStats({ medallas: { oro: 0, plata: 0, bronce: 0 }, total_competencias: 0, experiencia: 0 });
             setHistorial([]);
@@ -187,13 +186,19 @@ const DashboardAtletaPage = () => {
                                             <Table.Cell className="text-gray-700 dark:text-gray-300">Prueba #{item.prueba_id}</Table.Cell>
                                             <Table.Cell className="text-gray-900 dark:text-white font-mono">{item.resultado} {item.unidad_medida}</Table.Cell>
                                             <Table.Cell>
-                                                <Badge color={
-                                                    item.posicion_final.includes('primero') ? 'warning' :
-                                                        item.posicion_final.includes('segundo') ? 'gray' :
-                                                            item.posicion_final.includes('tercero') ? 'failure' : 'info'
-                                                } className="text-xs font-bold uppercase w-fit">
-                                                    {item.posicion_final}
-                                                </Badge>
+                                                {(() => {
+                                                    let badgeColor = 'info';
+                                                    const pos = item.posicion_final.toLowerCase();
+                                                    if (pos.includes('primero')) badgeColor = 'warning';
+                                                    else if (pos.includes('segundo')) badgeColor = 'gray';
+                                                    else if (pos.includes('tercero')) badgeColor = 'failure';
+
+                                                    return (
+                                                        <Badge color={badgeColor} className="text-xs font-bold uppercase w-fit">
+                                                            {item.posicion_final}
+                                                        </Badge>
+                                                    );
+                                                })()}
                                             </Table.Cell>
                                             <Table.Cell>
                                                 {item.estado ? (

@@ -186,7 +186,11 @@ const VerificationModal = ({ email, isOpen, onClose, onSuccess }) => {
                                 }
                             `}
                         >
-                            {resendLoading ? 'Enviando...' : countdown > 0 ? `Reenviar en ${countdown}s` : 'Reenviar código'}
+                            {(() => {
+                                if (resendLoading) return 'Enviando...';
+                                if (countdown > 0) return `Reenviar en ${countdown}s`;
+                                return 'Reenviar código';
+                            })()}
                         </button>
                     </p>
                 </div>

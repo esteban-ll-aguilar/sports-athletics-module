@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
 import TipoDisciplinaModal from "../widgets/TipoDisciplinaModal";
 import Swal from "sweetalert2";
-import { Plus, Search, Filter, Activity, Edit2, Power, CheckCircle, ArrowLeft, Trophy } from 'lucide-react';
+import { Plus, Activity, Edit2, Power, CheckCircle, ArrowLeft, Trophy } from 'lucide-react';
 
 const TipoDisciplinaPage = () => {
   const [tipos, setTipos] = useState([]);

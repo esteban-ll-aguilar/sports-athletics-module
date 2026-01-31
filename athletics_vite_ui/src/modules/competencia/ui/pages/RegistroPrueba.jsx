@@ -6,7 +6,7 @@ import PruebaRepository from "../../services/prueba_service";
 import baremoService from "../../services/baremo_service";
 import RegistroPruebaModal from "../widgets/RegistroPruebaModal";
 import Swal from "sweetalert2";
-import { Plus, Search, Filter, Calendar, User, Trophy, Activity, Clipboard, CheckCircle, Power, Edit2, AlertCircle } from 'lucide-react';
+import { Plus, Search, Calendar, User, Activity, Clipboard, CheckCircle, Power, Edit2 } from 'lucide-react';
 
 const RegistroPruebasPage = () => {
     const [resultados, setResultados] = useState([]);

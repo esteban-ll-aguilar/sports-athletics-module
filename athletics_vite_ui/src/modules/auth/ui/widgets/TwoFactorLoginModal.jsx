@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Key, ArrowRight, X } from 'lucide-react';
+import { Shield, Lock, Key, ArrowRight } from 'lucide-react';
 import authService from '../../services/auth_service';
 import { useNavigate } from 'react-router-dom';
 

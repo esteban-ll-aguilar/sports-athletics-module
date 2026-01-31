@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
 import HorarioManager from '../components/HorarioManager';
-import { Plus, Search, Filter, Dumbbell, Calendar, Users, Edit, Trash2, Clock, Info } from 'lucide-react';
+import { Plus, Search, Dumbbell, Calendar, Users, Edit, Trash2, Info } from 'lucide-react';
 
 const GestionEntrenamientosPage = () => {
     const [entrenamientos, setEntrenamientos] = useState([]);
@@ -106,7 +106,7 @@ const GestionEntrenamientosPage = () => {
                                 flex-1 md:flex-none flex items-center justify-center gap-2
                                 px-6 py-3 rounded-xl
                                 text-sm font-bold text-white
-                                bg-gradient-to-r from-[#b30c25] to-[#80091b]
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
                                 hover:brightness-110
                                 shadow-lg shadow-red-900/20
                                 active:scale-95 transition-all
@@ -165,37 +165,45 @@ const GestionEntrenamientosPage = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-10 h-10 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 dark:text-gray-400 font-medium">Cargando entrenamientos...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : filteredEntrenamientos.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="p-4 bg-gray-100 dark:bg-[#2a2829] rounded-full">
-                                                    <Dumbbell className="text-gray-400" size={32} />
-                                                </div>
-                                                <p className="text-gray-500 dark:text-gray-400 font-medium">
-                                                    No se encontraron entrenamientos.
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredEntrenamientos.map((ent) => (
+                                {(() => {
+                                    if (isLoading) {
+                                        return (
+                                            <tr>
+                                                <td colSpan="4" className="py-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="w-10 h-10 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                                                        <span className="text-gray-500 dark:text-gray-400 font-medium">Cargando entrenamientos...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+
+                                    if (filteredEntrenamientos.length === 0) {
+                                        return (
+                                            <tr>
+                                                <td colSpan="4" className="py-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="p-4 bg-gray-100 dark:bg-[#2a2829] rounded-full">
+                                                            <Dumbbell className="text-gray-400" size={32} />
+                                                        </div>
+                                                        <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                                            No se encontraron entrenamientos.
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+
+                                    return filteredEntrenamientos.map((ent) => (
                                         <tr
                                             key={ent.id}
                                             className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors group"
                                         >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="flex-shrink-0 w-12 h-12 bg-red-50 dark:bg-[#b30c25]/10 rounded-xl flex items-center justify-center text-[#b30c25]">
+                                                    <div className="shrink-0 w-12 h-12 bg-red-50 dark:bg-[#b30c25]/10 rounded-xl flex items-center justify-center text-[#b30c25]">
                                                         <Dumbbell size={24} />
                                                     </div>
                                                     <div>
@@ -255,8 +263,8 @@ const GestionEntrenamientosPage = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ));
+                                })()}
                             </tbody>
                         </table>
                     </div>

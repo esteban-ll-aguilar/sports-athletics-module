@@ -75,9 +75,8 @@ class UserBaseSchema(BaseModel):
         # O idealmente validar si el tipo es CEDULA.
         # Limitacion: en Pydantic v2 field_validator el contexto de otros campos está en info.data
         if info.data.get('tipo_identificacion') == TipoIdentificacionEnum.CEDULA:
-             if not validar_cedula_ecuador(v):
-                 # raise ValueError('Cédula inválida') # TODO: Reactivar en producción
-                 pass
+            if not validar_cedula_ecuador(v):
+                raise ValueError('Cédula ecuatoriana inválida')
         return v
         
     @field_validator('phone')
@@ -92,7 +91,7 @@ class UserBaseSchema(BaseModel):
 # ======================================================
 
 class UserCreateSchema(UserBaseSchema):
-    email: str # Should be EmailStr but str for now to match other patterns if any
+    email: str # Should be EmailStr but str for now to match other patterns
     password: str
     
     # Optional role-specific data

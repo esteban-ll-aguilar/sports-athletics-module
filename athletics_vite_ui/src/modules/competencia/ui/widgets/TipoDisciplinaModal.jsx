@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
+import PropTypes from "prop-types";
 import TipoDisciplina from "../../domain/models/TipoDisciplina";
 import Swal from "sweetalert2";
-import { X, Trophy, FileText, Activity, PlusCircle } from "lucide-react";
+import { X, Trophy, FileText, PlusCircle } from "lucide-react";
 
 const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
   const [form, setForm] = useState(new TipoDisciplina());
+  const baseId = useId();
 
   useEffect(() => {
     if (editingData) {
@@ -85,8 +87,16 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div className="absolute inset-0 transition-opacity" onClick={onClose} />
+    <dialog
+      open={isOpen}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm w-full h-full border-none outline-none"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+        onClick={onClose}
+        aria-label="Cerrar modal"
+      />
       <div className="relative w-full max-w-xl bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 dark:border-[#332122] flex justify-between items-center bg-gray-50 dark:bg-[#212121]">
@@ -107,10 +117,11 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* CAMPO NOMBRE */}
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nombre</label>
+            <label htmlFor={`${baseId}-nombre`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Nombre</label>
             <div className="relative">
               <Trophy className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
+                id={`${baseId}-nombre`}
                 type="text"
                 name="nombre"
                 value={form.nombre}
@@ -132,10 +143,11 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
           {/* CAMPO DESCRIPCIÓN */}
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Descripción</label>
+            <label htmlFor={`${baseId}-descripcion`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Descripción</label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 text-gray-400" size={18} />
               <textarea
+                id={`${baseId}-descripcion`}
                 name="descripcion"
                 value={form.descripcion}
                 onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
@@ -203,9 +215,21 @@ const TipoDisciplinaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 };
 
+
+TipoDisciplinaModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  editingData: PropTypes.shape({
+    id: PropTypes.number,
+    nombre: PropTypes.string,
+    descripcion: PropTypes.string,
+    estado: PropTypes.bool
+  })
+};
 
 export default TipoDisciplinaModal;

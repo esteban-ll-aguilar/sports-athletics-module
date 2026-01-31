@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, AlertCircle, Check, AlertTriangle, Clock } from 'lucide-react';
+import { Search, Plus, AlertCircle, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import AtletaService from '@modules/atleta/services/AtletaService';
 
@@ -61,18 +61,7 @@ const HistorialMedicoPage = () => {
     }
   };
 
-  const getEstadoColor = (estado) => {
-    switch (estado) {
-      case 'apto':
-        return { bg: 'bg-green-100', text: 'text-green-700', icon: Check, label: 'Apto' };
-      case 'lesionado':
-        return { bg: 'bg-red-100', text: 'text-red-700', icon: AlertTriangle, label: 'Lesionado' };
-      case 'en_revision':
-        return { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: Clock, label: 'En Observación' };
-      default:
-        return { bg: 'bg-gray-100', text: 'text-gray-700', icon: AlertCircle, label: 'Sin evaluar' };
-    }
-  };
+
 
   const filteredAtletas = atletas.filter(a =>
     a.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||

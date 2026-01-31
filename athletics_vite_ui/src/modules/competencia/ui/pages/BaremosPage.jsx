@@ -4,7 +4,7 @@ import baremoService from "../../services/baremo_service";
 import pruebaService from "../../services/prueba_service";
 import BaremoModal from "../widgets/BaremoModal";
 import Swal from "sweetalert2";
-import { Plus, Search, Filter, ArrowLeft, Ruler, Users, Activity, Edit2, Power, CheckCircle, Trash2, List } from 'lucide-react';
+import { Plus, Ruler, Users, Activity, Edit2, Power, CheckCircle, List } from 'lucide-react';
 
 const BaremosPage = () => {
   const [baremos, setBaremos] = useState([]);

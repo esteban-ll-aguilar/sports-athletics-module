@@ -1,6 +1,65 @@
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import Swal from "sweetalert2";
-import { X, User, Activity, Clock, Ruler, Calendar, Save, AlertCircle, Edit3, Type } from "lucide-react";
+import { X, User, Activity, Clock, Ruler, Calendar, Save, Edit3, Type } from "lucide-react";
+
+const InputField = ({ label, icon: Icon, ...props }) => (
+    <div className="space-y-1">
+        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <input
+                {...props}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
+                bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm
+            `}
+            />
+        </div>
+    </div>
+);
+
+InputField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType
+};
+
+const SelectField = ({ label, icon: Icon, children, ...props }) => (
+    <div className="space-y-1">
+        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <select
+                {...props}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
+                 bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm appearance-none
+            `}
+            >
+                {children}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </div>
+    </div>
+);
+
+SelectField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    children: PropTypes.node
+};
 
 const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competencias = [], atletas = [], pruebas = [] }) => {
     const [submitting, setSubmitting] = useState(false);
@@ -116,56 +175,17 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
 
     if (!isOpen) return null;
 
-    const InputField = ({ label, icon: Icon, ...props }) => (
-        <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-                <input
-                    {...props}
-                    className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
-                        bg-white dark:bg-[#212121] 
-                        border border-gray-300 dark:border-[#332122]
-                        text-gray-900 dark:text-gray-100
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all sm:text-sm
-                    `}
-                />
-            </div>
-        </div>
-    );
-
-    const SelectField = ({ label, icon: Icon, children, ...props }) => (
-        <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-            <div className="relative">
-                {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-                <select
-                    {...props}
-                    className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
-                         bg-white dark:bg-[#212121] 
-                        border border-gray-300 dark:border-[#332122]
-                        text-gray-900 dark:text-gray-100
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all sm:text-sm appearance-none
-                    `}
-                >
-                    {children}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
-            </div>
-        </div>
-    );
-
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend']">
-            <div className="absolute inset-0 transition-opacity" onClick={onClose} />
+        <dialog
+            open={isOpen}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] w-full h-full border-none outline-none"
+        >
+            <button
+                type="button"
+                className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+                onClick={onClose}
+                aria-label="Cerrar modal"
+            />
             <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
@@ -320,8 +340,27 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                     </div>
                 </form>
             </div>
-        </div>
+        </dialog>
     );
+};
+
+RegistroPruebaModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+    editingItem: PropTypes.shape({
+        atleta_external_id: PropTypes.string,
+        atleta_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        prueba_external_id: PropTypes.string,
+        prueba_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        marca_obtenida: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        unidad_medida: PropTypes.string,
+        estado: PropTypes.bool,
+        fecha: PropTypes.string
+    }),
+    competencias: PropTypes.array,
+    atletas: PropTypes.array,
+    pruebas: PropTypes.array
 };
 
 export default RegistroPruebaModal;

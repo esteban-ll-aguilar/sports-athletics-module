@@ -134,18 +134,25 @@ const TwoFactorSettings = () => {
 
                             <div>
                                 <p className="text-sm font-medium text-gray-900 dark:text-white mb-2">O ingresa la clave manualmente:</p>
-                                <div className="flex items-center gap-2 bg-gray-50 dark:bg-[#212121] p-3 rounded-lg border border-gray-200 dark:border-[#332122] group cursor-pointer hover:border-gray-300 dark:hover:border-[#444]" onClick={() => copyToClipboard(qrCodeData?.secret)}>
-                                    <code className="flex-1 font-mono text-sm text-[#b30c25] break-all">{qrCodeData?.secret}</code>
-                                    <Copy size={16} className="text-gray-400" />
-                                </div>
+                                <button
+                                    type="button"
+                                    className="flex items-center gap-2 w-full bg-gray-50 dark:bg-[#212121] p-3 rounded-lg border border-gray-200 dark:border-[#332122] group cursor-pointer hover:border-gray-300 dark:hover:border-[#444] transition-all"
+                                    onClick={() => copyToClipboard(qrCodeData?.secret)}
+                                    title="Copiar clave secreta"
+                                    aria-label="Copiar clave secreta al portapapeles"
+                                >
+                                    <code className="flex-1 font-mono text-sm text-[#b30c25] break-all text-left">{qrCodeData?.secret}</code>
+                                    <Copy size={16} className="text-gray-400 group-hover:text-[#b30c25] transition-colors" />
+                                </button>
                             </div>
 
                             <form onSubmit={handleVerifyEnable} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
+                                    <label htmlFor="2fa-verification-code" className="block text-sm font-medium text-gray-900 dark:text-white mb-1">
                                         2. Ingresa el código de 6 dígitos
                                     </label>
                                     <input
+                                        id="2fa-verification-code"
                                         type="text"
                                         maxLength={6}
                                         value={verificationCode}
@@ -184,7 +191,7 @@ const TwoFactorSettings = () => {
 
                     <div className="grid grid-cols-2 gap-3 mb-6 bg-gray-50 dark:bg-[#212121] p-4 rounded-xl border border-gray-200 dark:border-[#332122]">
                         {backupCodes.map((code, index) => (
-                            <div key={index} className="font-mono text-sm text-gray-700 dark:text-gray-300 font-medium py-1">
+                            <div key={`backup-${code}-${index}`} className="font-mono text-sm text-gray-700 dark:text-gray-300 font-medium py-1">
                                 {code}
                             </div>
                         ))}
@@ -280,10 +287,11 @@ const TwoFactorSettings = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Tu Contraseña</label>
+                                        <label htmlFor="2fa-disable-password" name="2fa-disable-password" className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Tu Contraseña</label>
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                             <input
+                                                id="2fa-disable-password"
                                                 type="password"
                                                 value={disablePassword}
                                                 onChange={(e) => setDisablePassword(e.target.value)}
@@ -294,10 +302,11 @@ const TwoFactorSettings = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Código Autenticador</label>
+                                        <label htmlFor="2fa-disable-code" className="block text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-1">Código Autenticador</label>
                                         <div className="relative">
                                             <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                             <input
+                                                id="2fa-disable-code"
                                                 type="text"
                                                 value={disableCode}
                                                 onChange={(e) => setDisableCode(e.target.value)}

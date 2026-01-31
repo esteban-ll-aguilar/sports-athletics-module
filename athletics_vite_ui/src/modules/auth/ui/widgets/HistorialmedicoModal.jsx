@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import historialMedicoService from "../../services/historialMedicoService";
-import { Activity, Heart, Ruler, Weight, AlertCircle, Save, X, Edit3, PlusCircle } from "lucide-react";
+import { Activity, Heart, Ruler, Weight, Save, X, Edit3, PlusCircle } from "lucide-react";
 
 export const OPCIONES_ALERGIAS = [
     { value: "Ninguna", label: "Ninguna" },
@@ -162,7 +162,11 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={onClose} />
+            <button
+                className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm transition-opacity cursor-default"
+                onClick={onClose}
+                aria-label="Cerrar modal"
+            />
 
             <div className="relative w-full max-w-2xl bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-[#332122] flex flex-col max-h-[90vh]">
 
@@ -215,10 +219,11 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Peso */}
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Peso (kg)</label>
+                                <label htmlFor="hm-peso" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Peso (kg)</label>
                                 <div className="relative">
                                     <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
+                                        id="hm-peso"
                                         type="number"
                                         step="0.01"
                                         name="peso"
@@ -233,10 +238,11 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* Talla */}
                             <div className="space-y-1">
-                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Altura (m)</label>
+                                <label htmlFor="hm-talla" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Altura (m)</label>
                                 <div className="relative">
                                     <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
+                                        id="hm-talla"
                                         type="number"
                                         step="0.01"
                                         name="talla"
@@ -266,8 +272,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* Alergias */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Alergias</label>
+                                <label htmlFor="hm-alergias" className="text-sm font-medium text-gray-700 dark:text-gray-300">Alergias</label>
                                 <select
+                                    id="hm-alergias"
                                     name="alergias"
                                     value={formData.alergias}
                                     onChange={handleChange}
@@ -282,8 +289,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* Enfermedades */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enfermedades Preexistentes</label>
+                                <label htmlFor="hm-enfermedades" className="text-sm font-medium text-gray-700 dark:text-gray-300">Enfermedades Preexistentes</label>
                                 <select
+                                    id="hm-enfermedades"
                                     name="enfermedades"
                                     value={formData.enfermedades}
                                     onChange={handleChange}
@@ -298,8 +306,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* Hereditarias */}
                             <div className="space-y-1">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Antecedentes Hereditarios</label>
+                                <label htmlFor="hm-hereditarias" className="text-sm font-medium text-gray-700 dark:text-gray-300">Antecedentes Hereditarios</label>
                                 <select
+                                    id="hm-hereditarias"
                                     name="enfermedades_hereditarias"
                                     value={formData.enfermedades_hereditarias}
                                     onChange={handleChange}

@@ -32,12 +32,16 @@ const HomeNavbar = () => {
 
                     {/* Logo */}
                     {/* Logo */}
-                    <div className="shrink-0 cursor-pointer" onClick={() => navigate('/')}>
+                    <button
+                        className="shrink-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#b30c25] rounded-lg text-left"
+                        onClick={() => navigate('/')}
+                        aria-label="Ir al inicio"
+                    >
                         <h1 className="text-2xl font-black italic tracking-tighter">
                             <span className="text-gray-900 dark:text-white">ATHLETICS</span>
                             <span className="text-[#b30c25]">MODULE</span>
                         </h1>
-                    </div>
+                    </button>
 
                     {/* Desktop Nav */}
                     <div className="hidden md:flex items-center space-x-8">

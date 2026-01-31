@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import AtletaService from "../../services/AtletaService";
-import { Mail, FileText, User, UserPlus, Search, Filter } from "lucide-react";
+import { Mail, FileText, User, Search, Filter } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
-import EditUserModal from "../../../auth/ui/pages/RegisterPage";
-import { Link } from "react-router-dom";
+import EditUserModal from "../widgets/atletasModal";
 
 
 const AthletesTable = () => {
@@ -122,10 +121,7 @@ const AthletesTable = () => {
     doc.save("atletas.pdf");
   };
 
-  const openCreateModal = () => {
-    setSelectedUser(null);
-    setShowModal(true);
-  };
+
 
   const openEditModal = (user) => {
     setSelectedUser(user);
@@ -229,6 +225,8 @@ const AthletesTable = () => {
           <div className="col-span-1 md:col-span-2 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
+              id="athlete-search"
+              aria-label="Buscar atletas"
               type="text"
               placeholder="Buscar por nombre, correo o identificación..."
               value={searchTerm}
@@ -249,6 +247,8 @@ const AthletesTable = () => {
           <div className="relative">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <select
+              id="status-filter"
+              aria-label="Filtrar por estado"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="
@@ -348,9 +348,9 @@ const AthletesTable = () => {
             <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
               onClick={closeModal}
+              role="presentation"
             />
             <div className="relative z-10 w-full max-w-5xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-              {/* We are reusing the RegisterPage component as a Modal essentially */}
               <EditUserModal
                 asModal
                 user={selectedUser}
