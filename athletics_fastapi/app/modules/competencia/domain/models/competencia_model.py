@@ -13,6 +13,12 @@ if TYPE_CHECKING:
 
 
 class Competencia(Base):
+    """
+    Entidad principal que representa un evento deportivo o jornada de evaluación.
+    
+    Almacena la información logística de la competencia y actúa como contenedor 
+    para los resultados individuales de los atletas bajo la supervisión de un entrenador.
+    """
     __tablename__ = "competencia"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -25,6 +31,7 @@ class Competencia(Base):
         server_onupdate=text("gen_random_uuid()")
 
     )
+    #Identificadores
     nombre: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     descripcion: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     fecha: Mapped[datetime.date] = mapped_column(Date, nullable=False, index=True)
@@ -35,11 +42,11 @@ class Competencia(Base):
     entrenador_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     entrenador: Mapped["UserModel"] = relationship("UserModel")
     
-    # Timestamps
+    # Marcas de tiempo
     fecha_creacion: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=datetime.datetime.utcnow)
     fecha_actualizacion: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(timezone=True), nullable=True, onupdate=datetime.datetime.utcnow)
     
-    # Relationships
+    # Relaciones
     resultados: Mapped[list["ResultadoCompetencia"]] = relationship(
         "ResultadoCompetencia",
         back_populates="competencia",
