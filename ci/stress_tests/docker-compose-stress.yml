@@ -13,14 +13,9 @@ services:
       - ./jmeter/data:/data
     networks:
       - stress-test-network
+    entrypoint: [ "/bin/sh", "-c" ]
     command: >
-      sh -c "
-        echo '============================================' &&
-        echo '🔧 JMeter - Pruebas de Estrés' &&
-        echo '============================================' &&
-        echo 'Esperando instrucciones...' &&
-        tail -f /dev/null
-      "
+      echo '============================================' && echo '🔧 JMeter - Pruebas de Estrés' && echo '============================================' && echo 'Esperando instrucciones...' && tail -f /dev/null
 
   # ============================================
   # Gatling - Pruebas de Rendimiento

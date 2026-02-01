@@ -1,0 +1,279 @@
+groups:
+  - name: performance_alerts
+    interval: 30s
+    rules:
+      # Alerta: Tiempo de respuesta alto
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[5m])) by (uri, le)
+          ) > 3
+        for: 2m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "Alto tiempo de respuesta en {{ $labels.uri }}"
+          description: "El endpoint {{ $labels.uri }} tiene un P95 de {{ $value | humanizeDuration }} (límite: 3s)"
+
+      # Alerta: Tiempo de respuesta crítico
+      - alert: CriticalResponseTime
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[5m])) by (uri, le)
+          ) > 5
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Tiempo de respuesta CRÍTICO en {{ $labels.uri }}"
+          description: "El endpoint {{ $labels.uri }} tiene un P95 de {{ $value | humanizeDuration }} (límite crítico: 5s)"
+
+      # Alerta: Tasa de error alta
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (uri) /
+            sum(rate(http_server_requests_seconds_count[5m])) by (uri)
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "Alta tasa de errores en {{ $labels.uri }}"
+          description: "{{ $labels.uri }} tiene {{ $value | humanize }}% de errores (límite: 5%)"
+
+      # Alerta: Tasa de error crítica
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (uri) /
+            sum(rate(http_server_requests_seconds_count[5m])) by (uri)
+          ) * 100 > 10
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Tasa de errores CRÍTICA en {{ $labels.uri }}"
+          description: "{{ $labels.uri }} tiene {{ $value | humanize }}% de errores (límite crítico: 10%)"
+
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # Alerta: CPU alto en backend
+      - alert: HighBackendCPU
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 3m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Alto uso de CPU en backend"
+          description: "El backend está usando {{ $value | humanize }}% de CPU (límite: 85%)"
+
+      # Alerta: CPU crítico en backend
+      - alert: CriticalBackendCPU
+        expr: |
+          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 95
+        for: 1m
+        labels:
+          severity: critical
+          component: infrastructure
+        annotations:
+          summary: "Uso CRÍTICO de CPU en backend"
+          description: "El backend está usando {{ $value | humanize }}% de CPU (límite crítico: 95%)"
+
+      # Alerta: Memoria alta
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) /
+            node_memory_MemTotal_bytes
+          ) * 100 > 85
+        for: 3m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Alto uso de memoria"
+          description: "El sistema está usando {{ $value | humanize }}% de memoria (límite: 85%)"
+
+      # Alerta: Disco lleno
+      - alert: DiskSpaceLow
+        expr: |
+          (
+            (node_filesystem_avail_bytes{mountpoint="/"} /
+            node_filesystem_size_bytes{mountpoint="/"})
+          ) * 100 < 15
+        for: 5m
+        labels:
+          severity: warning
+          component: infrastructure
+        annotations:
+          summary: "Espacio en disco bajo"
+          description: "Queda {{ $value | humanize }}% de espacio disponible (límite: 15%)"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # Alerta: Alto número de conexiones
+      - alert: HighDatabaseConnections
+        expr: mysql_global_status_threads_connected > 150
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Alto número de conexiones a la base de datos"
+          description: "Hay {{ $value }} conexiones activas (límite: 150)"
+
+      # Alerta: Conexiones críticas
+      - alert: CriticalDatabaseConnections
+        expr: mysql_global_status_threads_connected > 200
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Número CRÍTICO de conexiones a la base de datos"
+          description: "Hay {{ $value }} conexiones activas (límite crítico: 200)"
+
+      # Alerta: Queries lentas
+      - alert: HighSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Alta tasa de queries lentas"
+          description: "{{ $value | humanize }} queries lentas por segundo (límite: 10/s)"
+
+      # Alerta: InnoDB Buffer Pool hit rate bajo
+      - alert: LowInnoDBBufferPoolHitRate
+        expr: |
+          (
+            (mysql_global_status_innodb_buffer_pool_read_requests - mysql_global_status_innodb_buffer_pool_reads) /
+            mysql_global_status_innodb_buffer_pool_read_requests
+          ) * 100 < 85
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Baja tasa de hit del InnoDB Buffer Pool"
+          description: "Hit rate es {{ $value | humanize }}% (óptimo: >95%)"
+
+      # Alerta: Deadlocks frecuentes
+      - alert: FrequentDeadlocks
+        expr: rate(mysql_global_status_innodb_deadlocks[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "Deadlocks frecuentes en la base de datos"
+          description: "{{ $value | humanize }} deadlocks por segundo"
+
+  - name: application_alerts
+    interval: 30s
+    rules:
+      # Alerta: Backend caído
+      - alert: BackendDown
+        expr: up{job="spring-boot-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: backend
+        annotations:
+          summary: "Backend no está respondiendo"
+          description: "El backend ha estado down por más de 1 minuto"
+
+      # Alerta: Base de datos caída
+      - alert: DatabaseDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "Base de datos no está respondiendo"
+          description: "La base de datos ha estado down por más de 1 minuto"
+
+      # Alerta: Bajo throughput
+      - alert: LowThroughput
+        expr: sum(rate(http_server_requests_seconds_count[5m])) < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: backend
+        annotations:
+          summary: "Bajo throughput del sistema"
+          description: "El sistema está procesando solo {{ $value | humanize }} req/s (esperado: >10 req/s)"
+
+      # Alerta: Garbage Collection alto
+      - alert: HighGCPause
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) /
+          rate(jvm_gc_pause_seconds_count[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "Alto tiempo de pausa en Garbage Collection"
+          description: "Pausas de GC promedio: {{ $value | humanizeDuration }}"
+
+      # Alerta: Memory leak sospechoso
+      - alert: PossibleMemoryLeak
+        expr: |
+          (
+            jvm_memory_used_bytes{area="heap"} /
+            jvm_memory_max_bytes{area="heap"}
+          ) * 100 > 90
+        for: 10m
+        labels:
+          severity: warning
+          component: jvm
+        annotations:
+          summary: "Posible memory leak detectado"
+          description: "Heap usage ha estado sobre 90% por 10+ minutos: {{ $value | humanize }}%"
+
+  - name: sla_violations
+    interval: 1m
+    rules:
+      # Alerta: Violación de SLA - Tiempo de respuesta
+      - alert: SLAViolation_ResponseTime
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_sum{uri="/api/v1/auth/login"}[5m])) /
+            sum(rate(http_server_requests_seconds_count{uri="/api/v1/auth/login"}[5m]))
+          ) > 3
+        for: 5m
+        labels:
+          severity: critical
+          component: sla
+          sla_type: response_time
+        annotations:
+          summary: "Violación de SLA: Tiempo de respuesta de login"
+          description: "Login tiene un tiempo de respuesta promedio de {{ $value | humanizeDuration }} (SLA: 3s)"
+
+      # Alerta: Violación de SLA - Disponibilidad
+      - alert: SLAViolation_Availability
+        expr: |
+          (
+            sum(rate(http_server_requests_seconds_count{status=~"2.."}[5m])) /
+            sum(rate(http_server_requests_seconds_count[5m]))
+          ) * 100 < 99
+        for: 5m
+        labels:
+          severity: critical
+          component: sla
+          sla_type: availability
+        annotations:
+          summary: "Violación de SLA: Disponibilidad"
+          description: "Disponibilidad es {{ $value | humanize }}% (SLA: 99%)"
