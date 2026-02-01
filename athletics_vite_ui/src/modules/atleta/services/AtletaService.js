@@ -26,6 +26,25 @@ const AtletaService = {
     getHistorialByUserId: async (userId) => {
         const response = await ApiClient.get(`/atleta/historial-medico/user/${userId}`);
         return response;
+    },
+
+    // Obtener perfil del atleta actual (usa endpoint /me)
+    getProfile: async () => {
+        const response = await ApiClient.get('/atleta/me');
+        console.log("AtletaService.getProfile data:", response);
+        return response;
+    },
+
+    // Obtener resultados de pruebas del atleta
+    getTestResults: async () => {
+        const response = await ApiClient.get('/competencia/resultados-pruebas/');
+        return response;
+    },
+
+    // Obtener entrenamientos del atleta
+    getTrainingSessions: async (atletaId) => {
+        const response = await ApiClient.get(`/entrenador/asistencias/mis-registros?atleta_id=${atletaId}`);
+        return response;
     }
 };
 

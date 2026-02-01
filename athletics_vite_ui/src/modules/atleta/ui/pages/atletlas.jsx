@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import AtletaService from "../../services/AtletaService";
-import { Mail, FileText, User, UserPlus, Search, Filter } from "lucide-react";
+import { Mail, FileText, User, UserPlus, Search, Filter, X } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Swal from "sweetalert2";
-import EditUserModal from "../../../auth/ui/pages/RegisterPage";
+import RegisterPage from "../../../auth/ui/pages/RegisterPage";
 import { Link } from "react-router-dom";
 
 
@@ -41,6 +41,8 @@ const AthletesTable = () => {
         tipo_estamento: u.tipo_estamento || "",
         phone: u.phone || "",
         direccion: u.direccion || "",
+        fecha_nacimiento: u.fecha_nacimiento || "",
+        sexo: u.sexo || "M",
         is_active: u.is_active ?? true,
         id: u.id,
         role: u.role || "ATLETA",
@@ -187,13 +189,13 @@ const AthletesTable = () => {
         {/* Actions Row */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8">
           <div className="w-full sm:w-auto flex gap-3">
-            {/* <button
+            <button
               onClick={openCreateModal}
               className="
                             flex items-center gap-2 justify-center
                             px-6 py-3 rounded-xl w-full sm:w-auto
                             text-sm font-semibold text-white
-                            bg-linear-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
+                            bg-gradient-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
                             hover:shadow-lg hover:shadow-red-900/20 hover:-translate-y-0.5
                             active:translate-y-0 active:shadow-none
                             transition-all duration-300
@@ -201,7 +203,7 @@ const AthletesTable = () => {
             >
               <UserPlus size={18} />
               Nuevo Atleta
-            </button> */}
+            </button>
 
             <button
               onClick={exportPDF}
@@ -346,16 +348,26 @@ const AthletesTable = () => {
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={closeModal}
             />
-            <div className="relative z-10 w-full max-w-5xl h-[90vh] rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-              {/* We are reusing the RegisterPage component as a Modal essentially */}
-              <EditUserModal
-                asModal
-                user={selectedUser}
+            <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="absolute top-4 right-4 z-20">
+                <button
+                  onClick={closeModal}
+                  className="p-2 rounded-full bg-white dark:bg-[#212121] hover:bg-gray-100 dark:hover:bg-[#2a2829] text-gray-500 dark:text-gray-400 shadow-lg transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <RegisterPage
+                isModal={true}
+                userData={selectedUser}
                 onClose={closeModal}
-                onUpdated={fetchAthletes}
+                onSuccess={() => {
+                  fetchAthletes();
+                  closeModal();
+                }}
               />
             </div>
           </div>

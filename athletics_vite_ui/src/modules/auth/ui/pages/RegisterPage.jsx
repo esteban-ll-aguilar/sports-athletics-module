@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import { toast } from 'react-hot-toast';
 
-const RegisterPage = () => {
+const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, userData = null }) => {
     const navigate = useNavigate();
+    const isEditMode = Boolean(userData);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -28,6 +29,28 @@ const RegisterPage = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Pre-fill form data when in edit mode
+    useEffect(() => {
+        if (userData) {
+            setFormData({
+                username: userData.username || '',
+                email: userData.email || '',
+                password: '',
+                confirmPassword: '',
+                first_name: userData.first_name || '',
+                last_name: userData.last_name || '',
+                tipo_identificacion: userData.tipo_identificacion || 'CEDULA',
+                identificacion: userData.identificacion || '',
+                tipo_estamento: userData.tipo_estamento || 'EXTERNOS',
+                role: userData.role || 'ATLETA',
+                phone: userData.phone || '',
+                direccion: userData.direccion || '',
+                fecha_nacimiento: userData.fecha_nacimiento || '',
+                sexo: userData.sexo || 'M',
+            });
+        }
+    }, [userData]);
 
     // Funciones de validación específicas por campo
     const validateFirstName = (value) => {
@@ -121,18 +144,22 @@ const RegisterPage = () => {
     };
 
     const validatePassword = (password) => {
-        if (!password) return 'La contraseña es requerida';
+        // In edit mode, password is optional (only validate if provided)
+        if (!password) {
+            if (isEditMode) return ''; // Empty is OK in edit mode
+            return 'La contraseña es requerida'; // Required in create mode
+        }
         if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
         if (!/(?=.*[A-Z])/.test(password)) return 'Debe contener al menos una mayúscula';
         if (!/(?=.*[a-z])/.test(password)) return 'Debe contener al menos una minúscula';
         if (!/(?=.*[0-9])/.test(password)) return 'Debe contener al menos un número';
-        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;\'`~])/.test(password)) return 'Debe contener al menos un carácter especial';
+        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;'`~])/.test(password)) return 'Debe contener al menos un carácter especial';
         return '';
     };
 
     const validateConfirmPassword = (password, confirmPassword) => {
-        if (!confirmPassword) return 'Debe confirmar la contraseña';
-        if (password !== confirmPassword) return 'Las contraseñas no coinciden';
+        if (!confirmPassword && !isEditMode) return 'Debe confirmar la contraseña';
+        if (confirmPassword && password !== confirmPassword) return 'Las contraseñas no coinciden';
         return '';
     };
 
@@ -175,7 +202,12 @@ const RegisterPage = () => {
         }
         // Validación de contraseña
         else if (name === 'password') {
-            newErrors[name] = validatePassword(value);
+            // Only validate if there's a value OR if we're in create mode
+            if (value || !isEditMode) {
+                newErrors[name] = validatePassword(value);
+            } else {
+                delete newErrors[name]; // Clear error if empty in edit mode
+            }
             if (formData.confirmPassword) {
                 newErrors['confirmPassword'] = validateConfirmPassword(value, formData.confirmPassword);
             }
@@ -207,8 +239,13 @@ const RegisterPage = () => {
         newErrors['username'] = validateUsername(formData.username);
         newErrors['email'] = validateEmail(formData.email);
         newErrors['identificacion'] = validateIdentificacion(formData.identificacion, formData.tipo_identificacion);
-        newErrors['password'] = validatePassword(formData.password);
-        newErrors['confirmPassword'] = validateConfirmPassword(formData.password, formData.confirmPassword);
+
+        // Password validation: required for create, optional for edit
+        if (!isEditMode || formData.password) {
+            newErrors['password'] = validatePassword(formData.password);
+            newErrors['confirmPassword'] = validateConfirmPassword(formData.password, formData.confirmPassword);
+        }
+
         newErrors['fecha_nacimiento'] = validateFechaNacimiento(formData.fecha_nacimiento);
         if (formData.phone) newErrors['phone'] = validatePhone(formData.phone);
         if (formData.direccion) newErrors['direccion'] = validateDireccion(formData.direccion);
@@ -235,18 +272,33 @@ const RegisterPage = () => {
 
         try {
             // Remove confirmPassword before sending to API
-            const { confirmPassword, phone, direccion, ...rest } = formData;
+            const { confirmPassword, phone, direccion, password, ...rest } = formData;
 
             // Only include optional fields if they have content to avoid min_length validation errors
             const dataToSend = { ...rest };
             if (phone && phone.trim() !== '') dataToSend.phone = phone;
             if (direccion && direccion.trim() !== '') dataToSend.direccion = direccion;
 
+            // Include password only if provided (required for create, optional for edit)
+            if (password && password.trim() !== '') dataToSend.password = password;
+
             console.log("Data enviada al backend:", dataToSend);
 
-            await authService.register(dataToSend);
-            toast.success('Usuario registrado exitosamente. Verifique su correo.');
-            navigate('/login');
+            if (isEditMode) {
+                // Update existing user
+                await authService.updateUser(userData.id, dataToSend);
+                toast.success('Usuario actualizado exitosamente.');
+            } else {
+                // Create new user
+                await authService.register(dataToSend);
+                toast.success('Usuario registrado exitosamente. Verifique su correo.');
+            }
+
+            if (onSuccessProp) {
+                onSuccessProp();
+            } else {
+                navigate('/login');
+            }
         } catch (err) {
             console.error("Registration error:", err);
             let errorMessage = 'Error al registrar usuario';
@@ -302,31 +354,33 @@ const RegisterPage = () => {
         };
     };
     return (
-        <div className="flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
+        <div className={isModal ? "" : "flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black"}>
             {/* Left Side - Image */}
-            <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src={loginImage}
-                        alt="Athletics Background"
-                        className="w-full h-full object-cover opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent"></div>
+            {!isModal && (
+                <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
+                    <div className="absolute inset-0 z-0">
+                        <img
+                            src={loginImage}
+                            alt="Athletics Background"
+                            className="w-full h-full object-cover opacity-60"
+                        />
+                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent"></div>
+                    </div>
+                    <div className="relative z-10 p-12 text-center max-w-lg">
+                        <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
+                        <p className="text-lg text-gray-200">
+                            Comienza tu viaje deportivo hoy mismo.
+                        </p>
+                    </div>
                 </div>
-                <div className="relative z-10 p-12 text-center max-w-lg">
-                    <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
-                    <p className="text-lg text-gray-200">
-                        Comienza tu viaje deportivo hoy mismo.
-                    </p>
-                </div>
-            </div>
+            )}
 
             {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto">
+            <div className={isModal ? "w-full flex items-center justify-center p-8" : "w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto"}>
                 <div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white">Crear Cuenta</h2>
-                        <p className="text-gray-400 mt-2">Ingresa tus datos para registrarte</p>
+                        <h2 className="text-2xl font-bold text-white">{isEditMode ? 'Editar Usuario' : 'Crear Cuenta'}</h2>
+                        <p className="text-gray-400 mt-2">{isEditMode ? 'Actualiza los datos del usuario' : 'Ingresa tus datos para registrarte'}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
@@ -549,11 +603,11 @@ const RegisterPage = () => {
                                         <input
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            required
+                                            required={!isEditMode}
                                             value={formData.password}
                                             onChange={handleChange}
                                             className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
-                                            placeholder="********"
+                                            placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
@@ -579,11 +633,11 @@ const RegisterPage = () => {
                                         <input
                                             type={showConfirmPassword ? "text" : "password"}
                                             name="confirmPassword"
-                                            required
+                                            required={!isEditMode}
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
                                             className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
-                                            placeholder="********"
+                                            placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
@@ -624,15 +678,17 @@ const RegisterPage = () => {
                         mt-6
                         "
                         >
-                            {loading ? 'Registrando...' : 'Registrarse'}
+                            {loading ? (isEditMode ? 'Actualizando...' : 'Registrando...') : (isEditMode ? 'Actualizar Usuario' : 'Registrarse')}
                         </button>
 
-                        <div className="text-center mt-4">
-                            <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
-                            <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
-                                Inicia Sesión
-                            </Link>
-                        </div>
+                        {!isEditMode && (
+                            <div className="text-center mt-4">
+                                <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
+                                <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
+                                    Inicia Sesión
+                                </Link>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>

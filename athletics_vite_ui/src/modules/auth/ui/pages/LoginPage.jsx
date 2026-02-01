@@ -24,7 +24,21 @@ const LoginPage = () => {
 
     React.useEffect(() => {
         if (authService.isAuthenticated()) {
-            navigate('/dashboard');
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.role === 'ATLETA') {
+                        navigate('/dashboard/atleta');
+                    } else {
+                        navigate('/dashboard');
+                    }
+                } catch (error) {
+                    navigate('/dashboard');
+                }
+            } else {
+                navigate('/dashboard');
+            }
         }
     }, [navigate]);
 
@@ -44,7 +58,23 @@ const LoginPage = () => {
                 toast.success(response.data.message || 'Se requiere verificación en dos pasos.');
             } else if (response.success) {
                 toast.success(response.message || 'Inicio de sesión exitoso');
-                navigate('/dashboard');
+
+                // Redirect based on user role
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    try {
+                        const user = JSON.parse(userStr);
+                        if (user.role === 'ATLETA') {
+                            navigate('/dashboard/atleta');
+                        } else {
+                            navigate('/dashboard');
+                        }
+                    } catch (error) {
+                        navigate('/dashboard');
+                    }
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 // Caso raro donde success es false pero no lanzó excepción (depende de auth_service)
                 setError(response.message || 'Error desconocido');

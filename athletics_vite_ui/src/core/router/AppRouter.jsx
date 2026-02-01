@@ -84,7 +84,7 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           // /dashboard
-          { index: true, element: <DashboardPage /> },
+          { index: true, element: <DashboardAtletaPage /> },
 
           // --- ADMIN ROUTES ---
           {

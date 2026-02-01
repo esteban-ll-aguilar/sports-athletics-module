@@ -2,7 +2,6 @@ import { LayoutDashboard, Users, Trophy, Calendar, Activity, Heart, TrendingUp }
 
 const rolePermissions = {
     ADMINISTRADOR: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/dashboard/users', icon: Users, label: 'Gestión de Roles' },
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/admin', icon: Users, label: 'Administración' },

@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import adminService from "../../services/adminService";
-import { Shield, Mail, UserCog, FileText, Search, Filter } from "lucide-react";
+import { Shield, Mail, UserCog, FileText, Search, Filter, UserPlus, X } from "lucide-react";
 import EditUserModal from "./EditUserModal";
+import RegisterPage from "../../../auth/ui/pages/RegisterPage";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Link } from "react-router-dom";
@@ -12,6 +13,9 @@ const AdminUsersTable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+
+  // Register Modal State
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   // 🔍 Filtros
   const [searchTerm, setSearchTerm] = useState("");
@@ -120,15 +124,32 @@ const AdminUsersTable = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsRegisterModalOpen(true)}
+              className="
+                                group flex items-center gap-3
+                                px-6 py-3 rounded-xl
+                                text-sm font-semibold text-white
+                                bg-gradient-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
+                                hover:shadow-lg hover:shadow-red-900/20 hover:-translate-y-0.5
+                                active:translate-y-0 active:shadow-none
+                                transition-all duration-300
+                            "
+            >
+              <UserPlus size={18} />
+              <span>Registrar Usuario</span>
+            </button>
 
             <button
               onClick={exportPDF}
               className="
                                 group flex items-center gap-3
                                 px-6 py-3 rounded-xl
-                                text-sm font-semibold text-white
-                                bg-linear-to-r from-[#b30c25] via-[#a00b21] to-[#80091b]
-                                hover:shadow-lg hover:shadow-red-900/20 hover:-translate-y-0.5
+                                text-sm font-semibold text-[#b30c25]
+                                bg-red-50 dark:bg-red-900/10
+                                border border-red-100 dark:border-red-900/30
+                                hover:bg-red-100 dark:hover:bg-red-900/20
+                                hover:-translate-y-0.5
                                 active:translate-y-0 active:shadow-none
                                 transition-all duration-300
                             "
@@ -237,7 +258,10 @@ const AdminUsersTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => setEditingUser(user)}
+                          onClick={() => {
+                            setEditingUser(user);
+                            setIsRegisterModalOpen(true);
+                          }}
                           className="p-2 text-gray-400 hover:text-[#b30c25] hover:bg-red-50 dark:hover:bg-[#332122] rounded-lg transition-colors"
                           title="Editar usuario"
                         >
@@ -261,17 +285,40 @@ const AdminUsersTable = () => {
         </div>
       </div>
 
-      {editingUser && (
+
+      {isRegisterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => setEditingUser(null)}
+            onClick={() => {
+              setIsRegisterModalOpen(false);
+              setEditingUser(null);
+            }}
           />
-          <div className="relative z-10 w-full max-w-lg">
-            <EditUserModal
-              user={editingUser}
-              onClose={() => setEditingUser(null)}
-              onUpdated={fetchUsers}
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-4 right-4 z-20">
+              <button
+                onClick={() => {
+                  setIsRegisterModalOpen(false);
+                  setEditingUser(null);
+                }}
+                className="p-2 rounded-full bg-white dark:bg-[#212121] hover:bg-gray-100 dark:hover:bg-[#2a2829] text-gray-500 dark:text-gray-400 shadow-lg transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <RegisterPage
+              isModal={true}
+              userData={editingUser}
+              onClose={() => {
+                setIsRegisterModalOpen(false);
+                setEditingUser(null);
+              }}
+              onSuccess={() => {
+                fetchUsers();
+                setIsRegisterModalOpen(false);
+                setEditingUser(null);
+              }}
             />
           </div>
         </div>
