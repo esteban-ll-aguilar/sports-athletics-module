@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 from app.modules.auth.dependencies import get_current_admin_user
 from app.core.jwt.jwt import get_current_user
 from app.modules.auth.dependencies import get_admin_user_service

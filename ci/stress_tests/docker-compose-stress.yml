@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # JMeter - Pruebas de Carga y Estrés
+  # ============================================
+  jmeter:
+    image: justb4/jmeter:latest
+    container_name: jmeter-stress-test
+    volumes:
+      - ./jmeter/tests:/tests
+      - ./jmeter/results:/results
+      - ./jmeter/data:/data
+    networks:
+      - stress-test-network
+    command: >
+      sh -c "
+        echo '============================================' &&
+        echo '🔧 JMeter - Pruebas de Estrés' &&
+        echo '============================================' &&
+        echo 'Esperando instrucciones...' &&
+        tail -f /dev/null
+      "
+
+  # ============================================
+  # Gatling - Pruebas de Rendimiento
+  # ============================================
+  gatling:
+    image: denvazh/gatling:latest
+    container_name: gatling-stress-test
+    volumes:
+      - ./gatling/simulations:/opt/gatling/user-files/simulations
+      - ./gatling/resources:/opt/gatling/user-files/resources
+      - ./gatling/results:/opt/gatling/results
+    networks:
+      - stress-test-network
+    environment:
+      - JAVA_OPTS=-Xmx1024m
+    command: >
+      sh -c "
+        echo '============================================' &&
+        echo '⚡ Gatling - Pruebas de Rendimiento' &&
+        echo '============================================' &&
+        echo 'Esperando instrucciones...' &&
+        tail -f /dev/null
+      "
+
+  # ============================================
+  # Grafana - Visualización de Métricas
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-monitoring
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - stress-test-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+
+  # ============================================
+  # Prometheus - Recolección de Métricas
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-metrics
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - stress-test-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+
+  # ============================================
+  # cAdvisor - Monitoreo de Contenedores
+  # ============================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor-monitor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - stress-test-network
+    privileged: true
+
+networks:
+  stress-test-network:
+    driver: bridge
+    name: stress-test-network
+
+volumes:
+  grafana_data:
+    driver: local
+  prometheus_data:
+    driver: local

@@ -124,6 +124,9 @@ const AthletesTable = () => {
     doc.save("atletas.pdf");
   };
 
+
+
+
   const openCreateModal = () => {
     setSelectedUser(null);
     setShowModal(true);
@@ -231,6 +234,8 @@ const AthletesTable = () => {
           <div className="col-span-1 md:col-span-2 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
+              id="athlete-search"
+              aria-label="Buscar atletas"
               type="text"
               placeholder="Buscar por nombre, correo o identificación..."
               value={searchTerm}
@@ -251,6 +256,8 @@ const AthletesTable = () => {
           <div className="relative">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <select
+              id="status-filter"
+              aria-label="Filtrar por estado"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="
@@ -350,6 +357,7 @@ const AthletesTable = () => {
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
               onClick={closeModal}
+              role="presentation"
             />
             <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="absolute top-4 right-4 z-20">

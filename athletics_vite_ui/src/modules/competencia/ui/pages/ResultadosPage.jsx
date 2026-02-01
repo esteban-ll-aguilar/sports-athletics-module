@@ -6,7 +6,7 @@ import AtletaService from "../../../atleta/services/AtletaService";
 import PruebaRepository from "../../services/prueba_service";
 import ResultadoModal from "../widgets/ResultadoModal";
 import Swal from "sweetalert2";
-import { Plus, Search, Filter, Calendar, User, Trophy, Activity, Clipboard, CheckCircle, Power, Edit2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, User, Trophy, CheckCircle, Power, Edit2, ArrowLeft } from 'lucide-react';
 
 const ResultadosPage = () => {
   const [resultados, setResultados] = useState([]);

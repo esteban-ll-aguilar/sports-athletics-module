@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import Swal from "sweetalert2";
 import pruebaService from "../../services/prueba_service";
 // import baremoService from "../../services/baremo_service"; // Passed via props implicitly or used in parent
@@ -111,19 +112,23 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 overflow-y-auto">
+    <dialog
+      open={isOpen}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 overflow-y-auto w-full h-full border-none outline-none"
+      aria-labelledby="modal-title"
+    >
       <div className="w-full max-w-4xl bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#333] my-8">
 
         {/* HEADER */}
         <div className="px-8 py-6 border-b border-[#333] flex justify-between items-center bg-[#252525] rounded-t-2xl">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">
+            <h2 id="modal-title" className="text-2xl font-bold text-white mb-1">
               {editingBaremo ? 'Editar Baremo' : 'Nuevo Baremo'}
             </h2>
             <p className="text-gray-400 text-sm">Configura las reglas de puntuación y clasificación</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <span className="material-symbols-outlined text-3xl">close</span>
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
+            <span className="material-symbols-outlined text-3xl" aria-hidden="true">close</span>
           </button>
         </div>
 
@@ -132,8 +137,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
           {/* SECCIÓN 1: CONTEXTO */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Prueba</label>
+              <label htmlFor="baremo-prueba" className="block text-sm font-medium text-gray-300 mb-2">Prueba</label>
               <select
+                id="baremo-prueba"
                 className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
                 value={form.prueba_id}
                 onChange={e => setForm({ ...form, prueba_id: e.target.value })}
@@ -150,12 +156,13 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Sexo</label>
-              <div className="flex bg-[#121212] rounded-xl p-1 border border-[#444]">
+              <fieldset className="flex bg-[#121212] rounded-xl p-1 border border-[#444]" aria-label="Seleccionar sexo">
                 {['M', 'F'].map(sex => (
                   <button
                     type="button"
                     key={sex}
                     onClick={() => setForm({ ...form, sexo: sex })}
+                    aria-pressed={form.sexo === sex}
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${form.sexo === sex
                       ? 'bg-[#b30c25] text-white shadow-lg'
                       : 'text-gray-400 hover:text-white'
@@ -164,12 +171,13 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                     {sex === 'M' ? 'Masculino' : 'Femenino'}
                   </button>
                 ))}
-              </div>
+              </fieldset>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Edad Mínima (años)</label>
+              <label htmlFor="baremo-edad-min" className="block text-sm font-medium text-gray-300 mb-2">Edad Mínima (años)</label>
               <input
+                id="baremo-edad-min"
                 type="number"
                 className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
                 value={form.edad_min}
@@ -179,8 +187,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Edad Máxima (años)</label>
+              <label htmlFor="baremo-edad-max" className="block text-sm font-medium text-gray-300 mb-2">Edad Máxima (años)</label>
               <input
+                id="baremo-edad-max"
                 type="number"
                 className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
                 value={form.edad_max}
@@ -201,7 +210,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                 onClick={addItem}
                 className="text-[#b30c25] hover:text-[#d41c3a] font-bold text-sm flex items-center gap-1"
               >
-                <span className="material-symbols-outlined text-lg">add_circle</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">add_circle</span>{' '}
                 Agregar Rango
               </button>
             </div>
@@ -210,8 +219,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
               {form.items.map((item, index) => (
                 <div key={index} className="flex flex-col md:flex-row gap-3 items-start bg-[#161616] p-4 rounded-xl border border-[#333] group hover:border-[#555] transition">
                   <div className="flex-1 w-full">
-                    <label className="text-xs text-gray-500 mb-1 block">Marca Mínima</label>
+                    <label htmlFor={`marca-min-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Mínima</label>
                     <input
+                      id={`marca-min-${index}`}
                       type="number" step="0.01"
                       className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
                       value={item.marca_minima}
@@ -221,8 +231,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                     />
                   </div>
                   <div className="flex-1 w-full">
-                    <label className="text-xs text-gray-500 mb-1 block">Marca Máxima</label>
+                    <label htmlFor={`marca-max-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Máxima</label>
                     <input
+                      id={`marca-max-${index}`}
                       type="number" step="0.01"
                       className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
                       value={item.marca_maxima}
@@ -231,9 +242,10 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                       required
                     />
                   </div>
-                  <div className="flex-[2] w-full">
-                    <label className="text-xs text-gray-500 mb-1 block">Clasificación</label>
+                  <div className="flex-2 w-full">
+                    <label htmlFor={`clasif-${index}`} className="text-xs text-gray-500 mb-1 block">Clasificación</label>
                     <select
+                      id={`clasif-${index}`}
                       className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
                       value={item.clasificacion}
                       onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
@@ -249,8 +261,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                     type="button"
                     onClick={() => removeItem(index)}
                     className="mt-6 md:mt-5 p-2 text-gray-500 hover:text-red-500 transition rounded-lg hover:bg-red-500/10"
+                    aria-label={`Eliminar rango ${index + 1}`}
                   >
-                    <span className="material-symbols-outlined">delete</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">delete</span>
                   </button>
                 </div>
               ))}
@@ -273,7 +286,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             </button>
             <button
               type="submit"
-              className="flex-1 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-[#b30c25] to-[#7a0819] hover:brightness-110 shadow-lg shadow-red-900/20 transition"
+              className="flex-1 py-3.5 rounded-xl font-bold text-white bg-linear-to-r from-[#b30c25] to-[#7a0819] hover:brightness-110 shadow-lg shadow-red-900/20 transition"
             >
               {editingBaremo ? 'Guardar Cambios' : 'Crear Baremo'}
             </button>
@@ -281,8 +294,28 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
 
         </form>
       </div>
-    </div>
+    </dialog>
+
   );
+};
+
+BaremoModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  editingBaremo: PropTypes.shape({
+    id: PropTypes.number,
+    prueba_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    prueba_external_id: PropTypes.string,
+    sexo: PropTypes.string,
+    edad_min: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    edad_max: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    items: PropTypes.arrayOf(PropTypes.shape({
+      marca_minima: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      marca_maxima: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      clasificacion: PropTypes.string
+    }))
+  })
 };
 
 export default BaremoModal;

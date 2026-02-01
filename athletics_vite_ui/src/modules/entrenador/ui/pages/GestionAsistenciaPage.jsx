@@ -8,7 +8,7 @@ import AsistenciaHistoryModal from '../components/AsistenciaHistoryModal';
 import InscribirAtletaModal from '../components/InscribirAtletaModal';
 import {
     ArrowLeft, Download, Users, CheckCircle, Clock, XCircle,
-    Calendar, UserPlus, Trash2, Eye, Check, X, AlertCircle,
+    UserPlus, Trash2, Eye, Check, X, AlertCircle,
     User
 } from 'lucide-react';
 
@@ -414,7 +414,7 @@ const GestionAsistenciaPage = () => {
                                             <tr key={registro.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center text-gray-600 dark:text-white font-bold border border-gray-200 dark:border-gray-700 shadow-sm">
+                                                        <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center text-gray-600 dark:text-white font-bold border border-gray-200 dark:border-gray-700 shadow-sm">
                                                             {atleta?.user?.first_name?.charAt(0) || "A"}
                                                         </div>
                                                         <div>

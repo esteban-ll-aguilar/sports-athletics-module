@@ -1,0 +1,20 @@
+# Resultados de JMeter
+jmeter/results/*.jtl
+jmeter/results/*.html
+jmeter/results/*.xml
+jmeter/results/*.csv
+
+# Resultados de Gatling
+gatling/results/*
+
+# Datos sensibles
+*.log
+*.tmp
+
+# Datos de Grafana y Prometheus
+grafana/data/
+prometheus/data/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db

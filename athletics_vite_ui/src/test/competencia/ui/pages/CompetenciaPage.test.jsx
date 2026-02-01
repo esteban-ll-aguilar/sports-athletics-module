@@ -3,9 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import CompetenciasPage from '../../../../modules/competencia/ui/pages/CompetenciaPage'
 import competenciaService from '../../../../modules/competencia/services/competencia_service'
 import { BrowserRouter } from 'react-router-dom'
+import Swal from 'sweetalert2'
 
 // Mocks
+vi.mock('sweetalert2', () => ({
+    default: {
+        fire: vi.fn()
+    }
+}))
 vi.mock('../../../../modules/competencia/services/competencia_service')
+
 vi.mock('../../../../modules/competencia/ui/widgets/CompetenciaModal', () => ({
     default: ({ isOpen, onClose, onSubmit, editingCompetencia }) => {
         if (!isOpen) return null;
@@ -85,7 +92,7 @@ describe('CompetenciasPage', () => {
 
         await waitFor(() => expect(screen.getByText(/no hay competencias/i)).toBeInTheDocument())
 
-        fireEvent.click(screen.getByText(/crear nueva competencia/i))
+        fireEvent.click(screen.getByText(/nueva competencia/i))
         expect(screen.getByTestId('competencia-modal')).toBeInTheDocument()
     })
 
@@ -94,7 +101,7 @@ describe('CompetenciasPage', () => {
         competenciaService.update.mockResolvedValue({ ...mockCompetencias[0], estado: false })
 
         // Mock confirm
-        global.confirm = vi.fn(() => true)
+        Swal.fire.mockResolvedValue({ isConfirmed: true })
 
         renderComponent()
 

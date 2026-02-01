@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom';
 
 // Layouts
-import MainLayout from '@shared/components/MainLayout';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 
 // Páginas públicas
@@ -19,6 +18,19 @@ import PasswordResetPage from '@modules/auth/ui/pages/PasswordResetPage';
 
 // Proteccion
 import ProtectedRoute from './ProtectedRoute';
+import { getUserRole } from '@modules/auth/utils/roleUtils';
+
+// Helper component for role-based dashboard routing
+const RoleBasedDashboard = () => {
+  const userRole = getUserRole();
+
+  // Redirect ATLETA users to their specific dashboard
+  if (userRole === 'ATLETA') {
+    return <Navigate to="/dashboard/atleta" replace />;
+  }
+
+  return <DashboardPage />;
+};
 
 // Dashboard pages
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
@@ -84,7 +96,7 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           // /dashboard
-          { index: true, element: <DashboardAtletaPage /> },
+          { index: true, element: <RoleBasedDashboard /> },
 
           // --- ADMIN ROUTES ---
           {

@@ -11,6 +11,7 @@ from app.modules.competencia.repositories.resultado_prueba_repository import Res
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
+from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 
 class ResultadoPruebaService:
     """Servicio para manejar resultados de Pruebas (Test/Control) con evaluación automática."""
@@ -21,11 +22,13 @@ class ResultadoPruebaService:
         atleta_repo: AtletaRepository,
         prueba_repo: PruebaRepository,
         baremo_repo: BaremoRepository,
+        auth_users_repo=None,  # Added optional parameter
     ):
         self.repo = repo
         self.atleta_repo = atleta_repo
         self.prueba_repo = prueba_repo
         self.baremo_repo = baremo_repo
+        self.auth_users_repo = auth_users_repo  # Store the optional parameter
 
     async def create(self, data: ResultadoPruebaCreate, entrenador_id: int) -> ResultadoPrueba:
         """
@@ -47,18 +50,18 @@ class ResultadoPruebaService:
         
         # Try to find atleta by external_id first
         atleta = await self.atleta_repo.get_by_external_id(data.atleta_id)
-        
+
         # If not found, try to find by user.external_id (in case UUID is from auth_users)
         if not atleta:
             logger.warning("⚠️ Atleta no encontrado por external_id, buscando por user UUID...")
-            user_repo = AuthUsersRepository(self.atleta_repo.session)
+            user_repo = self.auth_users_repo or AuthUsersRepository(self.atleta_repo.session)
             user = await user_repo.get_by_external_id(data.atleta_id)
-            
+
             if user:
                 logger.info(f"✅ Usuario encontrado: {user.first_name} {user.last_name}")
                 # Try to find atleta by user_id
                 atleta = await self.atleta_repo.get_by_user_id(user.id)
-                
+
                 if not atleta:
                     # Create atleta record if it doesn't exist
                     logger.info(f"📝 Creando registro de Atleta para usuario {user.id}")

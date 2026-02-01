@@ -2,9 +2,11 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from uuid import UUID
 from typing import List, Optional
 from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
+from app.modules.competencia.domain.models.prueba_model import Prueba
 
 
 class ResultadoCompetenciaRepository:
@@ -55,7 +57,12 @@ class ResultadoCompetenciaRepository:
 
     async def get_all(self, incluir_inactivos: bool = True, entrenador_id: Optional[int] = None) -> List[ResultadoCompetencia]:
         """Obtener todos los resultados, filtrando por estado y entrenador si aplica."""
-        query = select(ResultadoCompetencia)
+        query = select(ResultadoCompetencia).options(
+            selectinload(ResultadoCompetencia.competencia),
+            selectinload(ResultadoCompetencia.prueba),
+            selectinload(ResultadoCompetencia.atleta),
+            selectinload(ResultadoCompetencia.entrenador)
+        )
         if not incluir_inactivos:
             query = query.where(ResultadoCompetencia.estado == True)
         if entrenador_id is not None:
@@ -91,5 +98,11 @@ class ResultadoCompetenciaRepository:
             .where(ResultadoCompetencia.atleta_id == atleta_id)
             .where(ResultadoCompetencia.estado == True)
             .order_by(ResultadoCompetencia.fecha_registro.desc())
+            .options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
+            )
         )
         return result.scalars().all() or []

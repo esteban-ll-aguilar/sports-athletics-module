@@ -101,12 +101,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
     const validatePhone = (value) => {
         if (!value) return '';
-
-        // Verificar si hay caracteres inválidos antes de limpiar
-        if (!/^\d+$/.test(value)) {
-            return 'El teléfono solo debe contener números';
-        }
-
+        if (!/^\d+$/.test(value)) return 'El teléfono solo debe contener números';
         const cleanPhone = value.replace(/\D/g, '');
         if (cleanPhone.length > 0) {
             if (!cleanPhone.startsWith('09')) return 'El número celular debe empezar con 09';
@@ -250,7 +245,6 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
         if (formData.phone) newErrors['phone'] = validatePhone(formData.phone);
         if (formData.direccion) newErrors['direccion'] = validateDireccion(formData.direccion);
 
-        // Remover campos vacíos de errores
         Object.keys(newErrors).forEach(key => {
             if (!newErrors[key]) delete newErrors[key];
         });
@@ -261,15 +255,12 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Validar todos los campos
         if (!validateFormOnSubmit()) {
             toast.error('Por favor, corrige los errores en los campos.');
             return;
         }
 
         setLoading(true);
-
         try {
             // Remove confirmPassword before sending to API
             const { confirmPassword, phone, direccion, password, ...rest } = formData;
@@ -301,58 +292,17 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
             }
         } catch (err) {
             console.error("Registration error:", err);
-            let errorMessage = 'Error al registrar usuario';
-
-            if (err.message) errorMessage = err.message;
-            // APIResponse errors extraction
+            let errorMessage = err.message || 'Error al registrar usuario';
             if (err.detail) {
-                if (typeof err.detail === 'string') {
-                    errorMessage = err.detail;
-                } else if (Array.isArray(err.detail)) {
-                    // Pydantic validation errors or APIResponse errors list if mapped there
-                    errorMessage = err.detail.map(e => e.msg).join(', ');
-                }
+                if (typeof err.detail === 'string') errorMessage = err.detail;
+                else if (Array.isArray(err.detail)) errorMessage = err.detail.map(e => e.msg).join(', ');
             }
-            // If backend sends errors list in new API format directly in data... 
-            // auth_repository probably throws the parsed error.
-
             toast.error(errorMessage);
-            try {
-                setLoading(true);
-                const response = await authService.register(formData);
-                if (response.success) {
-                    toast.success(response.message || 'Registro exitoso. Verifica tu correo electrónico.');
-                    setShowVerificationModal(true);
-                } else {
-                    let message = response.message || 'Error en el registro';
-                    if (response.errors && Array.isArray(response.errors)) {
-                        message = response.errors.map(e => e.msg).join(' | ');
-                    }
-                    if (message.toLowerCase().includes('cédula inválida')) {
-                        message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
-                    }
-                    toast.error(message);
-                }
-            } catch (err) {
-                let message = 'Error en el registro';
-                if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
-                    message = 'Demasiados intentos. Por favor, espera un minuto antes de volver a intentarlo.';
-                } else if (err.message && typeof err.message === 'string') {
-                    message = err.message;
-                } else if (err.detail && typeof err.detail === 'string') {
-                    message = err.detail;
-                } else if (err.errors && Array.isArray(err.errors)) {
-                    message = err.errors.map(e => e.msg).join(' | ');
-                }
-                if (message.toLowerCase().includes('cédula inválida')) {
-                    message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
-                }
-                toast.error(message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        } finally {
+            setLoading(false);
+        }
     };
+
     return (
         <div className={isModal ? "" : "flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black"}>
             {/* Left Side - Image */}
@@ -384,32 +334,32 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos Personales</h3>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                                    <label htmlFor="reg-first_name" className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
                                     <input
+                                        id="reg-first_name"
                                         name="first_name"
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Nombre"
                                     />
                                     {fieldErrors.first_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                                    <label htmlFor="reg-last_name" className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
                                     <input
+                                        id="reg-last_name"
                                         name="last_name"
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Apellido"
                                     />
                                     {fieldErrors.last_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>}
@@ -418,12 +368,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
+                                    <label htmlFor="reg-tipo_id" className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
                                     <select
+                                        id="reg-tipo_id"
                                         name="tipo_identificacion"
                                         value={formData.tipo_identificacion}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="CEDULA">Cédula</option>
                                         <option value="PASAPORTE">Pasaporte</option>
@@ -431,27 +382,27 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">
-                                        Identificación
-                                        <span className="text-xs text-gray-500 ml-1">
-                                            (Numérico)
-                                        </span>
+                                    <label htmlFor="reg-identificacion" className="block text-sm font-medium text-gray-400 mb-1">
+                                        Identificación <span className="text-xs text-gray-500 ml-1">(Numérico)</span>
                                     </label>
                                     <input
+                                        id="reg-identificacion"
                                         name="identificacion"
                                         required
                                         value={formData.identificacion}
                                         onChange={handleChange}
                                         onKeyDown={(e) => {
                                             const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
-                                            if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-                                                e.preventDefault();
-                                            }
+                                            if (!/\d/.test(e.key) && !allowedKeys.includes(e.key)) e.preventDefault();
                                         }}
                                         pattern="\d*"
                                         inputMode="numeric"
-                                        maxLength={formData.tipo_identificacion === 'CEDULA' ? 10 : formData.tipo_identificacion === 'RUC' ? 13 : 20}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
+                                        maxLength={(() => {
+                                            if (formData.tipo_identificacion === 'CEDULA') return 10;
+                                            if (formData.tipo_identificacion === 'RUC') return 13;
+                                            return 20;
+                                        })()}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0123456789"
                                     />
                                     {fieldErrors.identificacion && <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>}
@@ -460,94 +411,81 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">
-                                        Teléfono
-                                        <span className="text-xs text-gray-500 ml-1">
-                                            (Numérico)
-                                        </span>
+                                    <label htmlFor="reg-phone" className="block text-sm font-medium text-gray-400 mb-1">
+                                        Teléfono <span className="text-xs text-gray-500 ml-1">(Numérico)</span>
                                     </label>
                                     <input
+                                        id="reg-phone"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
                                         onKeyDown={(e) => {
                                             const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
-                                            if (!/[0-9]/.test(e.key) && !allowedKeys.includes(e.key)) {
-                                                e.preventDefault();
-                                            }
+                                            if (!/\d/.test(e.key) && !allowedKeys.includes(e.key)) e.preventDefault();
                                         }}
                                         maxLength={10}
                                         inputMode="tel"
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="0999999999"
                                     />
                                     {fieldErrors.phone && <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
+                                    <label htmlFor="reg-direccion" className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
                                     <input
+                                        id="reg-direccion"
                                         name="direccion"
                                         value={formData.direccion}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
                                         placeholder="Tu dirección"
                                     />
                                     {fieldErrors.direccion && <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
-                                    Fecha de nacimiento
-                                </label>
-                                <input
-                                    type="date"
-                                    name="fecha_nacimiento"
-                                    required
-                                    value={formData.fecha_nacimiento}
-                                    onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
-                                />
-                                {fieldErrors.fecha_nacimiento && <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>}
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
-                                    Sexo
-                                </label>
-                                <select
-                                    name="sexo"
-                                    value={formData.sexo}
-                                    onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
-                                >
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="reg-birth" className="block text-sm font-medium text-gray-400 mb-1">Fecha de nacimiento</label>
+                                    <input
+                                        id="reg-birth"
+                                        type="date"
+                                        name="fecha_nacimiento"
+                                        required
+                                        value={formData.fecha_nacimiento}
+                                        onChange={handleChange}
+                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
+                                    />
+                                    {fieldErrors.fecha_nacimiento && <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>}
+                                </div>
+                                <div>
+                                    <label htmlFor="reg-sex" className="block text-sm font-medium text-gray-400 mb-1">Sexo</label>
+                                    <select
+                                        id="reg-sex"
+                                        name="sexo"
+                                        value={formData.sexo}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                    >
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
                             <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
+                                    <label htmlFor="reg-estamento" className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
                                     <select
+                                        id="reg-estamento"
                                         name="tipo_estamento"
                                         value={formData.tipo_estamento}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
@@ -556,12 +494,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
+                                    <label htmlFor="reg-role" className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
                                     <select
+                                        id="reg-role"
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
@@ -570,27 +509,29 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
+                                <label htmlFor="reg-username" className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
                                 <input
+                                    id="reg-username"
                                     name="username"
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="Nombre de usuario"
                                 />
                                 {fieldErrors.username && <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
+                                <label htmlFor="reg-email" className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
                                 <input
+                                    id="reg-email"
                                     type="email"
                                     name="email"
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
                                 {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
@@ -598,9 +539,10 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
+                                    <label htmlFor="reg-password" className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
                                     <div className="relative">
                                         <input
+                                            id="reg-password"
                                             type={showPassword ? "text" : "password"}
                                             name="password"
                                             required={!isEditMode}
@@ -626,11 +568,14 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             )}
                                         </button>
                                     </div>
+                                    <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                                    {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
+                                    <label htmlFor="reg-conf-password" className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
                                     <div className="relative">
                                         <input
+                                            id="reg-conf-password"
                                             type={showConfirmPassword ? "text" : "password"}
                                             name="confirmPassword"
                                             required={!isEditMode}
@@ -656,27 +601,15 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             )}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
-                            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
-                            {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
                         </div>
-
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="
-                        w-full py-3 px-4 rounded-lg
-                        text-sm font-semibold text-white
-                        bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122]
-                        hover:brightness-110
-                        focus:ring-2 focus:ring-[#b30c25]
-                        disabled:opacity-50
-                        transition-all duration-300 shadow-lg
-                        mt-6
-                        "
+                            className="w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 transition-all duration-300 shadow-lg mt-6"
                         >
                             {loading ? (isEditMode ? 'Actualizando...' : 'Registrando...') : (isEditMode ? 'Actualizar Usuario' : 'Registrarse')}
                         </button>
@@ -695,6 +628,5 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
         </div>
     );
 };
-
 
 export default RegisterPage;

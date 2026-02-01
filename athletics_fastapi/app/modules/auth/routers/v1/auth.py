@@ -73,6 +73,12 @@ async def register(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email ya registrado",
         )
+
+    if await repo.get_by_username(data.username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username ya registrado",
+        )
     
     try:
         password_hash = hasher.hash(data.password)

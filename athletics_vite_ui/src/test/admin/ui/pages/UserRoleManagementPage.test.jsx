@@ -32,7 +32,7 @@ describe('UserRoleManagementPage', () => {
     it('renders loading state', () => {
         adminService.getUsers.mockReturnValue(new Promise(() => { }))
         renderComponent()
-        expect(screen.getByText(/cargando usuarios/i)).toBeInTheDocument()
+        expect(screen.getByTestId('loading-state')).toBeInTheDocument()
     })
 
     it('renders user list', async () => {
@@ -70,8 +70,8 @@ describe('UserRoleManagementPage', () => {
         fireEvent.change(selects[0], { target: { value: 'ADMINISTRADOR' } })
 
         // Find safe button (Guardar)
-        const saveButton = screen.getAllByText('Guardar')[0]
-        expect(saveButton).toBeEnabled()
+        const saveButton = screen.getByTitle('Guardar cambio')
+        expect(saveButton).toBeInTheDocument()
 
         fireEvent.click(saveButton)
 

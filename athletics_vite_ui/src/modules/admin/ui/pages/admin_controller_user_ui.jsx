@@ -5,7 +5,6 @@ import EditUserModal from "./EditUserModal";
 import RegisterPage from "../../../auth/ui/pages/RegisterPage";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Link } from "react-router-dom";
 
 
 const AdminUsersTable = () => {

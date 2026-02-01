@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Smartphone, Trash2, AlertTriangle, Monitor, Shield, Laptop } from 'lucide-react';
+import { RefreshCw, Smartphone, Trash2, AlertTriangle, Shield, Laptop } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import authService from '../../services/auth_service';
 import Swal from 'sweetalert2';
@@ -162,7 +162,12 @@ const ActiveSessionsWidget = () => {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <p className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-md" title={session.user_agent}>
-                                                {session.user_agent ? (session.user_agent.length > 50 ? session.user_agent.substring(0, 50) + '...' : session.user_agent) : 'Dispositivo Desconocido'}
+                                                {(() => {
+                                                    if (!session.user_agent) return 'Dispositivo Desconocido';
+                                                    return session.user_agent.length > 50
+                                                        ? session.user_agent.substring(0, 50) + '...'
+                                                        : session.user_agent;
+                                                })()}
                                             </p>
                                             {session.is_current && (
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">

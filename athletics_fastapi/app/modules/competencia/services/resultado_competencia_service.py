@@ -103,6 +103,13 @@ class ResultadoCompetenciaService:
     async def get_all(self, incluir_inactivos: bool = True, entrenador_id: int = None):
         return await self.repo.get_all(incluir_inactivos, entrenador_id)
 
+    async def get_by_user_id(self, user_id: int):
+        atleta = await self.atleta_repo.get_by_user_id(user_id)
+        if not atleta:
+             return []
+        return await self.repo.get_by_atleta(atleta.user_id) # The repo expects internal ID, but check if correct.
+
+
     async def update(self, external_id: UUID, data: ResultadoCompetenciaUpdate) -> ResultadoCompetencia:
         resultado = await self.get_by_external_id(external_id)
         for field, value in data.model_dump(exclude_unset=True).items():

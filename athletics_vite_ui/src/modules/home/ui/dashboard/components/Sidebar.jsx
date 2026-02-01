@@ -120,7 +120,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
 
                             return (
                                 <div key={item.path} className="flex flex-col">
-                                    <div
+                                    <button
                                         className={`
                                             w-full flex items-center justify-between px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer
                                             ${isChildActive
@@ -128,15 +128,17 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
                                                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#2a2829] hover:text-gray-900 dark:hover:text-white'}
                                         `}
                                         onClick={() => toggleExpand(item.path)}
+                                        aria-expanded={isExpanded}
+                                        aria-controls={`submenu-${item.path}`}
                                     >
-                                        <div className="flex items-center flex-grow">
+                                        <div className="flex items-center grow">
                                             <item.icon size={22} className={isChildActive ? 'text-[#b30c25]' : ''} />
                                             <span className="ml-3 font-medium text-sm">{item.label}</span>
                                         </div>
-                                        <button className="p-0.5">
+                                        <div className="p-0.5">
                                             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                        </button>
-                                    </div>
+                                        </div>
+                                    </button>
 
                                     {isExpanded && (
                                         <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-100 dark:border-[#332122] pl-2">

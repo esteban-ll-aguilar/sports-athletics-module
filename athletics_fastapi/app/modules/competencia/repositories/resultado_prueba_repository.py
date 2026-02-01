@@ -18,11 +18,13 @@ class ResultadoPruebaRepository:
     async def get_all(self) -> List[ResultadoPrueba]:
         from sqlalchemy.orm import selectinload
         from app.modules.atleta.domain.models.atleta_model import Atleta
+        from app.modules.competencia.domain.models.prueba_model import Prueba
         
         stmt = (
             select(ResultadoPrueba)
             .options(
-                selectinload(ResultadoPrueba.atleta).selectinload(Atleta.user)
+                selectinload(ResultadoPrueba.atleta).selectinload(Atleta.user),
+                selectinload(ResultadoPrueba.prueba)
             )
             .order_by(ResultadoPrueba.fecha_creacion.desc())
         )

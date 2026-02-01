@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import {
     LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
@@ -8,20 +8,11 @@ import resultadoEntrenamientoService from '../../services/resultado_entrenamient
 import CompetenciaService from '../../../competencia/services/competencia_service';
 import PruebaService from '../../../competencia/services/prueba_service';
 import AtletaService from '../../../atleta/services/AtletaService';
-import EntrenamientoService from '../../services/EntrenamientoService';
 import { User, Activity, Trophy, TrendingUp, Users, AlertCircle, RefreshCw, Filter, FilterX, ClipboardList, Dumbbell } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 
 const RendimientoPage = () => {
-    const [activeTab, setActiveTab] = useState('individual'); // individual, general, comparativo
-    const [loading, setLoading] = useState(true);
-    const [resultados, setResultados] = useState([]);
-    const [resultadosPruebas, setResultadosPruebas] = useState([]); // Resultados de tests (Baremos)
-    const [resultadosEntrenamientos, setResultadosEntrenamientos] = useState([]); // Nuevos resultados de entrenamientos
-    const [atletas, setAtletas] = useState([]);
-    const [competencias, setCompetencias] = useState([]);
-    const [pruebas, setPruebas] = useState([]);
-    const [entrenamientos, setEntrenamientos] = useState([]);
+    const baseId = useId();
 
     // Filters
     const [selectedAtleta, setSelectedAtleta] = useState('');
@@ -29,150 +20,112 @@ const RendimientoPage = () => {
     const [selectedPrueba, setSelectedPrueba] = useState('');
 
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('individual');
+
+    const [competencias, setCompetencias] = useState([]);
+    const [pruebas, setPruebas] = useState([]);
+    const [resultados, setResultados] = useState([]);
+    const [resultadosPruebas, setResultadosPruebas] = useState([]);
+    const [resultadosEntrenamientos, setResultadosEntrenamientos] = useState([]);
+    const [atletas, setAtletas] = useState([]);
+
+    // Data fetching helpers
+    const extractData = (res, isTrain = false) => {
+        if (res.status !== 'fulfilled') return [];
+        const val = res.value;
+        if (isTrain) {
+            return Array.isArray(val) ? val : (val.data || []);
+        }
+        return val.items || val.data?.items || val.data || val || [];
+    };
+
+    const processAtletas = (itemsAthletes, itemsTrainResults) => {
+        const existingIds = new Set(itemsAthletes.map(a => String(a.id)));
+        const ghostAthletes = [];
+
+        itemsTrainResults.forEach(r => {
+            const hasValidAtleta = r.atleta && r.atleta_id;
+            const isNotExisting = !existingIds.has(String(r.atleta_id));
+
+            if (hasValidAtleta && isNotExisting) {
+                ghostAthletes.push({
+                    id: r.atleta.id,
+                    first_name: r.atleta.user?.first_name || 'Atleta',
+                    last_name: r.atleta.user?.last_name || 'Desconocido',
+                    user: r.atleta.user,
+                    isGhost: true
+                });
+                existingIds.add(String(r.atleta_id));
+            }
+        });
+
+        return [...itemsAthletes, ...ghostAthletes];
+    };
+
+    const getInitialAthleteId = (finalAthletes, itemsTrainResults) => {
+        if (finalAthletes.length === 0) return '';
+
+        const params = new URLSearchParams(window.location.search);
+        const urlAtletaId = params.get('atleta_id');
+
+        if (urlAtletaId) {
+            const validUrlId = finalAthletes.some(a => String(a.id) === String(urlAtletaId));
+            if (validUrlId) return String(urlAtletaId);
+        }
+
+        // Search for first athlete with data
+        const athleteWithData = finalAthletes.find(a => {
+            return itemsTrainResults.some(r => String(r.atleta_id) === String(a.id));
+        });
+
+        return String(athleteWithData ? athleteWithData.id : finalAthletes[0].id);
+    };
 
     // Fetch data
     useEffect(() => {
-        const fetchData = async () => {
+        const loadInitialData = async () => {
             try {
                 setLoading(true);
                 setError(null);
 
-                // Fetch independently to pinpoint failures
-                let resResultados = { items: [] };
-                let resResultadosPruebas = { items: [] };
-                let resResultadosEntrenamientos = [];
-                let resAtletas = { items: [] };
+                const results = await Promise.allSettled([
+                    ResultadoCompetenciaService.getAll().catch(() => ({ data: { items: [] } })),
+                    ResultadoPruebaService.getAll().catch(() => ({ data: { items: [] } })),
+                    resultadoEntrenamientoService.getAll().catch(() => []),
+                    AtletaService.getAthletes(1, 100).catch(() => ({ data: { items: [] } })),
+                    CompetenciaService.getAll().catch(() => ({ data: [] })),
+                    PruebaService.getAll().catch(() => ({ data: [] }))
+                ]);
 
-                // 1. Resultados de Competencia
-                try {
-                    const resp = await ResultadoCompetenciaService.getAll();
-                    resResultados = resp.data || resp;
-                } catch (e) {
-                    console.error("Error fetching competition results", e);
-                }
+                const [resResultados, resResultadosPruebas, resResultadosEntrenamientos, resAtletas, resCompetencias, resPruebas] = results;
 
-                // 2. Resultados de Pruebas (Tests)
-                try {
-                    const resp = await ResultadoPruebaService.getAll();
-                    resResultadosPruebas = resp.data || resp;
-                } catch (e) {
-                    console.error("Error fetching test results", e);
-                }
+                const itemsResults = extractData(resResultados);
+                const itemsTestResults = extractData(resResultadosPruebas);
+                const itemsTrainResults = extractData(resResultadosEntrenamientos, true);
+                const itemsAthletes = extractData(resAtletas);
 
-                // 3. Resultados de Entrenamientos
-                try {
-                    const resp = await resultadoEntrenamientoService.getAll();
-                    console.log("DEBUG: Fetched Entrenamientos:", resp);
-                    resResultadosEntrenamientos = Array.isArray(resp) ? resp : (resp.data || []);
-                } catch (e) {
-                    console.error("Error fetching training results", e);
-                }
+                setCompetencias(extractData(resCompetencias));
+                setPruebas(extractData(resPruebas));
 
-                try {
-                    const resp = await AtletaService.getAthletes(1, 100);
-                    resAtletas = resp.data || resp;
-                } catch (e) {
-                    console.error("Error fetching athletes", e);
-                }
+                const finalAthletes = processAtletas(itemsAthletes, itemsTrainResults);
 
-                // ... competitions ...
-                // ... pruebas ...
+                setResultados(Array.isArray(itemsResults) ? itemsResults : []);
+                setResultadosPruebas(Array.isArray(itemsTestResults) ? itemsTestResults : []);
+                setResultadosEntrenamientos(itemsTrainResults);
+                setAtletas(finalAthletes);
 
-                // (Logic moved below to avoid duplication)
-
-
-                // Fetch Competitions
-                try {
-                    const resp = await CompetenciaService.getAll();
-                    setCompetencias(resp.data || resp || []);
-                } catch (e) {
-                    console.error("Error fetching competitions", e);
-                }
-
-                // Fetch Pruebas
-                try {
-                    const resp = await PruebaService.getAll();
-                    setPruebas(resp.data || resp || []);
-                } catch (e) {
-                    console.error("Error fetching pruebas", e);
-                }
-
-                // Fetch Entrenamientos (Catalog)
-                try {
-                    const resp = await EntrenamientoService.getAll();
-                    setEntrenamientos(resp.data || resp || []);
-                } catch (e) {
-                    console.error("Error fetching entrenamientos catalog", e);
-                }
-
-                const itemsResultados = resResultados.items || (Array.isArray(resResultados) ? resResultados : []);
-                const itemsResultadosPruebas = resResultadosPruebas.items || (Array.isArray(resResultadosPruebas) ? resResultadosPruebas : []);
-                const itemsResultadosEntrenamientos = Array.isArray(resResultadosEntrenamientos) ? resResultadosEntrenamientos : [];
-                let itemsAtletasList = resAtletas.items || (Array.isArray(resAtletas) ? resAtletas : []);
-
-                // Fix: Ensure athletes with data are available in the dropdown even if not returned by getAthletes
-                try {
-                    const existingIds = new Set(itemsAtletasList.map(a => String(a.id)));
-                    const ghostAthletes = [];
-
-                    itemsResultadosEntrenamientos.forEach(r => {
-                        if (r.atleta && r.atleta_id && !existingIds.has(String(r.atleta_id))) {
-                            // Reconstruct minimal athlete object from nested data
-                            ghostAthletes.push({
-                                id: r.atleta.id,
-                                first_name: r.atleta.user?.first_name || 'Atleta',
-                                last_name: r.atleta.user?.last_name || 'Desconocido',
-                                user: r.atleta.user,
-                                isGhost: true // Marker for debug
-                            });
-                            existingIds.add(String(r.atleta_id));
-                            console.log("DEBUG: Found Ghost Athlete in results:", r.atleta_id);
-                        }
-                    });
-
-                    if (ghostAthletes.length > 0) {
-                        itemsAtletasList = [...itemsAtletasList, ...ghostAthletes];
-                    }
-                } catch (err) {
-                    console.error("Error merging ghost athletes:", err);
-                }
-
-                setResultados(itemsResultados);
-                setResultadosPruebas(itemsResultadosPruebas);
-                setResultadosEntrenamientos(itemsResultadosEntrenamientos);
-                setAtletas(itemsAtletasList);
-
-                const itemsAtletas = itemsAtletasList; // Keep compatibility with logic below            const athletesWithDataIds = [...new Set(itemsResultadosEntrenamientos.map(r => r.atleta_id))];
-                const availableAthleteIds = itemsAtletas.map(a => a.id);
-
-
-                // Default select logic: Prioritize athlete with training data
-                if (itemsAtletas.length > 0) {
-                    // Check URL params first
-                    const params = new URLSearchParams(window.location.search);
-                    const urlAthleteId = params.get('atleta_id');
-
-                    if (urlAthleteId && itemsAtletas.some(a => String(a.id) === String(urlAthleteId))) {
-                        setSelectedAtleta(String(urlAthleteId));
-                    } else {
-                        // Find first athlete who has ANY training results
-                        const athleteWithData = itemsAtletas.find(a =>
-                            itemsResultadosEntrenamientos.some(r => r.atleta_id === a.id)
-                        );
-
-                        // Select that athlete, or fallback to the first one in the list
-                        setSelectedAtleta(String(athleteWithData ? athleteWithData.id : itemsAtletas[0].id));
-                    }
-                }
+                const initialId = getInitialAthleteId(finalAthletes, itemsTrainResults);
+                if (initialId) setSelectedAtleta(initialId);
 
             } catch (err) {
-                console.error("Critical Error in RendimientoPage:", err);
-                setError("Ocurrió un error al cargar los datos. Por favor intenta de nuevo.");
+                console.error("Critical Error:", err);
+                setError("Ocurrió un error al cargar los datos. Por favor reintenta.");
             } finally {
                 setLoading(false);
             }
         };
-        fetchData();
+        loadInitialData();
     }, []);
 
     // Helper to extract date
@@ -352,8 +305,9 @@ const RendimientoPage = () => {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center bg-white dark:bg-[#1a1a1a] p-4 rounded-xl border border-gray-200 dark:border-[#332122] shadow-sm">
                     <User className="text-gray-400" />
-                    <label className="text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap">Seleccionar Atleta:</label>
+                    <label htmlFor={`${baseId}-atleta`} className="text-gray-700 dark:text-gray-300 font-bold whitespace-nowrap">Seleccionar Atleta:</label>
                     <select
+                        id={`${baseId}-atleta`}
                         value={selectedAtleta}
                         onChange={(e) => setSelectedAtleta(e.target.value)}
                         className="
@@ -449,8 +403,8 @@ const RendimientoPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
-                                        {data.filter(i => i.source === 'COMPETENCIA').map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
+                                        {data.filter(i => i.source === 'COMPETENCIA').map((item) => (
+                                            <tr key={`${item.source}-${item.original.id}`} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
                                                 <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{item.date}</td>
                                                 <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{item.name}</td>
                                                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{item.tipo}</td>
@@ -488,8 +442,8 @@ const RendimientoPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
-                                        {data.filter(i => i.source === 'PRUEBA').map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
+                                        {data.filter(i => i.source === 'PRUEBA').map((item) => (
+                                            <tr key={`${item.source}-${item.original.id}`} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
                                                 <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{item.date}</td>
                                                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
@@ -531,8 +485,8 @@ const RendimientoPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
-                                        {data.filter(i => i.source === 'ENTRENAMIENTO').map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
+                                        {data.filter(i => i.source === 'ENTRENAMIENTO').map((item) => (
+                                            <tr key={`${item.source}-${item.original.id}`} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
                                                 <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{item.date}</td>
                                                 <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">
                                                     {item.tipo}

@@ -1,5 +1,6 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
-import { Shield, User, Mail, Activity, Lock } from "lucide-react";
+import { Shield, User, Mail, Activity } from "lucide-react";
 import authService from "../../../auth/services/auth_service";
 
 const ROLES = [
@@ -8,6 +9,24 @@ const ROLES = [
   { value: "ENTRENADOR", label: "Entrenador" },
   { value: "REPRESENTANTE", label: "Representante" },
 ];
+
+const InputField = ({ icon: Icon, id, ...props }) => (
+  <div className="relative w-full">
+    {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+    <input
+      {...props}
+      id={id}
+      className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+      text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
+      focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
+    />
+  </div>
+);
+
+InputField.propTypes = {
+  icon: PropTypes.elementType,
+  id: PropTypes.string.isRequired,
+};
 
 const EditUserModal = ({ user, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({
@@ -48,24 +67,15 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
     }
   };
 
-  const InputField = ({ icon: Icon, ...props }) => (
-    <div className="relative w-full">
-      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
-      <input
-        {...props}
-        className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
-        text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
-        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
-      />
-    </div>
-  );
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+      <button
+        className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm transition-opacity cursor-default"
         onClick={onClose}
+        aria-label="Cerrar modal"
       />
 
       <div className="relative z-10 w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#332122] flex flex-col max-h-[90vh]">
@@ -81,7 +91,7 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
             </h2>
           </div>
 
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="Cerrar modal">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -90,8 +100,9 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
 
           {/* Usuario */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</label>
+            <label htmlFor="edit-username" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</label>
             <InputField
+              id="edit-username"
               icon={User}
               placeholder="Nombre de usuario"
               value={formData.username}
@@ -102,8 +113,9 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
 
           {/* Correo */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Correo Electrónico</label>
+            <label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Correo Electrónico</label>
             <InputField
+              id="edit-email"
               icon={Mail}
               type="email"
               placeholder="ejemplo@correo.com"
@@ -115,13 +127,14 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
 
           {/* Rol */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Rol del Sistema</label>
+            <label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Rol del Sistema</label>
             <div className="relative">
               <Shield
                 size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <select
+                id="edit-role"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="
@@ -145,7 +158,7 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
 
           {/* Estado */}
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</label>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</span>
             <button
               type="button"
               onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
@@ -198,6 +211,19 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
       </div>
     </div>
   );
+};
+
+EditUserModal.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string,
+    email: PropTypes.string,
+    role: PropTypes.string,
+    is_active: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    profile_image: PropTypes.string,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onUpdated: PropTypes.func.isRequired,
 };
 
 export default EditUserModal;

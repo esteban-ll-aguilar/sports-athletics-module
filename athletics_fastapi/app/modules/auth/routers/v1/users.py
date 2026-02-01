@@ -294,6 +294,8 @@ async def get_user_by_external_id(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuario no encontrado"
             )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching user by external_id: {e}")
         raise HTTPException(
@@ -350,6 +352,8 @@ async def update_user_by_id(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Usuario no encontrado"
             )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error fetching user by ID: {e}")
         raise HTTPException(

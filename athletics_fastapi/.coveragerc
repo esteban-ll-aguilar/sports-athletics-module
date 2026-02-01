@@ -1,0 +1,51 @@
+[run]
+source = app
+omit =
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */.venv/*
+    */migrations/*
+    */alembic/*
+    */example/*
+    # Modelos y schemas (solo definiciones)
+    */*_model.py
+    */*_schema.py
+    */enum.py
+    */base_response.py
+    */response_handler.py
+    # Routers (lógica HTTP, no lógica de negocio)
+    */routers/*
+    # Repositorios (wrappers de DB)
+    */repositories/*
+    # Dependencies (inyección de dependencias)
+    */dependencies.py
+    # Core utilities (infraestructura)
+    app/core/jwt/*
+    app/core/cache/*
+    app/core/db/*
+    app/core/utils/*
+    app/providers/*
+    # Scripts de utilidad
+    check_*.py
+    debug_*.py
+    fix_*.py
+    inspect_*.py
+    minimal_*.py
+    verify_*.py
+    run.py
+    app/main.py
+    # CI y conftest
+    ci/*
+    conftest.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod

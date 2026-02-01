@@ -14,6 +14,27 @@ from app.utils.response_codes import ResponseCodes
 import asyncio
 
 
+
+async def cleanup_sessions_periodically(logger):
+    """Limpia sesiones expiradas cada hora."""
+    from app.core.db.database import _db
+    from app.modules.auth.repositories.sessions_repository import SessionsRepository
+    try:
+        while True:
+            await asyncio.sleep(3600)  # Cada hora
+            try:
+                async with _db.get_session_factory()() as session:
+                    repo = SessionsRepository(session)
+                    count = await repo.cleanup_expired_sessions()
+                    await session.commit()
+                    if count > 0:
+                        logger.info(f"🧹 Cleaned up {count} expired sessions")
+            except Exception as e:
+                logger.error(f"❌ Error cleaning sessions: {e}")
+    except asyncio.CancelledError:
+         logger.info("🛑 Cleanup task cancelled")
+         return
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -62,27 +83,8 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ JWT rotation check failed: {e}")
     
-    # Tarea de limpieza de sesiones expiradas
-    async def cleanup_sessions_periodically():
-        """Limpia sesiones expiradas cada hora."""
-        try:
-            while True:
-                await asyncio.sleep(3600)  # Cada hora
-                try:
-                    async with _db.get_session_factory()() as session:
-                        repo = SessionsRepository(session)
-                        count = await repo.cleanup_expired_sessions()
-                        await session.commit()
-                        if count > 0:
-                            logger.info(f"🧹 Cleaned up {count} expired sessions")
-                except Exception as e:
-                    logger.error(f"❌ Error cleaning sessions: {e}")
-        except asyncio.CancelledError:
-             logger.info("🛑 Cleanup task cancelled")
-             return
-    
     # Iniciar tarea de limpieza
-    cleanup_task = asyncio.create_task(cleanup_sessions_periodically())
+    cleanup_task = asyncio.create_task(cleanup_sessions_periodically(logger))
     logger.info("🧹 Session cleanup task started")
     
     logger.info("✨ Application startup complete")
@@ -138,6 +140,16 @@ _APP = FastAPI(
 _APP.mount("/data", StaticFiles(directory="data"), name="data")
 
 
+
+
+# Health check endpoint
+@_APP.get("/health", tags=["Health"])
+async def health_check():
+    return {
+        "status": "ok",
+        "message": "Service is healthy",
+        "version": _SETTINGS.application_version
+    }
 
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter

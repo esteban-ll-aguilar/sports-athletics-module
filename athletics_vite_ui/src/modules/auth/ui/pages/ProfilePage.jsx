@@ -259,8 +259,9 @@ const ProfilePage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* First Name */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre</label>
+                        <label htmlFor="p-first_name" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre</label>
                         <input
+                            id="p-first_name"
                             type="text"
                             name="first_name"
                             value={formData.first_name}
@@ -278,8 +279,9 @@ const ProfilePage = () => {
 
                     {/* Last Name */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Apellido</label>
+                        <label htmlFor="p-last_name" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Apellido</label>
                         <input
+                            id="p-last_name"
                             type="text"
                             name="last_name"
                             value={formData.last_name}
@@ -296,8 +298,9 @@ const ProfilePage = () => {
 
                     {/* Username */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Usuario</label>
+                        <label htmlFor="p-username" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Usuario</label>
                         <input
+                            id="p-username"
                             type="text"
                             name="username"
                             value={formData.username}
@@ -314,12 +317,13 @@ const ProfilePage = () => {
 
                     {/* Phone */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Teléfono</label>
+                        <label htmlFor="p-phone" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Teléfono</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Phone size={16} className="text-gray-400" />
                             </div>
                             <input
+                                id="p-phone"
                                 type="tel"
                                 name="phone"
                                 value={formData.phone}
@@ -337,12 +341,13 @@ const ProfilePage = () => {
 
                     {/* Direccion */}
                     <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Dirección</label>
+                        <label htmlFor="p-direccion" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Dirección</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <MapPin size={16} className="text-gray-400" />
                             </div>
                             <input
+                                id="p-direccion"
                                 type="text"
                                 name="direccion"
                                 value={formData.direccion}
@@ -360,12 +365,13 @@ const ProfilePage = () => {
 
                     {/* Fecha Nacimiento */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Fecha de Nacimiento</label>
+                        <label htmlFor="p-fecha_nacimiento" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Fecha de Nacimiento</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Calendar size={16} className="text-gray-400" />
                             </div>
                             <input
+                                id="p-fecha_nacimiento"
                                 type="date"
                                 name="fecha_nacimiento"
                                 value={formData.fecha_nacimiento}
@@ -383,8 +389,9 @@ const ProfilePage = () => {
 
                     {/* Sexo (Enum) */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sexo</label>
+                        <label htmlFor="p-sexo" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Sexo</label>
                         <select
+                            id="p-sexo"
                             name="sexo"
                             value={formData.sexo}
                             onChange={handleChange}
@@ -406,8 +413,9 @@ const ProfilePage = () => {
 
                     {/* Tipo Identificacion (Enum) */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo Identificación</label>
+                        <label htmlFor="p-tipo_identificacion" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo Identificación</label>
                         <select
+                            id="p-tipo_identificacion"
                             name="tipo_identificacion"
                             value={formData.tipo_identificacion}
                             onChange={handleChange}
@@ -429,12 +437,13 @@ const ProfilePage = () => {
                     {/* Usually ident is not changeable, but UserUpdateRequest allows `identificacion`? NO, it does NOT. */}
                     {/* So I will display it as disabled. */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Identificación</label>
+                        <label htmlFor="p-identificacion" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Identificación</label>
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <CreditCard size={16} className="text-gray-400" />
                             </div>
                             <input
+                                id="p-identificacion"
                                 type="text"
                                 name="identificacion"
                                 value={formData.identificacion}
@@ -452,8 +461,9 @@ const ProfilePage = () => {
 
                     {/* Tipo Estamento (Enum) */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estamento</label>
+                        <label htmlFor="p-tipo_estamento" className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estamento</label>
                         <select
+                            id="p-tipo_estamento"
                             name="tipo_estamento"
                             value={formData.tipo_estamento}
                             onChange={handleChange}

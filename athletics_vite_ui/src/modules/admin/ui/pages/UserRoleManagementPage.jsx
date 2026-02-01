@@ -115,7 +115,7 @@ const UserRoleManagementPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300">
+      <div data-testid="loading-state" className="flex justify-center items-center h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300">
         <div className="animate-spin h-10 w-10 rounded-full border-t-2 border-b-2 border-[#b30c25]" />
       </div>
     );

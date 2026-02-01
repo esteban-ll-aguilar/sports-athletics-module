@@ -1,5 +1,6 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Linkedin, Heart } from 'lucide-react';
+import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { X, Heart } from 'lucide-react';
 
 const Footer = () => {
     return (
@@ -16,8 +17,13 @@ const Footer = () => {
                             Impulsando el rendimiento deportivo con tecnología de vanguardia.
                         </p>
                         <div className="flex space-x-4">
-                            {[Facebook, Twitter, Instagram, Linkedin].map((Icon, idx) => (
-                                <a key={idx} href="#" className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-[#242223] text-gray-500 hover:bg-[#b30c25] hover:text-white transition-all">
+                            {[
+                                { Icon: FaFacebook, name: 'Facebook' },
+                                { Icon: X, name: 'X' },
+                                { Icon: FaInstagram, name: 'Instagram' },
+                                { Icon: FaLinkedin, name: 'Linkedin' }
+                            ].map(({ Icon, name }) => (
+                                <a key={name} href="/" className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-[#242223] text-gray-500 hover:bg-[#b30c25] hover:text-white transition-all">
                                     <Icon size={18} />
                                 </a>
                             ))}
@@ -29,7 +35,7 @@ const Footer = () => {
                         <ul className="space-y-2">
                             {['Inicio', 'Características', 'Precios', 'Contactos', 'Ayuda'].map(item => (
                                 <li key={item}>
-                                    <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-[#b30c25] transition-colors">{item}</a>
+                                    <a href="/" className="text-gray-500 dark:text-gray-400 hover:text-[#b30c25] transition-colors">{item}</a>
                                 </li>
                             ))}
                         </ul>
@@ -40,7 +46,7 @@ const Footer = () => {
                         <ul className="space-y-2">
                             {['Términos de servicio', 'Política de privacidad', 'Cookies'].map(item => (
                                 <li key={item}>
-                                    <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-[#b30c25] transition-colors">{item}</a>
+                                    <a href="/" className="text-gray-500 dark:text-gray-400 hover:text-[#b30c25] transition-colors">{item}</a>
                                 </li>
                             ))}
                         </ul>

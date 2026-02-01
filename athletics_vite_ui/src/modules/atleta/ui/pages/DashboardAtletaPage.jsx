@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import AtletaService from '../../services/AtletaService';
-import CompetenciaService from '../../../competencia/services/CompetenciaService';
-import authService from '../../../auth/services/auth_service';
+import ResultadoCompetenciaService from '../../../competencia/services/resultado_competencia_service';
+import resultadoEntrenamientoService from '../../../entrenador/services/resultado_entrenamiento_service';
+import ResultadoPruebaService from '../../../competencia/services/resultado_prueba_service';
 import { Trophy, Medal, Calendar, Activity, TrendingUp, Award, Target, Zap, BarChart3, Timer, Ruler, User, ClipboardList, Dumbbell, Filter, RefreshCw, AlertCircle } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Cell, Legend } from 'recharts';
 import { format, isValid } from 'date-fns';
+import authService from '../../../auth/services/auth_service';
 
 const DashboardAtletaPage = () => {
     const [user, setUser] = useState(null);
@@ -109,48 +111,144 @@ const DashboardAtletaPage = () => {
                 return;
             }
 
-            console.log('✅ Usando ID de atleta:', atletaId);
+            // 1. Fetch CURRENT Authenticated User from API (Single Source of Truth)
+            // This avoids stale localStorage data from other projects
+            let currentUserApi = currentUser;
+            try {
+                const profileRes = await authService.getProfile();
+                console.log('📡 API /users/me Response:', profileRes);
+                if (profileRes && (profileRes.data || profileRes.id)) {
+                    currentUserApi = profileRes.data || profileRes;
+                }
+            } catch (err) {
+                console.warn('⚠️ Could not fetch /users/me, using localStorage fallback:', err);
+            }
 
-            // Obtener entrenamientos del atleta usando el ID numérico
-            const trainingsPromise = AtletaService.getTrainingSessions(atletaId);
-            const historyPromise = AtletaService.getHistorial();
-            const statsPromise = AtletaService.getEstadisticas();
-            const testsPromise = AtletaService.getTestResults();
+            console.log('✅ Usando Usuario:', currentUserApi);
 
-            const [trainingsData, historyData, statsData, testsData] = await Promise.all([
-                trainingsPromise,
-                historyPromise,
-                statsPromise,
-                testsPromise
+            // Obtener datos reales usando la estrategia de RendimientoPage
+            const results = await Promise.allSettled([
+                ResultadoCompetenciaService.getAll().catch(() => ({ data: { items: [] } })),
+                ResultadoPruebaService.getAll().catch(() => ({ data: { items: [] } })),
+                resultadoEntrenamientoService.getAll().catch(() => []),
+                AtletaService.getAll().catch(() => ({ data: [] }))
             ]);
 
-            console.log('📊 Training Data Response:', trainingsData);
-            console.log('🏅 History Data Response:', historyData);
-            console.log('📈 Stats Data Response:', statsData);
-            console.log('⏱️ Tests Data Response:', testsData);
+            const [resCompetencias, resPruebas, resEntrenamientos, resAtletas] = results;
 
-            const allTrainings = trainingsData?.data || trainingsData || [];
-            const allCompetitions = historyData?.data || historyData || [];
-            const apiStats = statsData?.data || statsData || {};
-            const allTests = testsData?.data || testsData || [];
+            // Helper extraction logic comparable to RendimientoPage
+            // Robust extraction logic (Single Source of Truth)
+            const extractData = (res, name = 'unknown') => {
+                if (res.status !== 'fulfilled') {
+                    console.warn(`⚠️ Resource ${name} failed to load:`, res.reason);
+                    return [];
+                }
 
-            console.log('✅ All Trainings:', allTrainings);
-            console.log('✅ All Competitions:', allCompetitions);
-            console.log('✅ All Tests:', allTests);
-            console.log('👤 Current User:', currentUser);
+                const val = res.value;
+                if (!val) return [];
+
+                // 1. Direct array
+                if (Array.isArray(val)) return val;
+
+                // 2. BaseResponse wrapper (val.data is the payload)
+                if (val.data) {
+                    if (Array.isArray(val.data)) return val.data;
+                    if (val.data.items && Array.isArray(val.data.items)) return val.data.items;
+                    // Double nesting sometimes seen in some services
+                    if (val.data.data && Array.isArray(val.data.data)) return val.data.data;
+                    if (val.data.data?.items && Array.isArray(val.data.data.items)) return val.data.data.items;
+                }
+
+                // 3. Directly in .items
+                if (val.items && Array.isArray(val.items)) return val.items;
+
+                console.warn(`❓ Could not find array in ${name} response:`, val);
+                return [];
+            };
+
+            const rawCompetitions = extractData(resCompetencias, 'Competencias');
+            const rawTests = extractData(resPruebas, 'Tests');
+            const rawTrainings = extractData(resEntrenamientos, 'Trainings');
+            const rawAthletes = extractData(resAtletas, 'Athletes');
+
+            console.log('📦 API RESPONSES:');
+            console.log('  Competencias response:', resCompetencias);
+            console.log('  Tests response:', resPruebas);
+            console.log('  Trainings response:', resEntrenamientos);
+
+
+            setDebugStats({
+                rawComp: rawCompetitions.length,
+                rawTest: rawTests.length,
+                rawTrain: rawTrainings.length
+            });
+
+            // DEBUG: Detailed check of first items structure
+            if (rawCompetitions.length > 0) console.log('🔍 Comp[0] structure:', rawCompetitions[0]);
+            if (rawTests.length > 0) console.log('🔍 Test[0] structure:', rawTests[0]);
+
+            // Improved Filtering Strategy
+            console.log('🔍 Filtering Strategy: Matching by ID or UserID');
+
+            const validIds = new Set();
+            if (atletaId) validIds.add(String(atletaId));
+            if (currentUser.id) validIds.add(String(currentUser.id));
+            if (user && user.id) validIds.add(String(user.id));
+
+            if (currentUserApi && currentUserApi.perfiles) {
+                const athleteProfile = currentUserApi.perfiles.find(p => p.rol === 'ATLETA');
+                if (athleteProfile) validIds.add(String(athleteProfile.id));
+            }
+
+            if (currentUserApi.id && rawAthletes.length > 0) {
+                const foundProfile = rawAthletes.find(a =>
+                    String(a.user_id || a.user?.id) === String(currentUserApi.id)
+                );
+                if (foundProfile) validIds.add(String(foundProfile.id));
+            }
+
+            console.log('🔑 Valid IDs for User:', Array.from(validIds));
+
+            const belongsToUser = (item) => {
+                const itemAtletaId = String(item.atleta_id || item.atleta?.id || '');
+                const itemUserId = String(item.atleta?.user_id || item.atleta?.user?.id || '');
+                return validIds.has(itemAtletaId) || validIds.has(itemUserId);
+            };
+
+            console.log('🔍 RAW DATA BEFORE FILTERING:');
+            console.log('  - Competitions:', rawCompetitions.length, rawCompetitions.length > 0 ? rawCompetitions[0] : 'empty');
+            console.log('  - Tests:', rawTests.length, rawTests.length > 0 ? rawTests[0] : 'empty');
+            console.log('  - Trainings:', rawTrainings.length);
+
+            const allCompetitions = rawCompetitions.filter(belongsToUser);
+            const allTests = rawTests.filter(belongsToUser);
+            const allTrainings = rawTrainings.filter(belongsToUser);
+
+            console.log(`✅ FILTERED Results: Tests ${allTests.length}, Comps ${allCompetitions.length}, Trainings ${allTrainings.length}`);
 
             setTrainingSessions(allTrainings);
             setCompetitions(allCompetitions);
             setTestResults(allTests);
 
-            // Calcular estadísticas
+            // Calcular estadísticas con seguridad adicional
             const totalSessions = allTrainings.length;
             const completedSessions = allTrainings.filter(t =>
-                t.asistencias && t.asistencias.some(a => a.presente)
+                t.asistencias && Array.isArray(t.asistencias) && t.asistencias.some(a => a.presente)
             ).length;
             const attendanceRate = totalSessions > 0 ? Math.round((completedSessions / totalSessions) * 100) : 0;
 
             console.log('📊 Stats - Total Sessions:', totalSessions, 'Completed:', completedSessions, 'Rate:', attendanceRate);
+
+            const apiStats = {
+                total_competencias: allCompetitions.length,
+                medallas: allCompetitions.reduce((acc, comp) => {
+                    const pos = String(comp.posicion_final || '').toLowerCase();
+                    if (pos === '1' || pos.includes('oro')) acc.oro++;
+                    else if (pos === '2' || pos.includes('plata')) acc.plata++;
+                    else if (pos === '3' || pos.includes('bronce')) acc.bronce++;
+                    return acc;
+                }, { oro: 0, plata: 0, bronce: 0 })
+            };
 
             setStats({
                 totalSessions,
@@ -185,30 +283,47 @@ const DashboardAtletaPage = () => {
         }
     };
 
+    const [debugStats, setDebugStats] = useState({ rawTrain: 0, rawComp: 0, rawTest: 0 });
+
     const getUnifiedHistory = () => {
         // 1. Competitions
         const compData = competitions.map(c => ({
             name: c.competencia?.nombre || 'Competencia',
-            resultado: parseFloat(c.marca_obtenida || 0),
-            unit: c.prueba?.unidad_medida || '',
+            resultado: parseFloat(c.resultado) || 0, // Changed from marca_obtenida based on RendimientoPage
+            unit: c.unidad_medida || '',
             date: getDate(c),
-            realDate: new Date(c.fecha_registro || 0),
+            realDate: new Date(c.fecha || c.fecha_registro || 0),
             type: c.prueba?.nombre || 'Competencia',
-            source: 'COMPETENCIA'
+            source: 'COMPETENCIA',
+            original: c
         }));
 
         // 2. Tests
         const testData = testResults.map(t => ({
             name: 'Test Físico',
             resultado: parseFloat(t.marca_obtenida || 0),
-            unit: t.prueba?.unidad_medida || '',
+            unit: t.unidad_medida || '',
             date: getDate(t),
             realDate: new Date(t.fecha || 0),
             type: t.prueba?.nombre || 'Test',
-            source: 'PRUEBA'
+            source: 'PRUEBA',
+            original: t
         }));
 
-        return [...compData, ...testData].sort((a, b) => a.realDate - b.realDate);
+        // 3. Trainings (New Addition)
+        const trainingData = trainingSessions.map(t => ({
+            name: 'Entrenamiento',
+            resultado: t.evaluacion ? parseFloat(t.evaluacion) : (t.distancia || t.tiempo || 0),
+            unit: t.unidad_medida || (t.evaluacion ? 'pts' : ''),
+            date: getDate(t),
+            realDate: new Date(t.fecha || 0),
+            type: t.entrenamiento?.tipo_entrenamiento || 'Entrenamiento',
+            source: 'ENTRENAMIENTO',
+            original: t
+        }));
+
+        return [...compData, ...testData, ...trainingData]
+            .sort((a, b) => b.realDate - a.realDate); // Sort descending like RendimientoPage
     };
 
     const unifiedData = getUnifiedHistory();
@@ -227,9 +342,6 @@ const DashboardAtletaPage = () => {
         }
         return null;
     };
-
-    console.log("🔄 Rendering state:", { loading, trainings: trainingSessions.length, competitions: competitions.length, tests: testResults.length });
-    console.log("📋 Detailed Data:", { trainingSessions, competitions, testResults });
 
     if (loading) {
         return (
@@ -331,7 +443,7 @@ const DashboardAtletaPage = () => {
                         <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                             <TrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Evolución de Rendimiento (Competencias y Tests)</h3>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Historial de Rendimiento (Todos los Eventos)</h3>
                     </div>
 
                     {unifiedData.length > 0 ? (
@@ -401,10 +513,12 @@ const DashboardAtletaPage = () => {
                                     <tr key={session.id || index} className="hover:bg-gray-50 dark:hover:bg-[#212121]">
                                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{getDate(session)}</td>
                                         <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">
-                                            {session.horario?.entrenamiento?.nombre || 'Sin nombre'}
+                                            {session.entrenamiento?.tipo_entrenamiento || session.entrenamiento?.descripcion || 'Sin nombre'}
                                         </td>
                                         <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
-                                            {session.horario?.dia_semana || ''} {session.horario?.hora_inicio || ''}
+                                            {session.entrenamiento?.horarios && session.entrenamiento.horarios.length > 0
+                                                ? `${session.entrenamiento.horarios[0].hora_inicio} - ${session.entrenamiento.horarios[0].hora_fin}`
+                                                : 'Sin horario'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${session.asistencias && session.asistencias.some(a => a.presente)
@@ -453,7 +567,7 @@ const DashboardAtletaPage = () => {
                                             <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{item.competencia?.nombre || 'N/A'}</td>
                                             <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{item.prueba?.nombre || 'N/A'}</td>
                                             <td className="px-4 py-3 text-gray-900 dark:text-white font-mono font-bold">
-                                                {item.marca_obtenida} {item.prueba?.unidad_medida}
+                                                {item.resultado} {item.unidad_medida || item.prueba?.unidad_medida}
                                             </td>
                                         </tr>
                                     ))}

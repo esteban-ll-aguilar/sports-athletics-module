@@ -66,12 +66,6 @@ class Settings(BaseSettings):
             f"@{self.database_host}:{self.database_port}/{self.database_name}"
         )
     
-    # @property
-    # def database_url_sync(self) -> str:
-    #     return (
-    #         f"postgresql://{self.database_user}:{self.database_password}"
-    #         f"@{self.database_host}:{self.database_port}/{self.database_name}"
-    #     )
 
 
 @lru_cache

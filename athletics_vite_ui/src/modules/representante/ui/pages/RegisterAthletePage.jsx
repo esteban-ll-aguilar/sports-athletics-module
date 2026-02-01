@@ -5,6 +5,7 @@ import AthleteForm from '../components/AthleteForm';
 
 const RegisterAthletePage = ({ isModal = false, onClose, athleteId = null, onSuccess: onSuccessProp }) => {
     const navigate = useNavigate();
+    const baseId = useId();
 
     const handleSuccess = (data) => {
         if (onSuccessProp) {

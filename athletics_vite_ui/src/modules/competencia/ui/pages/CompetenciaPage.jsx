@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Aunque no veo uso directo de Link en el body excepto breadcrumb vacio
+// import { Link } from "react-router-dom"; // Se eliminó Link ya que no se usa directamente en el cuerpo del componente
 import competenciaService from "../../services/competencia_service";
 import CompetenciaModal from "../widgets/CompetenciaModal";
 import Swal from "sweetalert2";
@@ -249,7 +249,7 @@ const CompetenciasPage = () => {
                     >
                       <td className="px-6 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="flex-shrink-0 w-10 h-10 bg-red-50 dark:bg-red-900/20 text-[#b30c25] rounded-xl flex items-center justify-center">
+                          <div className="shrink-0 w-10 h-10 bg-red-50 dark:bg-red-900/20 text-[#b30c25] rounded-xl flex items-center justify-center">
                             <Trophy size={20} />
                           </div>
                           <div>

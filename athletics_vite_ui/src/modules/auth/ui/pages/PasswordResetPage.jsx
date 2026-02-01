@@ -146,7 +146,7 @@ const PasswordResetPage = () => {
                     {step === 1 && (
                         <form onSubmit={handleRequestCode} className="space-y-5 animate-fadeIn">
                             <div className="space-y-1">
-                                <label htmlFor="email" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
+                                <label htmlFor="reset-email" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
                                     Correo Electrónico
                                 </label>
                                 <div className="relative group">
@@ -155,7 +155,7 @@ const PasswordResetPage = () => {
                                     </div>
                                     <input
                                         type="email"
-                                        id="email"
+                                        id="reset-email"
                                         required
                                         className="
                                             block w-full pl-10 pr-3 py-3
@@ -216,7 +216,7 @@ const PasswordResetPage = () => {
                     {step === 2 && (
                         <form onSubmit={handleValidateCode} className="space-y-5 animate-fadeIn">
                             <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
+                                <label htmlFor="verify-email" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
                                     Verificar Correo
                                 </label>
                                 <div className="relative backdrop-blur-sm">
@@ -225,6 +225,7 @@ const PasswordResetPage = () => {
                                     </div>
                                     <input
                                         type="email"
+                                        id="verify-email"
                                         disabled
                                         className="
                                             block w-full pl-10 pr-3 py-3
@@ -238,7 +239,7 @@ const PasswordResetPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label htmlFor="code" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
+                                <label htmlFor="reset-code" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">
                                     Código de Verificación
                                 </label>
                                 <div className="relative group">
@@ -247,7 +248,7 @@ const PasswordResetPage = () => {
                                     </div>
                                     <input
                                         type="text"
-                                        id="code"
+                                        id="reset-code"
                                         required
                                         maxLength={6}
                                         className="
@@ -304,13 +305,14 @@ const PasswordResetPage = () => {
                     {step === 3 && (
                         <form onSubmit={handleResetPassword} className="space-y-5 animate-fadeIn">
                             <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">Nueva Contraseña</label>
+                                <label htmlFor="new-password" title="Nueva Contraseña" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">Nueva Contraseña</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[#b30c25] transition-colors" />
                                     </div>
                                     <input
                                         type="password"
+                                        id="new-password"
                                         required
                                         className="
                                             block w-full pl-10 pr-3 py-3
@@ -329,13 +331,14 @@ const PasswordResetPage = () => {
                             </div>
 
                             <div className="space-y-1">
-                                <label className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">Confirmar Contraseña</label>
+                                <label htmlFor="confirm-password" title="Confirmar Contraseña" className="block text-xs font-medium text-gray-400 uppercase tracking-wider pl-1">Confirmar Contraseña</label>
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Lock className="h-5 w-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[#b30c25] transition-colors" />
                                     </div>
                                     <input
                                         type="password"
+                                        id="confirm-password"
                                         required
                                         className="
                                             block w-full pl-10 pr-3 py-3

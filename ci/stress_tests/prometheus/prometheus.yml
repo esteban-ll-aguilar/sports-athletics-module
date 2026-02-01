@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Monitoreo de cAdvisor (contenedores Docker)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Monitoreo de Prometheus mismo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Monitoreo del Backend FastAPI (si está expuesto)
+  - job_name: 'fastapi'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+    metrics_path: '/metrics'
+
+  # Monitoreo del Spring Boot (si tiene actuator)
+  - job_name: 'springboot'
+    static_configs:
+      - targets: ['host.docker.internal:8096']
+    metrics_path: '/actuator/prometheus'

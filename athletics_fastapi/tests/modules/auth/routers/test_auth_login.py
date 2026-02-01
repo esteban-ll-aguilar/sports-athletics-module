@@ -83,7 +83,7 @@ async def test_tc_l01_login_exitoso(client: AsyncClient, override_deps, mock_rep
     mock_hasher.verify.return_value = True
 
     payload = {"username": "juan@test.com", "password": "Abc123$%"}
-    response = await client.post("/api/v1/auth/login", data=payload)
+    response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -102,7 +102,7 @@ async def test_tc_l02_password_incorrecto(client: AsyncClient, override_deps, mo
     mock_hasher.verify.return_value = False # Password incorrecto
 
     payload = {"username": "juan@test.com", "password": "WrongPassword"}
-    response = await client.post("/api/v1/auth/login", data=payload)
+    response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == 401
     assert response.json()["message"] == "Credenciales inválidas"
@@ -116,7 +116,7 @@ async def test_tc_l03_usuario_inexistente(client: AsyncClient, override_deps, mo
     mock_repo.get_by_email.return_value = None
 
     payload = {"username": "noexiste@test.com", "password": "Abc123$%"}
-    response = await client.post("/api/v1/auth/login", data=payload)
+    response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == 401
     assert response.json()["message"] == "Credenciales inválidas"
@@ -132,7 +132,7 @@ async def test_tc_l04_usuario_inactivo(client: AsyncClient, override_deps, mock_
     mock_hasher.verify.return_value = True
 
     payload = {"username": "inactive@test.com", "password": "Abc123$%"}
-    response = await client.post("/api/v1/auth/login", data=payload)
+    response = await client.post("/api/v1/auth/login", json=payload)
 
     assert response.status_code == 401
     assert "inactivo" in response.json()["message"]
@@ -148,7 +148,7 @@ async def test_tc_l05_2fa_requerido(client: AsyncClient, override_deps, mock_rep
     mock_hasher.verify.return_value = True
 
     payload = {"username": "2fa@test.com", "password": "Abc123$%"}
-    response = await client.post("/api/v1/auth/login", data=payload)
+    response = await client.post("/api/v1/auth/login", json=payload)
 
     # El status OK 200 sigue siendo válido porque devuelve una respuesta exitosa (aunque parcial)
     # o un status específico si se diseñó así. Revisando auth.py, retorna TokenPair o TwoFactorRequired
@@ -157,4 +157,5 @@ async def test_tc_l05_2fa_requerido(client: AsyncClient, override_deps, mock_rep
     data = response.json()
     assert data["success"] is True
     assert "temp_token" in data["data"]
-    assert data["message"] == "2FA requerido"
+    assert data["message"] == "Se requiere autenticación de dos factores"
+    assert data["data"]["message"] == "2FA requerido"

@@ -50,9 +50,9 @@ const Features = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {features.map((feature, index) => (
+                    {features.map((feature) => (
                         <div
-                            key={index}
+                            key={feature.title}
                             className="group bg-white dark:bg-[#242223] p-8 rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 dark:border-[#332122] transition-all duration-300 transform hover:-translate-y-2"
                         >
                             <div className="w-14 h-14 rounded-xl bg-[#b30c25]/10 flex items-center justify-center text-[#b30c25] mb-6 group-hover:bg-[#b30c25] group-hover:text-white transition-colors duration-300">

@@ -1,10 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useId } from "react";
+import PropTypes from "prop-types";
 import ResultadoCompetencia from "../../domain/models/ResultadoCompetencia";
 import Swal from "sweetalert2";
-import { X, Save, Edit3, Activity, User, Trophy, Eye, EyeOff, FileText, Check, Hash, Ruler } from "lucide-react";
+import { X, Save, Edit3, Activity, User, Trophy, Eye, EyeOff, FileText, Hash, Ruler } from "lucide-react";
+
+const InputField = ({ label, icon: Icon, id, ...props }) => (
+  <div className="space-y-1 w-full">
+    <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+    <div className="relative">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+      <input
+        {...props}
+        id={id}
+        className={`
+          w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
+          bg-white dark:bg-[#252525] 
+          border border-gray-300 dark:border-[#444]
+          text-gray-900 dark:text-white
+          placeholder-gray-400
+          focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+          outline-none transition-all text-sm
+        `}
+      />
+    </div>
+  </div>
+);
+
+InputField.propTypes = {
+  label: PropTypes.string.isRequired,
+  icon: PropTypes.elementType,
+  id: PropTypes.string.isRequired
+};
+
+const SelectField = ({ label, icon: Icon, children, id, ...props }) => (
+  <div className="space-y-1 w-full">
+    <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+    <div className="relative">
+      {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+      <select
+        {...props}
+        id={id}
+        className={`
+          w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
+          bg-white dark:bg-[#252525] 
+          border border-gray-300 dark:border-[#444]
+          text-gray-900 dark:text-white
+          placeholder-gray-400
+          focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+          outline-none transition-all text-sm appearance-none
+        `}
+      >
+        {children}
+      </select>
+      <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+      </div>
+    </div>
+  </div>
+);
+
+SelectField.propTypes = {
+  label: PropTypes.string.isRequired,
+  icon: PropTypes.elementType,
+  children: PropTypes.node,
+  id: PropTypes.string.isRequired
+};
 
 const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competencias = [], atletas = [], pruebas = [] }) => {
   const [form, setForm] = useState(new ResultadoCompetencia());
+  const baseId = useId();
 
   const posicionesDisponibles = [
     { value: 'primero', label: '🥇 Primer Lugar' },
@@ -115,57 +179,17 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
     }
   };
 
-  const InputField = ({ label, icon: Icon, ...props }) => (
-    <div className="space-y-1 w-full">
-      <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-        <input
-          {...props}
-          className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
-                        bg-white dark:bg-[#252525] 
-                        border border-gray-300 dark:border-[#444]
-                        text-gray-900 dark:text-white
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all text-sm
-                    `}
-        />
-      </div>
-    </div>
-  );
-
-  const SelectField = ({ label, icon: Icon, children, ...props }) => (
-    <div className="space-y-1 w-full">
-      <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
-      <div className="relative">
-        {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
-        <select
-          {...props}
-          className={`
-                        w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
-                        bg-white dark:bg-[#252525] 
-                        border border-gray-300 dark:border-[#444]
-                        text-gray-900 dark:text-white
-                        placeholder-gray-400
-                        focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
-                        outline-none transition-all text-sm appearance-none
-                    `}
-        >
-          {children}
-        </select>
-        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-        </div>
-      </div>
-    </div>
-  );
-
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 overflow-y-auto">
-      <div className="absolute inset-0 transition-opacity" onClick={onClose} />
+    <dialog
+      open={isOpen}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 w-full h-full border-none outline-none overflow-y-auto"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+        onClick={onClose}
+        aria-label="Cerrar modal"
+      />
       <div className="relative w-full max-w-lg bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#333] my-8 flex flex-col max-h-[90vh]">
 
         {/* HEADER */}
@@ -188,6 +212,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
           <SelectField
             label="Competencia *"
             icon={Trophy}
+            id={`${baseId}-cmp`}
             value={form.competencia_id}
             onChange={(e) => {
               const selected = competencias.find(c => c.external_id === e.target.value);
@@ -205,6 +230,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
           <SelectField
             label="Atleta *"
             icon={User}
+            id={`${baseId}-atl`}
             value={form.atleta_id}
             onChange={e => {
               const val = e.target.value;
@@ -225,6 +251,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
           <SelectField
             label="Prueba *"
             icon={Activity}
+            id={`${baseId}-pru`}
             value={form.prueba_id}
             onChange={e => {
               const selected = pruebas.find(p => p.external_id === e.target.value);
@@ -243,6 +270,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <InputField
               label="Resultado *"
               icon={Hash}
+              id={`${baseId}-res`}
               type="number"
               step="0.01"
               value={safeValue(form.resultado)}
@@ -252,7 +280,8 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <SelectField
               label="Unidad *"
               icon={Ruler}
-              value={safeValue(form.unidad_medida) || 'METROS'}
+              id={`${baseId}-uni`}
+              value={safeValue(form.unid_medida) || (safeValue(form.unidad_medida) || 'METROS')}
               onChange={e => setForm({ ...form, unidad_medida: e.target.value })}
               required
             >
@@ -265,6 +294,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <SelectField
               label="Posición Final *"
               icon={Trophy}
+              id={`${baseId}-pos`}
               value={safeValue(form.posicion_final)}
               onChange={e => setForm({ ...form, posicion_final: e.target.value })}
               required
@@ -274,6 +304,7 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
             <InputField
               label="Puesto Numérico"
               icon={Hash}
+              id={`${baseId}-pue`}
               type="number"
               value={safeValue(form.puesto_obtenido)}
               onChange={e => setForm({ ...form, puesto_obtenido: e.target.value ? Number(e.target.value) : null })}
@@ -283,10 +314,11 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
 
           {/* Observaciones */}
           <div className="space-y-1 w-full">
-            <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Observaciones</label>
+            <label htmlFor={`${baseId}-obs`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Observaciones</label>
             <div className="relative">
               <FileText className="absolute left-3 top-3 text-gray-400" size={16} />
               <textarea
+                id={`${baseId}-obs`}
                 value={safeValue(form.observaciones)}
                 onChange={e => setForm({ ...form, observaciones: e.target.value })}
                 rows="2"
@@ -353,8 +385,29 @@ const ResultadoModal = ({ isOpen, onClose, onSubmit, editingResultado, competenc
           </div>
         </form>
       </div >
-    </div>
+    </dialog>
   );
+};
+
+ResultadoModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  editingResultado: PropTypes.shape({
+    external_id: PropTypes.string,
+    atleta_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    prueba_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    competencia_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    resultado: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    unidad_medida: PropTypes.string,
+    posicion_final: PropTypes.string,
+    puesto_obtenido: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    observaciones: PropTypes.string,
+    estado: PropTypes.bool
+  }),
+  competencias: PropTypes.array,
+  atletas: PropTypes.array,
+  pruebas: PropTypes.array
 };
 
 export default ResultadoModal;

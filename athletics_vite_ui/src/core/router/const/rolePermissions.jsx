@@ -18,12 +18,11 @@ const rolePermissions = {
     ],
 
     ATLETA: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/dashboard/atleta', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/dashboard/schedule', icon: Calendar, label: 'Horario' },
     ],
 
     ENTRENADOR: [
-        { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         {
             path: '/dashboard/registro-pruebas',
             icon: Users,

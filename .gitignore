@@ -1,1 +1,17 @@
 *.pdf
+
+# Reportes de SonarQube
+.scannerwork/
+.sonar/
+
+# Reportes de Cobertura
+coverage/
+htmlcov/
+coverage.xml
+.coverage
+*.lcov
+lcov.info
+
+# Logs
+*.log
+

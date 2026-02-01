@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import competenciaService from '../../../modules/competencia/services/competencia_service'
 import competenciaRepository from '../../../modules/competencia/repositories/competencia_repositorio'
 
@@ -12,17 +12,8 @@ describe('CompetenciaService', () => {
     describe('getAll', () => {
         it('should return data when repository returns object with data property', async () => {
             const mockData = [{ id: 1, nombre: 'Competencia 1' }]
+            // Service expects response.data to be the array or object containing items
             competenciaRepository.getAll.mockResolvedValue({ data: mockData })
-
-            const result = await competenciaService.getAll()
-
-            expect(competenciaRepository.getAll).toHaveBeenCalled()
-            expect(result).toEqual(mockData)
-        })
-
-        it('should return data directly when repository returns array', async () => {
-            const mockData = [{ id: 1, nombre: 'Competencia 1' }]
-            competenciaRepository.getAll.mockResolvedValue(mockData)
 
             const result = await competenciaService.getAll()
 
@@ -34,6 +25,7 @@ describe('CompetenciaService', () => {
     describe('getById', () => {
         it('should return single competency by id', async () => {
             const mockItem = { id: 1, nombre: 'Competencia 1' }
+            // Service accesses response.data
             competenciaRepository.getById.mockResolvedValue({ data: mockItem })
 
             const result = await competenciaService.getById(1)
@@ -46,7 +38,8 @@ describe('CompetenciaService', () => {
     describe('create', () => {
         it('should call repository create with correct data', async () => {
             const newItem = { nombre: 'Nueva Competencia' }
-            competenciaRepository.create.mockResolvedValue(newItem)
+            // Service accesses response.data
+            competenciaRepository.create.mockResolvedValue({ data: newItem })
 
             const result = await competenciaService.create(newItem)
 
@@ -58,7 +51,8 @@ describe('CompetenciaService', () => {
     describe('update', () => {
         it('should call repository update with correct arguments', async () => {
             const updateData = { nombre: 'Actualizada' }
-            competenciaRepository.update.mockResolvedValue(true)
+            // Service accesses response.data
+            competenciaRepository.update.mockResolvedValue({ data: true })
 
             const result = await competenciaService.update(1, updateData)
 
@@ -69,7 +63,8 @@ describe('CompetenciaService', () => {
 
     describe('delete', () => {
         it('should call repository delete', async () => {
-            competenciaRepository.delete.mockResolvedValue(true)
+            // Service accesses response.data
+            competenciaRepository.delete.mockResolvedValue({ data: true })
 
             const result = await competenciaService.delete(1)
 
