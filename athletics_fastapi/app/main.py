@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from app.utils.response_handler import ResponseHandler
 from app.utils.response_codes import ResponseCodes
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import asyncio
 
@@ -135,6 +136,10 @@ _APP = FastAPI(
     },
     lifespan=lifespan
 )
+
+# Instrumentar Prometheus para métricas de rendimiento
+Instrumentator().instrument(_APP).expose(_APP, endpoint="/metrics", include_in_schema=True)
+
 # ✅ 2. LUEGO MONTAS STATIC FILES
 
 _APP.mount("/data", StaticFiles(directory="data"), name="data")

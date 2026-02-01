@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.modules.atleta.routers.v1.atleta_simple_router import router as atleta_router
+from app.modules.atleta.routers.v1.atleta_router import router as atleta_router
 from app.modules.atleta.routers.v1.historial_medico_router import router as historial_router
 from app.modules.modules import APP_TAGS_V1
 

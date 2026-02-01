@@ -138,28 +138,45 @@ class AuthUsersRepository:
         await self.db.flush()
 
         # 3. Sub-entidad por rol
+        # 3. Sub-entidad por rol (Manejado por Trigger, solo actualizamos datos)
         if user_data.role == RoleEnum.ATLETA and user_data.atleta_data:
-            self.db.add(
-                Atleta(
-                    user_id=user_profile.id,
-                    anios_experiencia=user_data.atleta_data.anios_experiencia,
-                )
-            )
+            # El trigger ya creó el registro con valores por defecto (0 experiencia)
+            # Buscamos y actualizamos
+            result = await self.db.execute(select(Atleta).where(Atleta.user_id == user_profile.id))
+            atleta = result.scalars().first()
+            if atleta:
+                atleta.anios_experiencia = user_data.atleta_data.anios_experiencia
+                self.db.add(atleta)
+            else:
+                 # Fallback por si el trigger falla o no existe
+                 pass
 
         elif user_data.role == RoleEnum.ENTRENADOR and user_data.entrenador_data:
-            self.db.add(
-                Entrenador(
-                    user_id=user_profile.id,
-                    anios_experiencia=user_data.entrenador_data.anios_experiencia,
-                    is_pasante=user_data.entrenador_data.is_pasante,
-                )
-            )
+            result = await self.db.execute(select(Entrenador).where(Entrenador.user_id == user_profile.id))
+            entrenador = result.scalars().first()
+            if entrenador:
+                entrenador.anios_experiencia = user_data.entrenador_data.anios_experiencia
+                entrenador.is_pasante = user_data.entrenador_data.is_pasante
+                self.db.add(entrenador)
+            else:
+                pass
 
         elif user_data.role == RoleEnum.REPRESENTANTE:
-            self.db.add(Representante(user_id=user_profile.id))
+            # Ya creado por trigger, no se requiere acción adicional
+            pass
 
         await self.db.commit()
-        await self.db.refresh(user_profile)
+        
+        # Recargar el usuario completo con sus relaciones para evitar MissingGreenlet
+        # Pydantic accede a user.email (que es user.auth.email), por lo que necesitamos 'auth' cargado.
+        result = await self.db.execute(
+            select(UserModel)
+            .where(UserModel.id == user_profile.id)
+            .options(selectinload(UserModel.auth))
+        )
+        user_profile = result.scalar_one()
+
+        return user_profile
 
         return user_profile
 

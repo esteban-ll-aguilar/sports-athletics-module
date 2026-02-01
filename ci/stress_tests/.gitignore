@@ -18,3 +18,10 @@ prometheus/data/
 # Archivos de sistema
 .DS_Store
 Thumbs.db
+
+
+#PYTHON
+eggs/
+.eggs/
+*.pyc
+__pycache__/

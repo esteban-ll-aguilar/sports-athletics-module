@@ -144,13 +144,22 @@ async def login(
     # Ya no capturamos todas las excepciones para permitir que HTTPException fluya
     user = await repo.get_by_email(data.username)
 
+    logger.info(f"Login attempt for: {data.username}")
+    if user:
+         logger.info(f"User found. ID: {user.id}, Active: {user.is_active}")
+         # logger.info(f"Stored Hash: {user.hashed_password}") # DEBUG ONLY - REMOVE LATER
+    else:
+         logger.warning("User NOT found")
+
     if not user or not hasher.verify(data.password, user.hashed_password):
+        logger.warning(f"Password mismatch for user: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas",
         )
 
     if not user.is_active:
+        logger.warning(f"User inactive: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario inactivo, por favor verifica tu email",
