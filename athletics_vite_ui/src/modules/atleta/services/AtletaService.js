@@ -45,6 +45,22 @@ const AtletaService = {
     getTrainingSessions: async (atletaId) => {
         const response = await ApiClient.get(`/entrenador/asistencias/mis-registros?atleta_id=${atletaId}`);
         return response;
+    },
+
+    // Obtener confirmaciones pendientes de asistencia
+    getPendingConfirmations: async (atletaId) => {
+        const response = await ApiClient.get(`/entrenador/asistencias/mis-registros?atleta_id=${atletaId}`);
+        return response;
+    },
+
+    // Confirmar o rechazar asistencia
+    confirmAttendance: async (registroId, confirmado, fechaEntrenamiento) => {
+        const endpoint = confirmado
+            ? `/entrenador/asistencias/confirmar/${registroId}?fecha_entrenamiento=${fechaEntrenamiento}`
+            : `/entrenador/asistencias/rechazar/${registroId}?fecha_entrenamiento=${fechaEntrenamiento}`;
+
+        const response = await ApiClient.post(endpoint);
+        return response;
     }
 };
 
