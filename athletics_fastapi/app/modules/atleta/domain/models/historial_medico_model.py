@@ -20,6 +20,9 @@ class HistorialMedico(Base):
     enfermedades_hereditarias = Column(String, nullable=True)
     enfermedades = Column(String, nullable=True)
 
+    contacto_emergencia_nombre = Column(String, nullable=True)
+    contacto_emergencia_telefono = Column(String, nullable=True)
+
     atleta_id = Column(
         Integer,
         ForeignKey("atleta.id", ondelete="CASCADE"),  

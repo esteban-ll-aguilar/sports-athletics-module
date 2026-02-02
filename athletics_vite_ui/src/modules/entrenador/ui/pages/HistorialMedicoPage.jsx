@@ -262,6 +262,29 @@ const HistorialMedicoPage = () => {
                       {selectedHistorial.enfermedades || "Ninguna reportada"}
                     </p>
                   </div>
+
+                  {/* Contacto de Emergencia */}
+                  {(selectedHistorial.contacto_emergencia_nombre || selectedHistorial.contacto_emergencia_telefono) && (
+                    <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-lg border border-red-100 dark:border-red-900/20">
+                      <h4 className="text-sm font-semibold text-red-800 dark:text-red-400 mb-3 border-b border-red-100 dark:border-red-900/20 pb-2">
+                        Contacto de Emergencia
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedHistorial.contacto_emergencia_nombre && (
+                          <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nombre</p>
+                            <p className="text-gray-900 dark:text-white font-medium">{selectedHistorial.contacto_emergencia_nombre}</p>
+                          </div>
+                        )}
+                        {selectedHistorial.contacto_emergencia_telefono && (
+                          <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Teléfono</p>
+                            <p className="text-gray-900 dark:text-white font-medium">{selectedHistorial.contacto_emergencia_telefono}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -276,8 +299,9 @@ const HistorialMedicoPage = () => {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 export default HistorialMedicoPage;

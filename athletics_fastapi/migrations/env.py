@@ -16,6 +16,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from app.core.config.enviroment import _SETTINGS
 from app.core.db.database import Base
 from app.modules.entrenador.domain.models.resultado_entrenamiento_model import ResultadoEntrenamiento # Explicit Import
+from app.modules.auth.domain.models.auth_user_model import AuthUserModel # Import this to register 'users' table
+from app.modules.atleta.domain.models.atleta_model import Atleta # Import this to register 'atleta' table
+from app.modules.representante.domain.models.representante_model import Representante # Import this to register 'representante' table
+from app.modules.competencia.domain.models.baremo_model import Baremo 
+from app.modules.competencia.domain.models.item_baremo_model import ItemBaremo
+from app.modules.competencia.domain.models.resultado_prueba_model import ResultadoPrueba
+from app.modules.competencia.domain.models.registro_prueba_competencia_model import RegistroPruebaCompetencia
+from app.modules.competencia.domain.models.prueba_model import Prueba
 
 
 # Este es el objeto de configuración de Alembic 

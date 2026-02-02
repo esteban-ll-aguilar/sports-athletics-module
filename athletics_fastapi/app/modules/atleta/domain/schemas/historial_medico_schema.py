@@ -57,6 +57,9 @@ class HistorialMedicoBase(BaseModel):
         description="Enfermedades actuales"
     )
 
+    contacto_emergencia_nombre: Optional[str] = Field(None, description="Nombre del contacto de emergencia")
+    contacto_emergencia_telefono: Optional[str] = Field(None, description="Teléfono del contacto de emergencia")
+
     # Mantenemos tus validadores (son importantes para evitar divisiones por cero o datos locos)
     @field_validator('talla')
     @classmethod
@@ -83,6 +86,8 @@ class HistorialMedicoUpdate(BaseModel):
     alergias: Optional[str] = None
     enfermedades_hereditarias: Optional[str] = None
     enfermedades: Optional[str] = None
+    contacto_emergencia_nombre: Optional[str] = None
+    contacto_emergencia_telefono: Optional[str] = None
 
 
 class HistorialMedicoRead(HistorialMedicoBase):

@@ -151,7 +151,7 @@ const BaremosSimplePage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend']">
             <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
                 {/* Breadcrumb Navigation */}
@@ -168,10 +168,10 @@ const BaremosSimplePage = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
                     <div className="space-y-1">
-                        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
                             Gestión de Baremos
                         </h1>
-                        <p className="text-gray-400">Vista simplificada - Información básica de baremos</p>
+                        <p className="text-gray-500 dark:text-gray-400">Vista simplificada - Información básica de baremos</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">

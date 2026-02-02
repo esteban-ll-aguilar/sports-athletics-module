@@ -89,6 +89,8 @@ class HistorialMedicoService:
             alergias=data.alergias,
             enfermedades_hereditarias=data.enfermedades_hereditarias,
             enfermedades=data.enfermedades,
+            contacto_emergencia_nombre=data.contacto_emergencia_nombre,
+            contacto_emergencia_telefono=data.contacto_emergencia_telefono,
             atleta_id=atleta.id
         )
 

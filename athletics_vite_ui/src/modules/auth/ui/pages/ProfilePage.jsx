@@ -553,6 +553,26 @@ const ProfilePage = () => {
                                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Enfermedades Hereditarias</p>
                                     <p className="text-gray-900 dark:text-white">{historial.enfermedades_hereditarias || "Ninguna"}</p>
                                 </div>
+
+                                {(historial.contacto_emergencia_nombre || historial.contacto_emergencia_telefono) && (
+                                    <div className="border-t border-gray-200 dark:border-[#332122] pt-4 mt-2">
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Contacto de Emergencia</p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {historial.contacto_emergencia_nombre && (
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Nombre</p>
+                                                    <p className="text-gray-900 dark:text-white">{historial.contacto_emergencia_nombre}</p>
+                                                </div>
+                                            )}
+                                            {historial.contacto_emergencia_telefono && (
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Teléfono</p>
+                                                    <p className="text-gray-900 dark:text-white">{historial.contacto_emergencia_telefono}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </>
                     ) : (

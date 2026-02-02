@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import historialMedicoService from "../../services/historialMedicoService";
-import { Activity, Heart, Ruler, Weight, Save, X, Edit3, PlusCircle } from "lucide-react";
+import { Activity, Heart, Ruler, Weight, Save, X, Edit3, PlusCircle, Phone } from "lucide-react";
 
 export const OPCIONES_ALERGIAS = [
     { value: "Ninguna", label: "Ninguna" },
@@ -49,7 +49,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
         peso: "",
         alergias: "",
         enfermedades: "",
-        enfermedades_hereditarias: ""
+        enfermedades_hereditarias: "",
+        contacto_emergencia_nombre: "",
+        contacto_emergencia_telefono: ""
     });
 
     // Cargar historial cuando el modal se abra
@@ -77,7 +79,9 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                     peso: response.peso || "",
                     alergias: response.alergias || "",
                     enfermedades: response.enfermedades || "",
-                    enfermedades_hereditarias: response.enfermedades_hereditarias || ""
+                    enfermedades_hereditarias: response.enfermedades_hereditarias || "",
+                    contacto_emergencia_nombre: response.contacto_emergencia_nombre || "",
+                    contacto_emergencia_telefono: response.contacto_emergencia_telefono || ""
                 });
                 setHistorial(response);
                 setActiveTab("editar");
@@ -111,6 +115,12 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                     return; // No permitir escribir más
                 }
             }
+        }
+
+        // Validación para teléfono (solo números)
+        if (name === "contacto_emergencia_telefono") {
+            const isNumeric = /^\d*$/.test(value);
+            if (!isNumeric) return;
         }
 
         setFormData(prev => ({ ...prev, [name]: value }));
@@ -222,7 +232,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
         // Vamos a asumir que "Otra" no es válido como dato final, debería ser específico o vacío.
 
         try {
-            await historialMedicoService.createHistorial(formData);
+            await historialMedicoService.createHistorialMedico(formData);
             Swal.fire({
                 icon: 'success',
                 title: 'Historial Creado',
@@ -233,10 +243,12 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
             });
             loadHistorial();
         } catch (error) {
+            console.error("Error creating historial:", error);
+            const errorMsg = error.response?.data?.detail || 'No se pudo crear el historial.';
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'No se pudo crear el historial.',
+                text: errorMsg,
                 background: '#1a1a1a',
                 color: '#fff',
                 confirmButtonColor: '#332122'
@@ -398,6 +410,39 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
                             {/* Hereditarias */}
                             {renderMedicalField("Antecedentes Hereditarios", "enfermedades_hereditarias", OPCIONES_HEREDITARIAS)}
+
+                            <div className="pt-4 border-t border-gray-100 dark:border-[#332122]">
+                                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 pb-3">Contacto de Emergencia</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label htmlFor="hm-contacto_nombre" className="text-sm font-medium text-gray-700 dark:text-gray-300">Nombre Completo</label>
+                                        <input
+                                            id="hm-contacto_nombre"
+                                            type="text"
+                                            name="contacto_emergencia_nombre"
+                                            value={formData.contacto_emergencia_nombre}
+                                            onChange={handleChange}
+                                            placeholder="Nombre del contacto"
+                                            className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label htmlFor="hm-contacto_telefono" className="text-sm font-medium text-gray-700 dark:text-gray-400">Teléfono</label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <input
+                                                id="hm-contacto_telefono"
+                                                type="tel"
+                                                name="contacto_emergencia_telefono"
+                                                value={formData.contacto_emergencia_telefono}
+                                                onChange={handleChange}
+                                                placeholder="Ej: 0991234567"
+                                                className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Actions */}
