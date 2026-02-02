@@ -17,6 +17,8 @@ from app.modules.auth.domain.schemas import (
     LoginSchema
 )
 from app.modules.auth.domain.enums.role_enum import RoleEnum
+from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
+from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
 from app.modules.auth.dependencies import (
     get_users_repo,
     get_sessions_repo,
@@ -97,19 +99,27 @@ async def register_test_user(
     try:
         password_hash = hasher.hash(data.password)
         
-        # Convert test schema to standard UserCreateSchema
-        user_data = UserCreateSchema(
+        # Para testing: bypass del validador de rol usando model_construct
+        # Esto permite crear usuarios con rol ADMINISTRADOR
+        role = RoleEnum(data.roles[0]) if data.roles else RoleEnum.ATLETA
+        
+        # Convertir strings a Enums (model_construct no hace conversión automática)
+        tipo_identificacion = TipoIdentificacionEnum(data.tipo_identificacion)
+        tipo_estamento = TipoEstamentoEnum(data.tipo_estamento)
+        
+        # Usar model_construct para saltar validadores (permite ADMINISTRADOR)
+        user_data = UserCreateSchema.model_construct(
             email=data.email,
             password=data.password,
             username=data.username,
             first_name=data.first_name,
             last_name=data.last_name,
-            tipo_identificacion=data.tipo_identificacion,
+            tipo_identificacion=tipo_identificacion,
             identificacion=data.identificacion,
-            tipo_estamento=data.tipo_estamento,
+            tipo_estamento=tipo_estamento,
             direccion=data.direccion if data.direccion else "Test Address",
             phone=data.phone if data.phone else "0999999999",
-            role=RoleEnum(data.roles[0]) if data.roles else RoleEnum.ATLETA
+            role=role
         )
         
         user = await repo.create(password_hash=password_hash, user_data=user_data)
@@ -124,6 +134,38 @@ async def register_test_user(
                 
             await repo.db.commit()
             user = await repo.get_by_id_profile(user.id)
+        
+        # Crear registro en tabla correspondiente según el rol
+        if data.roles:
+            from sqlalchemy import select
+            from app.modules.atleta.domain.models.atleta_model import Atleta
+            from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+            from app.modules.representante.domain.models.representante_model import Representante
+            
+            if role == RoleEnum.REPRESENTANTE:
+                # Verificar si ya existe
+                result = await repo.db.execute(
+                    select(Representante).where(Representante.user_id == user.id)
+                )
+                if not result.scalar_one_or_none():
+                    repo.db.add(Representante(user_id=user.id))
+                    await repo.db.commit()
+                    
+            elif role == RoleEnum.ENTRENADOR:
+                result = await repo.db.execute(
+                    select(Entrenador).where(Entrenador.user_id == user.id)
+                )
+                if not result.scalar_one_or_none():
+                    repo.db.add(Entrenador(user_id=user.id, anios_experiencia=0))
+                    await repo.db.commit()
+                    
+            elif role == RoleEnum.ATLETA:
+                result = await repo.db.execute(
+                    select(Atleta).where(Atleta.user_id == user.id)
+                )
+                if not result.scalar_one_or_none():
+                    repo.db.add(Atleta(user_id=user.id, anios_experiencia=0))
+                    await repo.db.commit()
         
         logger.info(f"TEST USER CREATED: {user.email} - Active: {user.is_active} - Roles: {data.roles}")
 
@@ -140,6 +182,40 @@ async def register_test_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error interno del servidor: {str(e)}",
         )
+
+
+# ======================================================
+# PROFILE (NO RATE LIMITING)
+# ======================================================
+
+@router.get("/profile", response_model=APIResponse[UserResponseSchema])
+async def get_profile_test(
+    request: Request,
+    repo: AuthUsersRepository = Depends(get_users_repo),
+    jwtm: JWTManager = Depends(get_jwt_manager),
+):
+    """TEST: Get user profile without rate limiting"""
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token no proporcionado")
+    
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwtm.decode(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    user_id = payload.get("sub")
+    user = await repo.get_by_id_profile(int(user_id))
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return APIResponse(
+        success=True,
+        message="Perfil obtenido exitosamente",
+        data=UserResponseSchema.model_validate(user)
+    )
 
 
 # ======================================================

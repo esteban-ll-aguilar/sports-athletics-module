@@ -1,5 +1,5 @@
 import React from 'react';
-import { Facebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
 import { X, Heart } from 'lucide-react';
 
 const Footer = () => {
@@ -18,7 +18,7 @@ const Footer = () => {
                         </p>
                         <div className="flex space-x-4">
                             {[
-                                { Icon: Facebook, name: 'Facebook' },
+                                { Icon: FaFacebook, name: 'Facebook' },
                                 { Icon: X, name: 'X' },
                                 { Icon: FaInstagram, name: 'Instagram' },
                                 { Icon: FaLinkedin, name: 'Linkedin' }

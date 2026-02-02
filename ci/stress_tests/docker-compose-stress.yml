@@ -1,120 +1,62 @@
 version: '3.8'
 
+# ============================================
+# LOCUST STRESS TESTING - CONFIGURACIÓN SIMPLIFICADA
+# ============================================
+# Uso:
+#   docker-compose -f docker-compose-stress.yml up -d
+#   Abrir http://localhost:8089 para UI de Locust
+#
+# IMPORTANTE: El backend debe tener ENABLE_TEST_ROUTES=true
+# ============================================
+
 services:
   # ============================================
-  # JMeter - Pruebas de Carga y Estrés
+  # Locust - Pruebas de Carga
   # ============================================
-  jmeter:
-    image: justb4/jmeter:latest
-    container_name: jmeter-stress-test
-    volumes:
-      - ./jmeter/tests:/tests
-      - ./jmeter/results:/results
-      - ./jmeter/data:/data
-    networks:
-      - stress-test-network
-    entrypoint: [ "/bin/sh", "-c" ]
-    command: >
-      echo '============================================' && echo '🔧 JMeter - Pruebas de Estrés' && echo '============================================' && echo 'Esperando instrucciones...' && tail -f /dev/null
-
-  # ============================================
-  # Gatling - Pruebas de Rendimiento
-  # ============================================
-  gatling:
-    image: denvazh/gatling:latest
-    container_name: gatling-stress-test
-    volumes:
-      - ./gatling/simulations:/opt/gatling/user-files/simulations
-      - ./gatling/resources:/opt/gatling/user-files/resources
-      - ./gatling/results:/opt/gatling/results
-    networks:
-      - stress-test-network
-    environment:
-      - JAVA_OPTS=-Xmx1024m
-    command: >
-      sh -c "
-        echo '============================================' &&
-        echo '⚡ Gatling - Pruebas de Rendimiento' &&
-        echo '============================================' &&
-        echo 'Esperando instrucciones...' &&
-        tail -f /dev/null
-      "
-  
-  # ============================================
-  # Locust - Pruebas de Carga Python
-  # ============================================
-  locust:
+  locust-master:
     image: locustio/locust:latest
-    container_name: locust-stress-test
+    container_name: locust-master
     ports:
-      - "8089:8089"
+      - "8089:8089"  # Web UI
     volumes:
       - ./locust:/mnt/locust
       - ./utils:/mnt/utils
-    networks:
-      - stress-test-network
     environment:
-      - LOCUST_HOST=http://host.docker.internal:8080
-    command: -f /mnt/locust/locustfile.py --web-host=0.0.0.0
-
-  # ============================================
-  # Grafana - Visualización de Métricas
-  # ============================================
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana-monitoring
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - LOCUST_HOST=http://host.docker.internal:8081
+      - LOCUST_USERS=100
+      - LOCUST_SPAWN_RATE=10
+    command: >
+      -f /mnt/locust/locustfile.py
+      --master
+      --web-host=0.0.0.0
     networks:
-      - stress-test-network
+      - locust-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Workers para pruebas distribuidas (opcional)
+  locust-worker:
+    image: locustio/locust:latest
+    volumes:
+      - ./locust:/mnt/locust
+      - ./utils:/mnt/utils
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-
-  # ============================================
-  # Prometheus - Recolección de Métricas
-  # ============================================
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus-metrics
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+      - LOCUST_HOST=http://host.docker.internal:8081
+    command: >
+      -f /mnt/locust/locustfile.py
+      --worker
+      --master-host=locust-master
     networks:
-      - stress-test-network
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-
-  # ============================================
-  # cAdvisor - Monitoreo de Contenedores
-  # ============================================
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor-monitor
-    ports:
-      - "8080:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-    networks:
-      - stress-test-network
-    privileged: true
+      - locust-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - locust-master
+    deploy:
+      replicas: 2  # Número de workers
 
 networks:
-  stress-test-network:
+  locust-network:
     driver: bridge
-    name: stress-test-network
-
-volumes:
-  grafana_data:
-    driver: local
-  prometheus_data:
-    driver: local
+    name: locust-network

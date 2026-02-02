@@ -42,12 +42,14 @@ class RepresentanteService:
             atleta.anios_experiencia = update_data.atleta_data.anios_experiencia
             self.session.add(atleta)
             await self.session.commit()
-            await self.session.refresh(atleta)
+        
+        # 5. Recargar atleta con relaciones (eager loading)
+        atleta_updated = await self.atleta_repo.get_by_id(atleta_id)
             
         return {
             "success": True,
             "message": "Atleta actualizado correctamente",
-            "data": atleta,
+            "data": atleta_updated,
             "status_code": 200
         }
 
@@ -96,8 +98,8 @@ class RepresentanteService:
             existing_atleta.representante_id = representante.id
             self.session.add(existing_atleta)
             await self.session.commit()
-            await self.session.refresh(existing_atleta)
-            res_atleta = existing_atleta
+            # Recargar con relaciones
+            res_atleta = await self.atleta_repo.get_by_id(existing_atleta.id)
         else:
             new_atleta = Atleta(
                 user_id=new_user.id,
