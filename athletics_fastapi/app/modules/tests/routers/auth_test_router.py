@@ -1,63 +1,70 @@
 """
 Auth Test Router - No Rate Limiting
-Provides authentication endpoints without rate limiting for testing purposes.
-Users are created with is_active=True by default and support multiple roles.
+Reimplements all auth routes WITHOUT rate limiting for testing.
+Custom registration allows creating users with any role including ADMINISTRADOR.
 """
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
-from typing import Union
+from typing import Optional, List, Union
 from datetime import datetime, timezone
+from pydantic import BaseModel
 
 from app.modules.auth.domain.schemas import (
-    UserCreateSchema,
+    UserCreateSchema, 
     UserResponseSchema,
     TokenPair,
     RefreshRequest,
     TwoFactorRequired,
     LoginSchema
 )
-
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.modules.auth.dependencies import (
     get_users_repo,
     get_sessions_repo,
     get_jwt_manager,
     get_password_hasher,
-    get_email_service,
-    get_email_verification_service,
 )
-
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, PasswordHasher
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
 from app.api.schemas.api_schemas import APIResponse
-from pydantic import BaseModel
-from typing import Optional, List
+
+# Import routers without rate limiting (users, user_management, password_reset)
+from app.modules.auth.routers.v1.users import users_router_v1
+from app.modules.auth.routers.v1.user_management_router import user_management_router_v1
+from app.modules.auth.routers.v1.password_reset import reset_password_router_v1
 
 router = APIRouter(prefix="/auth")
 
+# Include routers that DON'T have rate limiting
+router.include_router(users_router_v1, prefix="/users")
+router.include_router(user_management_router_v1, prefix="/users")
+router.include_router(reset_password_router_v1, prefix="/password-reset")
+
+# NOTE: We DON'T include auth_router_v1, auth_email_router_v1, auth_sessions_router_v1, 
+# or auth_twofa_router_v1 because they have @limiter.limit() decorators.
+# Instead, we reimplement the core routes below WITHOUT rate limiting.
+
 
 # ======================================================
-# TEST SCHEMAS
+# CUSTOM TEST REGISTRATION - ALLOWS ANY ROLE INCLUDING ADMINISTRADOR
 # ======================================================
 
 class TestUserCreateSchema(BaseModel):
-    """Extended user creation schema for testing with multiple roles"""
+    """Extended user creation schema for testing with any role support"""
     email: str
     password: str
     username: str
     first_name: str
     last_name: str
     tipo_identificacion: str
-    numero_identificacion: str
-    roles: Optional[List[str]] = ["ATLETA"]  # Can include multiple: ATLETA, ENTRENADOR, ADMINISTRADOR, REPRESENTANTE
+    identificacion: str
+    tipo_estamento: str
+    direccion: Optional[str] = "Test Address"
+    phone: Optional[str] = "0999999999"
+    roles: Optional[List[str]] = ["ATLETA"]  # Can include: ATLETA, ENTRENADOR, ADMINISTRADOR, REPRESENTANTE
     is_active: bool = True  # Active by default for testing
 
-
-# ======================================================
-# REGISTER (TEST VERSION - NO RATE LIMIT, ACTIVE BY DEFAULT)
-# ======================================================
 
 @router.post(
     "/register",
@@ -72,17 +79,9 @@ async def register_test_user(
 ):
     """
     TEST ONLY: Registers a new user with is_active=True by default.
-    Supports multiple roles for comprehensive testing.
+    Supports ANY role including ADMINISTRADOR for comprehensive testing.
     NO RATE LIMITING applied.
-    
-    Args:
-        request: Request object.
-        data: Test user registration data with roles and active status.
-        
-    Returns:
-        APIResponse: User data with active status.
     """
-
     if await repo.get_by_email(data.email):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -106,17 +105,25 @@ async def register_test_user(
             first_name=data.first_name,
             last_name=data.last_name,
             tipo_identificacion=data.tipo_identificacion,
-            numero_identificacion=data.numero_identificacion,
+            identificacion=data.identificacion,
+            tipo_estamento=data.tipo_estamento,
+            direccion=data.direccion if data.direccion else "Test Address",
+            phone=data.phone if data.phone else "0999999999",
+            role=RoleEnum(data.roles[0]) if data.roles else RoleEnum.ATLETA
         )
         
         user = await repo.create(password_hash=password_hash, user_data=user_data)
         
-        # Set user as active for testing
-        if data.is_active:
-            user.is_active = True
-            user.email_verified_at = datetime.now(timezone.utc)
-            await repo.session.commit()
-            await repo.session.refresh(user)
+        # Set user as active for testing & Update to Admin if requested
+        if data.is_active or (data.roles and data.roles[0] == "ADMINISTRADOR"):
+            user.auth.is_active = True
+            user.auth.email_confirmed_at = datetime.now(timezone.utc)
+            
+            if data.roles and data.roles[0] == "ADMINISTRADOR":
+                user.role = RoleEnum.ADMINISTRADOR
+                
+            await repo.db.commit()
+            user = await repo.get_by_id_profile(user.id)
         
         logger.info(f"TEST USER CREATED: {user.email} - Active: {user.is_active} - Roles: {data.roles}")
 
@@ -136,7 +143,7 @@ async def register_test_user(
 
 
 # ======================================================
-# LOGIN (TEST VERSION - NO RATE LIMIT)
+# LOGIN (NO RATE LIMITING)
 # ======================================================
 
 @router.post(
@@ -152,26 +159,19 @@ async def login_test(
     hasher: PasswordHasher = Depends(get_password_hasher),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    """
-    TEST ONLY: Login without rate limiting.
-    Same functionality as standard login but without rate limiter.
-    """
+    """TEST: Login without rate limiting"""
     user = await repo.get_by_email(data.username)
 
-    logger.info(f"TEST LOGIN attempt for: {data.username}")
-    
     if not user or not hasher.verify(data.password, user.hashed_password):
-        logger.warning(f"TEST LOGIN: Password mismatch for user: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas",
         )
 
     if not user.is_active:
-        logger.warning(f"TEST LOGIN: User inactive: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario inactivo",
+            detail="Usuario inactivo, por favor verifica tu email",
         )
 
     if user.two_factor_enabled:
@@ -230,7 +230,7 @@ async def login_test(
 
     return APIResponse(
         success=True,
-        message="Inicio de sesión exitoso (TEST)",
+        message="Inicio de sesión exitoso",
         data=TokenPair(
             access_token=access,
             refresh_token=refresh,
@@ -239,7 +239,7 @@ async def login_test(
 
 
 # ======================================================
-# REFRESH (TEST VERSION - NO RATE LIMIT)
+# REFRESH (NO RATE LIMITING)
 # ======================================================
 
 @router.post("/refresh", response_model=APIResponse[TokenPair])
@@ -250,21 +250,19 @@ async def refresh_token_test(
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    """
-    TEST ONLY: Token refresh without rate limiting.
-    """
+    """TEST: Refresh token without rate limiting"""
     try:
         token_to_refresh = body.refresh_token
         if not token_to_refresh:
             token_to_refresh = request.cookies.get("refresh_token")
         
         if not token_to_refresh:
-             raise HTTPException(status_code=400, detail="Refresh token no proporcionado")
+            raise HTTPException(status_code=400, detail="Refresh token no proporcionado")
 
         try:
             payload = jwtm.decode(token_to_refresh)
         except Exception:
-             raise HTTPException(status_code=401, detail="Token inválido o expirado")
+            raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=400, detail="Token inválido")
@@ -309,7 +307,7 @@ async def refresh_token_test(
 
         return APIResponse(
             success=True,
-            message="Token refrescado exitosamente (TEST)",
+            message="Token refrescado exitosamente",
             data=TokenPair(
                 access_token=access,
                 refresh_token=refresh,
@@ -318,7 +316,7 @@ async def refresh_token_test(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error al refrescar el token (TEST): {e}")
+        logger.error(f"Error al refrescar el token: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor",
@@ -326,7 +324,7 @@ async def refresh_token_test(
 
 
 # ======================================================
-# LOGOUT (TEST VERSION - NO RATE LIMIT)
+# LOGOUT (NO RATE LIMITING)
 # ======================================================
 
 @router.post("/logout", response_model=APIResponse)
@@ -337,9 +335,7 @@ async def logout_test(
     jwtm: JWTManager = Depends(get_jwt_manager),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
 ):
-    """
-    TEST ONLY: Logout without rate limiting.
-    """
+    """TEST: Logout without rate limiting"""
     try:
         cookie_refresh = request.cookies.get("refresh_token")
         token_to_revoke = (body and body.refresh_token) or cookie_refresh
@@ -352,22 +348,22 @@ async def logout_test(
                     await sessions_repo.revoke_session_by_refresh_jti(jti)
             except Exception:
                 pass
-        
+
         response.delete_cookie(
-            key="refresh_token", 
-            httponly=True, 
+            key="refresh_token",
+            httponly=True,
             secure=False,
             samesite="lax"
         )
         
         return APIResponse(
             success=True,
-            message="Sesión cerrada exitosamente (TEST)"
+            message="Sesión cerrada exitosamente"
         )
     except Exception as e:
-        logger.error(f"Error en logout (TEST): {e}")
+        logger.error(f"Error en logout: {e}")
         response.delete_cookie(key="refresh_token")
         return APIResponse(
-            success=True, 
-            message="Sesión cerrada (TEST - con advertencias)"
+            success=True,
+            message="Sesión cerrada (con advertencias)"
         )

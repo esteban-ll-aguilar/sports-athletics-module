@@ -32,3 +32,8 @@ class HistorialMedico(Base):
         back_populates="historial_medico",
         uselist=False
     )
+
+    @property
+    def user_id(self) -> int:
+        return self.atleta.user_id if self.atleta else 0
+

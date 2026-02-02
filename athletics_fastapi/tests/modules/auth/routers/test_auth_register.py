@@ -10,6 +10,7 @@ from app.modules.auth.dependencies import (
     get_users_repo, get_password_hasher, get_email_service, get_email_verification_service
 )
 # from app.modules.auth.domain.schemas.schemas_auth import UserRead
+from tests.utils import generar_cedula_ecuador
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from uuid import uuid4
 
@@ -113,7 +114,7 @@ async def test_tc_01_crear_usuario_valido(client: AsyncClient, override_deps, mo
         "first_name": "Juan",
         "last_name": "Perez",
         "tipo_identificacion": "CEDULA",
-        "identificacion": "1710034065",
+        "identificacion": generar_cedula_ecuador(),
         "phone": "0999999999",
         "tipo_estamento": "EXTERNOS",
         "role": "ATLETA"

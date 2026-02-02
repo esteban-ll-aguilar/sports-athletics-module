@@ -39,7 +39,7 @@ ENABLE_TEST_ROUTES = os.getenv("ENABLE_TEST_ROUTES", "false").lower() == "true"
 if ENABLE_TEST_ROUTES:
     from app.modules.tests.routers import tests_router
     router_api_v1.include_router(tests_router)
-    print("⚠️  TEST ROUTES ENABLED - NO RATE LIMITING ON /api/v1/tests/* ⚠️")
+    print("WARNING: TEST ROUTES ENABLED - NO RATE LIMITING ON /api/v1/tests/*")
 
 
 
