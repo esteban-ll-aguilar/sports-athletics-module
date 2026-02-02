@@ -1,7 +1,8 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AthleteForm from '../components/AthleteForm';
+import { useId } from "react";
+
 
 const RegisterAthletePage = ({ isModal = false, onClose, athleteId = null, onSuccess: onSuccessProp }) => {
     const navigate = useNavigate();
