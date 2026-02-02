@@ -1,39 +1,43 @@
 #!/usr/bin/env python3
 """
 Script para poblar la base de datos con datos de prueba para stress testing.
-
-⚠️ LIMITACIONES ARQUITECTÓNICAS:
-   Este microservicio usa autenticación basada en roles del servicio externo.
-   Solo funciona con admin:
-   ✅ Competencias (CREATE/READ/UPDATE/DELETE)
-   ❌ Atletas (requiere usuarios con rol ATLETA del servicio externo)
-   ❌ Entrenamientos (requiere usuarios con rol ENTRENADOR)
-   
-   Ver LIMITACIONES_POBLACION.md para más detalles.
+Usa los endpoints de TEST: /api/v1/tests/* (sin rate limiting)
 
 Uso:
-    python populate_database.py --competencias 30
-    python populate_database.py --full  # Crea 50 competencias
-    python populate_database.py --generate-csv --csv-users 100
+    python populate_database.py                     # Crea datos básicos
+    python populate_database.py --full              # Crea datos completos
+    python populate_database.py --users 100         # Crea 100 usuarios
+    python populate_database.py --competencias 50   # Crea 50 competencias
+
+IMPORTANTE: Requiere ENABLE_TEST_ROUTES=true en el backend
 """
 
 import sys
 import os
 import argparse
 import asyncio
-from typing import List, Dict
+from typing import List, Dict, Optional
 import httpx
+
+# Agregar path para imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from utils.utils import (
     generar_atleta,
     generar_entrenador,
     generar_entrenamiento,
     generar_competencia,
-    generar_usuario,
-    generar_usuarios_csv
+    generar_cedula_ecuador,
+    generar_nombre_completo,
+    generar_email,
+    generar_telefono_ecuador,
 )
 
-# Configuración
+# ============================================================================
+# CONFIGURACIÓN
+# ============================================================================
 API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8080")
+API_PREFIX = "/api/v1/tests"
 API_TIMEOUT = 30.0
 
 # Colores para output
@@ -46,53 +50,43 @@ class Colors:
     FAIL = '\033[91m'
     ENDC = '\033[0m'
     BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 
 def print_info(message: str):
-    """Imprime mensaje informativo."""
     print(f"{Colors.OKBLUE}ℹ️  {message}{Colors.ENDC}")
 
 
 def print_success(message: str):
-    """Imprime mensaje de éxito."""
     print(f"{Colors.OKGREEN}✅ {message}{Colors.ENDC}")
 
 
 def print_error(message: str):
-    """Imprime mensaje de error."""
     print(f"{Colors.FAIL}❌ {message}{Colors.ENDC}")
 
 
 def print_warning(message: str):
-    """Imprime mensaje de advertencia."""
     print(f"{Colors.WARNING}⚠️  {message}{Colors.ENDC}")
 
 
 def print_header(message: str):
-    """Imprime encabezado."""
     print(f"\n{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}")
     print(f"{Colors.HEADER}{Colors.BOLD}{message.center(60)}{Colors.ENDC}")
     print(f"{Colors.HEADER}{Colors.BOLD}{'='*60}{Colors.ENDC}\n")
 
 
 class DatabasePopulator:
-    """Clase para poblar la base de datos con datos de prueba."""
+    """Clase para poblar la base de datos usando endpoints de TEST."""
     
     def __init__(self, base_url: str = API_BASE_URL):
         self.base_url = base_url
-        self.client = None
-        self.auth_token = None
+        self.client: Optional[httpx.AsyncClient] = None
+        self.auth_token: Optional[str] = None
         self.stats = {
-            "atletas": {"created": 0, "failed": 0},
-            "entrenadores": {"created": 0, "failed": 0},
-            "entrenamientos": {"created": 0, "failed": 0},
+            "usuarios": {"created": 0, "failed": 0},
             "competencias": {"created": 0, "failed": 0},
-            "usuarios": {"created": 0, "failed": 0}
         }
     
     async def __aenter__(self):
-        """Inicializa el cliente HTTP."""
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=API_TIMEOUT,
@@ -101,32 +95,118 @@ class DatabasePopulator:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Cierra el cliente HTTP."""
         if self.client:
             await self.client.aclose()
     
-    async def authenticate(self, email: str = "admin@test.com", password: str = "Admin123!"):
-        """
-        Autentica con el API y obtiene token.
+    async def check_health(self) -> bool:
+        """Verifica que el API esté disponible."""
+        print_info("Verificando disponibilidad del API...")
         
-        Args:
-            email: Email del usuario administrador
-            password: Contraseña
+        try:
+            response = await self.client.get("/health")
+            if response.status_code == 200:
+                print_success("API disponible")
+                return True
+            else:
+                print_error(f"API no disponible: {response.status_code}")
+                return False
+        except Exception as e:
+            print_error(f"Error conectando al API: {str(e)}")
+            return False
+    
+    async def check_test_routes(self) -> bool:
+        """Verifica que las rutas de test estén habilitadas."""
+        print_info("Verificando rutas de test...")
+        
+        try:
+            # Intentar hacer login en el endpoint de test
+            response = await self.client.post(
+                f"{API_PREFIX}/auth/login",
+                json={"username": "test@test.com", "password": "test"}
+            )
             
-        Returns:
-            True si la autenticación fue exitosa
+            # Si devuelve 404, las rutas de test no están habilitadas
+            if response.status_code == 404:
+                print_error("Las rutas de test NO están habilitadas")
+                print_error("Asegúrate de tener ENABLE_TEST_ROUTES=true en el backend")
+                return False
+            
+            # 401 o 409 significa que las rutas están habilitadas
+            print_success("Rutas de test habilitadas")
+            return True
+            
+        except Exception as e:
+            print_error(f"Error verificando rutas de test: {str(e)}")
+            return False
+    
+    async def register_user(
+        self,
+        email: str,
+        password: str,
+        username: str,
+        first_name: str,
+        last_name: str,
+        role: str = "ATLETA"
+    ) -> Optional[Dict]:
         """
-        print_info(f"Autenticando como {email}...")
+        Registra un usuario usando el endpoint de test.
+        Permite crear usuarios con cualquier rol incluyendo ADMINISTRADOR.
+        """
+        user_data = {
+            "email": email,
+            "password": password,
+            "username": username,
+            "first_name": first_name,
+            "last_name": last_name,
+            "tipo_identificacion": "CEDULA",
+            "identificacion": generar_cedula_ecuador(),
+            "tipo_estamento": "ESTUDIANTE",
+            "direccion": "Dirección de prueba",
+            "phone": generar_telefono_ecuador(),
+            "roles": [role],
+            "is_active": True
+        }
         
         try:
             response = await self.client.post(
-                "/api/v1/auth/login",
-                json={"username": email, "password": password}
+                f"{API_PREFIX}/auth/register",
+                json=user_data
+            )
+            
+            if response.status_code in [200, 201]:
+                self.stats["usuarios"]["created"] += 1
+                return response.json()
+            elif response.status_code == 409:
+                # Usuario ya existe, no es error
+                return {"exists": True}
+            else:
+                self.stats["usuarios"]["failed"] += 1
+                return None
+                
+        except Exception as e:
+            self.stats["usuarios"]["failed"] += 1
+            print_error(f"Error registrando usuario {email}: {str(e)}")
+            return None
+    
+    async def authenticate_as_admin(self) -> bool:
+        """Autentica como admin y guarda el token."""
+        print_info("Autenticando como administrador...")
+        
+        try:
+            response = await self.client.post(
+                f"{API_PREFIX}/auth/login",
+                json={
+                    "username": "admin@test.com",
+                    "password": "Admin123!"
+                }
             )
             
             if response.status_code == 200:
                 data = response.json()
-                self.auth_token = data.get("access_token") or data.get("data", {}).get("access_token")
+                self.auth_token = (
+                    data.get("access_token") or
+                    data.get("data", {}).get("access_token")
+                )
                 
                 if self.auth_token:
                     self.client.headers.update({
@@ -134,252 +214,212 @@ class DatabasePopulator:
                     })
                     print_success("Autenticación exitosa")
                     return True
-                else:
-                    print_error("No se encontró token en la respuesta")
-                    return False
-            else:
-                print_error(f"Autenticación fallida: {response.status_code}")
-                print_error(f"Respuesta: {response.text}")
-                return False
-                
+            
+            print_error(f"Autenticación fallida: {response.status_code}")
+            return False
+            
         except Exception as e:
             print_error(f"Error en autenticación: {str(e)}")
             return False
     
-    async def check_health(self) -> bool:
-        """Verifica que el API esté disponible."""
-        print_info(f"Verificando disponibilidad del API en {self.base_url}...")
+    async def create_competencia(self, data: Optional[Dict] = None) -> Optional[Dict]:
+        """Crea una competencia usando el endpoint de test."""
+        if data is None:
+            data = generar_competencia()
         
         try:
-            response = await self.client.get("/health")
-            
-            if response.status_code == 200:
-                print_success("API está disponible")
-                return True
-            else:
-                print_error(f"API respondió con código {response.status_code}")
-                return False
-                
-        except Exception as e:
-            print_error(f"No se pudo conectar al API: {str(e)}")
-            return False
-    
-    async def crear_atleta(self, datos: Dict) -> bool:
-        """
-        NOTA: Este endpoint requiere rol ATLETA, el admin no puede crear atletas.
-        Por ahora se salta para evitar errores 403.
-        Ver LIMITACIONES_POBLACION.md para más detalles.
-        """
-        # Saltamos la creación por restricción de roles
-        self.stats["atletas"]["failed"] += 1
-        if self.stats["atletas"]["failed"] == 1:
-            print_warning("Endpoint de atletas requiere rol ATLETA (no disponible para admin)")
-            print_info("Ver LIMITACIONES_POBLACION.md para alternativas")
-        return False
-    
-    async def crear_entrenador(self, datos: Dict) -> bool:
-        """
-        NOTA: Endpoint de entrenador no existe en la estructura actual.
-        El sistema solo permite que usuarios con rol ENTRENADOR gestionen entrenamientos.
-        """
-        self.stats["entrenadores"]["failed"] += 1
-        if self.stats["entrenadores"]["failed"] == 1:
-            print_warning("Endpoint de entrenadores no disponible (arquitectura de microservicios)")
-        return False
-    
-    async def crear_entrenamiento(self, datos: Dict) -> bool:
-        """Crea un entrenamiento en el sistema."""
-        try:
-            response = await self.client.post("/api/v1/entrenador/entrenamientos/", json=datos)
-            
-            if response.status_code in [200, 201]:
-                self.stats["entrenamientos"]["created"] += 1
-                return True
-            else:
-                self.stats["entrenamientos"]["failed"] += 1
-                if self.stats["entrenamientos"]["failed"] <= 3:
-                    print_warning(f"Error al crear entrenamiento: {response.status_code}")
-                return False
-        except Exception as e:
-            self.stats["entrenamientos"]["failed"] += 1
-            if self.stats["entrenamientos"]["failed"] <= 3:
-                print_warning(f"Excepción al crear entrenamiento: {str(e)}")
-            return False
-           
-    async def crear_competencia(self, datos: Dict) -> bool:
-        """Crea una competencia en el sistema."""
-        try:
-            response = await self.client.post("/api/v1/competencia/competencias", json=datos)
+            response = await self.client.post(
+                f"{API_PREFIX}/competencia/competencias/",
+                json=data
+            )
             
             if response.status_code in [200, 201]:
                 self.stats["competencias"]["created"] += 1
-                return True
+                return response.json()
             else:
                 self.stats["competencias"]["failed"] += 1
-                if self.stats["competencias"]["failed"] <= 3:
-                    print_warning(f"Error al crear competencia: {response.status_code}")
-                return False
+                return None
                 
         except Exception as e:
             self.stats["competencias"]["failed"] += 1
-            if self.stats["competencias"]["failed"] <= 3:
-                print_warning(f"Excepción al crear competencia: {str(e)}")
-            return False
+            return None
     
-    async def poblar_atletas(self, cantidad: int):
-        """Puebla la BD con atletas."""
-        print_header(f"CREANDO {cantidad} ATLETAS")
+    async def create_test_users(self, cantidad: int = 100):
+        """Crea usuarios de prueba para Locust."""
+        print_header(f"CREANDO {cantidad} USUARIOS DE PRUEBA")
         
-        for i in range(cantidad):
-            datos = generar_atleta()
-            await self.crear_atleta(datos)
+        # 1. Crear usuario administrador
+        print_info("Creando usuario administrador...")
+        await self.register_user(
+            email="admin@test.com",
+            password="Admin123!",
+            username="admin_test",
+            first_name="Admin",
+            last_name="Test",
+            role="ADMINISTRADOR"
+        )
+        
+        # 2. Crear entrenadores
+        print_info("Creando entrenadores...")
+        for i in range(1, 3):
+            await self.register_user(
+                email=f"entrenador{i}@test.com",
+                password="Entrenador123!",
+                username=f"entrenador{i}",
+                first_name=f"Entrenador{i}",
+                last_name="Test",
+                role="ENTRENADOR"
+            )
+        
+        # 3. Crear representantes
+        print_info("Creando representantes...")
+        for i in range(1, 3):
+            await self.register_user(
+                email=f"representante{i}@test.com",
+                password="Rep123!",
+                username=f"representante{i}",
+                first_name=f"Representante{i}",
+                last_name="Test",
+                role="REPRESENTANTE"
+            )
+        
+        # 4. Crear usuarios genéricos (atletas)
+        print_info(f"Creando {cantidad} usuarios atletas...")
+        for i in range(1, cantidad + 1):
+            nombre = generar_nombre_completo()
+            await self.register_user(
+                email=f"user{i}@test.com",
+                password="Password123!",
+                username=f"user{i}",
+                first_name=nombre["nombre"],
+                last_name=nombre["apellido_paterno"],
+                role="ATLETA"
+            )
             
-            # Progress indicator
-            if (i + 1) % 10 == 0:
-                print_info(f"Progreso: {i + 1}/{cantidad} atletas procesados...")
+            if i % 25 == 0:
+                print_info(f"Progreso: {i}/{cantidad} usuarios creados")
         
-        print_success(f"Atletas creados: {self.stats['atletas']['created']}")
-        if self.stats['atletas']['failed'] > 0:
-            print_warning(f"Atletas fallidos: {self.stats['atletas']['failed']}")
+        print_success(f"Usuarios creados: {self.stats['usuarios']['created']}")
+        if self.stats['usuarios']['failed'] > 0:
+            print_warning(f"Usuarios fallidos: {self.stats['usuarios']['failed']}")
     
-    async def poblar_entrenadores(self, cantidad: int):
-        """Puebla la BD con entrenadores."""
-        print_header(f"CREANDO {cantidad} ENTRENADORES")
-        
-        for i in range(cantidad):
-            datos = generar_entrenador()
-            await self.crear_entrenador(datos)
-            
-            if (i + 1) % 5 == 0:
-                print_info(f"Progreso: {i + 1}/{cantidad} entrenadores procesados...")
-        
-        print_success(f"Entrenadores creados: {self.stats['entrenadores']['created']}")
-        if self.stats['entrenadores']['failed'] > 0:
-            print_warning(f"Entrenadores fallidos: {self.stats['entrenadores']['failed']}")
-    
-    async def poblar_entrenamientos(self, cantidad: int):
-        """Puebla la BD con entrenamientos."""
-        print_header(f"CREANDO {cantidad} ENTRENAMIENTOS")
-        
-        for i in range(cantidad):
-            datos = generar_entrenamiento()
-            await self.crear_entrenamiento(datos)
-            
-            if (i + 1) % 10 == 0:
-                print_info(f"Progreso: {i + 1}/{cantidad} entrenamientos procesados...")
-        
-        print_success(f"Entrenamientos creados: {self.stats['entrenamientos']['created']}")
-        if self.stats['entrenamientos']['failed'] > 0:
-            print_warning(f"Entrenamientos fallidos: {self.stats['entrenamientos']['failed']}")
-    
-    async def poblar_competencias(self, cantidad: int):
-        """Puebla la BD con competencias."""
+    async def create_competencias(self, cantidad: int = 30):
+        """Crea competencias de prueba."""
         print_header(f"CREANDO {cantidad} COMPETENCIAS")
         
+        # Primero autenticar como admin
+        if not await self.authenticate_as_admin():
+            print_error("No se pudo autenticar como admin. Creando admin primero...")
+            await self.register_user(
+                email="admin@test.com",
+                password="Admin123!",
+                username="admin_test",
+                first_name="Admin",
+                last_name="Test",
+                role="ADMINISTRADOR"
+            )
+            if not await self.authenticate_as_admin():
+                print_error("No se pudo autenticar. Abortando creación de competencias.")
+                return
+        
         for i in range(cantidad):
-            datos = generar_competencia()
-            await self.crear_competencia(datos)
+            await self.create_competencia()
             
-            if (i + 1) % 5 == 0:
-                print_info(f"Progreso: {i + 1}/{cantidad} competencias procesadas...")
+            if (i + 1) % 10 == 0:
+                print_info(f"Progreso: {i + 1}/{cantidad} competencias creadas")
         
         print_success(f"Competencias creadas: {self.stats['competencias']['created']}")
         if self.stats['competencias']['failed'] > 0:
             print_warning(f"Competencias fallidas: {self.stats['competencias']['failed']}")
     
-    def imprimir_resumen(self):
-        """Imprime resumen de la población de datos."""
-        print_header("RESUMEN DE POBLACIÓN DE DATOS")
+    async def generate_csv(self, cantidad: int = 100, archivo: str = "users.csv"):
+        """Genera archivo CSV con usuarios para referencia."""
+        print_info(f"Generando archivo {archivo}...")
         
-        total_created = sum(cat["created"] for cat in self.stats.values())
-        total_failed = sum(cat["failed"] for cat in self.stats.values())
+        import csv
         
-        print(f"{Colors.BOLD}Entidad{' '*15}| Creados | Fallidos{Colors.ENDC}")
-        print("-" * 50)
+        with open(archivo, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow(['email', 'password', 'role'])
+            
+            # Admin
+            writer.writerow(['admin@test.com', 'Admin123!', 'ADMINISTRADOR'])
+            
+            # Entrenadores
+            for i in range(1, 3):
+                writer.writerow([f'entrenador{i}@test.com', 'Entrenador123!', 'ENTRENADOR'])
+            
+            # Representantes
+            for i in range(1, 3):
+                writer.writerow([f'representante{i}@test.com', 'Rep123!', 'REPRESENTANTE'])
+            
+            # Usuarios genéricos
+            for i in range(1, cantidad + 1):
+                writer.writerow([f'user{i}@test.com', 'Password123!', 'ATLETA'])
         
-        for entidad, stats in self.stats.items():
-            entidad_nombre = entidad.capitalize()
-            espacios = ' ' * (20 - len(entidad_nombre))
-            print(f"{entidad_nombre}{espacios}| {stats['created']:>7} | {stats['failed']:>8}")
+        print_success(f"Archivo {archivo} generado con {cantidad + 6} usuarios")
+    
+    def print_summary(self):
+        """Imprime resumen de operaciones."""
+        print_header("RESUMEN")
         
-        print("-" * 50)
-        print(f"{Colors.BOLD}TOTAL{' '*15}| {total_created:>7} | {total_failed:>8}{Colors.ENDC}")
+        total_created = sum(s["created"] for s in self.stats.values())
+        total_failed = sum(s["failed"] for s in self.stats.values())
         
-        if total_failed == 0:
-            print_success("\n¡Población de datos completada exitosamente!")
-        else:
-            print_warning(f"\nPoblación completada con {total_failed} errores")
+        for entity, stats in self.stats.items():
+            if stats["created"] > 0 or stats["failed"] > 0:
+                print(f"  {entity.capitalize()}: {stats['created']} creados, {stats['failed']} fallidos")
+        
+        print(f"\n  Total: {total_created} creados, {total_failed} fallidos")
 
 
 async def main():
-    """Función principal."""
-    parser = argparse.ArgumentParser(description="Poblar BD con datos de prueba para stress testing")
-    
-    parser.add_argument("--atletas", type=int, default=0, help="[NO SOPORTADO] Requiere usuarios con rol ATLETA (default: 0)")
-    parser.add_argument("--entrenadores", type=int, default=0, help="[NO SOPORTADO] Endpoint no disponible (default: 0)")
-    parser.add_argument("--entrenamientos", type=int, default=0, help="[NO SOPORTADO] Requiere rol ENTRENADOR (default: 0)")
-    parser.add_argument("--competencias", type=int, default=20, help="✅ Cantidad de competencias a crear (default: 20)")
-    parser.add_argument("--full", action="store_true", help="✅ Carga completa: 50 competencias (arquitectura no permite atletas/entrenamientos)")
-    parser.add_argument("--api-url", type=str, default=API_BASE_URL, help=f"URL del API (default: {API_BASE_URL})")
-    parser.add_argument("--generate-csv", action="store_true", help="Genera archivo CSV de usuarios para JMeter/Gatling")
-    parser.add_argument("--csv-users", type=int, default=100, help="Cantidad de usuarios en CSV (default: 100)")
+    parser = argparse.ArgumentParser(description="Poblar base de datos para stress testing")
+    parser.add_argument("--users", type=int, default=100, help="Cantidad de usuarios a crear")
+    parser.add_argument("--competencias", type=int, default=30, help="Cantidad de competencias a crear")
+    parser.add_argument("--full", action="store_true", help="Crear datos completos (100 users, 50 competencias)")
+    parser.add_argument("--generate-csv", action="store_true", help="Generar archivo CSV con usuarios")
+    parser.add_argument("--csv-file", type=str, default="users.csv", help="Nombre del archivo CSV")
+    parser.add_argument("--api-url", type=str, default=API_BASE_URL, help="URL base del API")
     
     args = parser.parse_args()
     
-    print_header("🏃 POBLADOR DE BASE DE DATOS - STRESS TESTING")
-    
-    # Generar CSV si se solicita
-    if args.generate_csv:
-        print_info(f"Generando archivo CSV con {args.csv_users} usuarios...")
-        archivo = generar_usuarios_csv(args.csv_users, "jmeter/data/users.csv")
-        print_success(f"Archivo CSV generado: {archivo}")
-        
-        # También generar para Gatling
-        archivo_gatling = generar_usuarios_csv(args.csv_users, "gatling/resources/users.csv")
-        print_success(f"Archivo CSV para Gatling generado: {archivo_gatling}")
-    
-    # Ajustar cantidades si se solicita carga completa
     if args.full:
-        print_info("Modo FULL activado - Se crearán 50 competencias")
-        args.atletas = 0  # No soportado (requiere rol ATLETA)
-        args.entrenadores = 0  # No soportado (endpoint no existe)
-        args.entrenamientos = 0  # No soportado (requiere rol ENTRENADOR)
-        args.competencias = 50  # ✅ Funciona con admin
+        args.users = 100
+        args.competencias = 50
     
-    # Inicializar poblador
+    print_header("POBLADOR DE BASE DE DATOS PARA LOCUST")
+    print_info(f"API URL: {args.api_url}")
+    print_info(f"Usuarios: {args.users}")
+    print_info(f"Competencias: {args.competencias}")
+    
     async with DatabasePopulator(args.api_url) as populator:
-        # Verificar salud del API
+        # Verificar API
         if not await populator.check_health():
-            print_error("El API no está disponible. Verifica que esté ejecutándose.")
+            print_error("No se puede conectar al API. Asegúrate de que el servidor esté corriendo.")
             sys.exit(1)
         
-        # Autenticar
-        if not await populator.authenticate():
-            print_error("No se pudo autenticar. Verifica las credenciales.")
-            print_info("Asegúrate de que exista un usuario admin con email: admin@test.com y password: Admin123!")
+        # Verificar rutas de test
+        if not await populator.check_test_routes():
+            print_error("Las rutas de test no están habilitadas.")
+            print_error("Configura ENABLE_TEST_ROUTES=true en el backend.")
             sys.exit(1)
         
-        # Poblar datos
-        try:
-            if args.atletas > 0:
-                await populator.poblar_atletas(args.atletas)
-            
-            if args.entrenadores > 0:
-                await populator.poblar_entrenadores(args.entrenadores)
-            
-            if args.entrenamientos > 0:
-                await populator.poblar_entrenamientos(args.entrenamientos)
-            
-            if args.competencias > 0:
-                await populator.poblar_competencias(args.competencias)
-            
-            # Imprimir resumen
-            populator.imprimir_resumen()
-            
-        except KeyboardInterrupt:
-            print_warning("\n\n⚠️  Proceso interrumpido por el usuario")
-            populator.imprimir_resumen()
-            sys.exit(1)
+        # Crear usuarios
+        await populator.create_test_users(args.users)
+        
+        # Crear competencias
+        await populator.create_competencias(args.competencias)
+        
+        # Generar CSV si se solicita
+        if args.generate_csv:
+            await populator.generate_csv(args.users, args.csv_file)
+        
+        # Imprimir resumen
+        populator.print_summary()
+    
+    print_success("\n¡Listo! Ahora puedes ejecutar Locust:")
+    print(f"  locust -f locust/locustfile.py --host={args.api_url}")
 
 
 if __name__ == "__main__":

@@ -17,25 +17,21 @@ class EntrenamientoRepository:
             entrenamiento (Entrenamiento): Objeto a persistir.
             
         Returns:
-            Entrenamiento: El objeto persistido con horarios cargados.
+            Entrenamiento: El objeto persistido con relaciones cargadas.
         """
         self.session.add(entrenamiento)
         await self.session.commit()
-        # Explicitly reload with eager loading for requirements of the response schema
-        # Since refresh() resets attributes, we need to ensure the relationship is loaded relative to the session
-        # Standard refresh might not load relationships unless configured.
-        # A safer async approach is executing a select with options
-        from sqlalchemy.orm import selectinload
         
-        # We can refresh the instance, but to get relationships loaded in async, it's often better to re-query 
-        # or rely on expiry if the session is still active (but Pydantic access might be outside async Io context if not careful)
-        # However, MissingGreenlet usually means we touched a lazy loader.
-        # Let's re-fetch fully to be safe.
+        # Re-fetch with all relationships loaded
+        from sqlalchemy.orm import selectinload
         
         result = await self.session.execute(
              select(Entrenamiento)
              .where(Entrenamiento.id == entrenamiento.id)
-             .options(selectinload(Entrenamiento.horarios))
+             .options(
+                 selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user),
+                 selectinload(Entrenamiento.horarios)
+             )
         )
         return result.scalars().first()
 

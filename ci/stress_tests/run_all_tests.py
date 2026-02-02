@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
 """
-Orquestador Principal de Pruebas de Estrés
+Orquestador de Pruebas de Estrés con Locust
 
-Este script ejecuta todas las pruebas de estrés de forma automática:
-1. Verifica que los servicios estén levantados
-2. Puebla la base de datos con datos de prueba
-3. Ejecuta pruebas con Locust, JMeter y/o Gatling
-4. Monitorea métricas en tiempo real
-5. Analiza resultados y compara con baselines
-6. Genera reportes consolidados
+Este script automatiza:
+1. Verifica que el API esté disponible
+2. Verifica que las rutas de test estén habilitadas
+3. Puebla la base de datos con datos de prueba
+4. Ejecuta pruebas con Locust
 
 Uso:
-    python run_all_tests.py
-    python run_all_tests.py --smoke
-    python run_all_tests.py --load
-    python run_all_tests.py --stress
-    python run_all_tests.py --tool locust
-    python run_all_tests.py --skip-populate
+    python run_all_tests.py                    # Smoke test (10 users, 2 min)
+    python run_all_tests.py --load             # Load test (100 users, 10 min)
+    python run_all_tests.py --stress           # Stress test (500 users, 15 min)
+    python run_all_tests.py --spike            # Spike test (300 users, 5 min)
+    python run_all_tests.py --soak             # Soak test (150 users, 60 min)
+    python run_all_tests.py --skip-populate    # Saltar poblado de BD
+    python run_all_tests.py --users 200        # Custom: 200 usuarios
 """
 
 import argparse
-import asyncio
 import subprocess
 import sys
 import time
 import os
 from datetime import datetime
-from typing import Dict, List, Optional
 import requests
 
 # Colores para terminal
@@ -67,400 +64,317 @@ def print_step(step: int, total: int, msg: str):
     print(f"{Colors.BOLD}[{step}/{total}] {msg}{Colors.ENDC}")
 
 
-class TestOrchestrator:
-    """Orquestador de pruebas de estrés."""
+# Configuraciones de test predefinidas
+TEST_CONFIGS = {
+    "smoke": {
+        "users": 10,
+        "spawn_rate": 2,
+        "duration": "2m",
+        "description": "Smoke Test - Verificación básica"
+    },
+    "load": {
+        "users": 100,
+        "spawn_rate": 10,
+        "duration": "10m",
+        "description": "Load Test - Carga normal"
+    },
+    "stress": {
+        "users": 500,
+        "spawn_rate": 25,
+        "duration": "15m",
+        "description": "Stress Test - Carga alta"
+    },
+    "spike": {
+        "users": 300,
+        "spawn_rate": 100,
+        "duration": "5m",
+        "description": "Spike Test - Picos de carga"
+    },
+    "soak": {
+        "users": 150,
+        "spawn_rate": 15,
+        "duration": "60m",
+        "description": "Soak Test - Resistencia prolongada"
+    }
+}
+
+
+class LocustOrchestrator:
+    """Orquestador de pruebas de estrés con Locust."""
     
     def __init__(self, api_url: str = "http://localhost:8080"):
         self.api_url = api_url
-        self.results = {}
         self.start_time = datetime.now()
+        self.results_dir = os.path.join(os.path.dirname(__file__), "results")
     
-    def check_service_health(self, service: str, url: str, max_attempts: int = 10) -> bool:
-        """Verifica que un servicio esté disponible."""
-        print_info(f"Verificando {service} en {url}...")
+    def check_api_health(self, max_attempts: int = 10) -> bool:
+        """Verifica que el API esté disponible."""
+        print_info(f"Verificando API en {self.api_url}...")
         
         for attempt in range(1, max_attempts + 1):
             try:
-                response = requests.get(url, timeout=5)
+                response = requests.get(f"{self.api_url}/health", timeout=5)
                 if response.status_code == 200:
-                    print_success(f"{service} está disponible")
+                    print_success("API disponible")
                     return True
             except Exception as e:
                 if attempt < max_attempts:
                     print_warning(f"Intento {attempt}/{max_attempts} fallido, reintentando...")
                     time.sleep(3)
                 else:
-                    print_error(f"No se pudo conectar a {service}: {str(e)}")
+                    print_error(f"No se pudo conectar al API: {str(e)}")
         
         return False
     
-    def check_all_services(self) -> bool:
-        """Verifica que todos los servicios necesarios estén levantados."""
-        print_header("VERIFICANDO SERVICIOS")
+    def check_test_routes(self) -> bool:
+        """Verifica que las rutas de test estén habilitadas."""
+        print_info("Verificando rutas de test...")
         
-        services = {
-            "FastAPI Backend": f"{self.api_url}/health",
-            "Prometheus Metrics": f"{self.api_url}/metrics",
-            "Prometheus": "http://localhost:9090/-/healthy",
-            "Grafana": "http://localhost:3000/api/health",
-        }
-        
-        all_healthy = True
-        for service, url in services.items():
-            if not self.check_service_health(service, url):
-                all_healthy = False
-        
-        if all_healthy:
-            print_success("\n✅ Todos los servicios están disponibles")
-        else:
-            print_error("\n❌ Algunos servicios no están disponibles")
-            print_info("Ejecuta: docker-compose -f docker-compose-stress.yml up -d")
-        
-        return all_healthy
+        try:
+            response = requests.post(
+                f"{self.api_url}/api/v1/tests/auth/login",
+                json={"username": "test@test.com", "password": "test"},
+                timeout=5
+            )
+            
+            if response.status_code == 404:
+                print_error("Las rutas de test NO están habilitadas")
+                print_error("Configura ENABLE_TEST_ROUTES=true en el backend")
+                return False
+            
+            print_success("Rutas de test habilitadas")
+            return True
+            
+        except Exception as e:
+            print_error(f"Error verificando rutas de test: {str(e)}")
+            return False
     
-    def populate_database(self, mode: str = "basic") -> bool:
+    def populate_database(self, users: int = 100, competencias: int = 30) -> bool:
         """Puebla la base de datos con datos de prueba."""
         print_header("POBLANDO BASE DE DATOS")
         
-        cmd = ["python", "populate_database.py"]
-        
-        if mode == "full":
-            cmd.append("--full")
-        elif mode == "smoke":
-            cmd.extend(["--atletas", "25", "--entrenadores", "5", "--entrenamientos", "15"])
-        
-        cmd.append("--generate-csv")
+        cmd = [
+            sys.executable,  # python
+            "populate_database.py",
+            "--users", str(users),
+            "--competencias", str(competencias),
+            "--generate-csv",
+            "--api-url", self.api_url
+        ]
         
         print_info(f"Ejecutando: {' '.join(cmd)}")
         
         try:
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            result = subprocess.run(cmd, check=True, cwd=os.path.dirname(__file__))
             print_success("Base de datos poblada exitosamente")
             return True
         except subprocess.CalledProcessError as e:
             print_error(f"Error poblando base de datos: {e}")
-            if e.stdout:
-                print(e.stdout)
-            if e.stderr:
-                print(e.stderr)
             return False
     
-    def run_locust_test(self, users: int, spawn_rate: int, duration: str) -> bool:
+    def run_locust_test(
+        self,
+        users: int,
+        spawn_rate: int,
+        duration: str,
+        headless: bool = True
+    ) -> bool:
         """Ejecuta prueba con Locust."""
         print_header(f"EJECUTANDO LOCUST TEST ({users} usuarios)")
         
+        # Crear directorio de resultados
+        os.makedirs(self.results_dir, exist_ok=True)
+        
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        html_report = f"locust/results/report_{timestamp}.html"
-        csv_prefix = f"locust/results/stats_{timestamp}"
+        report_html = os.path.join(self.results_dir, f"report_{timestamp}.html")
+        report_csv = os.path.join(self.results_dir, f"stats_{timestamp}")
+        
+        locust_file = os.path.join(os.path.dirname(__file__), "locust", "locustfile.py")
         
         cmd = [
             "locust",
-            "-f", "locust/locustfile.py",
+            "-f", locust_file,
             "--host", self.api_url,
             "--users", str(users),
             "--spawn-rate", str(spawn_rate),
             "--run-time", duration,
-            "--headless",
-            "--html", html_report,
-            "--csv", csv_prefix,
-            "--loglevel", "INFO"
+            "--html", report_html,
+            "--csv", report_csv
         ]
         
-        print_info(f"Comando: {' '.join(cmd)}")
-        print_info(f"Duración: {duration}")
+        if headless:
+            cmd.append("--headless")
+        
+        print_info(f"Ejecutando: {' '.join(cmd)}")
         print_info(f"Usuarios: {users}")
         print_info(f"Spawn rate: {spawn_rate}/s")
-        print_info("\n🏃 Ejecutando prueba...\n")
+        print_info(f"Duración: {duration}")
+        print_info(f"Reporte HTML: {report_html}")
         
         try:
-            result = subprocess.run(cmd, check=True)
-            print_success(f"\n✅ Locust test completado")
-            print_info(f"Reporte HTML: {html_report}")
-            print_info(f"Estadísticas CSV: {csv_prefix}_stats.csv")
+            result = subprocess.run(cmd, cwd=os.path.dirname(__file__))
             
-            self.results["locust"] = {
-                "status": "success",
-                "report": html_report,
-                "csv": f"{csv_prefix}_stats.csv"
-            }
-            return True
-            
-        except subprocess.CalledProcessError as e:
+            if result.returncode == 0:
+                print_success("Test completado exitosamente")
+                print_success(f"Reporte generado: {report_html}")
+                return True
+            else:
+                print_error(f"Test terminó con código: {result.returncode}")
+                return False
+                
+        except FileNotFoundError:
+            print_error("Locust no está instalado. Instálalo con: pip install locust")
+            return False
+        except Exception as e:
             print_error(f"Error ejecutando Locust: {e}")
-            self.results["locust"] = {"status": "failed", "error": str(e)}
             return False
     
-    def run_jmeter_test(self, users: int, ramp_time: int) -> bool:
-        """Ejecuta prueba con JMeter."""
-        print_header(f"EJECUTANDO JMETER TEST ({users} usuarios)")
+    def run_locust_ui(self) -> bool:
+        """Inicia Locust con Web UI para pruebas interactivas."""
+        print_header("INICIANDO LOCUST WEB UI")
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        jtl_file = f"jmeter/results/results_{timestamp}.jtl"
-        report_dir = f"jmeter/results/report_{timestamp}"
-        
-        # Verificar que Docker esté corriendo JMeter
-        check_cmd = ["docker", "ps", "--filter", "name=jmeter-stress-test", "--format", "{{.Names}}"]
-        try:
-            result = subprocess.run(check_cmd, capture_output=True, text=True)
-            if "jmeter-stress-test" not in result.stdout:
-                print_error("Contenedor JMeter no está corriendo")
-                print_info("Ejecuta: docker-compose -f docker-compose-stress.yml up -d")
-                return False
-        except Exception as e:
-            print_error(f"Error verificando Docker: {e}")
-            return False
+        locust_file = os.path.join(os.path.dirname(__file__), "locust", "locustfile.py")
         
         cmd = [
-            "docker", "exec", "jmeter-stress-test",
-            "jmeter", "-n",
-            "-t", "/tests/load_test.jmx",
-            "-l", f"/results/results_{timestamp}.jtl",
-            "-e", "-o", f"/results/report_{timestamp}",
-            "-JNUM_USERS", str(users),
-            "-JRAMP_TIME", str(ramp_time),
-            "-JBASE_URL", self.api_url
+            "locust",
+            "-f", locust_file,
+            "--host", self.api_url,
+            "--web-host", "0.0.0.0",
+            "--web-port", "8089"
         ]
         
-        print_info(f"Ejecutando JMeter con {users} usuarios...")
-        print_info("\n🏃 Ejecutando prueba...\n")
+        print_info(f"Ejecutando: {' '.join(cmd)}")
+        print_info("Web UI disponible en: http://localhost:8089")
+        print_info("Presiona Ctrl+C para detener")
         
         try:
-            result = subprocess.run(cmd, check=True)
-            print_success(f"\n✅ JMeter test completado")
-            print_info(f"Resultados JTL: jmeter/results/results_{timestamp}.jtl")
-            print_info(f"Reporte HTML: jmeter/results/report_{timestamp}/index.html")
-            
-            self.results["jmeter"] = {
-                "status": "success",
-                "jtl": jtl_file,
-                "report": f"{report_dir}/index.html"
-            }
+            subprocess.run(cmd, cwd=os.path.dirname(__file__))
             return True
-            
-        except subprocess.CalledProcessError as e:
-            print_error(f"Error ejecutando JMeter: {e}")
-            self.results["jmeter"] = {"status": "failed", "error": str(e)}
+        except KeyboardInterrupt:
+            print_info("\nLocust detenido por el usuario")
+            return True
+        except FileNotFoundError:
+            print_error("Locust no está instalado. Instálalo con: pip install locust")
             return False
     
-    def run_gatling_test(self, simulation: str = "LoadTestSimulation") -> bool:
-        """Ejecuta prueba con Gatling."""
-        print_header(f"EJECUTANDO GATLING TEST ({simulation})")
-        
-        # Verificar que Docker esté corriendo Gatling
-        check_cmd = ["docker", "ps", "--filter", "name=gatling-stress-test", "--format", "{{.Names}}"]
-        try:
-            result = subprocess.run(check_cmd, capture_output=True, text=True)
-            if "gatling-stress-test" not in result.stdout:
-                print_error("Contenedor Gatling no está corriendo")
-                print_info("Ejecuta: docker-compose -f docker-compose-stress.yml up -d")
-                return False
-        except Exception as e:
-            print_error(f"Error verificando Docker: {e}")
-            return False
-        
-        cmd = [
-            "docker", "exec", "gatling-stress-test",
-            "gatling.sh",
-            "-sf", "/opt/gatling/user-files/simulations",
-            "-s", simulation
-        ]
-        
-        print_info(f"Ejecutando Gatling simulation: {simulation}")
-        print_info("\n🏃 Ejecutando prueba...\n")
-        
-        try:
-            result = subprocess.run(cmd, check=True)
-            print_success(f"\n✅ Gatling test completado")
-            print_info(f"Reportes en: gatling/results/")
-            
-            self.results["gatling"] = {
-                "status": "success",
-                "simulation": simulation
-            }
-            return True
-            
-        except subprocess.CalledProcessError as e:
-            print_error(f"Error ejecutando Gatling: {e}")
-            self.results["gatling"] = {"status": "failed", "error": str(e)}
-            return False
-    
-    def analyze_results(self) -> bool:
-        """Analiza los resultados de las pruebas."""
-        print_header("ANALIZANDO RESULTADOS")
-        
-        cmd = [
-            "python", "analyze_results.py",
-            "--tool", "all",
-            "--compare-baseline",
-            "--generate-plots"
-        ]
-        
-        print_info("Analizando resultados y comparando con baselines...")
-        
-        try:
-            result = subprocess.run(cmd, check=True)
-            print_success("Análisis completado")
-            return True
-        except subprocess.CalledProcessError as e:
-            print_error(f"Error analizando resultados: {e}")
-            return False
-    
-    def generate_final_report(self):
-        """Genera reporte final consolidado."""
-        print_header("REPORTE FINAL")
+    def print_summary(self, test_type: str, success: bool):
+        """Imprime resumen del test."""
+        print_header("RESUMEN DEL TEST")
         
         duration = datetime.now() - self.start_time
         
-        print(f"{Colors.BOLD}Duración total: {duration}{Colors.ENDC}")
-        print(f"\n{Colors.BOLD}Resultados por herramienta:{Colors.ENDC}")
-        
-        for tool, result in self.results.items():
-            status = result.get("status", "unknown")
-            symbol = "✅" if status == "success" else "❌"
-            print(f"  {symbol} {tool.upper()}: {status}")
-            
-            if status == "success":
-                if "report" in result:
-                    print(f"      📊 Reporte: {result['report']}")
-                if "csv" in result:
-                    print(f"      📄 CSV: {result['csv']}")
-        
-        print(f"\n{Colors.BOLD}Archivos generados:{Colors.ENDC}")
-        print(f"  📁 locust/results/")
-        print(f"  📁 jmeter/results/")
-        print(f"  📁 results/")
-        
-        print(f"\n{Colors.BOLD}Próximos pasos:{Colors.ENDC}")
-        print(f"  1. Revisar reportes HTML generados")
-        print(f"  2. Abrir Grafana: http://localhost:3000")
-        print(f"  3. Ver métricas en Prometheus: http://localhost:9090")
-        print(f"  4. Analizar gráficos en results/plots/")
+        print(f"  Tipo de test: {test_type}")
+        print(f"  API URL: {self.api_url}")
+        print(f"  Duración total: {duration}")
+        print(f"  Resultado: {'✅ EXITOSO' if success else '❌ FALLIDO'}")
+        print(f"  Reportes en: {self.results_dir}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Orquestador de pruebas de estrés")
+    parser = argparse.ArgumentParser(
+        description="Orquestador de Pruebas de Estrés con Locust",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Ejemplos:
+  python run_all_tests.py                    # Smoke test (default)
+  python run_all_tests.py --load             # Load test
+  python run_all_tests.py --stress           # Stress test
+  python run_all_tests.py --ui               # Abrir Web UI interactiva
+  python run_all_tests.py --skip-populate    # Saltar poblado de BD
+        """
+    )
     
-    # Tipos de prueba
-    test_types = parser.add_mutually_exclusive_group()
-    test_types.add_argument("--smoke", action="store_true",
-                           help="Smoke test (25 usuarios, 2 minutos)")
-    test_types.add_argument("--load", action="store_true",
-                           help="Load test (100 usuarios, 10 minutos)")
-    test_types.add_argument("--stress", action="store_true",
-                           help="Stress test (500 usuarios, 15 minutos)")
+    # Tipo de test
+    test_group = parser.add_mutually_exclusive_group()
+    test_group.add_argument("--smoke", action="store_true", help="Smoke test (10 users, 2 min)")
+    test_group.add_argument("--load", action="store_true", help="Load test (100 users, 10 min)")
+    test_group.add_argument("--stress", action="store_true", help="Stress test (500 users, 15 min)")
+    test_group.add_argument("--spike", action="store_true", help="Spike test (300 users, 5 min)")
+    test_group.add_argument("--soak", action="store_true", help="Soak test (150 users, 60 min)")
+    test_group.add_argument("--ui", action="store_true", help="Iniciar Web UI interactiva")
     
-    # Herramientas
-    parser.add_argument("--tool", choices=["locust", "jmeter", "gatling", "all"], default="locust",
-                       help="Herramienta a usar (default: locust)")
+    # Configuración custom
+    parser.add_argument("--users", type=int, help="Número de usuarios (override)")
+    parser.add_argument("--spawn-rate", type=int, help="Spawn rate (override)")
+    parser.add_argument("--duration", type=str, help="Duración del test, ej: 5m, 1h (override)")
     
-    # Parámetros personalizados
-    parser.add_argument("--users", type=int, help="Número de usuarios")
-    parser.add_argument("--duration", help="Duración (ej: 5m, 10m)")
-    parser.add_argument("--api-url", default="http://localhost:8080", help="URL del API")
-    
-    # Flags
-    parser.add_argument("--skip-check", action="store_true", help="Saltar verificación de servicios")
-    parser.add_argument("--skip-populate", action="store_true", help="Saltar población de BD")
-    parser.add_argument("--skip-analyze", action="store_true", help="Saltar análisis de resultados")
+    # Opciones
+    parser.add_argument("--skip-populate", action="store_true", help="Saltar poblado de BD")
+    parser.add_argument("--api-url", type=str, default="http://localhost:8080", help="URL del API")
+    parser.add_argument("--populate-users", type=int, default=100, help="Usuarios a crear en BD")
+    parser.add_argument("--populate-competencias", type=int, default=30, help="Competencias a crear")
     
     args = parser.parse_args()
     
-    # Determinar parámetros de prueba
-    if args.smoke:
-        users = 25
-        duration = "2m"
-        spawn_rate = 5
-        populate_mode = "smoke"
-    elif args.load:
-        users = 100
-        duration = "10m"
-        spawn_rate = 10
-        populate_mode = "basic"
+    # Determinar tipo de test
+    if args.load:
+        test_type = "load"
     elif args.stress:
-        users = 500
-        duration = "15m"
-        spawn_rate = 25
-        populate_mode = "full"
+        test_type = "stress"
+    elif args.spike:
+        test_type = "spike"
+    elif args.soak:
+        test_type = "soak"
+    elif args.ui:
+        test_type = "ui"
     else:
-        users = args.users or 50
-        duration = args.duration or "5m"
-        spawn_rate = 10
-        populate_mode = "basic"
+        test_type = "smoke"
     
-    print_header("🚀 ORQUESTADOR DE PRUEBAS DE ESTRÉS")
-    print_info(f"Configuración:")
-    print_info(f"  - Herramienta: {args.tool}")
-    print_info(f"  - Usuarios: {users}")
-    print_info(f"  - Duración: {duration}")
-    print_info(f"  - API URL: {args.api_url}")
+    print_header("ORQUESTADOR DE PRUEBAS DE ESTRÉS - LOCUST")
+    print_info(f"Fecha: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print_info(f"API URL: {args.api_url}")
     
-    orchestrator = TestOrchestrator(api_url=args.api_url)
+    if test_type != "ui":
+        config = TEST_CONFIGS[test_type]
+        print_info(f"Test: {config['description']}")
     
-    total_steps = 5
-    current_step = 0
+    orchestrator = LocustOrchestrator(args.api_url)
     
-    # Paso 1: Verificar servicios
-    current_step += 1
-    if not args.skip_check:
-        print_step(current_step, total_steps, "Verificando servicios")
-        if not orchestrator.check_all_services():
-            print_error("Los servicios no están disponibles. Abortando.")
-            sys.exit(1)
-    else:
-        print_info("Saltando verificación de servicios")
-    
-    # Paso 2: Poblar base de datos
-    current_step += 1
-    if not args.skip_populate:
-        print_step(current_step, total_steps, "Poblando base de datos")
-        if not orchestrator.populate_database(mode=populate_mode):
-            print_warning("Error poblando BD, continuando de todas formas...")
-    else:
-        print_info("Saltando población de base de datos")
-    
-    # Paso 3: Ejecutar pruebas
-    current_step += 1
-    print_step(current_step, total_steps, "Ejecutando pruebas")
-    
-    test_success = False
-    
-    if args.tool in ["locust", "all"]:
-        test_success = orchestrator.run_locust_test(users, spawn_rate, duration) or test_success
-    
-    if args.tool in ["jmeter", "all"]:
-        test_success = orchestrator.run_jmeter_test(users, ramp_time=30) or test_success
-    
-    if args.tool in ["gatling", "all"]:
-        test_success = orchestrator.run_gatling_test() or test_success
-    
-    if not test_success:
-        print_error("Todas las pruebas fallaron")
+    # Paso 1: Verificar API
+    print_step(1, 4, "Verificando disponibilidad del API")
+    if not orchestrator.check_api_health():
+        print_error("El API no está disponible. Asegúrate de que el servidor esté corriendo.")
         sys.exit(1)
     
-    # Paso 4: Analizar resultados
-    current_step += 1
-    if not args.skip_analyze:
-        print_step(current_step, total_steps, "Analizando resultados")
-        orchestrator.analyze_results()
+    # Paso 2: Verificar rutas de test
+    print_step(2, 4, "Verificando rutas de test")
+    if not orchestrator.check_test_routes():
+        print_error("Las rutas de test no están habilitadas.")
+        sys.exit(1)
+    
+    # Paso 3: Poblar base de datos
+    if not args.skip_populate:
+        print_step(3, 4, "Poblando base de datos")
+        if not orchestrator.populate_database(args.populate_users, args.populate_competencias):
+            print_warning("Error poblando BD, continuando de todas formas...")
     else:
-        print_info("Saltando análisis de resultados")
+        print_step(3, 4, "Saltando poblado de BD (--skip-populate)")
     
-    # Paso 5: Reporte final
-    current_step += 1
-    print_step(current_step, total_steps, "Generando reporte final")
-    orchestrator.generate_final_report()
+    # Paso 4: Ejecutar test
+    print_step(4, 4, "Ejecutando prueba de estrés")
     
-    print_success("\n🎉 PROCESO COMPLETADO EXITOSAMENTE")
+    if test_type == "ui":
+        success = orchestrator.run_locust_ui()
+    else:
+        config = TEST_CONFIGS[test_type]
+        
+        # Aplicar overrides si se especificaron
+        users = args.users or config["users"]
+        spawn_rate = args.spawn_rate or config["spawn_rate"]
+        duration = args.duration or config["duration"]
+        
+        success = orchestrator.run_locust_test(
+            users=users,
+            spawn_rate=spawn_rate,
+            duration=duration,
+            headless=True
+        )
     
-    return 0
+    # Resumen
+    orchestrator.print_summary(test_type, success)
+    
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        print_warning("\n\n⚠️  Proceso interrumpido por el usuario")
-        sys.exit(1)
-    except Exception as e:
-        print_error(f"\n❌ Error inesperado: {str(e)}")
-        sys.exit(1)
+    main()

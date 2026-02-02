@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, status
 from app.core.jwt.jwt import get_current_user
 from app.core.jwt.secret_rotation import JWTSecretRotation
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
+from app.modules.auth.dependencies import get_current_admin_user
 from app.core.logging.logger import logger
 from pydantic import BaseModel
 from app.public.schemas.base_response import BaseResponse
@@ -35,11 +36,11 @@ class RotationResponse(BaseModel):
 
 @admin_router.get("/jwt/rotation-info", response_model=BaseResponse)
 async def get_jwt_rotation_info(
-    current_user: AuthUserModel = Depends(get_current_user)
+    current_user: AuthUserModel = Depends(get_current_admin_user)
 ):
     """
     Obtiene información sobre el estado de rotación de JWT secrets.
-    Solo accesible por usuarios autenticados (considerar agregar rol admin).
+    Solo accesible por administradores.
     """
     try:
         rotation = JWTSecretRotation()
@@ -70,10 +71,11 @@ async def get_jwt_rotation_info(
 
 @admin_router.post("/jwt/rotate-secret", response_model=BaseResponse)
 async def rotate_jwt_secret(
-    current_user: AuthUserModel = Depends(get_current_user)
+    current_user: AuthUserModel = Depends(get_current_admin_user)
 ):
     """
     Rota el JWT secret manualmente.
+    Solo accesible por administradores.
     
     ⚠️ IMPORTANTE: 
     - Los tokens existentes seguirán válidos durante 30 días (período de gracia)
