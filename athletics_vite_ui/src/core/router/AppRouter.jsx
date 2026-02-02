@@ -43,6 +43,7 @@ import AdminUsersTable from '@modules/admin/ui/pages/admin_controller_user_ui';
 import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
 import RegistroPruebasPage from '@modules/competencia/ui/pages/RegistroPrueba.jsx';
 import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
+import BaremosSimplePage from '@modules/competencia/ui/pages/BaremosSimplePage';
 import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
 import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
 import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
@@ -123,6 +124,7 @@ const router = createBrowserRouter([
                   { index: true, element: <PruebasPage /> },
                   { path: 'resultados', element: <RegistroPruebasPage /> },
                   { path: 'baremos', element: <BaremosPage /> },
+                  { path: 'baremos-simple', element: <BaremosSimplePage /> },
                   { path: 'disciplinas', element: <TipoDisciplinaPage /> },
                 ]
               }
