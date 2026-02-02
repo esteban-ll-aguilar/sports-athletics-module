@@ -13,14 +13,9 @@ services:
       - ./jmeter/data:/data
     networks:
       - stress-test-network
+    entrypoint: [ "/bin/sh", "-c" ]
     command: >
-      sh -c "
-        echo '============================================' &&
-        echo '🔧 JMeter - Pruebas de Estrés' &&
-        echo '============================================' &&
-        echo 'Esperando instrucciones...' &&
-        tail -f /dev/null
-      "
+      echo '============================================' && echo '🔧 JMeter - Pruebas de Estrés' && echo '============================================' && echo 'Esperando instrucciones...' && tail -f /dev/null
 
   # ============================================
   # Gatling - Pruebas de Rendimiento
@@ -44,6 +39,23 @@ services:
         echo 'Esperando instrucciones...' &&
         tail -f /dev/null
       "
+  
+  # ============================================
+  # Locust - Pruebas de Carga Python
+  # ============================================
+  locust:
+    image: locustio/locust:latest
+    container_name: locust-stress-test
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./locust:/mnt/locust
+      - ./utils:/mnt/utils
+    networks:
+      - stress-test-network
+    environment:
+      - LOCUST_HOST=http://host.docker.internal:8080
+    command: -f /mnt/locust/locustfile.py --web-host=0.0.0.0
 
   # ============================================
   # Grafana - Visualización de Métricas
@@ -55,8 +67,7 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - stress-test-network
     environment:

@@ -228,3 +228,9 @@ class AsistenciaService:
         asistencia.asistio = False
         
         return await self.asistencia_repo.update(asistencia)
+        
+    async def get_registros_by_atleta(self, atleta_id: int) -> List[RegistroAsistencias]:
+        """
+        Obtiene todos los registros de inscripción de un atleta.
+        """
+        return await self.registro_repo.get_by_atleta(atleta_id)

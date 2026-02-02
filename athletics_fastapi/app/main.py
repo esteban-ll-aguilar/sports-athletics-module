@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from app.utils.response_handler import ResponseHandler
 from app.utils.response_codes import ResponseCodes
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import asyncio
 
@@ -119,22 +120,24 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 _APP = FastAPI(
-    title='API Dalios Facturacion SRI',
+    title='API Modulo de Atletismo',
     description=(
-        "La API Dalios Facturacion SRI es el motor detrás de la aplicación Dalios, diseñada para gestionar todo el flujo de operaciones de un servicio de entrega eficiente y moderno. "
-        "Además, esta API está optimizada para integrarse con servicios externos, y ofrecer una experiencia fluida tanto para los administradores como para los clientes. "
-        "Con capacidades en manejo de datos, Dalios es tu solución todo en uno para administrar un negocio de entregas con eficacia y confianza."
+        "El API Modulo de Atletismo es una herramienta que permite gestionar las competiciones de atletismo."
     ),
     version=_SETTINGS.application_version,
     docs_url='/',
     redoc_url='/doc',
     contact={
-        'name': 'Equipo de Desarrollo Dalios',
-        'email': 'dalios.solutions@gmail.com',
+        'name': 'Equipo de Desarrollo',
+        'email': 'esteban.leon@unl.edu.ec',
         'url': 'https://dalios.solutions',
     },
     lifespan=lifespan
 )
+
+# Instrumentar Prometheus para métricas de rendimiento
+Instrumentator().instrument(_APP).expose(_APP, endpoint="/metrics", include_in_schema=True)
+
 # ✅ 2. LUEGO MONTAS STATIC FILES
 
 _APP.mount("/data", StaticFiles(directory="data"), name="data")

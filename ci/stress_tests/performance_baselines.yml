@@ -1,0 +1,409 @@
+# ============================================================================
+# BASELINES DE RENDIMIENTO - ATHLETICS MODULE API
+# ============================================================================
+# Este archivo define las métricas de rendimiento esperadas (SLAs) y baselines
+# para las pruebas de estrés del módulo de athletics.
+#
+# Actualizado: Febrero 2026
+# ============================================================================
+
+# ============================================================================
+# CAPACITY PLANNING - Capacidad del Sistema
+# ============================================================================
+capacity:
+  # Usuarios concurrentes que el sistema debe soportar
+  concurrent_users:
+    minimum: 100          # Mínimo esperado en operación normal
+    target: 500           # Objetivo a alcanzar
+    maximum: 1000         # Capacidad máxima del sistema
+    
+  # Throughput (requests por segundo)
+  throughput:
+    minimum_rps: 50       # 50 req/s mínimo
+    target_rps: 200       # 200 req/s objetivo
+    peak_rps: 500         # 500 req/s en picos
+
+  # Duración de pruebas
+  test_duration:
+    smoke: "2m"           # Prueba básica
+    load: "10m"           # Prueba de carga normal
+    stress: "15m"         # Prueba de estrés
+    soak: "60m"           # Prueba de resistencia
+
+# ============================================================================
+# RESPONSE TIME BASELINES - Tiempos de Respuesta Esperados
+# ============================================================================
+response_times:
+  # Tiempos en milisegundos (ms)
+  
+  # Endpoints de Autenticación (críticos)
+  auth:
+    login:
+      p50: 300      # 50% responden en <300ms
+      p95: 800      # 95% responden en <800ms
+      p99: 1500     # 99% responden en <1500ms
+      max: 3000     # Máximo aceptable: 3s
+    
+    logout:
+      p50: 200
+      p95: 500
+      p99: 1000
+      max: 2000
+    
+    refresh_token:
+      p50: 250
+      p95: 600
+      p99: 1200
+      max: 2500
+    
+    get_profile:
+      p50: 200
+      p95: 500
+      p99: 1000
+      max: 2000
+  
+  # Endpoints de Lectura (GET)
+  read_operations:
+    list_atletas:
+      p50: 400
+      p95: 1000
+      p99: 2000
+      max: 3000
+    
+    get_atleta_detail:
+      p50: 300
+      p95: 800
+      p99: 1500
+      max: 2500
+    
+    list_entrenamientos:
+      p50: 400
+      p95: 1000
+      p99: 2000
+      max: 3000
+    
+    list_competencias:
+      p50: 500
+      p95: 1200
+      p99: 2500
+      max: 4000
+    
+    search_atletas:
+      p50: 600
+      p95: 1500
+      p99: 3000
+      max: 5000
+  
+  # Endpoints de Escritura (POST/PUT)
+  write_operations:
+    create_atleta:
+      p50: 500
+      p95: 1500
+      p99: 3000
+      max: 5000
+    
+    update_atleta:
+      p50: 400
+      p95: 1200
+      p99: 2500
+      max: 4000
+    
+    create_entrenamiento:
+      p50: 600
+      p95: 1500
+      p99: 3000
+      max: 5000
+    
+    create_inscripcion:
+      p50: 700
+      p95: 1800
+      p99: 3500
+      max: 6000
+  
+  # Endpoints de Eliminación (DELETE)
+  delete_operations:
+    delete_atleta:
+      p50: 300
+      p95: 800
+      p99: 1500
+      max: 3000
+    
+    delete_entrenamiento:
+      p50: 400
+      p95: 1000
+      p99: 2000
+      max: 3500
+
+# ============================================================================
+# ERROR RATE BASELINES - Tasas de Error Aceptables
+# ============================================================================
+error_rates:
+  # Porcentajes máximos aceptables
+  overall:
+    target: 0.1%        # 0.1% de errores (99.9% éxito)
+    warning: 1%         # Advertencia a partir de 1%
+    critical: 5%        # Crítico a partir de 5%
+  
+  # Por tipo de error HTTP
+  http_4xx:
+    target: 0.5%        # Errores del cliente (400-499)
+    warning: 2%
+    critical: 10%
+  
+  http_5xx:
+    target: 0.1%        # Errores del servidor (500-599)
+    warning: 0.5%
+    critical: 2%
+  
+  # Por categoría de endpoint
+  auth_endpoints:
+    target: 0.05%       # Auth debe ser más confiable
+    warning: 0.5%
+    critical: 2%
+  
+  read_endpoints:
+    target: 0.1%
+    warning: 1%
+    critical: 5%
+  
+  write_endpoints:
+    target: 0.5%        # Writes pueden tener más errores
+    warning: 2%
+    critical: 8%
+
+# ============================================================================
+# AVAILABILITY & UPTIME - Disponibilidad del Sistema
+# ============================================================================
+availability:
+  sla:
+    target: 99.9%       # "Three nines" - 43.2 minutos downtime/mes
+    minimum: 99.5%      # Mínimo aceptable - 3.6 horas downtime/mes
+    critical: 99.0%     # Por debajo es crítico
+  
+  health_check:
+    max_response_time: 500ms    # Health endpoint debe responder <500ms
+    check_interval: 30s          # Verificar cada 30 segundos
+
+# ============================================================================
+# RESOURCE UTILIZATION - Utilización de Recursos
+# ============================================================================
+resources:
+  # CPU
+  cpu:
+    target: 70%         # Uso objetivo
+    warning: 85%        # Advertencia
+    critical: 95%       # Crítico
+    
+  # Memoria
+  memory:
+    target: 75%
+    warning: 85%
+    critical: 95%
+    
+  # Base de Datos
+  database:
+    connections:
+      target: 100       # Número de conexiones objetivo
+      warning: 150
+      critical: 200
+    
+    pool_utilization:
+      target: 70%
+      warning: 85%
+      critical: 95%
+    
+    slow_queries:
+      threshold: 1000ms         # Queries >1s son "lentas"
+      max_per_minute: 10        # Máximo 10 queries lentas/min
+    
+    buffer_pool_hit_rate:
+      minimum: 85%              # Mínimo aceptable
+      target: 95%               # Objetivo
+      optimal: 99%              # Óptimo
+
+# ============================================================================
+# THROUGHPUT BASELINES - Baselines de Throughput
+# ============================================================================
+throughput:
+  # Requests por segundo por endpoint
+  auth_login:
+    minimum: 20
+    target: 50
+    maximum: 100
+  
+  atletas_list:
+    minimum: 30
+    target: 100
+    maximum: 300
+  
+  atletas_create:
+    minimum: 10
+    target: 30
+    maximum: 80
+  
+  entrenamientos_list:
+    minimum: 25
+    target: 80
+    maximum: 200
+
+# ============================================================================
+# SCALABILITY TARGETS - Objetivos de Escalabilidad
+# ============================================================================
+scalability:
+  # Degradación aceptable bajo carga
+  response_time_degradation:
+    acceptable: 50%      # 50% más lento bajo carga máxima
+    warning: 100%        # 2x más lento
+    critical: 200%       # 3x más lento
+  
+  # Throughput scaling
+  throughput_scaling:
+    linear_until: 500    # Debe escalar linealmente hasta 500 usuarios
+    acceptable_until: 1000   # Aceptable hasta 1000 usuarios
+
+# ============================================================================
+# DATA VOLUME LIMITS - Límites de Volumen de Datos
+# ============================================================================
+data_volume:
+  # Tamaños máximos de response
+  response_size:
+    typical: 50KB       # Tamaño típico
+    warning: 500KB      # Advertencia
+    critical: 2MB       # Crítico
+  
+  # Paginación
+  pagination:
+    default_page_size: 20
+    max_page_size: 100
+    
+  # Database records
+  test_data_size:
+    atletas: 200        # 200 atletas para pruebas
+    entrenadores: 20    # 20 entrenadores
+    entrenamientos: 100 # 100 entrenamientos
+    competencias: 20    # 20 competencias
+
+# ============================================================================
+# NETWORK BASELINES - Baselines de Red
+# ============================================================================
+network:
+  latency:
+    target: 10ms        # Latencia de red objetivo
+    warning: 50ms
+    critical: 100ms
+  
+  bandwidth:
+    minimum: 10Mbps     # Ancho de banda mínimo
+    target: 100Mbps     # Objetivo
+    
+  # Connection pooling
+  http_keep_alive:
+    enabled: true
+    timeout: 60s
+    max_requests: 100
+
+# ============================================================================
+# TEST CRITERIA - Criterios de Éxito de Pruebas
+# ============================================================================
+test_criteria:
+  # Condiciones para considerar un test exitoso
+  pass_conditions:
+    - "error_rate < 1%"
+    - "p95_response_time < defined_baseline * 1.2"  # Máximo 20% sobre baseline
+    - "availability > 99.5%"
+    - "cpu_usage_avg < 85%"
+    - "memory_usage_avg < 85%"
+    - "no_critical_errors"
+  
+  # Condiciones de advertencia
+  warning_conditions:
+    - "error_rate between 1% and 5%"
+    - "p95_response_time between baseline * 1.2 and baseline * 1.5"
+    - "availability between 99% and 99.5%"
+    - "cpu_usage_peak > 85%"
+  
+  # Condiciones de fallo
+  fail_conditions:
+    - "error_rate > 5%"
+    - "p95_response_time > baseline * 2"
+    - "availability < 99%"
+    - "any_service_down > 1min"
+    - "database_deadlocks > 10"
+
+# ============================================================================
+# PROGRESSIVE LOAD STEPS - Pasos de Carga Progresiva
+# ============================================================================
+load_steps:
+  # Para pruebas de estrés progresivo
+  step_1:
+    users: 50
+    duration: "2m"
+    ramp_up: "30s"
+    expected_p95: 1000ms
+  
+  step_2:
+    users: 100
+    duration: "3m"
+    ramp_up: "1m"
+    expected_p95: 1200ms
+  
+  step_3:
+    users: 250
+    duration: "5m"
+    ramp_up: "2m"
+    expected_p95: 1500ms
+  
+  step_4:
+    users: 500
+    duration: "5m"
+    ramp_up: "3m"
+    expected_p95: 2000ms
+  
+  step_5:
+    users: 1000
+    duration: "3m"
+    ramp_up: "5m"
+    expected_p95: 3000ms
+
+# ============================================================================
+# MONITORING THRESHOLDS - Umbrales de Monitoreo
+# ============================================================================
+monitoring:
+  # Frecuencias de scraping
+  scrape_intervals:
+    prometheus: 15s
+    detailed_metrics: 5s
+    
+  # Retention
+  metrics_retention:
+    short_term: "7d"
+    long_term: "30d"
+    
+  # Alerting
+  alert_evaluation_interval: 15s
+  alert_for_duration: "1m"     # Alerta debe persistir 1 min antes de disparar
+
+# ============================================================================
+# REGRESSION DETECTION - Detección de Regresión
+# ============================================================================
+regression:
+  # Comparación con baseline anterior
+  acceptable_degradation:
+    response_time: 10%      # Máximo 10% más lento que baseline
+    throughput: -10%        # Máximo 10% menos throughput
+    error_rate: 20%         # Máximo 20% más errores (si era bajo)
+  
+  # Períodos de comparación
+  comparison_periods:
+    - "last_run"            # Comparar con última ejecución
+    - "last_7_days_avg"     # Promedio últimos 7 días
+    - "last_30_days_avg"    # Promedio últimos 30 días
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# - Todos los tiempos están en milisegundos (ms) a menos que se especifique
+# - Todos los porcentajes son sobre el total de requests
+# - p50 = percentil 50 (mediana), p95 = percentil 95, p99 = percentil 99
+# - SLA = Service Level Agreement (acuerdo de nivel de servicio)
+# - Los valores pueden ajustarse basándose en métricas reales de producción

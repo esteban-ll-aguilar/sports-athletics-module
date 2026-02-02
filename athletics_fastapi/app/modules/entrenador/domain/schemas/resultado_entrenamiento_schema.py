@@ -2,6 +2,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import date, datetime
 from typing import Optional
+from app.modules.entrenador.domain.schemas.entrenamiento_schema import EntrenamientoResponse
+from app.modules.atleta.domain.schemas.atleta_simple_schema import AtletaSimpleResponse
 
 class ResultadoEntrenamientoBase(BaseModel):
     fecha: date
@@ -24,12 +26,6 @@ class ResultadoEntrenamientoUpdate(BaseModel):
     evaluacion: Optional[int] = Field(None, ge=1, le=10)
     observaciones: Optional[str] = None
     estado: Optional[bool] = None
-
-class ResultadoEntrenamientoRead(ResultadoEntrenamientoBase):
-    id: int
-    external_id: UUID
-from app.modules.entrenador.domain.schemas.entrenamiento_schema import EntrenamientoResponse
-from app.modules.atleta.domain.schemas.atleta_simple_schema import AtletaSimpleResponse
 
 class ResultadoEntrenamientoRead(ResultadoEntrenamientoBase):
     id: int

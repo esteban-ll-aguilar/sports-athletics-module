@@ -1,73 +1,87 @@
+"""
+Auth Test Router - No Rate Limiting
+Reimplements all auth routes WITHOUT rate limiting for testing.
+Custom registration allows creating users with any role including ADMINISTRADOR.
+"""
 from fastapi import APIRouter, Depends, status, Request, HTTPException, Response
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from typing import Union
+from typing import Optional, List, Union
 from datetime import datetime, timezone
+from pydantic import BaseModel
 
 from app.modules.auth.domain.schemas import (
-    UserCreateSchema,
+    UserCreateSchema, 
     UserResponseSchema,
     TokenPair,
     RefreshRequest,
     TwoFactorRequired,
     LoginSchema
 )
-
+from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.modules.auth.dependencies import (
     get_users_repo,
     get_sessions_repo,
     get_jwt_manager,
     get_password_hasher,
-    get_email_service,
-    get_email_verification_service,
 )
-
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.core.jwt.jwt import JWTManager, PasswordHasher
-from app.modules.auth.services.auth_email_service import AuthEmailService
-from app.modules.auth.services.email_verification_service import EmailVerificationService
 from app.core.logging.logger import logger
 from app.api.schemas.api_schemas import APIResponse
 
-# Inicializar rate limiter
-limiter = Limiter(key_func=get_remote_address)
+# Import routers without rate limiting (users, user_management, password_reset)
+from app.modules.auth.routers.v1.users import users_router_v1
+from app.modules.auth.routers.v1.user_management_router import user_management_router_v1
+from app.modules.auth.routers.v1.password_reset import reset_password_router_v1
 
-auth_router_v1 = APIRouter()
+router = APIRouter(prefix="/auth")
+
+# Include routers that DON'T have rate limiting
+router.include_router(users_router_v1, prefix="/users")
+router.include_router(user_management_router_v1, prefix="/users")
+router.include_router(reset_password_router_v1, prefix="/password-reset")
+
+# NOTE: We DON'T include auth_router_v1, auth_email_router_v1, auth_sessions_router_v1, 
+# or auth_twofa_router_v1 because they have @limiter.limit() decorators.
+# Instead, we reimplement the core routes below WITHOUT rate limiting.
 
 
 # ======================================================
-# REGISTER
+# CUSTOM TEST REGISTRATION - ALLOWS ANY ROLE INCLUDING ADMINISTRADOR
 # ======================================================
 
-@auth_router_v1.post(
+class TestUserCreateSchema(BaseModel):
+    """Extended user creation schema for testing with any role support"""
+    email: str
+    password: str
+    username: str
+    first_name: str
+    last_name: str
+    tipo_identificacion: str
+    identificacion: str
+    tipo_estamento: str
+    direccion: Optional[str] = "Test Address"
+    phone: Optional[str] = "0999999999"
+    roles: Optional[List[str]] = ["ATLETA"]  # Can include: ATLETA, ENTRENADOR, ADMINISTRADOR, REPRESENTANTE
+    is_active: bool = True  # Active by default for testing
+
+
+@router.post(
     "/register",
     response_model=APIResponse[UserResponseSchema],
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("10/minute")
-async def register(
+async def register_test_user(
     request: Request,
-    data: UserCreateSchema,
+    data: TestUserCreateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
     hasher: PasswordHasher = Depends(get_password_hasher),
-    email_service: AuthEmailService = Depends(get_email_service),
-    verification_service: EmailVerificationService = Depends(get_email_verification_service),
 ):
     """
-    Registra un nuevo usuario en el sistema.
-    
-    El usuario se crea con estado inactivo hasta que verifique su correo electrónico.
-    Se envía un código de verificación al email proporcionado.
-    
-    Args:
-        request: Request object.
-        data: Datos de registro (email, contraseña, etc.).
-        
-    Returns:
-        APIResponse: Confirmación de registro y datos del usuario (sin credenciales sensibles).
+    TEST ONLY: Registers a new user with is_active=True by default.
+    Supports ANY role including ADMINISTRADOR for comprehensive testing.
+    NO RATE LIMITING applied.
     """
-
     if await repo.get_by_email(data.email):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -82,42 +96,61 @@ async def register(
     
     try:
         password_hash = hasher.hash(data.password)
-        user = await repo.create(password_hash=password_hash, user_data=data)
         
-        # Enviar código de verificación
-        code = verification_service.generate_verification_code()
-        await verification_service.store_verification_code(data.email, code)
-
-        try:
-            email_service.send_email_verification_code(data.email, code)
-        except Exception as e:
-            logger.error(f"Error enviando email de verificación: {e}")
+        # Convert test schema to standard UserCreateSchema
+        user_data = UserCreateSchema(
+            email=data.email,
+            password=data.password,
+            username=data.username,
+            first_name=data.first_name,
+            last_name=data.last_name,
+            tipo_identificacion=data.tipo_identificacion,
+            identificacion=data.identificacion,
+            tipo_estamento=data.tipo_estamento,
+            direccion=data.direccion if data.direccion else "Test Address",
+            phone=data.phone if data.phone else "0999999999",
+            role=RoleEnum(data.roles[0]) if data.roles else RoleEnum.ATLETA
+        )
+        
+        user = await repo.create(password_hash=password_hash, user_data=user_data)
+        
+        # Set user as active for testing & Update to Admin if requested
+        if data.is_active or (data.roles and data.roles[0] == "ADMINISTRADOR"):
+            user.auth.is_active = True
+            user.auth.email_confirmed_at = datetime.now(timezone.utc)
+            
+            if data.roles and data.roles[0] == "ADMINISTRADOR":
+                user.role = RoleEnum.ADMINISTRADOR
+                
+            await repo.db.commit()
+            user = await repo.get_by_id_profile(user.id)
+        
+        logger.info(f"TEST USER CREATED: {user.email} - Active: {user.is_active} - Roles: {data.roles}")
 
         return APIResponse(
             success=True,
-            message="Usuario registrado exitosamente. Por favor verifica tu email.",
+            message=f"Usuario de test creado exitosamente. Active: {user.is_active}",
             data=UserResponseSchema.model_validate(user)
         )
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error registrando usuario: {e}")
+        logger.error(f"Error registrando usuario de test: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error interno del servidor",
+            detail=f"Error interno del servidor: {str(e)}",
         )
 
 
 # ======================================================
-# LOGIN
+# LOGIN (NO RATE LIMITING)
 # ======================================================
 
-@auth_router_v1.post(
+@router.post(
     "/login",
     response_model=APIResponse[Union[TokenPair, TwoFactorRequired]],
 )
-@limiter.limit("5/minute")
-async def login(
+async def login_test(
     request: Request,
     response: Response,
     data: LoginSchema,
@@ -126,40 +159,16 @@ async def login(
     hasher: PasswordHasher = Depends(get_password_hasher),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    """
-    Inicia sesión en el sistema.
-    
-    Verifica credenciales del usuario.
-    Si 2FA está habilitado, retorna un token temporal y un indicador de requerimiento de 2FA.
-    Si no, retorna el par de tokens (Access y Refresh) y establece la cookie de refresh.
-    
-    Args:
-        request: Request object.
-        response: Response object (para setear cookie).
-        data: Credenciales de login.
-        
-    Returns:
-        APIResponse[Union[TokenPair, TwoFactorRequired]]: Tokens o requerimiento de 2FA.
-    """
-    # Ya no capturamos todas las excepciones para permitir que HTTPException fluya
+    """TEST: Login without rate limiting"""
     user = await repo.get_by_email(data.username)
 
-    logger.info(f"Login attempt for: {data.username}")
-    if user:
-         logger.info(f"User found. ID: {user.id}, Active: {user.is_active}")
-         # logger.info(f"Stored Hash: {user.hashed_password}") # DEBUG ONLY - REMOVE LATER
-    else:
-         logger.warning("User NOT found")
-
     if not user or not hasher.verify(data.password, user.hashed_password):
-        logger.warning(f"Password mismatch for user: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas",
         )
 
     if not user.is_active:
-        logger.warning(f"User inactive: {data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario inactivo, por favor verifica tu email",
@@ -210,14 +219,13 @@ async def login(
         expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
     )
 
-    # Set Refresh Token in HttpOnly Cookie
     response.set_cookie(
         key="refresh_token",
         value=refresh,
         httponly=True,
-        secure=False, # TODO: Set to False for localhost development
-        samesite="lax", # or 'strict'
-        max_age=7 * 24 * 60 * 60 # 7 days
+        secure=False,
+        samesite="lax",
+        max_age=7 * 24 * 60 * 60
     )
 
     return APIResponse(
@@ -225,51 +233,36 @@ async def login(
         message="Inicio de sesión exitoso",
         data=TokenPair(
             access_token=access,
-            refresh_token=refresh, # We keep returning it for non-browser clients, optional
+            refresh_token=refresh,
         )
     )
 
 
 # ======================================================
-# REFRESH
+# REFRESH (NO RATE LIMITING)
 # ======================================================
 
-@auth_router_v1.post("/refresh", response_model=APIResponse[TokenPair])
-async def refresh_token(
+@router.post("/refresh", response_model=APIResponse[TokenPair])
+async def refresh_token_test(
     request: Request,
     response: Response,
     body: RefreshRequest,
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
     jwtm: JWTManager = Depends(get_jwt_manager),
 ):
-    """
-    Renueva el Access Token utilizando un Refresh Token válido.
-    
-    Busca el refresh token en el body o en la cookie HttpOnly.
-    Implementa rotación de refresh tokens para seguridad, invalidando el anterior.
-    
-    Args:
-        request: Request object.
-        response: Response object (para actualizar cookie).
-        body: Cuerpo de la petición (opcional con refresh token).
-        
-    Returns:
-        APIResponse[TokenPair]: Nuevos access y refresh tokens.
-    """
+    """TEST: Refresh token without rate limiting"""
     try:
-        logger.info(f"Refresh attempt. Cookies: {request.cookies.keys()}")
-        # Get refresh token from cookie if not in body
         token_to_refresh = body.refresh_token
         if not token_to_refresh:
             token_to_refresh = request.cookies.get("refresh_token")
         
         if not token_to_refresh:
-             raise HTTPException(status_code=400, detail="Refresh token no proporcionado")
+            raise HTTPException(status_code=400, detail="Refresh token no proporcionado")
 
         try:
             payload = jwtm.decode(token_to_refresh)
         except Exception:
-             raise HTTPException(status_code=401, detail="Token inválido o expirado")
+            raise HTTPException(status_code=401, detail="Token inválido o expirado")
 
         if payload.get("type") != "refresh":
             raise HTTPException(status_code=400, detail="Token inválido")
@@ -303,12 +296,11 @@ async def refresh_token(
             new_expires_at=datetime.fromtimestamp(refresh_payload["exp"], tz=timezone.utc),
         )
 
-        # Update cookie with new refresh token
         response.set_cookie(
             key="refresh_token",
             value=refresh,
             httponly=True,
-            secure=False, # TODO: False for dev
+            secure=False,
             samesite="lax",
             max_age=7 * 24 * 60 * 60
         )
@@ -332,30 +324,18 @@ async def refresh_token(
 
 
 # ======================================================
-# LOGOUT
+# LOGOUT (NO RATE LIMITING)
 # ======================================================
 
-@auth_router_v1.post("/logout", response_model=APIResponse)
-async def logout(
+@router.post("/logout", response_model=APIResponse)
+async def logout_test(
     request: Request,
     response: Response,
-    body: RefreshRequest = None,  # Opcional, para invalidar refresh
+    body: RefreshRequest = None,
     jwtm: JWTManager = Depends(get_jwt_manager),
     sessions_repo: SessionsRepository = Depends(get_sessions_repo),
 ):
-    """
-    Cierra la sesión del usuario.
-    
-    Revoca el refresh token especificado y elimina la cookie de sesión.
-    
-    Args:
-        request: Request object.
-        response: Response object (para eliminar cookie).
-        body: Datos de logout (opcional).
-        
-    Returns:
-        APIResponse: Mensaje de éxito.
-    """
+    """TEST: Logout without rate limiting"""
     try:
         cookie_refresh = request.cookies.get("refresh_token")
         token_to_revoke = (body and body.refresh_token) or cookie_refresh
@@ -365,16 +345,14 @@ async def logout(
                 payload = jwtm.decode(token_to_revoke)
                 jti = payload.get("jti")
                 if jti:
-                    # Revocar la sesión en base de datos
                     await sessions_repo.revoke_session_by_refresh_jti(jti)
             except Exception:
-                pass # Ignorar errores de token inválido en logout, queremos borrar cookie igual
-        
-        # Eliminar cookie explícitamente
+                pass
+
         response.delete_cookie(
-            key="refresh_token", 
-            httponly=True, 
-            secure=False, # Debe coincidir con como se seteo
+            key="refresh_token",
+            httponly=True,
+            secure=False,
             samesite="lax"
         )
         
@@ -384,11 +362,8 @@ async def logout(
         )
     except Exception as e:
         logger.error(f"Error en logout: {e}")
-        # Clear cookie force
         response.delete_cookie(key="refresh_token")
-
         return APIResponse(
-            success=True, 
+            success=True,
             message="Sesión cerrada (con advertencias)"
         )
-

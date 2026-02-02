@@ -14,7 +14,11 @@ from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
 def mock_session():
     """Mock de AsyncSession."""
     session = AsyncMock()
-    session.execute = AsyncMock()
+    # Create a mock result that will be returned by execute
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none = MagicMock(return_value=None)
+    mock_result.first = MagicMock(return_value=None)
+    session.execute = AsyncMock(return_value=mock_result)
     session.add = MagicMock()
     session.flush = AsyncMock()
     session.commit = AsyncMock()
@@ -29,7 +33,7 @@ async def test_get_by_email(repo, mock_session):
     """Prueba obtener usuario por email."""
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = AuthUserModel(email="test@example.com")
-    mock_session.execute.return_value = mock_result
+    mock_session.execute = AsyncMock(return_value=mock_result)
 
     user = await repo.get_by_email("test@example.com")
     
