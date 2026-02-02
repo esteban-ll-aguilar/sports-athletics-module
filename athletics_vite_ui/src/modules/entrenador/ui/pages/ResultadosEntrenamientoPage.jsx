@@ -33,6 +33,13 @@ const ResultadosEntrenamientoPage = () => {
             ]);
 
             setAllEntrenamientos(Array.isArray(resEntrenamientos) ? resEntrenamientos : []);
+
+            console.log("🏋️ Resultados Entrenamiento:", resResultados);
+            if (resResultados && resResultados.length > 0) {
+                console.log("🏋️ Primer Resultado:", resResultados[0]);
+                console.log("🏋️ Atleta en Resultado:", resResultados[0].atleta);
+            }
+
             setAllResultados(Array.isArray(resResultados) ? resResultados : []);
 
             const atletasData = Array.isArray(resAtletas) ? resAtletas : resAtletas.items || resAtletas.data || [];

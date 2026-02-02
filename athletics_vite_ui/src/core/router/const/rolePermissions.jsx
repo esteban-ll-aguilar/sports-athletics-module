@@ -30,8 +30,8 @@ const rolePermissions = {
             label: 'Gestión de Pruebas',
             children: [
                 { path: '/dashboard/registro-pruebas', label: 'Agregar Pruebas' },
-                { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos Específicos' },
-                { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos Simples' },
+                { path: '/dashboard/registro-pruebas/baremos', label: 'Items Baremos' },
+                { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos' },
                 { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
                 { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }
             ]

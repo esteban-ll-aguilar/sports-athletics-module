@@ -96,13 +96,131 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
 
     // Manejo de inputs
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        // Validación de altura máxima (2.30m)
+        if (name === "talla") {
+            if (value > 2.30) {
+                // Si es mayor, no actualizar o setear el máximo? 
+                // Mejor no permitir escribir más allá de 2.30
+                // O si se pega, cortar.
+                // Vamos a permitir escribir pero si se pasa, lo bajamos a 2.30 o mostramos alerta?
+                // El requerimiento dice "limite la altura maxima a 2,30"
+                // Vamos a hacer un clamp simple si es un número válido
+                if (parseFloat(value) > 2.30) {
+                    return; // No permitir escribir más
+                }
+            }
+        }
+
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Helpper para detectar si el valor seleccionado es "Otro" (custom)
+    const isCustomValue = (fieldName, options) => {
+        const value = formData[fieldName];
+        if (!value) return false;
+        // Si el valor NO está en las opciones predefinidas (y no es vacío ni "Ninguna" ni "Otra"), es custom.
+        // O si el valor ES "Otra"? El select tiene value="Otra".
+        // Si el usuario seleccionó "Otra", value="Otra".
+        // Si el usuario ya escribió "Polvo de hadas", value="Polvo de hadas".
+        // "Polvo de hadas" no está en options.
+        const inOptions = options.some(op => op.value === value);
+        return !inOptions && value !== "Ninguna" && value !== "";
+    };
+
+    // Renderiza un campo select que se convierte en input si es "Otra"
+    const renderMedicalField = (label, name, options) => {
+        const currentValue = formData[name];
+        // Determinar qué mostrar en el select:
+        // Si el valor actual está en las opciones, úsalo.
+        // Si no está (es custom), usa "Otra".
+        // Si es vacío, usa "".
+        const isCustom = options.every(op => op.value !== currentValue) && currentValue !== "" && currentValue !== "Ninguna";
+        const selectValue = isCustom ? "Otra" : currentValue;
+
+        return (
+            <div className="space-y-2">
+                <label htmlFor={`hm-${name}`} className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+                <select
+                    id={`hm-${name}`}
+                    name={name}
+                    value={selectValue}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "Otra") {
+                            // Si selecciona "Otra", limpiamos el valor real para que escriba, o dejamos "Otra" temporalmente?
+                            // Dejemos vacío para que aparezca el input vacío
+                            setFormData(prev => ({ ...prev, [name]: "" }));
+                            // PERO necesitamos saber que estamos en modo "custom".
+                            // El modo custom se activa si selectValue == "Otra".
+                            // Si seteamos "", selectValue será "" (si "" no está en options? ah "" suele ser disabled option).
+                            // Truco: Usar un estado temporal o...
+                            // Simplemente si val === "Otra", seteamos un valor especial temporal o manejamos un estado local de UI?
+                            // Mejor: Si selecciona "Otra", seteamos el formdata a "Otra" temporalmente.
+                            setFormData(prev => ({ ...prev, [name]: "Otra" }));
+                        } else {
+                            setFormData(prev => ({ ...prev, [name]: val }));
+                        }
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
+                >
+                    <option value="" disabled>Seleccione una opción</option>
+                    {options.map((op) => (
+                        <option key={op.value} value={op.value}>{op.label}</option>
+                    ))}
+                </select>
+
+                {/* Input condicional: Se muestra si el valor es "Otra" O si es un valor custom */}
+                {(selectValue === "Otra" || isCustom) && (
+                    <div className="relative animate-fadeIn">
+                        <input
+                            type="text"
+                            name={name}
+                            value={currentValue === "Otra" ? "" : currentValue} // Si es "Otra", mostrar vacío para escribir
+                            onChange={handleChange}
+                            placeholder="Especifique cuál..."
+                            autoFocus
+                            className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, [name]: "Ninguna" }))}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                            title="Cancelar entrada manual"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
     };
 
     // Agregar Historial
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validar que no se envíe "Otra" literal
+        if (formData.alergias === "Otra" || formData.enfermedades === "Otra" || formData.enfermedades_hereditarias === "Otra") {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Información Incompleta',
+                text: 'Por favor especifique el detalle en los campos seleccionados como "Otra" o seleccione "Ninguna".',
+                background: '#1a1a1a',
+                color: '#fff',
+                confirmButtonColor: '#b30c25'
+            });
+            return;
+        }
+
         setLoading(true);
+
+        // Limpiar "Otra" si se quedó así? No, validarlo?
+        // Si el valor es literalmente "Otra", significa que activó el input pero no escribió nada.
+        // Podríamos validarlo o dejarlo pasar (pero es feo).
+        // Vamos a asumir que "Otra" no es válido como dato final, debería ser específico o vacío.
+
         try {
             await historialMedicoService.createHistorial(formData);
             Swal.fire({
@@ -131,10 +249,10 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
     // Actualizar Historial
     const handleUpdate = async (e) => {
         e.preventDefault();
-        if (!historial?.id) return;
+        if (!historial?.external_id) return;
         setLoading(true);
         try {
-            await historialMedicoService.updateHistorial(historial.id, formData);
+            await historialMedicoService.updateHistorial(historial.external_id, formData);
             Swal.fire({
                 icon: 'success',
                 title: 'Actualizado',
@@ -245,6 +363,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                                         id="hm-talla"
                                         type="number"
                                         step="0.01"
+                                        max="2.30" // HTML Validation hint
                                         name="talla"
                                         value={formData.talla}
                                         onChange={handleChange}
@@ -252,6 +371,7 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                                         placeholder="ej. 1.75"
                                         required
                                     />
+                                    <p className="text-xs text-gray-400 mt-1 pl-1">Máx: 2.30m</p>
                                 </div>
                             </div>
                         </div>
@@ -271,55 +391,13 @@ const HistorialMedicoModal = ({ isOpen, onClose }) => {
                             <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-[#332122] pb-2">Antecedentes Clínicos</h3>
 
                             {/* Alergias */}
-                            <div className="space-y-1">
-                                <label htmlFor="hm-alergias" className="text-sm font-medium text-gray-700 dark:text-gray-300">Alergias</label>
-                                <select
-                                    id="hm-alergias"
-                                    name="alergias"
-                                    value={formData.alergias}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="" disabled>Seleccione una opción</option>
-                                    {OPCIONES_ALERGIAS.map((op) => (
-                                        <option key={op.value} value={op.value}>{op.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {renderMedicalField("Alergias", "alergias", OPCIONES_ALERGIAS)}
 
                             {/* Enfermedades */}
-                            <div className="space-y-1">
-                                <label htmlFor="hm-enfermedades" className="text-sm font-medium text-gray-700 dark:text-gray-300">Enfermedades Preexistentes</label>
-                                <select
-                                    id="hm-enfermedades"
-                                    name="enfermedades"
-                                    value={formData.enfermedades}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="" disabled>Seleccione una opción</option>
-                                    {OPCIONES_ENFERMEDADES.map((op) => (
-                                        <option key={op.value} value={op.value}>{op.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {renderMedicalField("Enfermedades Preexistentes", "enfermedades", OPCIONES_ENFERMEDADES)}
 
                             {/* Hereditarias */}
-                            <div className="space-y-1">
-                                <label htmlFor="hm-hereditarias" className="text-sm font-medium text-gray-700 dark:text-gray-300">Antecedentes Hereditarios</label>
-                                <select
-                                    id="hm-hereditarias"
-                                    name="enfermedades_hereditarias"
-                                    value={formData.enfermedades_hereditarias}
-                                    onChange={handleChange}
-                                    className="w-full px-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] bg-white dark:bg-[#212121] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="" disabled>Seleccione una opción</option>
-                                    {OPCIONES_HEREDITARIAS.map((op) => (
-                                        <option key={op.value} value={op.value}>{op.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {renderMedicalField("Antecedentes Hereditarios", "enfermedades_hereditarias", OPCIONES_HEREDITARIAS)}
                         </div>
 
                         {/* Actions */}

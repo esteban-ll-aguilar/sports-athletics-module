@@ -73,7 +73,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
     const [form, setForm] = useState({
         atleta_id: "",
         prueba_id: "",
-        marca_obtenida: "",
+        valor: "",
         unidad_medida: "METROS",
         estado: true,
         fecha: new Date().toISOString().substring(0, 16)
@@ -100,7 +100,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
             setForm({
                 atleta_id: atletaId,
                 prueba_id: pruebaId,
-                marca_obtenida: editingItem.marca_obtenida || "",
+                valor: editingItem.valor || "",
                 unidad_medida: normalizeUnit(editingItem.unidad_medida),
                 estado: editingItem.estado,
                 fecha: editingItem.fecha ? new Date(editingItem.fecha).toISOString().substring(0, 16) : new Date().toISOString().substring(0, 16)
@@ -109,7 +109,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
             setForm({
                 atleta_id: "",
                 prueba_id: "",
-                marca_obtenida: "",
+                valor: "",
                 unidad_medida: "METROS",
                 estado: true,
                 fecha: new Date().toISOString().substring(0, 16)
@@ -126,13 +126,39 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
         e.preventDefault();
         if (submitting) return;
 
+        // Convertir external_ids a IDs internos
+        const atleta = atletas.find(a => a.external_id === form.atleta_id || a.id === form.atleta_id);
+        const prueba = pruebas.find(p => p.external_id === form.prueba_id || p.id === form.prueba_id);
+
+        if (!atleta) {
+            Swal.fire("Error", "Atleta no encontrado", "error");
+            return;
+        }
+        if (!prueba) {
+            Swal.fire("Error", "Prueba no encontrada", "error");
+            return;
+        }
+
+        // El backend espera ResultadoPruebaCreate schema:
+        // - marca_obtenida (float)
+        // - atleta_id (UUID)
+        // - prueba_id (UUID)
+        // - fecha (datetime)
+        // - clasificacion_final (optional string)
+        // - estado (bool)
         const payload = {
-            atleta_id: form.atleta_id,
-            prueba_id: form.prueba_id,
-            marca_obtenida: Number(form.marca_obtenida),
-            fecha: new Date(form.fecha).toISOString(),
-            estado: form.estado
+            atleta_id: atleta.external_id,  // Usar UUID del atleta
+            prueba_id: prueba.external_id,  // Usar UUID de la prueba
+            marca_obtenida: Number(form.valor),  // Backend espera marca_obtenida
+            fecha: new Date(form.fecha).toISOString(),  // Backend espera datetime completo
+            estado: true
         };
+
+        console.log("📤 Payload a enviar:", payload);
+        console.log("👤 Atleta encontrado:", atleta);
+        console.log("🏃 Prueba encontrada:", prueba);
+        console.log("📅 Fecha original:", form.fecha);
+        console.log("📅 Fecha ISO:", payload.fecha);
 
         const result = await Swal.fire({
             title: editingItem ? '¿Actualizar Resultado?' : '¿Registrar Resultado?',
@@ -167,6 +193,33 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                 }
             } catch (error) {
                 console.error("Error modal:", error);
+
+                // Extraer mensaje de error detallado del backend
+                let errorMessage = "No se pudo guardar el registro";
+
+                if (error.response?.data?.detail) {
+                    errorMessage = error.response.data.detail;
+                } else if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                await Swal.fire({
+                    title: "Error al guardar",
+                    html: `<div style="text-align: left;">
+                        <p><strong>No se pudo crear el registro:</strong></p>
+                        <p style="color: #f87171; margin-top: 10px;">${errorMessage}</p>
+                        ${errorMessage.includes('baremo') ?
+                            '<p style="margin-top: 15px; color: #fbbf24;"><strong>💡 Sugerencia:</strong> Asegúrate de que exista un baremo configurado para esta prueba, sexo y edad del atleta.</p>'
+                            : ''}
+                    </div>`,
+                    icon: "error",
+                    confirmButtonColor: '#b30c25',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    width: '500px'
+                });
             } finally {
                 setSubmitting(false);
             }
@@ -176,9 +229,8 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
     if (!isOpen) return null;
 
     return (
-        <dialog
-            open={isOpen}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] w-full h-full border-none outline-none"
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] w-full h-full"
         >
             <button
                 type="button"
@@ -246,11 +298,11 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                                     min="0"
                                     step="1"
                                     name="minutos"
-                                    value={Math.floor(form.marca_obtenida / 60) || 0}
+                                    value={Math.floor(form.valor / 60) || 0}
                                     onChange={(e) => {
                                         const mins = parseInt(e.target.value) || 0;
-                                        const secs = form.marca_obtenida % 60;
-                                        setForm(prev => ({ ...prev, marca_obtenida: mins * 60 + secs }));
+                                        const secs = form.valor % 60;
+                                        setForm(prev => ({ ...prev, valor: mins * 60 + secs }));
                                     }}
                                     placeholder="0"
                                 />
@@ -262,11 +314,11 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                                     max="59.99"
                                     step="0.01"
                                     name="segundos"
-                                    value={(form.marca_obtenida % 60).toFixed(2)}
+                                    value={(form.valor % 60).toFixed(2)}
                                     onChange={(e) => {
-                                        const mins = Math.floor(form.marca_obtenida / 60);
+                                        const mins = Math.floor(form.valor / 60);
                                         const secs = parseFloat(e.target.value) || 0;
-                                        setForm(prev => ({ ...prev, marca_obtenida: mins * 60 + secs }));
+                                        setForm(prev => ({ ...prev, valor: mins * 60 + secs }));
                                     }}
                                     required
                                     placeholder="0.00"
@@ -280,8 +332,8 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                                     icon={Ruler}
                                     type="number"
                                     step="0.01"
-                                    name="marca_obtenida"
-                                    value={form.marca_obtenida}
+                                    name="valor"
+                                    value={form.valor}
                                     onChange={handleChange}
                                     required
                                     placeholder="0.00"
@@ -340,7 +392,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                     </div>
                 </form>
             </div>
-        </dialog>
+        </div>
     );
 };
 
@@ -353,7 +405,7 @@ RegistroPruebaModal.propTypes = {
         atleta_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         prueba_external_id: PropTypes.string,
         prueba_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-        marca_obtenida: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        valor: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         unidad_medida: PropTypes.string,
         estado: PropTypes.bool,
         fecha: PropTypes.string

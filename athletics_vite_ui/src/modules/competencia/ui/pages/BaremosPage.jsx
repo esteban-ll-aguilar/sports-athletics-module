@@ -130,7 +130,7 @@ const BaremosPage = () => {
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
               Administración de Baremos
             </h1>
-            <p className="text-gray-400">Gestiona puntuaciones y clasificaciones</p>
+            <p className="text-gray-400">Gestiona los rangos de clasificación de cada baremo</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -147,7 +147,7 @@ const BaremosPage = () => {
                     "
             >
               <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-              Añadir Baremo
+              Agregar Ítems
             </button>
           </div>
         </div>
@@ -280,13 +280,23 @@ const BaremosPage = () => {
       <BaremoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={async (data) => {
-          if (selectedBaremo) await baremoService.update(selectedBaremo.external_id, data);
-          else await baremoService.create(data);
-          setIsModalOpen(false);
-          fetchData();
+        onSubmit={async (data, baremoToUpdate) => {
+          try {
+            // Si hay external_id en data o baremoToUpdate, es una actualización
+            if (data.external_id || baremoToUpdate) {
+              const externalId = data.external_id || baremoToUpdate.external_id;
+              await baremoService.update(externalId, data);
+            } else {
+              await baremoService.create(data);
+            }
+            setIsModalOpen(false);
+            fetchData();
+          } catch (err) {
+            console.error("Error al guardar baremo:", err);
+          }
         }}
         editingBaremo={selectedBaremo}
+        baremos={baremos}
       />
     </div>
   );

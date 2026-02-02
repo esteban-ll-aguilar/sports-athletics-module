@@ -34,6 +34,7 @@ async def create_registro(
     )
 ):
     try:
+        print(f"📥 Datos recibidos: {data.model_dump()}")
         nuevo_registro = await service.create(data)
         return ResponseHandler.success_response(
             summary="Registro creado con exito",
@@ -42,6 +43,9 @@ async def create_registro(
             status_code=status.HTTP_201_CREATED
         )
     except Exception as e:
+        print(f"❌ Error al crear registro: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return ResponseHandler.error_response(
             summary="Error al crear registro",
             message=str(e),

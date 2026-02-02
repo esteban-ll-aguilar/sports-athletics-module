@@ -22,6 +22,7 @@ class BaremoUpdate(BaseModel):
     edad_min: int | None = None
     edad_max: int | None = None
     estado: bool | None = None
+    items: List[ItemBaremoCreate] | None = None
 
 # Modelo para la lectura de un Baremo
 class BaremoRead(BaremoBase):

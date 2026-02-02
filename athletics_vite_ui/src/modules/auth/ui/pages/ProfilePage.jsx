@@ -536,7 +536,7 @@ const ProfilePage = () => {
                                 </div>
                                 <div className="bg-gray-50 dark:bg-[#242223] p-4 rounded-xl border border-gray-200 dark:border-[#332122] transition-colors duration-300">
                                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">IMC</p>
-                                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{historial.imc}</p>
+                                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{Number(historial.imc).toFixed(2)}</p>
                                 </div>
                             </div>
 

@@ -44,16 +44,16 @@ class HistorialMedicoBase(BaseModel):
     imc: Optional[float] = Field(None, description="Índice de masa corporal")
     
 
-    alergias: Optional[TipoAlergia] = Field(
-        default=TipoAlergia.NINGUNA, 
+    alergias: Optional[str] = Field(
+        default="Ninguna", 
         description="Alergias conocidas"
     )
-    enfermedades_hereditarias: Optional[TipoEnfermedadHereditaria] = Field(
-        default=TipoEnfermedadHereditaria.NINGUNA, 
+    enfermedades_hereditarias: Optional[str] = Field(
+        default="Ninguna", 
         description="Antecedentes familiares"
     )
-    enfermedades: Optional[TipoEnfermedad] = Field(
-        default=TipoEnfermedad.NINGUNA, 
+    enfermedades: Optional[str] = Field(
+        default="Ninguna", 
         description="Enfermedades actuales"
     )
 
