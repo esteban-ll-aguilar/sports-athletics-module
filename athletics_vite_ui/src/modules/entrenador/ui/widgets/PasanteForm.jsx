@@ -42,16 +42,16 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
             {/* Sección Personal */}
-            <h3 className="text-white font-semibold border-b border-gray-700 pb-2 mb-4">Información Personal</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">Información Personal</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Usuario</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Usuario</label>
                     <div className="relative">
-                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             {...register('username', { required: 'El usuario es obligatorio' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="Ej. juan.perez"
                             readOnly={!!initialData}
                         />
@@ -60,9 +60,9 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Celular</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Celular</label>
                     <div className="relative">
-                        <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             {...register('phone', {
                                 required: 'El celular es obligatorio',
@@ -71,7 +71,7 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                                     message: 'Solo se permiten números'
                                 }
                             })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="0999999999"
                             onInput={handleNumericInput}
                             maxLength={10}
@@ -83,12 +83,12 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Nombre</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Nombre</label>
                     <div className="relative">
-                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             {...register('first_name', { required: 'El nombre es obligatorio' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="Ej. Juan Manuel"
                         />
                     </div>
@@ -96,12 +96,12 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Apellido</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Apellido</label>
                     <div className="relative">
-                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             {...register('last_name', { required: 'El apellido es obligatorio' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="Ej. Torres"
                         />
                     </div>
@@ -111,9 +111,9 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Identificación (DNI)</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Identificación (DNI)</label>
                     <div className="relative">
-                        <Hash className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Hash className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             {...register('identificacion', {
                                 required: 'La identificación es obligatoria',
@@ -122,7 +122,7 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                                     message: 'Solo se permiten números'
                                 }
                             })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="0000000000"
                             readOnly={!!initialData} // Readonly if editing
                             onInput={handleNumericInput}
@@ -133,13 +133,13 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Fecha de Nacimiento</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Fecha de Nacimiento</label>
                     <div className="relative">
-                        <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             type="date"
                             {...register('fecha_nacimiento', { required: 'Fecha requerida' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                         />
                     </div>
                 </div>
@@ -147,13 +147,13 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Correo Electrónico</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Correo Electrónico</label>
                     <div className="relative">
-                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             type="email"
                             {...register('email', { required: 'El correo es obligatorio' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder="ejemplo@correo.com"
                             readOnly={!!initialData}
                         />
@@ -161,12 +161,12 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Contraseña</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Contraseña</label>
                     <div className="relative">
                         <input
                             type="password"
                             {...register('password', { required: !initialData ? 'Contraseña requerida' : false })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-4 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-4 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                             placeholder={initialData ? "Dejar en blanco para no cambiar" : "******"}
                             disabled={!!initialData} // Disable password edit here for simplicity
                         />
@@ -175,16 +175,16 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
             </div>
 
             {/* Sección Pasante */}
-            <h3 className="text-white font-semibold border-b border-gray-700 pb-2 mb-4 mt-6">Detalles de Pasantía</h3>
+            <h3 className="text-gray-900 dark:text-white font-semibold border-b border-gray-200 dark:border-gray-700 pb-2 mb-4 mt-6">Detalles de Pasantía</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Especialidad Deportiva</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Especialidad Deportiva</label>
                     <div className="relative">
-                        <Award className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Award className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <select
                             {...register('especialidad', { required: true })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25] appearance-none"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25] appearance-none"
                         >
                             <option value="Atletismo">Atletismo</option>
                             <option value="Natación">Natación</option>
@@ -195,25 +195,25 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 </div>
 
                 <div className="space-y-1">
-                    <label className="text-sm text-gray-400">Fecha de Inicio</label>
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Fecha de Inicio</label>
                     <div className="relative">
-                        <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                        <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                         <input
                             type="date"
                             {...register('fecha_inicio', { required: 'Fecha requerida' })}
-                            className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                         />
                     </div>
                 </div>
             </div>
 
             <div className="space-y-1">
-                <label className="text-sm text-gray-400">Institución de Origen</label>
+                <label className="text-sm text-gray-700 dark:text-gray-400">Institución de Origen</label>
                 <div className="relative">
-                    <Building2 className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
+                    <Building2 className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
                     <input
                         {...register('institucion_origen')}
-                        className="w-full bg-[#2a2a2a] border border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-white focus:outline-none focus:border-[#b30c25]"
+                        className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25]"
                         placeholder="Universidad / Club"
                     />
                 </div>
@@ -223,7 +223,7 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                 >
                     Cancelar
                 </button>
