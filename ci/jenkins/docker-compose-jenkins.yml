@@ -1,0 +1,132 @@
+version: "3.9"
+
+# ============================================
+# Docker Compose para Jenkins CI/CD Local
+# ============================================
+# Este compose levanta Jenkins con todo lo necesario
+# para probar el pipeline localmente
+
+services:
+  # ============================================
+  # Jenkins Server
+  # ============================================
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: jenkins-server
+    privileged: true
+    user: root
+    ports:
+      - "8081:8080"      # Jenkins UI
+      - "50000:50000"    # Jenkins agents
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../../:/workspace    # Monta el proyecto completo desde la raíz
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Djenkins.install.skipSetupWizard=true
+      - CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/casc_configs/jenkins.yaml
+      - DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME:-}
+      - DOCKERHUB_PASSWORD=${DOCKERHUB_PASSWORD:-}
+    env_file:
+      - .env.jenkins
+    networks:
+      - jenkins-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ============================================
+  # Docker in Docker (para builds)
+  # ============================================
+  docker-dind:
+    image: docker:dind
+    container_name: jenkins-docker
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - jenkins-network
+    command: --storage-driver=overlay2
+
+  # ============================================
+  # SonarQube (para análisis de código)
+  # ============================================
+  sonarqube:
+    image: sonarqube:community
+    container_name: jenkins-sonarqube
+    depends_on:
+      - sonar-db
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonar-db:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - jenkins-network
+    restart: unless-stopped
+
+  # ============================================
+  # PostgreSQL para SonarQube
+  # ============================================
+  sonar-db:
+    image: postgres:15-alpine
+    container_name: jenkins-sonar-db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonar
+    volumes:
+      - sonar_db_data:/var/lib/postgresql/data
+    networks:
+      - jenkins-network
+    restart: unless-stopped
+
+  # ============================================
+  # Portainer (opcional - para gestionar containers)
+  # ============================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: jenkins-portainer
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - jenkins-network
+    restart: unless-stopped
+
+networks:
+  jenkins-network:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+    driver: local
+  jenkins-docker-certs:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  sonar_db_data:
+    driver: local
+  portainer_data:
+    driver: local
