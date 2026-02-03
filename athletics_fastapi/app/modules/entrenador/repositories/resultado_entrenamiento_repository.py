@@ -77,7 +77,21 @@ class ResultadoEntrenamientoRepository:
         self.session.add(db_obj)
         await self.session.commit()
         await self.session.refresh(db_obj)
-        return db_obj
+        
+        # Load relationships with eager loading
+        from app.modules.atleta.domain.models.atleta_model import Atleta
+        from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+        from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+        from app.modules.auth.domain.models.user_model import UserModel
+        
+        query = select(ResultadoEntrenamiento).where(ResultadoEntrenamiento.id == db_obj.id).options(
+            selectinload(ResultadoEntrenamiento.atleta).selectinload(Atleta.user).selectinload(UserModel.auth),
+            selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.horarios),
+            selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
 
     async def update(self, db_obj: ResultadoEntrenamiento, schema: ResultadoEntrenamientoUpdate) -> ResultadoEntrenamiento:
         update_data = schema.model_dump(exclude_unset=True)
@@ -86,7 +100,21 @@ class ResultadoEntrenamientoRepository:
         
         await self.session.commit()
         await self.session.refresh(db_obj)
-        return db_obj
+        
+        # Load relationships with eager loading
+        from app.modules.atleta.domain.models.atleta_model import Atleta
+        from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+        from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+        from app.modules.auth.domain.models.user_model import UserModel
+        
+        query = select(ResultadoEntrenamiento).where(ResultadoEntrenamiento.id == db_obj.id).options(
+            selectinload(ResultadoEntrenamiento.atleta).selectinload(Atleta.user).selectinload(UserModel.auth),
+            selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.horarios),
+            selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
 
     async def delete(self, db_obj: ResultadoEntrenamiento) -> bool:
         # Soft delete normally

@@ -176,7 +176,7 @@ const BaremosSimplePage = () => {
                 {/* Breadcrumb Navigation */}
                 <Link
                     to="/dashboard/registro-pruebas"
-                    className="inline-flex items-center gap-2 text-gray-400 hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
+                    className="inline-flex items-center gap-2 text-gray-400 dark:text-gray-500 hover:text-[#b30c25] dark:hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
                 >
                    
                 </Link>

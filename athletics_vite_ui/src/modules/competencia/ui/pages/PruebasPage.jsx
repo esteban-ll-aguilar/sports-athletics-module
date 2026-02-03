@@ -160,7 +160,7 @@ const PruebasPage = () => {
             return [
                 <tr key="no-results-row">
                     <td colSpan="5" className="py-20 text-center">
-                        <div className="flex flex-col items-center text-gray-400 space-y-3">
+                        <div className="flex flex-col items-center text-gray-400 dark:text-gray-500 space-y-3">
                             <div className="bg-gray-50 dark:bg-[#1a1a1a] p-4 rounded-full border border-gray-100 dark:border-[#332122]">
                                 <Search size={40} />
                             </div>
@@ -210,7 +210,7 @@ const PruebasPage = () => {
                         <span className="text-sm text-gray-900 dark:text-gray-200 font-bold uppercase">
                             {p.tipo_medicion}
                         </span>
-                        <span className="text-[10px] text-gray-500">
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
                             {p.unidad_medida}
                         </span>
                     </div>
@@ -227,7 +227,7 @@ const PruebasPage = () => {
                                 setSelectedPrueba(p);
                                 setIsModalOpen(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
+                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                             title="Editar prueba"
                         >
                             <Edit3 size={18} />
@@ -256,7 +256,7 @@ const PruebasPage = () => {
                     <div className="space-y-1">
                         <Link
                             to="/dashboard/competencias"
-                            className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
+                            className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-semibold text-sm mb-2 transition-all duration-200 group"
                         >
                             
                         </Link>
@@ -292,7 +292,7 @@ const PruebasPage = () => {
                         />
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Total: {filteredPruebas.length}</span>
+                        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-2">Total: {filteredPruebas.length}</span>
                     </div>
                 </div>
 

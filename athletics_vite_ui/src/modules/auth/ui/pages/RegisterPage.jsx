@@ -304,21 +304,21 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
     };
 
     return (
-        <div className={isModal ? "" : "flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black"}>
+        <div className={isModal ? "" : "flex min-h-screen w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-[#242223] dark:via-[#212121] dark:to-black"}>
             {/* Left Side - Image */}
             {!isModal && (
-                <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
+                <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white items-center justify-center overflow-hidden fixed h-full">
                     <div className="absolute inset-0 z-0">
                         <img
                             src={loginImage}
                             alt="Athletics Background"
                             className="w-full h-full object-cover opacity-60"
                         />
-                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-transparent dark:from-black/80"></div>
                     </div>
                     <div className="relative z-10 p-12 text-center max-w-lg">
                         <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
-                        <p className="text-lg text-gray-200">
+                        <p className="text-lg text-gray-700 dark:text-gray-200">
                             Comienza tu viaje deportivo hoy mismo.
                         </p>
                     </div>
@@ -327,39 +327,39 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
             {/* Right Side - Form */}
             <div className={isModal ? "w-full flex items-center justify-center p-8" : "w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto"}>
-                <div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
+                <div className="w-full max-w-lg bg-white dark:bg-[#242223] rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-[#332122]">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white">{isEditMode ? 'Editar Usuario' : 'Crear Cuenta'}</h2>
-                        <p className="text-gray-400 mt-2">{isEditMode ? 'Actualiza los datos del usuario' : 'Ingresa tus datos para registrarte'}</p>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{isEditMode ? 'Editar Usuario' : 'Crear Cuenta'}</h2>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">{isEditMode ? 'Actualiza los datos del usuario' : 'Ingresa tus datos para registrarte'}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos Personales</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Datos Personales</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-first_name" className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                                    <label htmlFor="reg-first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Nombre</label>
                                     <input
                                         id="reg-first_name"
                                         name="first_name"
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Nombre"
                                     />
                                     {fieldErrors.first_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-last_name" className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                                    <label htmlFor="reg-last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Apellido</label>
                                     <input
                                         id="reg-last_name"
                                         name="last_name"
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Apellido"
                                     />
                                     {fieldErrors.last_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>}
@@ -368,13 +368,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-tipo_id" className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
+                                    <label htmlFor="reg-tipo_id" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Tipo ID</label>
                                     <select
                                         id="reg-tipo_id"
                                         name="tipo_identificacion"
                                         value={formData.tipo_identificacion}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="CEDULA">Cédula</option>
                                         {/* <option value="PASAPORTE">Pasaporte</option>
@@ -382,8 +382,8 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-identificacion" className="block text-sm font-medium text-gray-400 mb-1">
-                                        Identificación <span className="text-xs text-gray-500 ml-1">(Numérico)</span>
+                                    <label htmlFor="reg-identificacion" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">
+                                        Identificación <span className="text-xs text-gray-600 dark:text-gray-500 ml-1">(Numérico)</span>
                                     </label>
                                     <input
                                         id="reg-identificacion"
@@ -402,7 +402,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             if (formData.tipo_identificacion === 'RUC') return 13;
                                             return 20;
                                         })()}
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="0123456789"
                                     />
                                     {fieldErrors.identificacion && <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>}
@@ -411,8 +411,8 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-phone" className="block text-sm font-medium text-gray-400 mb-1">
-                                        Teléfono <span className="text-xs text-gray-500 ml-1">(Numérico)</span>
+                                    <label htmlFor="reg-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">
+                                        Teléfono <span className="text-xs text-gray-600 dark:text-gray-500 ml-1">(Numérico)</span>
                                     </label>
                                     <input
                                         id="reg-phone"
@@ -425,19 +425,19 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                         }}
                                         maxLength={10}
                                         inputMode="tel"
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="0999999999"
                                     />
                                     {fieldErrors.phone && <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-direccion" className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
+                                    <label htmlFor="reg-direccion" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Dirección</label>
                                     <input
                                         id="reg-direccion"
                                         name="direccion"
                                         value={formData.direccion}
                                         onChange={handleChange}
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Tu dirección"
                                     />
                                     {fieldErrors.direccion && <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>}
@@ -446,7 +446,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-birth" className="block text-sm font-medium text-gray-400 mb-1">Fecha de nacimiento</label>
+                                    <label htmlFor="reg-birth" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Fecha de nacimiento</label>
                                     <input
                                         id="reg-birth"
                                         type="date"
@@ -454,18 +454,18 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                         required
                                         value={formData.fecha_nacimiento}
                                         onChange={handleChange}
-                                        className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                     />
                                     {fieldErrors.fecha_nacimiento && <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-sex" className="block text-sm font-medium text-gray-400 mb-1">Sexo</label>
+                                    <label htmlFor="reg-sex" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Sexo</label>
                                     <select
                                         id="reg-sex"
                                         name="sexo"
                                         value={formData.sexo}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="M">Masculino</option>
                                         <option value="F">Femenino</option>
@@ -476,16 +476,16 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Datos de Cuenta</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-estamento" className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
+                                    <label htmlFor="reg-estamento" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Estamento</label>
                                     <select
                                         id="reg-estamento"
                                         name="tipo_estamento"
                                         value={formData.tipo_estamento}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
@@ -494,13 +494,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-role" className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
+                                    <label htmlFor="reg-role" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Soy un..</label>
                                     <select
                                         id="reg-role"
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
@@ -509,21 +509,21 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                             </div>
 
                             <div>
-                                <label htmlFor="reg-username" className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
+                                <label htmlFor="reg-username" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Nombre de Usuario</label>
                                 <input
                                     id="reg-username"
                                     name="username"
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="Nombre de usuario"
                                 />
                                 {fieldErrors.username && <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>}
                             </div>
 
                             <div>
-                                <label htmlFor="reg-email" className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
+                                <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Correo Electrónico</label>
                                 <input
                                     id="reg-email"
                                     type="email"
@@ -531,7 +531,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`block w-full px-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
                                 {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
@@ -539,7 +539,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="reg-password" className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
+                                    <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Contraseña</label>
                                     <div className="relative">
                                         <input
                                             id="reg-password"
@@ -548,13 +548,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             required={!isEditMode}
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                             placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                         >
                                             {showPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -568,11 +568,11 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             )}
                                         </button>
                                     </div>
-                                    <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
                                     {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="reg-conf-password" className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
+                                    <label htmlFor="reg-conf-password" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Confirmar Contraseña</label>
                                     <div className="relative">
                                         <input
                                             id="reg-conf-password"
@@ -581,13 +581,13 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                             required={!isEditMode}
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                             placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                         >
                                             {showConfirmPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -616,7 +616,7 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
 
                         {!isEditMode && (
                             <div className="text-center mt-4">
-                                <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">¿Ya tienes cuenta? </span>
                                 <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
                                     Inicia Sesión
                                 </Link>

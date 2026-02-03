@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, date
 
 
 # =========================
@@ -15,6 +15,7 @@ class UserInfo(BaseModel):
     last_name: Optional[str] = None
     phone: Optional[str] = None
     identificacion: Optional[str] = None
+    fecha_nacimiento: Optional[date] = None
 
     model_config = ConfigDict(from_attributes=True)
 

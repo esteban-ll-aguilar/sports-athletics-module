@@ -15,6 +15,7 @@ const UserRoleManagementPage = () => {
   const roles = [
     'ADMINISTRADOR',
     'ENTRENADOR',
+    'PASANTE',
     'ATLETA',
     'REPRESENTANTE'
   ];

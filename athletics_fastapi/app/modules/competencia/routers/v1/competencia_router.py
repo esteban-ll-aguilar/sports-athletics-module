@@ -25,8 +25,11 @@ async def crear_competencia(
 ):
     """Crear una nueva competencia. Administradores y Entrenadores."""
     try:
-        # Validar permisos
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+        # Validar permisos - usar .value para comparar enums correctamente
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        if role_str not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
              return ResponseHandler.forbidden_response(
                  message="No tienes permisos para crear competencias"
              )

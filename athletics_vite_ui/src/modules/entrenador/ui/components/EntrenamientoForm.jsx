@@ -62,6 +62,17 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Validar campos requeridos
+        if (!formData.tipo_entrenamiento || formData.tipo_entrenamiento.trim() === '') {
+            toast.error("El tipo de entrenamiento es requerido");
+            return;
+        }
+
+        if (!formData.descripcion || formData.descripcion.trim() === '') {
+            toast.error("La descripción es requerida");
+            return;
+        }
+
         // Basic validation for schedules
         for (const h of formData.horarios) {
             if (!h.name || !h.hora_inicio || !h.hora_fin) {
@@ -86,6 +97,8 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
                 }))
             };
 
+            console.log('📤 Payload a enviar:', JSON.stringify(payload, null, 2));
+
             if (entrenamientoToEdit) {
                 await EntrenamientoService.update(entrenamientoToEdit.id, payload);
                 toast.success('Entrenamiento actualizado correctamente');
@@ -96,8 +109,12 @@ const EntrenamientoForm = ({ show, onClose, entrenamientoToEdit, onSave }) => {
             onSave();
             onClose();
         } catch (error) {
-            console.error(error);
-            toast.error('Error al guardar el entrenamiento');
+            console.error('❌ Error completo:', error);
+            console.error('❌ Response data:', error.response?.data);
+            console.error('❌ Errores de validación:', JSON.stringify(error.response?.data?.errors, null, 2));
+            console.error('❌ Response status:', error.response?.status);
+            const errorMsg = error.response?.data?.detail || error.response?.data?.message || 'Error al guardar el entrenamiento';
+            toast.error(errorMsg);
         } finally {
             setIsLoading(false);
         }

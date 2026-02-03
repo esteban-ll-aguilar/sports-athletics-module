@@ -137,16 +137,16 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 overflow-y-auto w-full h-full border-none outline-none"
       aria-labelledby="modal-title"
     >
-      <div className="w-full max-w-4xl bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#333] my-8">
+      <div className="w-full max-w-4xl bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#333] my-8">
 
         {/* HEADER */}
-        <div className="px-8 py-6 border-b border-[#333] bg-[#252525] rounded-t-2xl">
+        <div className="px-8 py-6 border-b border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#252525] rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div>
-              <h2 id="modal-title" className="text-2xl font-bold text-white">
+              <h2 id="modal-title" className="text-2xl font-bold text-gray-900 dark:text-white">
                 Gestionar Rangos de Clasificación
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {editingBaremo && pruebas.find(p => p.external_id === editingBaremo.prueba_external_id)?.nombre} -
                 {editingBaremo?.sexo === 'M' ? ' Masculino' : ' Femenino'} -
                 {editingBaremo?.edad_min}-{editingBaremo?.edad_max} años
@@ -155,7 +155,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-[#1e1e1e] rounded-lg transition text-gray-400 hover:text-white"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-[#1e1e1e] rounded-lg transition text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               aria-label="Cerrar modal"
             >
               <span className="material-symbols-outlined text-3xl">close</span>
@@ -168,12 +168,12 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
             <>
               {/* SELECTOR DE BAREMO */}
               <div>
-                <label htmlFor="select-baremo" className="block text-sm font-medium text-gray-300 mb-3">
+                <label htmlFor="select-baremo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Selecciona un Baremo para Agregar Ítems
                 </label>
                 <select
                   id="select-baremo"
-                  className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
+                  className="w-full bg-white dark:bg-[#121212] border border-gray-300 dark:border-[#444] rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
                   value={selectedBaremoId}
                   onChange={(e) => {
                     const baremoId = e.target.value;
@@ -202,9 +202,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                 </select>
 
                 {selectedBaremoId && (
-                  <div className="mt-4 p-4 bg-[#252525] rounded-xl border border-[#444]">
-                    <h3 className="text-sm font-bold text-white mb-2">Información del Baremo:</h3>
-                    <div className="text-sm text-gray-400 space-y-1">
+                  <div className="mt-4 p-4 bg-gray-50 dark:bg-[#252525] rounded-xl border border-gray-200 dark:border-[#444]">
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Información del Baremo:</h3>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                       <p><span className="font-medium">Prueba:</span> {pruebas.find(p => p.external_id === form.prueba_external_id || p.id === form.prueba_id)?.nombre}</p>
                       <p><span className="font-medium">Sexo:</span> {form.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
                       <p><span className="font-medium">Rango de Edad:</span> {form.edad_min} - {form.edad_max} años</p>
@@ -214,7 +214,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                 )}
               </div>
 
-              <hr className="border-[#333]" />
+              <hr className="border-gray-200 dark:border-[#333]" />
             </>
           )}
 
@@ -222,11 +222,11 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
           {(editingBaremo || selectedBaremoId) && (
             <div>
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-white">Rangos de Clasificación</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Rangos de Clasificación</h3>
                 <button
                   type="button"
                   onClick={addItem}
-                  className="text-[#b30c25] hover:text-[#d41c3a] font-bold text-sm flex items-center gap-1"
+                  className="text-[#b30c25] hover:text-[#d41c3a] dark:hover:text-[#d41c3a] font-bold text-sm flex items-center gap-1"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">add_circle</span>{' '}
                   Agregar Rango
@@ -235,13 +235,13 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
 
               <div className="space-y-3">
                 {form.items.map((item, index) => (
-                  <div key={index} className="flex flex-col md:flex-row gap-3 items-start bg-[#161616] p-4 rounded-xl border border-[#333] group hover:border-[#555] transition">
+                  <div key={index} className="flex flex-col md:flex-row gap-3 items-start bg-gray-50 dark:bg-[#161616] p-4 rounded-xl border border-gray-200 dark:border-[#333] group hover:border-gray-300 dark:hover:border-[#555] transition">
                     <div className="flex-1 w-full">
-                      <label htmlFor={`marca-min-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Mínima</label>
+                      <label htmlFor={`marca-min-${index}`} className="text-xs text-gray-600 dark:text-gray-500 mb-1 block">Marca Mínima</label>
                       <input
                         id={`marca-min-${index}`}
                         type="number" step="0.01"
-                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full bg-white dark:bg-[#252525] border border-gray-300 dark:border-[#444] rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm"
                         value={item.marca_minima}
                         onChange={e => handleItemChange(index, 'marca_minima', e.target.value)}
                         placeholder="0.00"
@@ -249,11 +249,11 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                       />
                     </div>
                     <div className="flex-1 w-full">
-                      <label htmlFor={`marca-max-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Máxima</label>
+                      <label htmlFor={`marca-max-${index}`} className="text-xs text-gray-600 dark:text-gray-500 mb-1 block">Marca Máxima</label>
                       <input
                         id={`marca-max-${index}`}
                         type="number" step="0.01"
-                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full bg-white dark:bg-[#252525] border border-gray-300 dark:border-[#444] rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm"
                         value={item.marca_maxima}
                         onChange={e => handleItemChange(index, 'marca_maxima', e.target.value)}
                         placeholder="10.00"
@@ -261,10 +261,10 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                       />
                     </div>
                     <div className="flex-2 w-full">
-                      <label htmlFor={`clasif-${index}`} className="text-xs text-gray-500 mb-1 block">Clasificación</label>
+                      <label htmlFor={`clasif-${index}`} className="text-xs text-gray-600 dark:text-gray-500 mb-1 block">Clasificación</label>
                       <select
                         id={`clasif-${index}`}
-                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        className="w-full bg-white dark:bg-[#252525] border border-gray-300 dark:border-[#444] rounded-lg px-3 py-2 text-gray-900 dark:text-white text-sm"
                         value={item.clasificacion}
                         onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
                         required
@@ -278,7 +278,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                     <button
                       type="button"
                       onClick={() => removeItem(index)}
-                      className="mt-6 md:mt-5 p-2 text-gray-500 hover:text-red-500 transition rounded-lg hover:bg-red-500/10"
+                      className="mt-6 md:mt-5 p-2 text-gray-500 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-500 transition rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10"
                       aria-label={`Eliminar rango ${index + 1}`}
                     >
                       <span className="material-symbols-outlined" aria-hidden="true">delete</span>
@@ -286,7 +286,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                   </div>
                 ))}
                 {form.items.length === 0 && (
-                  <div className="text-center py-8 text-gray-500 border border-dashed border-[#444] rounded-xl">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-500 border border-dashed border-gray-300 dark:border-[#444] rounded-xl">
                     No hay rangos definidos.
                   </div>
                 )}
@@ -295,11 +295,11 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
           )}
 
           {/* BOTONES */}
-          <div className="flex gap-4 pt-4 border-t border-[#333]">
+          <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-[#333]">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3.5 rounded-xl font-bold text-gray-400 border border-[#444] hover:bg-[#252525] transition"
+              className="flex-1 py-3.5 rounded-xl font-bold text-gray-700 dark:text-gray-400 border border-gray-300 dark:border-[#444] hover:bg-gray-50 dark:hover:bg-[#252525] transition"
             >
               Cancelar
             </button>

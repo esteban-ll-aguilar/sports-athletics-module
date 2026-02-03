@@ -7,6 +7,7 @@ const ROLES = [
   { value: "ADMINISTRADOR", label: "Administrador" },
   { value: "ATLETA", label: "Atleta" },
   { value: "ENTRENADOR", label: "Entrenador" },
+  { value: "PASANTE", label: "Pasante" },
   { value: "REPRESENTANTE", label: "Representante" },
 ];
 
