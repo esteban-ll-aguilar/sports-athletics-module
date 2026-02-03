@@ -13,17 +13,22 @@ from app.modules.competencia.dependencies import get_competencia_service
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
-
+# Instancia del router
 router = APIRouter()
 
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Crear Competencia
+# -------------------------------------------------------------------------
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def crear_competencia(
     data: CompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Crear una nueva competencia. Administradores y Entrenadores."""
+    """
+    Crea un nuevo evento de competencia.
+    Restringido a: ADMINISTRADOR, ENTRENADOR y PASANTE.
+    """
     try:
         # Validar permisos
         if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
@@ -44,15 +49,19 @@ async def crear_competencia(
             message=str(e),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Listar Competencias
+# -------------------------------------------------------------------------
 @router.get("", response_model=BaseResponse)
 async def listar_competencias(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todas las competencias. Administradores ven todas, Entrenadores solo las suyas."""
+    """
+    Lista las competencias. 
+    Los roles de gestión ven todas; otros roles podrían ver una lista filtrada.
+    """
     try:
         entrenador_id = current_user.id
         
@@ -87,14 +96,16 @@ async def listar_competencias(
             message=str(e)
         )
 
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Obtener una Competencia
+# -------------------------------------------------------------------------
 @router.get("/{external_id}", response_model=BaseResponse)
 async def obtener_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Obtener detalles de una competencia."""
+    """Obtiene el detalle completo de una competencia mediante su UUID.""" 
     try:
         competencia = await service.get_by_external_id(external_id)
         return ResponseHandler.success_response(
@@ -118,8 +129,9 @@ async def obtener_competencia(
             summary="Error interno",
             message=str(e)
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Actualizar Competencia
+# -------------------------------------------------------------------------
 @router.put("/{external_id}", response_model=BaseResponse)
 async def actualizar_competencia(
     external_id: UUID,
@@ -157,8 +169,9 @@ async def actualizar_competencia(
              summary="Error interno",
              message=str(e)
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Eliminar Competencia
+# -------------------------------------------------------------------------
 @router.delete("/{external_id}", response_model=BaseResponse)
 async def eliminar_competencia(
     external_id: UUID,
