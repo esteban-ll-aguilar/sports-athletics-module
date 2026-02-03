@@ -2,7 +2,7 @@ import React, { useEffect, useState, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RepresentanteService from '../../services/RepresentanteService';
 import { toast } from 'react-hot-toast';
-import { Users, Activity, Plus, User, Hash, Edit, X, Phone, Calendar, Briefcase ,Save  } from 'lucide-react';
+import { Users, Activity, Plus, User, Hash, Edit, X, Phone, Calendar, Briefcase, Save, Mail } from 'lucide-react';
 
 const MisAtletasPage = () => {
     const navigate = useNavigate();
@@ -170,6 +170,10 @@ const MisAtletasPage = () => {
                                             <p className="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
                                                 <User size={12} />
                                                 {atleta.user?.username}
+                                            </p>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1 mt-1" title={atleta.user?.email}>
+                                                <Mail size={10} />
+                                                {atleta.user?.email}
                                             </p>
                                         </div>
                                     </div>
