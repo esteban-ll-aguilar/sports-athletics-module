@@ -1,27 +1,21 @@
-# Resultados de JMeter
-jmeter/results/*.jtl
-jmeter/results/*.html
-jmeter/results/*.xml
-jmeter/results/*.csv
+# Locust stress tests - Gitignore
 
-# Resultados de Gatling
-gatling/results/*
-
-# Datos sensibles
+# Resultados
+results/
+!results/.gitkeep
+*.csv
+*.html
 *.log
-*.tmp
 
-# Datos de Grafana y Prometheus
-grafana/data/
-prometheus/data/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
 
-# Archivos de sistema
+# Archivos generados
+users.csv
+
+# Sistema
 .DS_Store
 Thumbs.db
-
-
-#PYTHON
-eggs/
-.eggs/
-*.pyc
-__pycache__/

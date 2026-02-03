@@ -12,6 +12,8 @@ const BaremosSimplePage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedBaremo, setSelectedBaremo] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterEstado, setFilterEstado] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -150,6 +152,23 @@ const BaremosSimplePage = () => {
         }
     };
 
+    // Update filteredBaremos to filter by prueba, sexo, edad mínima, and estado
+    const filteredBaremos = baremos.filter(baremo => {
+        const pruebaName = getPruebaName(baremo.prueba_id).toLowerCase();
+        const sexo = baremo.sexo === 'M' ? 'masculino' : 'femenino';
+        const edadMinima = baremo.edad_min.toString();
+        const estado = baremo.estado ? "activo" : "inactivo";
+
+        const matchSearch =
+            pruebaName.includes(searchTerm.toLowerCase()) ||
+            sexo.includes(searchTerm.toLowerCase()) ||
+            edadMinima.includes(searchTerm.toLowerCase());
+
+        const matchEstado = filterEstado === "" || estado === filterEstado.toLowerCase();
+
+        return matchSearch && matchEstado;
+    });
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend']">
             <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -159,10 +178,7 @@ const BaremosSimplePage = () => {
                     to="/dashboard/registro-pruebas"
                     className="inline-flex items-center gap-2 text-gray-400 hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
                 >
-                    <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-                        arrow_back
-                    </span>
-                    Volver a Gestión de Pruebas
+                   
                 </Link>
 
                 {/* Header */}
@@ -193,8 +209,44 @@ const BaremosSimplePage = () => {
                     </div>
                 </div>
 
+                {/* Search and Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6 w-full">
+                    {/* Search Bar */}
+                    <div className="relative w-full lg:col-span-2">
+                        <input
+                            type="text"
+                            placeholder="Buscar por prueba, sexo o edad mínima..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="
+                    w-full bg-white dark:bg-[#212121] border border-gray-200 dark:border-[#332122]
+                    text-gray-900 dark:text-gray-100 rounded-xl py-2.5 pl-4 pr-4
+                    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400
+                "
+                        />
+                    </div>
+
+                    {/* Filter by Estado */}
+                    <div className="relative w-full">
+                        <select
+                            value={filterEstado}
+                            onChange={(e) => setFilterEstado(e.target.value)}
+                            className="
+                    w-full bg-white dark:bg-[#212121] border border-gray-200 dark:border-[#332122]
+                    text-gray-900 dark:text-gray-100 rounded-xl py-2.5 pl-4 pr-4
+                    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all
+                    cursor-pointer appearance-none
+                "
+                        >
+                            <option value="">Todos los Estados</option>
+                            <option value="activo">Activo</option>
+                            <option value="inactivo">Inactivo</option>
+                        </select>
+                    </div>
+                </div>
+
                 {/* Table Card */}
-                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
+                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors w-full">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
@@ -217,7 +269,7 @@ const BaremosSimplePage = () => {
                                             </div>
                                         </td>
                                     </tr>
-                                ) : baremos.length === 0 ? (
+                                ) : filteredBaremos.length === 0 ? (
                                     <tr>
                                         <td colSpan="6" className="py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
@@ -227,7 +279,7 @@ const BaremosSimplePage = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    baremos.map((b) => (
+                                    filteredBaremos.map((b) => (
                                         <tr
                                             key={b.external_id}
                                             className={`transition-colors duration-200 ${!b.estado

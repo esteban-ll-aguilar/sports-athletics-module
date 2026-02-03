@@ -36,8 +36,8 @@ class ExternalUsersApiService:
                 self.external_id = external_id
                 return token, external_id
             except Exception as e:
-                logger.warning(f"⚠️ EXTERNAL SERVICE UNAVAILABLE: Using MOCK token. Error: {e}")
-                # MOCK FALLBACK
+                logger.debug(f"External service unavailable (expected in dev/test): {e}")
+                # MOCK FALLBACK - Normal para desarrollo/testing sin servicio externo
                 self.token = "mock-token-123"
                 self.external_id = "mock-external-id-123"
                 return self.token, self.external_id
@@ -111,8 +111,8 @@ class ExternalUsersApiService:
             return self._build_base_response(response)
             
         except Exception as e:
-            logger.warning(f"⚠️ EXTERNAL SERVICE UNAVAILABLE: Using MOCK user creation. Error: {e}")
-            # MOCK FALLBACK
+            logger.debug(f"External service unavailable for user creation (expected in dev/test): {e}")
+            # MOCK FALLBACK - Normal para desarrollo/testing sin servicio externo
             import uuid
             return BaseResponse(
                 data={"external": str(uuid.uuid4()), "username": user.email},

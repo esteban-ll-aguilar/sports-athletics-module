@@ -172,25 +172,16 @@ const ResultadosPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] p-6 font-['Lexend'] text-gray-900 dark:text-gray-200 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <Link
-              to="/dashboard/competencias"
-              className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
-            >
-              <span className="group-hover:-translate-x-1 transition-transform duration-200">
-                <ArrowLeft size={18} />
-              </span>
-              Volver a Gestión Principal
-            </Link>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
               Registro de Resultados
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-lg mt-1">
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
               Administra los resultados de las competencias oficiales.
             </p>
           </div>
@@ -225,15 +216,13 @@ const ResultadosPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="
-                                w-full pl-12 pr-4 py-4 rounded-2xl
-                                bg-white dark:bg-[#1f1c1d]
-                                border border-gray-200 dark:border-[#332122]
-                                text-gray-900 dark:text-gray-100
-                                placeholder-gray-400 dark:placeholder-gray-500
-                                focus:border-[#b30c25]
-                                focus:ring-1 focus:ring-[#b30c25]/40
-                                outline-none transition-all
-                                shadow-sm
+                                w-full pl-12 pr-4 py-3 rounded-xl 
+                bg-white dark:bg-[#212121]
+                border border-gray-200 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400 dark:placeholder-gray-500
+                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                outline-none transition-all shadow-sm
                             "
             />
           </div>
@@ -270,18 +259,6 @@ const ResultadosPage = () => {
 
         {/* Últimos Registros Card */}
         <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
-          <div className="p-6 border-b border-gray-100 dark:border-[#332122] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-50 dark:bg-red-900/10 rounded-lg text-[#b30c25]">
-                <Calendar size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Últimos Registros</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total filtrado: {filteredResultados.length}</p>
-              </div>
-            </div>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">

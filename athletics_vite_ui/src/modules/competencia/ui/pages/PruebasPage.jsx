@@ -258,9 +258,7 @@ const PruebasPage = () => {
                             to="/dashboard/competencias"
                             className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
                         >
-                            <span className="group-hover:-translate-x-1 transition-transform duration-200">
-                                ← Volver
-                            </span>
+                            
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                             Catálogo de Pruebas

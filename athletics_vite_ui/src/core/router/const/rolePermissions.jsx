@@ -47,7 +47,7 @@ const rolePermissions = {
         },
         { path: '/dashboard/historial-medico', icon: Heart, label: 'Historial Médico' },
         { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
-        { path: '/dashboard/results', icon: Activity, label: 'Resultados (Comp)' },
+        { path: '/dashboard/results', icon: Activity, label: 'Resultados Competencias' },
         { path: '/dashboard/rendimiento', icon: TrendingUp, label: 'Rendimiento Deportivo' },
         { path: '/dashboard/pasantes', icon: Users, label: 'Pasantes' },
     ],

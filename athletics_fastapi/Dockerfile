@@ -24,10 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar el resto del código fuente
 COPY . .
 
-# Copiar scripts de inicialización y dar permisos
-COPY check_db.py .
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+# Crear directorio data para archivos estáticos (ej: fotos de perfil)
+RUN mkdir -p data/profile_pictures
+
+# Convertir line endings y dar permisos al entrypoint (fix Windows CRLF)
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 # Exponer el puerto
 EXPOSE 8080
