@@ -39,6 +39,7 @@ const MisAtletasPage = () => {
         last_name: '',
         identificacion: '',
         fecha_nacimiento: '',
+        sexo: 'M',
         phone: '',
         anios_experiencia: 0
     });
@@ -55,6 +56,7 @@ const MisAtletasPage = () => {
                     last_name: detail.user?.last_name || '',
                     identificacion: detail.user?.identificacion || '',
                     fecha_nacimiento: detail.user?.fecha_nacimiento || '',
+                    sexo: detail.user?.sexo || 'M',
                     phone: detail.user?.phone || '',
                     anios_experiencia: detail.anios_experiencia || 0,
                 });
@@ -78,6 +80,7 @@ const MisAtletasPage = () => {
                 last_name: editFormData.last_name,
                 identificacion: editFormData.identificacion,
                 fecha_nacimiento: editFormData.fecha_nacimiento,
+                sexo: editFormData.sexo,
                 phone: editFormData.phone,
                 atleta_data: {
                     anios_experiencia: parseInt(editFormData.anios_experiencia)
@@ -285,7 +288,7 @@ const MisAtletasPage = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="md:col-span-2 space-y-1.5">
+                                <div className="space-y-1.5">
                                     <label htmlFor={`${baseId}-fecha_nacimiento`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Fecha de Nacimiento</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
@@ -297,6 +300,25 @@ const MisAtletasPage = () => {
                                             onChange={handleChange}
                                             className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
                                         />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label htmlFor={`${baseId}-sexo`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Sexo</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <select
+                                            id={`${baseId}-sexo`}
+                                            name="sexo"
+                                            value={editFormData.sexo}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all appearance-none"
+                                        >
+                                            <option value="M">Masculino</option>
+                                            <option value="F">Femenino</option>
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">

@@ -18,8 +18,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
 
-# Dependency Injection Helper
+# -------------------------------------------------------------------------
+# INYECCIÓN DE DEPENDENCIAS (Dependency Injection Factory)
+# -------------------------------------------------------------------------
 def get_resultado_prueba_service(db: AsyncSession = Depends(get_session)):
+    """
+    Factory function que construye el servicio con todas sus dependencias.
+    Inyecta los repositorios necesarios para realizar validaciones cruzadas.
+    """
     return ResultadoPruebaService(
         repo=ResultadoPruebaRepository(db),
         atleta_repo=AtletaRepository(db),
@@ -30,13 +36,25 @@ def get_resultado_prueba_service(db: AsyncSession = Depends(get_session)):
 from ...dependencies import get_current_admin_or_entrenador
 
 router = APIRouter()
-
+# -------------------------------------------------------------------------
+# ENDPOINT: POST / (Crear Resultado)
+# -------------------------------------------------------------------------
 @router.post("/", response_model=BaseResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_admin_or_entrenador)])
 async def create_resultado_prueba(
     data: ResultadoPruebaCreate,
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
 ):
+    """
+    Registra un nuevo resultado de prueba para un atleta.
+    
+    **Proceso interno:**
+    1. Verifica existencia del Atleta y la Prueba.
+    2. Cruza la marca obtenida con la tabla de Baremos.
+    3. Asigna automáticamente una clasificación (Excelente, Pobre, etc.).
+    4. Persiste el registro en la base de datos.
+    """
     try:
+        # Registro de actividad en consola para depuración
         print(f"\n{'='*60}")
         print(f"📥 CREAR RESULTADO DE PRUEBA")
         print(f"{'='*60}")
@@ -47,7 +65,7 @@ async def create_resultado_prueba(
         print(f"   - Fecha: {data.fecha}")
         print(f"   - Estado: {data.estado}")
         
-        # Pass 0 or None for entrenador_id since it was removed from model, or update service signature
+        # Se envía 0 como marcador de posición para el ID del entrenador (ajuste de modelo)
         nuevo_resultado = await service.create(data, 0)
         
         print(f"\n✅ RESULTADO CREADO:")
@@ -79,12 +97,19 @@ async def create_resultado_prueba(
             message=str(e),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
+# -------------------------------------------------------------------------
+# ENDPOINT: GET / (Listar Resultados)
+# -------------------------------------------------------------------------
 @router.get("/", response_model=BaseResponse)
 async def get_all_resultados_prueba(
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
 ):
     try:
+        """
+    Recupera el listado completo de resultados registrados.
+    Realiza una hidratación manual para incluir datos del usuario (Nombre/ID) 
+    y evitar que el frontend reciba solo UUIDs crudos.
+    """
         resultados = await service.get_all()
         if not resultados:
              return ResponseHandler.success_response(
@@ -127,13 +152,19 @@ async def get_all_resultados_prueba(
             summary="Error al listar resultados de pruebas",
             message=str(e)
         )
-
+# -------------------------------------------------------------------------
+# ENDPOINT: PUT /{external_id} (Actualizar)
+# -------------------------------------------------------------------------
 @router.put("/{external_id}", response_model=BaseResponse, dependencies=[Depends(get_current_admin_or_entrenador)])
 async def update_resultado_prueba(
     external_id: UUID,
     data: ResultadoPruebaUpdate,
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
 ):
+    """
+    Actualiza un resultado existente. Si la marca cambia, el sistema 
+    recalcula la clasificación automáticamente.
+    """
     try:
         resultado = await service.update(external_id, data)
         return ResponseHandler.success_response(

@@ -133,12 +133,7 @@ const TipoDisciplinaPage = () => {
         {/* Header and Nav */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <Link
-              to="/dashboard/competencias"
-              className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
-            >
-
-            </Link>
+          
             <div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
                 Tipos de Disciplina

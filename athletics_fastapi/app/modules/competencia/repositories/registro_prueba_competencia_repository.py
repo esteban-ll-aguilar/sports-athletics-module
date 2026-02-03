@@ -1,3 +1,19 @@
+"""
+Repositorio para RegistroPruebaCompetencia.
+
+Este módulo contiene la clase `RegistroPruebaCompetenciaRepository`, que se encarga de realizar las operaciones CRUD (Crear, Leer, Actualizar, Eliminar) para el modelo `RegistroPruebaCompetencia`.
+
+Clases:
+    - RegistroPruebaCompetenciaRepository: Clase principal para manejar las operaciones de base de datos relacionadas con el modelo `RegistroPruebaCompetencia`.
+
+Métodos:
+    - create(data: RegistroPruebaCompetencia): Crea un nuevo registro en la base de datos.
+    - get_all(): Obtiene todos los registros de la base de datos.
+    - get_by_external_id(external_id: UUID): Obtiene un registro específico por su `external_id`.
+    - update(external_id: UUID, data: dict): Actualiza un registro existente identificado por su `external_id`.
+
+"""
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID

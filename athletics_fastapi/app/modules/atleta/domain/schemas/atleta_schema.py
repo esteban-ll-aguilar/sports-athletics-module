@@ -16,6 +16,7 @@ class UserInfo(BaseModel):
     phone: Optional[str] = None
     identificacion: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
+    sexo: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

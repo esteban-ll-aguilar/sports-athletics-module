@@ -147,6 +147,28 @@ const PasanteForm = ({ onSubmit, initialData = null, onClose, isLoading }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
+                    <label className="text-sm text-gray-700 dark:text-gray-400">Sexo</label>
+                    <div className="relative">
+                        <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />
+                        <select
+                            {...register('sexo', { required: 'El sexo es obligatorio' })}
+                            className="w-full bg-gray-50 dark:bg-[#2a2a2a] border border-gray-300 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-8 text-gray-900 dark:text-white focus:outline-none focus:border-[#b30c25] appearance-none"
+                        >
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                    {errors.sexo && <span className="text-xs text-red-500">{errors.sexo.message}</span>}
+                </div>
+
+                <div className="space-y-1"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
                     <label className="text-sm text-gray-700 dark:text-gray-400">Correo Electrónico</label>
                     <div className="relative">
                         <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400 dark:text-gray-500" />

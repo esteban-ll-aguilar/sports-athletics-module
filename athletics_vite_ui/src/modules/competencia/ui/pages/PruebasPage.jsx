@@ -254,12 +254,6 @@ const PruebasPage = () => {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-1">
-                        <Link
-                            to="/dashboard/competencias"
-                            className="inline-flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 font-semibold text-sm mb-2 transition-all duration-200 group"
-                        >
-                            
-                        </Link>
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                             Catálogo de Pruebas
                         </h1>
@@ -291,9 +285,7 @@ const PruebasPage = () => {
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-[#332122] rounded-xl text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-[#b30c25] outline-none transition-all placeholder-gray-400"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest px-2">Total: {filteredPruebas.length}</span>
-                    </div>
+                  
                 </div>
 
                 {/* Quick Access Cards */}
@@ -360,16 +352,16 @@ const PruebasPage = () => {
                 </div>
 
                 {/* Table */}
-                <div className="bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
+                        <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-gray-50/50 dark:bg-[#212121]/50 border-b border-gray-200 dark:border-[#332122]">
-                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
-                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
-                                    <th className="px-6 py-4 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Medición</th>
-                                    <th className="px-6 py-4 text-center text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
-                                    <th className="px-6 py-4 text-right text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
+                                <tr className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Medición</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">

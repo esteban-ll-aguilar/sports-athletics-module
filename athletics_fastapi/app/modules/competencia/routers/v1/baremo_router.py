@@ -8,7 +8,7 @@ from app.modules.competencia.services.baremo_service import BaremoService
 from app.modules.competencia.dependencies import get_baremo_service, get_current_admin_or_entrenador
 from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
-
+# Definición del router para el recurso 'Baremo'
 router = APIRouter()
 
 # ----------------------
@@ -24,6 +24,10 @@ async def create_baremo(
     service: BaremoService = Depends(get_baremo_service),
     current_user = Depends(get_current_admin_or_entrenador)  # Protección explícita
 ):
+    """
+    Registra un nuevo baremo en el sistema.
+    Requiere permisos de Administrador o Entrenador.
+    """
     try:
         nuevo_baremo = await service.create(data)
         return ResponseHandler.success_response(
@@ -47,8 +51,13 @@ async def list_baremos(
     incluir_inactivos: bool = True,
     service: BaremoService = Depends(get_baremo_service)
 ):
+    """
+    Retorna la lista de todos los baremos configurados.
+    Endpoint público (o según política de dependencias globales).
+    """
     try:
         baremos = await service.get_all(incluir_inactivos)
+        # Manejo de lista vacía para evitar errores en el cliente
         if not baremos:
              return ResponseHandler.success_response(
                 summary="No hay baremos registrados",
@@ -78,6 +87,9 @@ async def get_baremo(
     service: BaremoService = Depends(get_baremo_service)
 ):
     try:
+        """
+    Busca un baremo específico utilizando su identificador externo (UUID).
+    """
         baremo = await service.get(external_id)
         if not baremo:
             return ResponseHandler.not_found_response(
@@ -108,6 +120,10 @@ async def update_baremo(
     service: BaremoService = Depends(get_baremo_service),
     current_user = Depends(get_current_admin_or_entrenador)  # Protección explícita
 ):
+    """
+    Actualiza la información de un baremo existente.
+    Protegido para roles de gestión.
+    """
     try:
         baremo = await service.update(external_id, data)
         return ResponseHandler.success_response(
