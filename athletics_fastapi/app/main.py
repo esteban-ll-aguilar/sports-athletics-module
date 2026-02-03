@@ -254,11 +254,3 @@ _APP.add_middleware(
 from app.api.api_v1 import router_api_v1 as api_v1_router
 
 _APP.include_router(api_v1_router)
-@_APP.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=422,
-        content={
-            "detail": "Error de validación en la solicitud. Revisa los campos enviados.",
-        }
-    )

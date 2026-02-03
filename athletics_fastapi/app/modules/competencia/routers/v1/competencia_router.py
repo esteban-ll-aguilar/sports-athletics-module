@@ -26,7 +26,8 @@ async def crear_competencia(
     """Crear una nueva competencia. Administradores y Entrenadores."""
     try:
         # Validar permisos
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        # Validar permisos
+        if current_user.profile.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.ENTRENADOR]:
              return ResponseHandler.forbidden_response(
                  message="No tienes permisos para crear competencias"
              )
@@ -130,7 +131,7 @@ async def actualizar_competencia(
     """Actualizar una competencia (Admin o Entrenador propietario)."""
     try:
         # Validación de rol
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if current_user.profile.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.ENTRENADOR]:
              return ResponseHandler.forbidden_response(
                  message="Solo administradores y entrenadores pueden modificar competencias"
              )
@@ -167,7 +168,7 @@ async def eliminar_competencia(
 ):
     """Eliminar una competencia (Admin o Entrenador)."""
     try:
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if current_user.profile.role not in [RoleEnum.ADMINISTRADOR, RoleEnum.ENTRENADOR]:
             return ResponseHandler.forbidden_response(
                 message="Solo administradores y entrenadores pueden eliminar competencias"
             )

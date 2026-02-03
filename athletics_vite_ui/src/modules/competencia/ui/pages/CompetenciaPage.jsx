@@ -328,7 +328,7 @@ const CompetenciasPage = () => {
             fetchCompetencias();
             return true;
           } catch (error) {
-            console.error("Error al guardar:", error);
+            console.error("Error al guardar:", error.response?.data || error);
             Swal.fire({
               title: 'Error',
               text: 'Error al guardar la competencia',
