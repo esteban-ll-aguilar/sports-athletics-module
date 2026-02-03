@@ -9,11 +9,17 @@ function App() {
 
   useEffect(() => {
     const initAuth = async () => {
-      await authService.checkAuth();
-      setIsLoading(false);
+      try {
+        // Silently check/refresh auth without blocking UI
+        await authService.checkAuth();
+      } catch (error) {
+        console.debug('Initial auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     initAuth();
-  }, []);
+  }, []); // Solo ejecutar una vez al montar
 
   if (isLoading) {
     return (

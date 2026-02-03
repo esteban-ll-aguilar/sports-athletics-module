@@ -76,12 +76,20 @@ const UserRoleManagementPage = () => {
     try {
       const updatedUser = await adminService.updateUserRole(userId, role);
 
-      setUsers(prev =>
-        prev.map(u => (u.id === userId ? updatedUser : u))
-      );
-
-      handleCancelChange(userId);
-      toast.success('Rol actualizado');
+      // Validar que el usuario actualizado tenga los campos necesarios
+      if (updatedUser && updatedUser.id) {
+        setUsers(prev =>
+          prev.map(u => (u.id === userId ? updatedUser : u))
+        );
+        handleCancelChange(userId);
+        toast.success('Rol actualizado');
+      } else {
+        // Si la respuesta no es válida, recargar la lista completa
+        console.warn('Updated user format invalid, reloading users');
+        await fetchUsers();
+        handleCancelChange(userId);
+        toast.success('Rol actualizado');
+      }
     } catch (error) {
       console.error(error);
       toast.error('Error al actualizar rol');
@@ -107,6 +115,9 @@ const UserRoleManagementPage = () => {
   // FILTER
   // ===============================
   const filteredUsers = users.filter(user => {
+    // Validar que el usuario existe y tiene los campos necesarios
+    if (!user || !user.email) return false;
+    
     const matches =
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username?.toLowerCase().includes(searchTerm.toLowerCase());

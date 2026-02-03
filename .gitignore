@@ -16,3 +16,5 @@ lcov.info
 *.log
 
 
+athletics_fastapi@tmp/
+athletics_vite_ui@tmp/

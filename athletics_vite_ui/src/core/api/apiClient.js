@@ -12,6 +12,19 @@ const axiosInstance = axios.create({
 });
 
 let accessToken = null;
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
 
 export const setAccessToken = (token) => {
     accessToken = token;
@@ -36,8 +49,26 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/refresh')) {
+        // No intentar refresh si el error es de login/register o ya estamos refrescando
+        const isAuthEndpoint = originalRequest.url.includes('/auth/login') || 
+                              originalRequest.url.includes('/auth/register') ||
+                              originalRequest.url.includes('/auth/refresh');
+
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+            if (isRefreshing) {
+                // Si ya está refrescando, encolar la petición
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return axiosInstance(originalRequest);
+                }).catch(err => {
+                    return Promise.reject(err);
+                });
+            }
+
             originalRequest._retry = true;
+            isRefreshing = true;
 
             try {
                 // Intentar refrescar el token (el backend leerá la cookie)
@@ -46,13 +77,21 @@ axiosInstance.interceptors.response.use(
                 if (response.data.success && response.data.data.access_token) {
                     const newAccessToken = response.data.data.access_token;
                     setAccessToken(newAccessToken);
+                    processQueue(null, newAccessToken);
                     originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     return axiosInstance(originalRequest);
                 }
             } catch (refreshError) {
                 // Si falla el refresh (token expirado o inválido), logout
+                processQueue(refreshError, null);
                 setAccessToken(null);
-                window.location.href = '/login'; // O usar history.push si se dispone de router fuera de componente
+                // Solo redirigir si no estamos ya en login
+                if (!window.location.pathname.includes('/login')) {
+                    window.location.href = '/login';
+                }
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
             }
         }
         return Promise.reject(error);

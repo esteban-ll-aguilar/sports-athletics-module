@@ -377,8 +377,8 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
                                         className="block w-full px-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="CEDULA">Cédula</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
-                                        <option value="RUC">RUC</option>
+                                        {/* <option value="PASAPORTE">Pasaporte</option>
+                                        <option value="RUC">RUC</option> */}
                                     </select>
                                 </div>
                                 <div>
