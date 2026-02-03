@@ -58,6 +58,7 @@ const CompetenciaModal = ({ isOpen, onClose, onSubmit, editingCompetencia }) => 
     if (result.isConfirmed) {
       setSubmitting(true);
       try {
+        console.log("CompetenciaModal submitting form:", form);
         const success = await onSubmit(form);
 
         if (success) {

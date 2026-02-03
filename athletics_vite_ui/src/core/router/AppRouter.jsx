@@ -18,6 +18,19 @@ import PasswordResetPage from '@modules/auth/ui/pages/PasswordResetPage';
 
 // Proteccion
 import ProtectedRoute from './ProtectedRoute';
+import { getUserRole } from '@modules/auth/utils/roleUtils';
+
+// Helper component for role-based dashboard routing
+const RoleBasedDashboard = () => {
+  const userRole = getUserRole();
+
+  // Redirect ATLETA users to their specific dashboard
+  if (userRole === 'ATLETA') {
+    return <Navigate to="/dashboard/atleta" replace />;
+  }
+
+  return <DashboardPage />;
+};
 
 // Dashboard pages
 import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
@@ -30,6 +43,7 @@ import AdminUsersTable from '@modules/admin/ui/pages/admin_controller_user_ui';
 import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
 import RegistroPruebasPage from '@modules/competencia/ui/pages/RegistroPrueba.jsx';
 import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
+import BaremosSimplePage from '@modules/competencia/ui/pages/BaremosSimplePage';
 import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
 import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
 import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
@@ -83,7 +97,7 @@ const router = createBrowserRouter([
         element: <DashboardLayout />,
         children: [
           // /dashboard
-          { index: true, element: <DashboardPage /> },
+          { index: true, element: <RoleBasedDashboard /> },
 
           // --- ADMIN ROUTES ---
           {
@@ -110,6 +124,7 @@ const router = createBrowserRouter([
                   { index: true, element: <PruebasPage /> },
                   { path: 'resultados', element: <RegistroPruebasPage /> },
                   { path: 'baremos', element: <BaremosPage /> },
+                  { path: 'baremos-simple', element: <BaremosSimplePage /> },
                   { path: 'disciplinas', element: <TipoDisciplinaPage /> },
                 ]
               }

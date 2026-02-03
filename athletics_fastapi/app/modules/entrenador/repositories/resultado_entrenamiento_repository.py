@@ -16,11 +16,13 @@ class ResultadoEntrenamientoRepository:
             # Import needed models for joined loading
             from app.modules.atleta.domain.models.atleta_model import Atleta
             from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+            from app.modules.entrenador.domain.models.entrenador_model import Entrenador
             from app.modules.auth.domain.models.user_model import UserModel
 
             query = select(ResultadoEntrenamiento).options(
                 selectinload(ResultadoEntrenamiento.atleta).selectinload(Atleta.user).selectinload(UserModel.auth),
-                selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.horarios)
+                selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.horarios),
+                selectinload(ResultadoEntrenamiento.entrenamiento).selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user)
             )
             
             if not incluir_inactivos:

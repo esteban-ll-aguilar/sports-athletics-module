@@ -185,7 +185,7 @@ const RegistroResultadoEntrenamientoModal = ({ isOpen, onClose, onSubmit, editin
     const submitButtonText = getSubmitButtonText();
 
     return (
-        <dialog open className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] border-none">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend']">
             <button
                 className="absolute inset-0 w-full h-full cursor-default bg-transparent border-none"
                 onClick={onClose}
@@ -376,7 +376,7 @@ const RegistroResultadoEntrenamientoModal = ({ isOpen, onClose, onSubmit, editin
                     </div>
                 </form>
             </div>
-        </dialog>
+        </div>
     );
 };
 

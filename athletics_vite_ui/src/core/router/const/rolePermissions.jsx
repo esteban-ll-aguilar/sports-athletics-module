@@ -2,7 +2,6 @@ import { LayoutDashboard, Users, Trophy, Calendar, Activity, Heart, TrendingUp }
 
 const rolePermissions = {
     ADMINISTRADOR: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/dashboard/users', icon: Users, label: 'Gestión de Roles' },
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/admin', icon: Users, label: 'Administración' },
@@ -11,7 +10,8 @@ const rolePermissions = {
             icon: Users,
             label: 'Gestión de Pruebas',
             children: [
-                { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos' },
+                { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos Especificos' },
+                { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos Simples' },
                 { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
                 { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }
             ]
@@ -19,19 +19,19 @@ const rolePermissions = {
     ],
 
     ATLETA: [
-        { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/dashboard/atleta', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/dashboard/schedule', icon: Calendar, label: 'Horario' },
     ],
 
     ENTRENADOR: [
-        { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         {
             path: '/dashboard/registro-pruebas',
             icon: Users,
             label: 'Gestión de Pruebas',
             children: [
                 { path: '/dashboard/registro-pruebas', label: 'Agregar Pruebas' },
-                { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos' },
+                { path: '/dashboard/registro-pruebas/baremos', label: 'Items Baremos' },
+                { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos' },
                 { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
                 { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }
             ]
@@ -47,7 +47,7 @@ const rolePermissions = {
         },
         { path: '/dashboard/historial-medico', icon: Heart, label: 'Historial Médico' },
         { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
-        { path: '/dashboard/results', icon: Activity, label: 'Resultados (Comp)' },
+        { path: '/dashboard/results', icon: Activity, label: 'Resultados Competencias' },
         { path: '/dashboard/rendimiento', icon: TrendingUp, label: 'Rendimiento Deportivo' },
     ],
 

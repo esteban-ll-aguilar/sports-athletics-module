@@ -27,9 +27,12 @@ class CompetenciaRepository {
     // POST /api/v1/competencia/competencias/
     async create(competenciaData) {
         try {
+            console.log("CompetenciaRepository create payload:", competenciaData);
             const responseData = await ApiClient.post(`${API_URL}`, competenciaData);
+            console.log("CompetenciaRepository create response:", responseData);
             return responseData;
         } catch (error) {
+            console.error("CompetenciaRepository create error:", error);
             throw error.response ? error.response.data : error;
         }
     }

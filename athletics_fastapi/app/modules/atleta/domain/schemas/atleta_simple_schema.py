@@ -7,7 +7,7 @@ class UserSimpleSchema(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     identificacion: Optional[str] = None
-    email: str
+    # email excluded - not needed for dashboard display
 
     model_config = ConfigDict(from_attributes=True)
 

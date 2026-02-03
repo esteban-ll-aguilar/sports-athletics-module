@@ -115,3 +115,10 @@ class ResultadoCompetenciaRead(ResultadoCompetenciaBase):
     fecha_actualizacion: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    competencia: Optional["CompetenciaRead"] = None
+    prueba: Optional["PruebaRead"] = None
+
+# Import after class definition to avoid circular imports
+from app.modules.competencia.domain.schemas.prueba_schema import PruebaRead
+ResultadoCompetenciaRead.model_rebuild()

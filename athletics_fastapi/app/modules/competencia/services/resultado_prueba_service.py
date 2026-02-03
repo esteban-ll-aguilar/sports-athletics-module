@@ -58,7 +58,7 @@ class ResultadoPruebaService:
             user = await user_repo.get_by_external_id(data.atleta_id)
 
             if user:
-                logger.info(f"✅ Usuario encontrado: {user.first_name} {user.last_name}")
+                logger.info(f"✅ Usuario encontrado: {user.first_name} {user.last_name} (ID: {user.id})")
                 # Try to find atleta by user_id
                 atleta = await self.atleta_repo.get_by_user_id(user.id)
 
@@ -71,9 +71,13 @@ class ResultadoPruebaService:
                     )
                     atleta = await self.atleta_repo.create(atleta)
                     logger.info(f"✅ Atleta creado con ID: {atleta.id}")
+                else:
+                    logger.info(f"✅ Atleta encontrado: ID={atleta.id}, user_id={atleta.user_id}")
             else:
                 logger.error(f"❌ Usuario no encontrado con UUID: {data.atleta_id}")
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Atleta/Usuario no encontrado con ID: {data.atleta_id}")
+        else:
+            logger.info(f"✅ Atleta encontrado directamente por external_id: ID={atleta.id}")
              
         # 1. Validar Usuario de Atleta (para Sexo y Edad)
         if not atleta.user:

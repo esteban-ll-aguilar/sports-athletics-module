@@ -1,7 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Users, Trophy, Calendar, Activity, CheckCircle, Clock } from 'lucide-react';
 
 const DashboardPage = () => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Redirect athletes to their specific dashboard
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                if (user.role === 'ATLETA') {
+                    navigate('/dashboard/atleta', { replace: true });
+                }
+            } catch (error) {
+                console.error('Error parsing user:', error);
+            }
+        }
+    }, [navigate]);
+
     return (
         <div className="space-y-8 p-6">
 

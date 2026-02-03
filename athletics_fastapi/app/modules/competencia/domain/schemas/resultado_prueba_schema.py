@@ -50,9 +50,16 @@ class ResultadoPruebaRead(ResultadoPruebaBase):
     def atleta_user_id(self) -> Optional[int]:
         """
         Retorna el identificador del usuario asociado al atleta.
-        Esta propiedad permite acceder al `user_id` del atleta relacionado
-        sin exponer directamente la entidad completa. 
         """
         if hasattr(self, '_atleta') and self._atleta and hasattr(self._atleta, 'user_id'):
             return self._atleta.user_id
         return None
+
+    # 🔗 Nested Objects
+    prueba: Optional["PruebaRead"] = None
+    atleta: Optional["AtletaSimpleResponse"] = None
+
+# Import after class definition to avoid circular imports
+from app.modules.competencia.domain.schemas.prueba_schema import PruebaRead
+from app.modules.atleta.domain.schemas.atleta_simple_schema import AtletaSimpleResponse
+ResultadoPruebaRead.model_rebuild()

@@ -257,7 +257,6 @@ const CompetenciasPage = () => {
                               {comp.nombre}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                              ID: {comp.external_id?.substring(0, 8)}...
                             </p>
                           </div>
                         </div>
@@ -328,7 +327,7 @@ const CompetenciasPage = () => {
             fetchCompetencias();
             return true;
           } catch (error) {
-            console.error("Error al guardar:", error);
+            console.error("Error al guardar:", error.response?.data || error);
             Swal.fire({
               title: 'Error',
               text: 'Error al guardar la competencia',

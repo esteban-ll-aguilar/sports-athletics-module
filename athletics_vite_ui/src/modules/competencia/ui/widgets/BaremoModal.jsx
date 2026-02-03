@@ -4,9 +4,10 @@ import Swal from "sweetalert2";
 import pruebaService from "../../services/prueba_service";
 // import baremoService from "../../services/baremo_service"; // Passed via props implicitly or used in parent
 
-const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
+const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] }) => {
   const [loading, setLoading] = useState(false);
   const [pruebas, setPruebas] = useState([]);
+  const [selectedBaremoId, setSelectedBaremoId] = useState("");
 
   // Estado del formulario
   const [form, setForm] = useState({
@@ -79,8 +80,12 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
     e.preventDefault();
 
     // Validaciones básicas
-    if (!form.prueba_id) return Swal.fire("Error", "Seleccione una prueba", "error");
+    if (!form.prueba_id && !form.prueba_external_id) return Swal.fire("Error", "Seleccione una prueba", "error");
     if (form.items.length === 0) return Swal.fire("Error", "Agregue al menos un rango de calificación", "error");
+
+    // Determinar si estamos editando (ya sea por editingBaremo o por selectedBaremoId)
+    const isEditing = editingBaremo || selectedBaremoId;
+    const baremoToUpdate = editingBaremo || baremos.find(b => b.external_id === selectedBaremoId);
 
     const payload = {
       ...form,
@@ -94,7 +99,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
     };
 
     const result = await Swal.fire({
-      title: editingBaremo ? '¿Actualizar Baremo?' : '¿Crear Baremo?',
+      title: isEditing ? '¿Actualizar Baremo?' : '¿Crear Baremo?',
       text: "Se guardará la configuración de puntuación.",
       icon: 'question',
       showCancelButton: true,
@@ -107,7 +112,22 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
     });
 
     if (result.isConfirmed) {
-      onSubmit(payload);
+      try {
+        console.log("📤 Payload a enviar:", payload);
+        console.log("🔄 isEditing:", isEditing);
+        console.log("📋 baremoToUpdate:", baremoToUpdate);
+
+        // Si estamos editando, pasar el baremo completo con su external_id
+        if (isEditing && baremoToUpdate) {
+          await onSubmit({ ...payload, external_id: baremoToUpdate.external_id }, baremoToUpdate);
+        } else {
+          await onSubmit(payload);
+        }
+        onClose();
+      } catch (err) {
+        console.error("Error al guardar:", err);
+        Swal.fire("Error", "No se pudo guardar el baremo", "error");
+      }
     }
   };
 
@@ -120,160 +140,159 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
       <div className="w-full max-w-4xl bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#333] my-8">
 
         {/* HEADER */}
-        <div className="px-8 py-6 border-b border-[#333] flex justify-between items-center bg-[#252525] rounded-t-2xl">
-          <div>
-            <h2 id="modal-title" className="text-2xl font-bold text-white mb-1">
-              {editingBaremo ? 'Editar Baremo' : 'Nuevo Baremo'}
-            </h2>
-            <p className="text-gray-400 text-sm">Configura las reglas de puntuación y clasificación</p>
+        <div className="px-8 py-6 border-b border-[#333] bg-[#252525] rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 id="modal-title" className="text-2xl font-bold text-white">
+                Gestionar Rangos de Clasificación
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                {editingBaremo && pruebas.find(p => p.external_id === editingBaremo.prueba_external_id)?.nombre} -
+                {editingBaremo?.sexo === 'M' ? ' Masculino' : ' Femenino'} -
+                {editingBaremo?.edad_min}-{editingBaremo?.edad_max} años
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2 hover:bg-[#1e1e1e] rounded-lg transition text-gray-400 hover:text-white"
+              aria-label="Cerrar modal"
+            >
+              <span className="material-symbols-outlined text-3xl">close</span>
+            </button>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
-            <span className="material-symbols-outlined text-3xl" aria-hidden="true">close</span>
-          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {!editingBaremo && (
+            <>
+              {/* SELECTOR DE BAREMO */}
+              <div>
+                <label htmlFor="select-baremo" className="block text-sm font-medium text-gray-300 mb-3">
+                  Selecciona un Baremo para Agregar Ítems
+                </label>
+                <select
+                  id="select-baremo"
+                  className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
+                  value={selectedBaremoId}
+                  onChange={(e) => {
+                    const baremoId = e.target.value;
+                    setSelectedBaremoId(baremoId);
+                    const baremo = baremos.find(b => b.external_id === baremoId);
+                    if (baremo) {
+                      const prueba = pruebas.find(p => p.id === baremo.prueba_id || p.external_id === baremo.prueba_id);
+                      setForm({
+                        ...baremo,
+                        prueba_external_id: prueba?.external_id || baremo.prueba_id,
+                        items: baremo.items || []
+                      });
+                    }
+                  }}
+                  required
+                >
+                  <option value="">Seleccione un baremo...</option>
+                  {baremos.map(b => {
+                    const prueba = pruebas.find(p => p.id === b.prueba_id || p.external_id === b.prueba_id);
+                    return (
+                      <option key={b.external_id} value={b.external_id}>
+                        {prueba?.nombre || 'Prueba'} - {b.sexo === 'M' ? 'Masculino' : 'Femenino'} - {b.edad_min}-{b.edad_max} años ({b.items?.length || 0} ítems)
+                      </option>
+                    );
+                  })}
+                </select>
 
-          {/* SECCIÓN 1: CONTEXTO */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label htmlFor="baremo-prueba" className="block text-sm font-medium text-gray-300 mb-2">Prueba</label>
-              <select
-                id="baremo-prueba"
-                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
-                value={form.prueba_id}
-                onChange={e => setForm({ ...form, prueba_id: e.target.value })}
-                required
-              >
-                <option value="">Seleccione Prueba...</option>
-                {pruebas.map(p => (
-                  <option key={p.external_id} value={p.external_id}>
-                    {p.nombre} ({p.tipo_medicion})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Sexo</label>
-              <fieldset className="flex bg-[#121212] rounded-xl p-1 border border-[#444]" aria-label="Seleccionar sexo">
-                {['M', 'F'].map(sex => (
-                  <button
-                    type="button"
-                    key={sex}
-                    onClick={() => setForm({ ...form, sexo: sex })}
-                    aria-pressed={form.sexo === sex}
-                    className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${form.sexo === sex
-                      ? 'bg-[#b30c25] text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white'
-                      }`}
-                  >
-                    {sex === 'M' ? 'Masculino' : 'Femenino'}
-                  </button>
-                ))}
-              </fieldset>
-            </div>
-
-            <div>
-              <label htmlFor="baremo-edad-min" className="block text-sm font-medium text-gray-300 mb-2">Edad Mínima (años)</label>
-              <input
-                id="baremo-edad-min"
-                type="number"
-                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
-                value={form.edad_min}
-                onChange={e => setForm({ ...form, edad_min: e.target.value })}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="baremo-edad-max" className="block text-sm font-medium text-gray-300 mb-2">Edad Máxima (años)</label>
-              <input
-                id="baremo-edad-max"
-                type="number"
-                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
-                value={form.edad_max}
-                onChange={e => setForm({ ...form, edad_max: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <hr className="border-[#333]" />
-
-          {/* SECCIÓN 2: ITEMS (RANGOS) */}
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-white">Rangos de Clasificación</h3>
-              <button
-                type="button"
-                onClick={addItem}
-                className="text-[#b30c25] hover:text-[#d41c3a] font-bold text-sm flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">add_circle</span>{' '}
-                Agregar Rango
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {form.items.map((item, index) => (
-                <div key={index} className="flex flex-col md:flex-row gap-3 items-start bg-[#161616] p-4 rounded-xl border border-[#333] group hover:border-[#555] transition">
-                  <div className="flex-1 w-full">
-                    <label htmlFor={`marca-min-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Mínima</label>
-                    <input
-                      id={`marca-min-${index}`}
-                      type="number" step="0.01"
-                      className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
-                      value={item.marca_minima}
-                      onChange={e => handleItemChange(index, 'marca_minima', e.target.value)}
-                      placeholder="0.00"
-                      required
-                    />
+                {selectedBaremoId && (
+                  <div className="mt-4 p-4 bg-[#252525] rounded-xl border border-[#444]">
+                    <h3 className="text-sm font-bold text-white mb-2">Información del Baremo:</h3>
+                    <div className="text-sm text-gray-400 space-y-1">
+                      <p><span className="font-medium">Prueba:</span> {pruebas.find(p => p.external_id === form.prueba_external_id || p.id === form.prueba_id)?.nombre}</p>
+                      <p><span className="font-medium">Sexo:</span> {form.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
+                      <p><span className="font-medium">Rango de Edad:</span> {form.edad_min} - {form.edad_max} años</p>
+                      <p><span className="font-medium">Ítems actuales:</span> {form.items?.length || 0}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 w-full">
-                    <label htmlFor={`marca-max-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Máxima</label>
-                    <input
-                      id={`marca-max-${index}`}
-                      type="number" step="0.01"
-                      className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
-                      value={item.marca_maxima}
-                      onChange={e => handleItemChange(index, 'marca_maxima', e.target.value)}
-                      placeholder="10.00"
-                      required
-                    />
-                  </div>
-                  <div className="flex-2 w-full">
-                    <label htmlFor={`clasif-${index}`} className="text-xs text-gray-500 mb-1 block">Clasificación</label>
-                    <select
-                      id={`clasif-${index}`}
-                      className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
-                      value={item.clasificacion}
-                      onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
-                      required
+                )}
+              </div>
+
+              <hr className="border-[#333]" />
+            </>
+          )}
+
+          {/* SECCIÓN DE ITEMS (RANGOS) - Solo mostrar si hay un baremo seleccionado */}
+          {(editingBaremo || selectedBaremoId) && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-bold text-white">Rangos de Clasificación</h3>
+                <button
+                  type="button"
+                  onClick={addItem}
+                  className="text-[#b30c25] hover:text-[#d41c3a] font-bold text-sm flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">add_circle</span>{' '}
+                  Agregar Rango
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {form.items.map((item, index) => (
+                  <div key={index} className="flex flex-col md:flex-row gap-3 items-start bg-[#161616] p-4 rounded-xl border border-[#333] group hover:border-[#555] transition">
+                    <div className="flex-1 w-full">
+                      <label htmlFor={`marca-min-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Mínima</label>
+                      <input
+                        id={`marca-min-${index}`}
+                        type="number" step="0.01"
+                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        value={item.marca_minima}
+                        onChange={e => handleItemChange(index, 'marca_minima', e.target.value)}
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                    <div className="flex-1 w-full">
+                      <label htmlFor={`marca-max-${index}`} className="text-xs text-gray-500 mb-1 block">Marca Máxima</label>
+                      <input
+                        id={`marca-max-${index}`}
+                        type="number" step="0.01"
+                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        value={item.marca_maxima}
+                        onChange={e => handleItemChange(index, 'marca_maxima', e.target.value)}
+                        placeholder="10.00"
+                        required
+                      />
+                    </div>
+                    <div className="flex-2 w-full">
+                      <label htmlFor={`clasif-${index}`} className="text-xs text-gray-500 mb-1 block">Clasificación</label>
+                      <select
+                        id={`clasif-${index}`}
+                        className="w-full bg-[#252525] border border-[#444] rounded-lg px-3 py-2 text-white text-sm"
+                        value={item.clasificacion}
+                        onChange={e => handleItemChange(index, 'clasificacion', e.target.value)}
+                        required
+                      >
+                        <option value="">Seleccione...</option>
+                        <option value="PRINCIPIANTE">PRINCIPIANTE</option>
+                        <option value="INTERMEDIO">INTERMEDIO</option>
+                        <option value="AVANZADO">AVANZADO</option>
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeItem(index)}
+                      className="mt-6 md:mt-5 p-2 text-gray-500 hover:text-red-500 transition rounded-lg hover:bg-red-500/10"
+                      aria-label={`Eliminar rango ${index + 1}`}
                     >
-                      <option value="">Seleccione...</option>
-                      <option value="PRINCIPIANTE">PRINCIPIANTE</option>
-                      <option value="INTERMEDIO">INTERMEDIO</option>
-                      <option value="AVANZADO">AVANZADO</option>
-                    </select>
+                      <span className="material-symbols-outlined" aria-hidden="true">delete</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    className="mt-6 md:mt-5 p-2 text-gray-500 hover:text-red-500 transition rounded-lg hover:bg-red-500/10"
-                    aria-label={`Eliminar rango ${index + 1}`}
-                  >
-                    <span className="material-symbols-outlined" aria-hidden="true">delete</span>
-                  </button>
-                </div>
-              ))}
-              {form.items.length === 0 && (
-                <div className="text-center py-8 text-gray-500 border border-dashed border-[#444] rounded-xl">
-                  No hay rangos definidos.
-                </div>
-              )}
+                ))}
+                {form.items.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 border border-dashed border-[#444] rounded-xl">
+                    No hay rangos definidos.
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* BOTONES */}
           <div className="flex gap-4 pt-4 border-t border-[#333]">
@@ -288,13 +307,13 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
               type="submit"
               className="flex-1 py-3.5 rounded-xl font-bold text-white bg-linear-to-r from-[#b30c25] to-[#7a0819] hover:brightness-110 shadow-lg shadow-red-900/20 transition"
             >
-              {editingBaremo ? 'Guardar Cambios' : 'Crear Baremo'}
+              Guardar Rangos
             </button>
           </div>
 
         </form>
-      </div>
-    </dialog>
+      </div >
+    </dialog >
 
   );
 };

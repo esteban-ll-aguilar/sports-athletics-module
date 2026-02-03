@@ -10,6 +10,8 @@ const TipoDisciplinaPage = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterEstado, setFilterEstado] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -109,6 +111,21 @@ const TipoDisciplinaPage = () => {
     }
   };
 
+  // Update filteredTipos to filter by name, description, and state
+  const filteredTipos = tipos.filter(tipo => {
+    const nombre = tipo.nombre.toLowerCase();
+    const descripcion = (tipo.descripcion || "").toLowerCase();
+    const estado = tipo.estado ? "activo" : "inactivo";
+
+    const matchSearch =
+      nombre.includes(searchTerm.toLowerCase()) ||
+      descripcion.includes(searchTerm.toLowerCase());
+
+    const matchEstado = filterEstado === "" || estado === filterEstado.toLowerCase();
+
+    return matchSearch && matchEstado;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#121212] font-['Lexend'] text-gray-900 dark:text-gray-200 transition-colors duration-300">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -120,10 +137,7 @@ const TipoDisciplinaPage = () => {
               to="/dashboard/competencias"
               className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
             >
-              <span className="group-hover:-translate-x-1 transition-transform duration-200">
-                <ArrowLeft size={18} />
-              </span>
-              Volver
+
             </Link>
             <div>
               <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
@@ -154,6 +168,48 @@ const TipoDisciplinaPage = () => {
           </div>
         </div>
 
+        {/* Search and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Search Bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar por nombre o descripción..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="
+              w-full pl-4 pr-4 py-3 rounded-xl 
+              bg-white dark:bg-[#212121]
+              border border-gray-200 dark:border-[#332122]
+              text-gray-900 dark:text-gray-100
+              placeholder-gray-400 dark:placeholder-gray-500
+              focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+              outline-none transition-all shadow-sm
+            "
+            />
+          </div>
+
+          {/* Filter by Estado */}
+          <div className="relative">
+            <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              className="
+              w-full pl-4 pr-4 py-3 rounded-xl 
+              bg-white dark:bg-[#212121]
+              border border-gray-200 dark:border-[#332122]
+              text-gray-900 dark:text-gray-100
+              focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+              outline-none transition-all shadow-sm
+              cursor-pointer appearance-none
+            "
+            >
+              <option value="">Todos los Estados</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
 
         {/* Tabla */}
         <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
@@ -185,7 +241,7 @@ const TipoDisciplinaPage = () => {
                       </div>
                     </td>
                   </tr>
-                ) : tipos.length === 0 ? (
+                ) : filteredTipos.length === 0 ? (
                   <tr>
                     <td colSpan="4" className="py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
@@ -195,7 +251,7 @@ const TipoDisciplinaPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  tipos.map((t) => (
+                  filteredTipos.map((t) => (
                     <tr
                       key={t.external_id}
                       className={`transition-colors duration-200 ${!t.estado

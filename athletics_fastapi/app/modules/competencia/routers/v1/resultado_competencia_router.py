@@ -56,11 +56,14 @@ async def listar_resultados(
         role = current_user.profile.role
         role_str = role.value if hasattr(role, 'value') else str(role)
 
-        # Entrenadores y Admins ven todo
-        if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
-            entrenador_id = None
+        # Entrenadores y Admins ven todo (o filtrado por entrenador)
+        if role_str == "ATLETA":
+            resultados = await service.get_by_user_id(current_user.id)
+        else:
+            if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
+                 entrenador_id = None
             
-        resultados = await service.get_all(incluir_inactivos, entrenador_id)
+            resultados = await service.get_all(incluir_inactivos, entrenador_id)
         if not resultados:
              return ResponseHandler.success_response(
                 summary="No hay resultados de competencia registrados",

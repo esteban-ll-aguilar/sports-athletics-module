@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from uuid import UUID
 from datetime import date
 from typing import List
@@ -48,6 +48,6 @@ class PruebaRead(PruebaBase):
     """
     id: int
     external_id: UUID
-    baremos: List[BaremoRead] = []
+    # baremos excluded - not needed for dashboard display
 
     model_config = ConfigDict(from_attributes=True)

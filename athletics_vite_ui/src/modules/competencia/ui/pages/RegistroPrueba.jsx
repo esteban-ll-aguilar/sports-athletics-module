@@ -32,6 +32,9 @@ const RegistroPruebasPage = () => {
                 competenciaService.getAll()
             ]);
 
+            console.log("📊 Resultados recibidos del backend:", resResultados);
+            console.log("📊 Primer resultado (estructura completa):", resResultados[0]);
+
             setResultados(Array.isArray(resResultados) ? resResultados : resResultados.data || []);
             setAtletas(Array.isArray(resAtletas) ? resAtletas : resAtletas.items || resAtletas.data || []);
             setPruebas(Array.isArray(resPruebas) ? resPruebas : resPruebas?.data || []);
@@ -98,10 +101,28 @@ const RegistroPruebasPage = () => {
             return true;
         } catch (error) {
             console.error("Error completo:", error);
-            const errorMsg = error.response?.data?.detail || error.message || "No se pudo guardar";
+            console.error("Error response:", error.response);
+            console.error("Error response data:", error.response?.data);
+
+            // Extraer mensaje de error detallado
+            let errorMsg = "No se pudo guardar";
+
+            if (error.response?.data?.detail) {
+                errorMsg = error.response.data.detail;
+            } else if (error.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            } else if (error.message) {
+                errorMsg = error.message;
+            }
+
             Swal.fire({
                 title: "Error",
-                text: errorMsg,
+                html: `<div style="text-align: left;">
+                    <p>${errorMsg}</p>
+                    ${errorMsg.includes('baremo') ?
+                        '<p style="margin-top: 15px; color: #fbbf24;"><strong>💡 Sugerencia:</strong> Verifica que exista un baremo configurado para esta prueba.</p>'
+                        : ''}
+                </div>`,
                 icon: "error",
                 confirmButtonColor: '#b30c25',
                 background: '#1a1a1a',
@@ -221,7 +242,6 @@ const RegistroPruebasPage = () => {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
                                 <tr>
-                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ID</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Atleta</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Baremo</th>
@@ -234,25 +254,37 @@ const RegistroPruebasPage = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-[#332122]">
                                 {loading ? (
-                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando datos...</td></tr>
+                                    <tr><td colSpan="8" className="p-8 text-center text-gray-500 dark:text-gray-400">Cargando datos...</td></tr>
                                 ) : resultados.length === 0 ? (
-                                    <tr><td colSpan="9" className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                    <tr><td colSpan="8" className="p-8 text-center text-gray-500 dark:text-gray-400">
                                         <div className="flex flex-col items-center gap-2">
                                             <Clipboard size={32} />
                                             <span>No hay resultados registrados</span>
                                         </div>
                                     </td></tr>
                                 ) : (
-                                    resultados.filter(r =>
-                                        !searchTerm ||
-                                        getAtletaName(r.atleta_id, r.atleta_user_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        getPruebaName(r.prueba_id).toLowerCase().includes(searchTerm.toLowerCase())
-                                    ).map(row => (
+                                    resultados.filter(r => {
+                                        if (!searchTerm) return true;
+                                        const searchLower = searchTerm.toLowerCase();
+
+                                        // Search in athlete name (from atleta.user object or fallback)
+                                        const atletaName = r.atleta?.user ?
+                                            `${r.atleta.user.first_name} ${r.atleta.user.last_name}` :
+                                            getAtletaName(r.atleta_id, r.atleta_user_id);
+
+                                        // Search in prueba name
+                                        const pruebaName = getPruebaName(r.prueba_id);
+
+                                        return atletaName.toLowerCase().includes(searchLower) ||
+                                            pruebaName.toLowerCase().includes(searchLower);
+                                    }).map(row => (
                                         <tr key={row.id} className="hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors">
-                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-500">#{row.id}</td>
                                             <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                                                 <User size={16} className="text-gray-400" />
-                                                {getAtletaName(row.atleta_id, row.atleta_user_id)}
+                                                {row.atleta?.user ?
+                                                    `${row.atleta.user.first_name} ${row.atleta.user.last_name}` :
+                                                    getAtletaName(row.atleta_id, row.atleta_user_id)
+                                                }
                                             </td>
                                             <td className="px-6 py-4 text-gray-600 dark:text-gray-300">
                                                 <div className="flex items-center gap-2">
@@ -261,7 +293,7 @@ const RegistroPruebasPage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{getBaremoInfo(row.baremo_id)}</td>
-                                            <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.marca_obtenida} {getPruebaUnit(row.prueba_id)}</td>
+                                            <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.valor} {getPruebaUnit(row.prueba_id)}</td>
                                             <td className="px-6 py-4">
                                                 <span className="px-2.5 py-1 bg-gray-100 dark:bg-[#333] rounded-lg text-xs font-bold text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#444]">
                                                     {row.clasificacion_final}

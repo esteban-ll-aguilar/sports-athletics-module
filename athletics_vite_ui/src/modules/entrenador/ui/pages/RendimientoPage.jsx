@@ -20,6 +20,15 @@ const RendimientoPage = () => {
     const [selectedPrueba, setSelectedPrueba] = useState('');
 
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('individual');
+
+    const [competencias, setCompetencias] = useState([]);
+    const [pruebas, setPruebas] = useState([]);
+    const [resultados, setResultados] = useState([]);
+    const [resultadosPruebas, setResultadosPruebas] = useState([]);
+    const [resultadosEntrenamientos, setResultadosEntrenamientos] = useState([]);
+    const [atletas, setAtletas] = useState([]);
 
     // Data fetching helpers
     const extractData = (res, isTrain = false) => {
@@ -28,7 +37,7 @@ const RendimientoPage = () => {
         if (isTrain) {
             return Array.isArray(val) ? val : (val.data || []);
         }
-        return val.data?.items || val.data || val || [];
+        return val.items || val.data?.items || val.data || val || [];
     };
 
     const processAtletas = (itemsAthletes, itemsTrainResults) => {

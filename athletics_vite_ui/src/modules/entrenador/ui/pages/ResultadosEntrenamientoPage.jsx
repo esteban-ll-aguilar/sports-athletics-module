@@ -6,6 +6,9 @@ import EntrenamientoService from '../../services/EntrenamientoService';
 import resultadoEntrenamientoService from '../../services/resultado_entrenamiento_service';
 import atletaService from '../../../atleta/services/AtletaService';
 import RegistroResultadoEntrenamientoModal from '../widgets/RegistroResultadoEntrenamientoModal';
+import Swal from 'sweetalert2';
+import { Power, CheckCircle } from 'lucide-react';
+
 
 const ResultadosEntrenamientoPage = () => {
     const { id } = useParams(); // Optional ID: if present, filter by it.
@@ -33,6 +36,13 @@ const ResultadosEntrenamientoPage = () => {
             ]);
 
             setAllEntrenamientos(Array.isArray(resEntrenamientos) ? resEntrenamientos : []);
+
+            console.log("🏋️ Resultados Entrenamiento:", resResultados);
+            if (resResultados && resResultados.length > 0) {
+                console.log("🏋️ Primer Resultado:", resResultados[0]);
+                console.log("🏋️ Atleta en Resultado:", resResultados[0].atleta);
+            }
+
             setAllResultados(Array.isArray(resResultados) ? resResultados : []);
 
             const atletasData = Array.isArray(resAtletas) ? resAtletas : resAtletas.items || resAtletas.data || [];
@@ -121,20 +131,13 @@ const ResultadosEntrenamientoPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
-            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-8">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-                    <div className="space-y-2">
-                        <button
-                            onClick={() => navigate('/dashboard/entrenamientos')}
-                            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
-                        >
-                            <ArrowLeft size={20} />
-                            Gestión de Entrenamientos
-                        </button>
-                        <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-3">
-                            <Dumbbell className="text-[#b30c25]" />
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
+                    <div className="space-y-1">
+                        
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
                             Resultados de Entrenamientos
                         </h1>
                         <p className="text-gray-500 dark:text-gray-400">

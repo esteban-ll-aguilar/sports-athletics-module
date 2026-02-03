@@ -258,9 +258,7 @@ const PruebasPage = () => {
                             to="/dashboard/competencias"
                             className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-2 transition-all duration-200 group"
                         >
-                            <span className="group-hover:-translate-x-1 transition-transform duration-200">
-                                ← Volver
-                            </span>
+                            
                         </Link>
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                             Catálogo de Pruebas
@@ -296,6 +294,69 @@ const PruebasPage = () => {
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest px-2">Total: {filteredPruebas.length}</span>
                     </div>
+                </div>
+
+                {/* Quick Access Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Link
+                        to="/dashboard/registro-pruebas/resultados"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">assignment</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Resultados</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Registrar resultados</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/baremos"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">rule</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Baremos Completos</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Con rangos e ítems</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/baremos-simple"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">speed</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Baremos Simples</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Vista simplificada</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/disciplinas"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">category</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Disciplinas</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Tipos de disciplina</p>
+                            </div>
+                        </div>
+                    </Link>
                 </div>
 
                 {/* Table */}

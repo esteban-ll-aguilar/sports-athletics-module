@@ -16,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import AtletaService from '../../services/AtletaService';
+import authService from '@modules/auth/services/auth_service';
 
 const getStatusStyles = (isConfirmed, isRejected) => {
     if (isConfirmed) {
@@ -49,14 +50,42 @@ const ConfirmacionEntrenamientoPage = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const res = await AtletaService.getPendingConfirmations();
-            setRegistros(res);
 
-            if (res.length > 0) {
-                const index = id ? res.findIndex(r => r.external_id === id) : 0;
+            // Get user profile from auth service to get the numeric atleta_id
+            const userProfile = await authService.getProfile();
+            console.log("User profile from API:", userProfile);
+
+            // Extract the numeric atleta_id from data.atleta.id
+            const atletaId = userProfile?.data?.atleta?.id;
+
+            if (!atletaId) {
+                toast.error("No se pudo obtener el ID del atleta");
+                return;
+            }
+
+            const res = await AtletaService.getPendingConfirmations(atletaId);
+
+            console.log("All registros from API:", res);
+            console.log("Confirmado values:", res.map(r => ({ id: r.id, confirmado: r.confirmado, type: typeof r.confirmado })));
+            console.log("Asistencias in registros:", res.map(r => ({ id: r.id, asistencias: r.asistencias })));
+
+            // Filter to show only pending confirmations (where confirmado is null/undefined)
+            // If confirmado === true, it's already confirmed
+            // If confirmado === false, it's already rejected
+            // Also filter out registros that already have asistencias with atleta_confirmo = true
+            const pendingRegistros = res.filter(reg => {
+                const hasConfirmado = reg.confirmado === null || reg.confirmado === undefined;
+                const hasNoConfirmedAsistencia = !reg.asistencias?.some(a => a.atleta_confirmo === true);
+                return hasConfirmado && hasNoConfirmedAsistencia;
+            });
+
+            setRegistros(pendingRegistros);
+
+            if (pendingRegistros.length > 0) {
+                const index = id ? pendingRegistros.findIndex(r => r.external_id === id) : 0;
                 const safeIndex = index >= 0 ? index : 0;
                 setCurrentIndex(safeIndex);
-                setEntrenamiento(res[safeIndex].entrenamiento);
+                setEntrenamiento(pendingRegistros[safeIndex].horario?.entrenamiento);
             }
         } catch (error) {
             console.error(error);
@@ -72,19 +101,30 @@ const ConfirmacionEntrenamientoPage = () => {
 
     const selectSession = (index) => {
         setCurrentIndex(index);
-        setEntrenamiento(registros[index].entrenamiento);
+        setEntrenamiento(registros[index].horario?.entrenamiento);
     };
 
     const handleConfirmar = async () => {
         if (!registros[currentIndex]) return;
         setConfirmando(true);
         try {
-            await AtletaService.confirmAttendance(registros[currentIndex].external_id, true);
+            const fechaEntrenamiento = registros[currentIndex].horario?.entrenamiento?.fecha_entrenamiento;
+            console.log("Confirming attendance:", {
+                registro_id: registros[currentIndex].id,
+                fecha_entrenamiento: fechaEntrenamiento,
+                registro: registros[currentIndex]
+            });
+            await AtletaService.confirmAttendance(
+                registros[currentIndex].id,
+                true,
+                fechaEntrenamiento
+            );
             toast.success("Asistencia confirmada correctamente");
             fetchData();
         } catch (error) {
             console.error(error);
-            toast.error("Error al confirmar asistencia");
+            const errorMessage = error.response?.data?.detail || "Error al confirmar asistencia";
+            toast.error(errorMessage);
         } finally {
             setConfirmando(false);
         }
@@ -94,7 +134,12 @@ const ConfirmacionEntrenamientoPage = () => {
         if (!registros[currentIndex]) return;
         setConfirmando(true);
         try {
-            await AtletaService.confirmAttendance(registros[currentIndex].external_id, false);
+            const fechaEntrenamiento = registros[currentIndex].horario?.entrenamiento?.fecha_entrenamiento;
+            await AtletaService.confirmAttendance(
+                registros[currentIndex].id,
+                false,
+                fechaEntrenamiento
+            );
             toast.success("Se ha registrado que no asistirás");
             fetchData();
         } catch (error) {
@@ -176,10 +221,12 @@ const ConfirmacionEntrenamientoPage = () => {
                                         <span className={`w-2 h-2 rounded-full mt-1.5 ${regStyles.dot}`}></span>
                                         <div className="flex-1 ml-3">
                                             <p className={`font-bold text-sm ${currentIndex === index ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>
-                                                {reg.entrenamiento?.tipo_entrenamiento || 'Entrenamiento'}
+                                                {reg.horario?.entrenamiento?.tipo_entrenamiento || 'Entrenamiento'}
                                             </p>
                                             <p className="text-[10px] text-gray-400 mt-0.5">
-                                                {format(new Date(reg.entrenamiento?.fecha_entrenamiento), "EEEE d 'de' MMMM", { locale: es })}
+                                                {reg.horario?.entrenamiento?.fecha_entrenamiento
+                                                    ? format(new Date(reg.horario.entrenamiento.fecha_entrenamiento), "EEEE d 'de' MMMM", { locale: es })
+                                                    : 'Fecha no disponible'}
                                             </p>
                                         </div>
                                         <ChevronRight size={16} className={`text-gray-300 group-hover:translate-x-1 transition-transform ${currentIndex === index ? 'text-[#b30c25] opacity-100' : 'opacity-0'}`} />
@@ -228,7 +275,9 @@ const ConfirmacionEntrenamientoPage = () => {
                                     <div>
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fecha Evento</p>
                                         <p className="font-bold text-gray-900 dark:text-white">
-                                            {format(new Date(entrenamiento?.fecha_entrenamiento), "d 'de' MMMM, yyyy", { locale: es })}
+                                            {entrenamiento?.fecha_entrenamiento
+                                                ? format(new Date(entrenamiento.fecha_entrenamiento), "d 'de' MMMM, yyyy", { locale: es })
+                                                : 'Fecha no disponible'}
                                         </p>
                                     </div>
                                 </div>

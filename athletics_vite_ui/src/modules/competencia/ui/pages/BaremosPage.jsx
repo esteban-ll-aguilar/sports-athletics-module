@@ -4,7 +4,7 @@ import baremoService from "../../services/baremo_service";
 import pruebaService from "../../services/prueba_service";
 import BaremoModal from "../widgets/BaremoModal";
 import Swal from "sweetalert2";
-import { Plus, Ruler, Users, Activity, Edit2, Power, CheckCircle, List } from 'lucide-react';
+import { Plus, Ruler, Users, Activity, Edit2, Power, CheckCircle, List, Search, Filter } from 'lucide-react';
 
 const BaremosPage = () => {
   const [baremos, setBaremos] = useState([]);
@@ -12,6 +12,10 @@ const BaremosPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBaremo, setSelectedBaremo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterPrueba, setFilterPrueba] = useState("");
+  const [filterContexto, setFilterContexto] = useState("");
+  const [filterEstado, setFilterEstado] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -108,9 +112,21 @@ const BaremosPage = () => {
     }
   };
 
+  // Update filteredBaremos to filter by Prueba, Contexto (Sexo/Edad), and Estado
+  const filteredBaremos = baremos.filter(baremo => {
+    const pruebaName = getPruebaName(baremo.prueba_id).toLowerCase();
+    const contexto = `${baremo.sexo === 'M' ? 'Masculino' : 'Femenino'} ${baremo.edad_min} - ${baremo.edad_max}`.toLowerCase();
+    const estado = baremo.estado ? "Activo" : "Inactivo";
+
+    const matchPrueba = filterPrueba === "" || pruebaName.includes(filterPrueba.toLowerCase());
+    const matchContexto = filterContexto === "" || contexto.includes(filterContexto.toLowerCase());
+    const matchEstado = filterEstado === "" || estado.toLowerCase() === filterEstado.toLowerCase();
+
+    return matchPrueba && matchContexto && matchEstado;
+  });
 
   return (
-    <div className="min-h-screen bg-[#121212] text-gray-200 font-['Lexend']">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend']">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumb Navigation */}
@@ -118,19 +134,16 @@ const BaremosPage = () => {
           to="/dashboard/pruebas"
           className="inline-flex items-center gap-2 text-gray-400 hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
         >
-          <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
-            arrow_back
-          </span>
-          Volver a Gestión de Pruebas
+          
         </Link>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
               Administración de Baremos
             </h1>
-            <p className="text-gray-400">Gestiona puntuaciones y clasificaciones</p>
+            <p className="text-gray-500 dark:text-gray-400">Gestiona los rangos de clasificación de cada baremo</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -147,8 +160,75 @@ const BaremosPage = () => {
                     "
             >
               <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
-              Añadir Baremo
+              Agregar Ítems
             </button>
+          </div>
+        </div>      
+
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Search Bar for Prueba */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Buscar por prueba..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="
+                w-full pl-12 pr-4 py-3 rounded-xl 
+                bg-white dark:bg-[#212121]
+                border border-gray-200 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400 dark:placeholder-gray-500
+                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                outline-none transition-all shadow-sm
+              "
+            />
+          </div>
+
+          {/* Filter by Contexto */}
+          <div className="relative">
+            <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <select
+              value={filterContexto}
+              onChange={(e) => setFilterContexto(e.target.value)}
+              className="
+                w-full pl-12 pr-4 py-3 rounded-xl 
+                bg-white dark:bg-[#212121]
+                border border-gray-200 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                outline-none transition-all shadow-sm
+                cursor-pointer appearance-none
+              "
+            >
+              <option value="">Todos los Contextos</option>
+              <option value="masculino">Masculino</option>
+              <option value="femenino">Femenino</option>
+            </select>
+          </div>
+
+          {/* Filter by Estado */}
+          <div className="relative">
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <select
+              value={filterEstado}
+              onChange={(e) => setFilterEstado(e.target.value)}
+              className="
+                w-full pl-12 pr-4 py-3 rounded-xl 
+                bg-white dark:bg-[#212121]
+                border border-gray-200 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                outline-none transition-all shadow-sm
+                cursor-pointer appearance-none
+              "
+            >
+              <option value="">Todos los Estados</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
           </div>
         </div>
 
@@ -175,7 +255,7 @@ const BaremosPage = () => {
                       </div>
                     </td>
                   </tr>
-                ) : baremos.length === 0 ? (
+                ) : filteredBaremos.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="py-20 text-center">
                       <div className="flex flex-col items-center gap-3">
@@ -185,7 +265,7 @@ const BaremosPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  baremos.map((b) => (
+                  filteredBaremos.map((b) => (
                     <tr
                       key={b.external_id}
                       className={`transition-colors duration-200 ${!b.estado
@@ -280,13 +360,23 @@ const BaremosPage = () => {
       <BaremoModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={async (data) => {
-          if (selectedBaremo) await baremoService.update(selectedBaremo.external_id, data);
-          else await baremoService.create(data);
-          setIsModalOpen(false);
-          fetchData();
+        onSubmit={async (data, baremoToUpdate) => {
+          try {
+            // Si hay external_id en data o baremoToUpdate, es una actualización
+            if (data.external_id || baremoToUpdate) {
+              const externalId = data.external_id || baremoToUpdate.external_id;
+              await baremoService.update(externalId, data);
+            } else {
+              await baremoService.create(data);
+            }
+            setIsModalOpen(false);
+            fetchData();
+          } catch (err) {
+            console.error("Error al guardar baremo:", err);
+          }
         }}
         editingBaremo={selectedBaremo}
+        baremos={baremos}
       />
     </div>
   );
