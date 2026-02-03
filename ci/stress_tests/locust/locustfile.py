@@ -33,4 +33,4 @@ from admin_load import AdminUser, AdminAccessDeniedUser
 # en cada clase individual con el atributo `weight`.
 
 # Ejemplo de ejecución:
-# locust -f locustfile.py --host=http://localhost:8081 -u 10 -r 2 --run-time 60s
+# locust -f locustfile.py --host=http://localhost:8080 -u 10 -r 2 --run-time 60s

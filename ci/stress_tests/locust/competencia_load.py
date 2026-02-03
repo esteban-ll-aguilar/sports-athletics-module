@@ -3,7 +3,7 @@
 COMPETENCIA MODULE LOAD TEST
 =================================================================
 Archivo: ci/stress_tests/locust/competencia_load.py
-Uso: locust -f competencia_load.py --host=http://localhost:8081
+Uso: locust -f competencia_load.py --host=http://localhost:8080
 
 Endpoints testeados (sin trailing slash):
   

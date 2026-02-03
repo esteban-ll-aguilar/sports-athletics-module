@@ -24,11 +24,19 @@ class DatabaseBase:
                 _SETTINGS.database_url_async,
                 pool_size=_SETTINGS.database_pool_size,
                 max_overflow=_SETTINGS.database_max_overflow,
-                pool_pre_ping=True,
+                pool_pre_ping=True,  # Verificar conexiones antes de usarlas
                 pool_recycle=_SETTINGS.database_pool_recycle,
                 pool_timeout=_SETTINGS.database_pool_timeout,
-                pool_use_lifo=True,  # Reutilizar conexiones recientes (mejor para stress)
+                pool_use_lifo=True,  # Reutilizar conexiones recientes (mejor cache)
                 echo=False,  # Desactivar SQL echo para reducir I/O
+                connect_args={
+                    "server_settings": {
+                        "application_name": "athletics_fastapi",
+                        "jit": "off"  # Desactivar JIT para consultas rápidas
+                    },
+                    "command_timeout": 60,  # Timeout de comandos SQL
+                    "timeout": 10,  # Timeout de conexión inicial
+                },
             )
             cls._instance._session_factory = async_sessionmaker(
                 cls._instance._engine, 

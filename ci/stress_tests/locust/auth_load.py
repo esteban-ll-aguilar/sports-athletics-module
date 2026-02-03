@@ -3,7 +3,7 @@
 AUTH MODULE LOAD TEST
 =================================================================
 Archivo: ci/stress_tests/locust/auth_load.py
-Uso: locust -f auth_load.py --host=http://localhost:8081
+Uso: locust -f auth_load.py --host=http://localhost:8080
 
 Endpoints testeados (sin trailing slash):
   POST /api/v1/tests/auth/register - Registro de usuarios

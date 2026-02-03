@@ -37,4 +37,4 @@ EXPOSE 8080
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Comando por defecto para iniciar la aplicación
-CMD ["uvicorn", "app.main:_APP", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "app.main:_APP", "--host", "0.0.0.0", "--port", "8080", "--workers", "4"]
