@@ -255,8 +255,8 @@ const GestionEntrenamientosPage = () => {
                                         <tr
                                             key={ent.id}
                                             className={`transition-colors ${!ent.estado
-                                                    ? "bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60"
-                                                    : "hover:bg-gray-50 dark:hover:bg-[#2a2829]"
+                                                ? "bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60"
+                                                : "hover:bg-gray-50 dark:hover:bg-[#2a2829]"
                                                 }`}                                        >
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-4">
