@@ -38,13 +38,10 @@ async def list_users(
     # Verificar permisos
     if current_user.profile.role == RoleEnum.ADMINISTRADOR:
         pass # Admin puede ver todo
-    elif current_user.profile.role == RoleEnum.ENTRENADOR:
-        # Entrenador solo puede ver Atletas
+    elif current_user.profile.role in [RoleEnum.ENTRENADOR, RoleEnum.PASANTE]:
+        # Entrenador y Pasante solo pueden listar Atletas
         if role and role != RoleEnum.ATLETA:
-             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Entrenadores solo pueden listar atletas")
-        # Si no especifica rol, forzamos filtro por Atleta? O dejamos que servico filtre?
-        # Mejor forzar filtro si es entrenador y no lo especificó, o validar.
-        # Por ahora asumimos que el frontend pide role=ATLETA.
+             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Entrenadores y Pasantes solo pueden listar atletas")
     else:
          raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permisos para listar usuarios")
 

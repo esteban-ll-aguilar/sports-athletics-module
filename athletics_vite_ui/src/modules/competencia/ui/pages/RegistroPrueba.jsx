@@ -36,7 +36,7 @@ const RegistroPruebasPage = () => {
             console.log("📊 Primer resultado (estructura completa):", resResultados[0]);
 
             setResultados(Array.isArray(resResultados) ? resResultados : resResultados.data || []);
-            setAtletas(Array.isArray(resAtletas) ? resAtletas : resAtletas.items || resAtletas.data || []);
+            setAtletas(resAtletas || []);
             setPruebas(Array.isArray(resPruebas) ? resPruebas : resPruebas?.data || []);
             setBaremos(Array.isArray(resBaremos) ? resBaremos : resBaremos?.data || []);
             setCompetencias(Array.isArray(resComp) ? resComp : resComp.data || []);
@@ -293,7 +293,7 @@ const RegistroPruebasPage = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{getBaremoInfo(row.baremo_id)}</td>
-                                            <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.valor} {getPruebaUnit(row.prueba_id)}</td>
+                                            <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.marca_obtenida} {getPruebaUnit(row.prueba_id)}</td>
                                             <td className="px-6 py-4">
                                                 <span className="px-2.5 py-1 bg-gray-100 dark:bg-[#333] rounded-lg text-xs font-bold text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#444]">
                                                     {row.clasificacion_final}

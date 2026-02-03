@@ -59,6 +59,7 @@ import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenci
 import HistorialMedicoPage from '@modules/entrenador/ui/pages/HistorialMedicoPage';
 import RendimientoPage from '@modules/entrenador/ui/pages/RendimientoPage';
 import ResultadosEntrenamientoPage from '@modules/entrenador/ui/pages/ResultadosEntrenamientoPage';
+import PasantesPage from '@modules/entrenador/ui/pages/PasantesPage';
 
 
 // Representante
@@ -72,7 +73,7 @@ import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 // Seguridad
 // Seguridad
 
-const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
+const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE', 'PASANTE'];
 
 const router = createBrowserRouter([
   // Public Routes
@@ -115,7 +116,7 @@ const router = createBrowserRouter([
           {
             path: 'registro-pruebas',
             element: (
-              <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />
+              <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />
             ),
             children: [
               {
@@ -133,19 +134,19 @@ const router = createBrowserRouter([
 
           {
             path: 'competitions',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [{ index: true, element: <CompetenciasPage /> }],
           },
           {
             path: 'results',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [{ index: true, element: <ResultadosPage /> }],
           },
 
           // --- ATLETA ROUTES ---
           {
             path: 'athletes',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [
               { index: true, element: <AthletesTable /> }
             ],
@@ -154,7 +155,7 @@ const router = createBrowserRouter([
           // --- ENTRENADOR ROUTES ---
           {
             path: 'entrenamientos',
-            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR', 'PASANTE']} />,
             children: [
               { index: true, element: <GestionEntrenamientosPage /> },
               { path: 'resultados', element: <ResultadosEntrenamientoPage /> },
@@ -172,6 +173,11 @@ const router = createBrowserRouter([
             path: 'rendimiento',
             element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
             children: [{ index: true, element: <RendimientoPage /> }],
+          },
+          {
+            path: 'pasantes',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <PasantesPage /> }],
           },
 
           // --- REPRESENTANTE ROUTES ---

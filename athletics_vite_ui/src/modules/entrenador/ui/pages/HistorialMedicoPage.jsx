@@ -22,7 +22,7 @@ const HistorialMedicoPage = () => {
       const response = await AtletaService.getAthletes();
 
       // Mapear los datos reales del backend
-      const items = response.items || [];
+      const items = response || [];
       const atletasReales = items.map((user) => ({
         id: user.id,
         nombre: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username,

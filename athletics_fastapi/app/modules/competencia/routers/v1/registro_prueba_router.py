@@ -27,9 +27,11 @@ def get_resultado_prueba_service(db: AsyncSession = Depends(get_session)):
         baremo_repo=BaremoRepository(db)
     )
 
+from ...dependencies import get_current_admin_or_entrenador
+
 router = APIRouter()
 
-@router.post("/", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=BaseResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_admin_or_entrenador)])
 async def create_resultado_prueba(
     data: ResultadoPruebaCreate,
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
@@ -126,7 +128,7 @@ async def get_all_resultados_prueba(
             message=str(e)
         )
 
-@router.put("/{external_id}", response_model=BaseResponse)
+@router.put("/{external_id}", response_model=BaseResponse, dependencies=[Depends(get_current_admin_or_entrenador)])
 async def update_resultado_prueba(
     external_id: UUID,
     data: ResultadoPruebaUpdate,

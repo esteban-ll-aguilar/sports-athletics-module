@@ -13,7 +13,8 @@ from app.modules.auth.domain.schemas import (
 )
 
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
-from app.modules.auth.dependencies import get_users_repo, get_current_user
+from app.modules.auth.dependencies import get_users_repo, get_current_user, get_password_hasher
+from app.core.jwt.jwt import PasswordHasher
 # from app.public.schemas import BaseResponse # Import removed
 from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums.role_enum import RoleEnum, SexoEnum
@@ -38,6 +39,7 @@ users_router_v1 = APIRouter()
 async def create_user(
     user_data: UserCreateSchema,
     repo: AuthUsersRepository = Depends(get_users_repo),
+    hasher: PasswordHasher = Depends(get_password_hasher),
 ):
     """
     Crea un nuevo usuario básico.
@@ -51,8 +53,21 @@ async def create_user(
     Returns:
         APIResponse: Usuario creado.
     """
+    if await repo.get_by_email(user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email ya registrado",
+        )
+
+    if user_data.username and await repo.get_by_username(user_data.username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username ya registrado",
+        )
+
     try:
-        user = await repo.create_user(user_data)
+        password_hash = hasher.hash(user_data.password)
+        user = await repo.create(password_hash=password_hash, user_data=user_data)
 
         return APIResponse(
             success=True,
@@ -62,6 +77,8 @@ async def create_user(
                 from_attributes=True
             ).model_dump()
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error creating user: {e}")
         raise HTTPException(

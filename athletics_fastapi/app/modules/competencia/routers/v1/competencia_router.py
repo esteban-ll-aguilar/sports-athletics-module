@@ -26,12 +26,12 @@ async def crear_competencia(
     """Crear una nueva competencia. Administradores y Entrenadores."""
     try:
         # Validar permisos
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
              return ResponseHandler.forbidden_response(
                  message="No tienes permisos para crear competencias"
              )
 
-        nueva_competencia = await service.create(data, current_user.id)
+        nueva_competencia = await service.create(data, current_user.profile.id)
         return ResponseHandler.success_response(
             summary="Competencia creado con exito",
             message="Competencia creado con exito",
@@ -60,9 +60,9 @@ async def listar_competencias(
         role = current_user.profile.role
         role_str = role.value if hasattr(role, 'value') else str(role)
         
-        # Si es admin o entrenador, ve todo (entrenador_id=None)
+        # Si es admin, entrenador o pasante, ve todo (entrenador_id=None)
         # Entrenadores también deben ver todas las competencias para participar.
-        if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if role_str in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
             entrenador_id = None
             
         competencias = await service.get_all(incluir_inactivos, entrenador_id)
@@ -130,9 +130,9 @@ async def actualizar_competencia(
     """Actualizar una competencia (Admin o Entrenador propietario)."""
     try:
         # Validación de rol
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
              return ResponseHandler.forbidden_response(
-                 message="Solo administradores y entrenadores pueden modificar competencias"
+                 message="Solo administradores, entrenadores y pasantes pueden modificar competencias"
              )
 
         competencia_actualizada = await service.update(external_id, data)
@@ -167,9 +167,9 @@ async def eliminar_competencia(
 ):
     """Eliminar una competencia (Admin o Entrenador)."""
     try:
-        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR"]:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
             return ResponseHandler.forbidden_response(
-                message="Solo administradores y entrenadores pueden eliminar competencias"
+                message="Solo administradores, entrenadores y pasantes pueden eliminar competencias"
             )
             
         await service.delete(external_id)

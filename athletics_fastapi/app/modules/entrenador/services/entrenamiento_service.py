@@ -48,6 +48,12 @@ class EntrenamientoService:
         """
         return await self.repository.get_all_by_entrenador(entrenador_id)
 
+    async def get_all_entrenamientos(self) -> List[Entrenamiento]:
+        """
+        Obtiene lista de todos los entrenamientos.
+        """
+        return await self.repository.get_all()
+
     async def get_entrenamiento_detalle(self, entrenamiento_id: int, entrenador_id: int) -> Entrenamiento:
         """
         Obtiene los detalles de un entrenamiento específico.
