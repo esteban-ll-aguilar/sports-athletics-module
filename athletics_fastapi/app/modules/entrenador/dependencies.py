@@ -20,7 +20,7 @@ async def get_current_entrenador(
 ) -> Entrenador:
     
     # 1. Verificar Rol
-    if current_user.profile.role != RoleEnum.ENTRENADOR:
+    if current_user.profile.role not in [RoleEnum.ENTRENADOR, RoleEnum.PASANTE]:
         # Nota: Si se permite que admin actúe como entrenador, ajustar aquí.
         # Por ahora estricto a que tenga el rol.
         raise HTTPException(
@@ -29,14 +29,14 @@ async def get_current_entrenador(
         )
 
     # 2. Buscar Entrenador
-    entrenador = await entrenador_repo.get_by_user_id(current_user.id)
+    entrenador = await entrenador_repo.get_by_user_id(current_user.profile.id)
 
     # 3. Auto-creación si no existe
     if not entrenador:
         new_entrenador = Entrenador(
-            user_id=current_user.id,
+            user_id=current_user.profile.id,
             anios_experiencia=0,
-            is_pasante=False
+            is_pasante=(current_user.profile.role == RoleEnum.PASANTE)
             # Otros campos opcionales van por defecto o nulos
         )
         entrenador = await entrenador_repo.create(new_entrenador)

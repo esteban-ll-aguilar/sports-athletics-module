@@ -23,6 +23,7 @@ from app.modules.competencia.domain.models.baremo_model import Baremo
 from app.modules.competencia.domain.models.item_baremo_model import ItemBaremo
 from app.modules.competencia.domain.models.resultado_prueba_model import ResultadoPrueba
 from app.modules.competencia.domain.models.registro_prueba_competencia_model import RegistroPruebaCompetencia
+from app.modules.pasante.domain.models.pasante_model import Pasante
 from app.modules.competencia.domain.models.prueba_model import Prueba
 
 

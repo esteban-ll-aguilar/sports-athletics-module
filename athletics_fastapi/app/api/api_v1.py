@@ -20,6 +20,7 @@ from app.modules.competencia.routers.v1.api_router import api_competencia_router
 from app.modules.atleta.routers.v1.api_router import api_atleta_router_v1
 from app.modules.representante.routers.v1.api_router import api_representante_router_v1
 from app.modules.entrenador.routers.v1.api_router import api_entrenador_router_v1
+from app.modules.pasante.routers.v1.api_router import api_pasante_router_v1
 
 # Enrutador principal de la versión 1 de la API
 router_api_v1 = APIRouter(prefix='/api/v1')
@@ -30,6 +31,7 @@ router_api_v1.include_router(api_competencia_router_v1)
 router_api_v1.include_router(api_entrenador_router_v1)
 router_api_v1.include_router(api_atleta_router_v1)
 router_api_v1.include_router(api_representante_router_v1)
+router_api_v1.include_router(api_pasante_router_v1)
 
 # ======================================================
 # TEST ROUTES (NO RATE LIMITING) - Conditional Registration

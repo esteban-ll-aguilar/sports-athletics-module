@@ -126,38 +126,32 @@ const BaremosPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend']">
-      <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-
-        {/* Breadcrumb Navigation */}
-        <Link
-          to="/dashboard/pruebas"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-[#b30c25] font-medium text-sm mb-6 transition group"
-        >
-          
-        </Link>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
               Administración de Baremos
             </h1>
-            <p className="text-gray-500 dark:text-gray-400">Gestiona los rangos de clasificación de cada baremo</p>
+            <p className="text-gray-500 dark:text-gray-400 text-lg">
+              Gestiona los rangos de clasificación de cada baremo
+            </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <button
               onClick={() => { setSelectedBaremo(null); setIsModalOpen(true); }}
               className="
-                        group flex items-center justify-center gap-2
-                        px-6 py-3 rounded-xl
-                        text-sm font-bold text-white
-                        bg-linear-to-r from-[#b30c25] to-[#80091b]
-                        hover:brightness-110
-                        shadow-lg shadow-red-900/20 active:scale-95
-                        transition-all duration-300
-                    "
+                    group flex items-center justify-center gap-2
+                    px-6 py-3 rounded-xl
+                    text-sm font-bold text-white
+                    bg-linear-to-r from-[#b30c25] to-[#80091b]
+                    hover:brightness-110
+                    shadow-lg shadow-red-900/20 active:scale-95
+                    transition-all duration-300
+                "
             >
               <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
               Agregar Ítems

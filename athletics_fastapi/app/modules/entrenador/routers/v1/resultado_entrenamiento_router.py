@@ -51,8 +51,8 @@ async def get_all(
              # Let's keep it simple: if found, use it.
              pass
 
-    elif role_str == "ADMINISTRADOR":
-         entrenador_id = None # Admin sees all
+    elif role_str in ["ADMINISTRADOR", "PASANTE"]:
+         entrenador_id = None # Admin and Pasante see all
 
     return await service.get_all(incluir_inactivos, entrenador_id)
 

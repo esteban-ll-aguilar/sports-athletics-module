@@ -60,6 +60,20 @@ class EntrenamientoRepository:
         )
         return result.scalars().all()
 
+    async def get_all(self) -> List[Entrenamiento]:
+        """
+        Recupera todos los entrenamientos sin filtrar por entrenador.
+        """
+        from sqlalchemy.orm import selectinload
+        result = await self.session.execute(
+            select(Entrenamiento)
+            .options(
+                selectinload(Entrenamiento.entrenador).selectinload(Entrenador.user),
+                selectinload(Entrenamiento.horarios)
+            )
+        )
+        return result.scalars().all()
+
     async def get_by_external_id(self, external_id: str) -> Optional[Entrenamiento]:
         """
         Obtiene un entrenamiento por su ID externo (UUID).

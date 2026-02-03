@@ -25,7 +25,7 @@ async def crear_resultado(
     Se reciben UUIDs desde el frontend y el Service los convierte a IDs internos.
     """
     try:
-        nuevo_resultado = await service.create(data, current_user.id)
+        nuevo_resultado = await service.create(data, current_user.profile.id)
         return ResponseHandler.success_response(
             summary="Resultado de competencia creado con exito",
             message="Resultado de competencia creado con exito",
@@ -50,17 +50,17 @@ async def listar_resultados(
 ):
     """Listar todos los resultados. Administradores ven todo, Entrenadores tambien."""
     try:
-        entrenador_id = current_user.id
+        entrenador_id = current_user.profile.id
         
         # Obtener rol como string de forma segura
         role = current_user.profile.role
         role_str = role.value if hasattr(role, 'value') else str(role)
 
-        # Entrenadores y Admins ven todo (o filtrado por entrenador)
+        # Entrenadores, Admins y Pasantes ven todo (o filtrado por entrenador)
         if role_str == "ATLETA":
-            resultados = await service.get_by_user_id(current_user.id)
+            resultados = await service.get_by_user_id(current_user.profile.id)
         else:
-            if role_str in ["ADMINISTRADOR", "ENTRENADOR"]:
+            if role_str in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
                  entrenador_id = None
             
             resultados = await service.get_all(incluir_inactivos, entrenador_id)
@@ -158,7 +158,7 @@ async def actualizar_resultado(
                 message="Resultado no encontrado para actualización"
             )
 
-        if resultado.entrenador_id != current_user.id and current_user.profile.role != "ADMINISTRADOR":
+        if resultado.entrenador_id != current_user.profile.id and current_user.profile.role not in ["ADMINISTRADOR", "PASANTE"]:
              return ResponseHandler.forbidden_response(
                  message="No tienes permiso para actualizar este resultado"
              )

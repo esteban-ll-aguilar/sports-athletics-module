@@ -3,15 +3,15 @@ import apiClient from "../../../core/api/apiClient";
 const resultadoEntrenamientoService = {
     getAll: async (incluirInactivos = false) => {
         const response = await apiClient.get(`/entrenador/resultados-entrenamientos/?incluir_inactivos=${incluirInactivos}`);
-        return response;
+        return response?.items || response || [];
     },
     create: async (data) => {
         const response = await apiClient.post("/entrenador/resultados-entrenamientos", data);
-        return response;
+        return response?.data || response;
     },
     update: async (id, data) => {
         const response = await apiClient.put(`/entrenador/resultados-entrenamientos/${id}`, data);
-        return response;
+        return response?.data || response;
     },
     delete: async (id) => {
         await apiClient.delete(`/entrenador/resultados-entrenamientos/${id}`);

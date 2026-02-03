@@ -101,6 +101,11 @@ class UserCreateSchema(UserBaseSchema):
     atleta_data: Optional[AtletaCreate] = None
     entrenador_data: Optional[EntrenadorCreate] = None
     
+    @field_validator('email')
+    @classmethod
+    def normalize_email(cls, v: str):
+        return v.strip().lower()
+
     @field_validator('password')
     @classmethod
     def validate_password_strength(cls, v: str):
@@ -140,6 +145,13 @@ class UserUpdateSchema(BaseModel):
     sexo: Optional[SexoEnum] = None
     is_active: Optional[bool] = None
     role: Optional[RoleEnum] = None
+    
+    @field_validator('email')
+    @classmethod
+    def normalize_email(cls, v: Optional[str]):
+        if v:
+            return v.strip().lower()
+        return v
     
     atleta_data: Optional['AtletaUpdate'] = None
 
