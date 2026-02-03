@@ -153,7 +153,6 @@ const HistorialMedicoPage = () => {
                           />
                           <div>
                             <p className="text-sm font-medium text-gray-900 dark:text-white">{atleta.nombre}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-600">ID: PATH-1281</p>
                           </div>
                         </div>
                       </td>

@@ -257,7 +257,6 @@ const CompetenciasPage = () => {
                               {comp.nombre}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                              ID: {comp.external_id?.substring(0, 8)}...
                             </p>
                           </div>
                         </div>
