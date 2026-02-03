@@ -80,7 +80,7 @@ const rolePermissions = {
                 { path: '/dashboard/entrenamientos/resultados', label: 'Resultados (Train)' }
             ]
         },
-        { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
+        // { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
         { path: '/dashboard/results', icon: Activity, label: 'Gestión de Resultados (Comp)' },
     ]
 };

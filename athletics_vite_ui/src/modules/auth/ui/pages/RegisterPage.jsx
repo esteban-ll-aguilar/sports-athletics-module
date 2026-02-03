@@ -307,18 +307,18 @@ const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, user
         <div className={isModal ? "" : "flex min-h-screen w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-[#242223] dark:via-[#212121] dark:to-black"}>
             {/* Left Side - Image */}
             {!isModal && (
-                <div className="hidden lg:flex w-1/2 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white items-center justify-center overflow-hidden fixed h-full">
+                <div className="hidden lg:flex w-1/2 bg-gray-900 text-gray-900 dark:text-white items-center justify-center overflow-hidden fixed h-full">
                     <div className="absolute inset-0 z-0">
                         <img
                             src={loginImage}
                             alt="Athletics Background"
                             className="w-full h-full object-cover opacity-60"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-transparent dark:from-black/80"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80"></div>
                     </div>
-                    <div className="relative z-10 p-12 text-center max-w-lg">
+                    <div className="relative text-center z-10 p-30text-center max-w-lg text-white">
                         <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
-                        <p className="text-lg text-gray-700 dark:text-gray-200">
+                        <p className="text-lg text-gray-200">
                             Comienza tu viaje deportivo hoy mismo.
                         </p>
                     </div>
