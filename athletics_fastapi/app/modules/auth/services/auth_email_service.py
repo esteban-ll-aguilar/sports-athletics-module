@@ -1,10 +1,16 @@
-from app.core.config.enviroment import _SETTINGS
 from app.providers.email.email_provider import EmailProvider
 
 
 class AuthEmailService(EmailProvider):
         
     def send_reset_code(self, to_email: str, code: str) -> None:
+        """
+        Envía un código de restablecimiento de contraseña por correo electrónico.
+        
+        Args:
+            to_email (str): Dirección de correo del destinatario.
+            code (str): Código numérico o alfanumérico generado.
+        """
         subject = "Código para restablecer tu contraseña"
         body = (
             f"Tu código de verificación es: {code}\n\n"
@@ -13,7 +19,12 @@ class AuthEmailService(EmailProvider):
         self._send_email(to_email, subject, body)
 
     def send_password_changed_confirmation(self, to_email: str) -> None:
-        """Envía confirmación de que la contraseña fue cambiada exitosamente."""
+        """
+        Envía un correo de notificación confirmando que la contraseña ha sido cambiada.
+        
+        Args:
+           to_email (str): Dirección de correo del destinatario.
+        """
         subject = "Contraseña restablecida exitosamente"
         body = (
             "Tu contraseña ha sido restablecida exitosamente.\n\n"
@@ -26,7 +37,13 @@ class AuthEmailService(EmailProvider):
         self._send_email(to_email, subject, body)
 
     def send_email_verification_code(self, to_email: str, code: str) -> None:
-        """Envía código de verificación de email."""
+        """
+        Envía un código para verificar la dirección de correo electrónico de una cuenta nueva.
+        
+        Args:
+            to_email (str): Dirección de correo a verificar.
+            code (str): Código de verificación generado.
+        """
         subject = "Verifica tu cuenta"
         body = (
             f"¡Bienvenido!\n\n"
@@ -34,6 +51,11 @@ class AuthEmailService(EmailProvider):
             "Este código expira en 1 hora. "
             "Por favor ingresa este código para activar tu cuenta."
         )
+        # LOG CODE FOR DEBUGGING
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"🔑 VERIFICATION CODE for {to_email}: {code}")
+        
         self._send_email(to_email, subject, body)
 # ============================================
     

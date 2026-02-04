@@ -2,7 +2,6 @@
 Módulo de Pruebas Unitarias para Utilidades de Autenticación.
 Verifica el funcionamiento aislado de funciones como el hashing de contraseñas.
 """
-import pytest
 from app.core.jwt.jwt import PasswordHasher
 
 def test_password_hashing():

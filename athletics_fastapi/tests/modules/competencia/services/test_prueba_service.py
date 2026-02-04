@@ -4,7 +4,7 @@ Verifica la gestión de pruebas (creación, lectura, actualización) mockeando e
 Incluye casos de éxito y manejo de errores (e.g. 404 Not Found).
 """
 import pytest
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import AsyncMock
 from datetime import date
 from fastapi import HTTPException
 from types import SimpleNamespace
@@ -25,10 +25,16 @@ async def test_create_prueba_ok():
     """
     Verifica que se llame al repositorio correctamente para crear una prueba.
     """
-    repo = Mock()
-    repo.create = AsyncMock(return_value={"external_id": "123", "nombre": "Prueba Test"})
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
+    
+    prueba_mock = SimpleNamespace()
+    prueba_mock.nombre = "Prueba Test"
+    prueba_mock.id = 123
+    prueba_mock.external_id = "123"
+    prueba_repo.create.return_value = prueba_mock
 
-    service = PruebaService(repo)
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
 
     data = PruebaCreate(
         nombre="Prueba Test",
@@ -36,6 +42,7 @@ async def test_create_prueba_ok():
         siglas="PT",
         fecha_registro=date.today(),
         tipo_prueba=PruebaType.NORMAL,
+        tipo_medicion="TIEMPO",
         unidad_medida="SEGUNDOS",
         tipo_disciplina_id=1,
         baremo_id=1,
@@ -43,8 +50,8 @@ async def test_create_prueba_ok():
 
     result = await service.create_prueba(data)
 
-    repo.create.assert_awaited_once_with(data)
-    assert result["external_id"] == "123"
+    prueba_repo.create.assert_awaited_once_with(data)
+    assert result.external_id == "123"
 
 
 # -----------------------------------------------------------------------------
@@ -55,15 +62,16 @@ async def test_get_prueba_ok():
     """
     Verifica la obtención exitosa de una prueba por su ID.
     """
-    repo = Mock()
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
     # Simulamos que devuelve un objeto o dict
-    repo.get = AsyncMock(return_value={"external_id": "123", "nombre": "Existente"})
+    prueba_repo.get_by_external_id.return_value = {"external_id": "123", "nombre": "Existente"}
 
-    service = PruebaService(repo)
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
 
     result = await service.get_prueba("123")
 
-    repo.get.assert_awaited_once_with("123")
+    prueba_repo.get_by_external_id.assert_awaited_once_with("123")
     assert result["external_id"] == "123"
 
 
@@ -72,10 +80,11 @@ async def test_get_prueba_not_found():
     """
     Verifica que se lance HTTPException(404) cuando la prueba no existe.
     """
-    repo = Mock()
-    repo.get = AsyncMock(return_value=None)
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
+    prueba_repo.get_by_external_id.return_value = None
 
-    service = PruebaService(repo)
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
 
     with pytest.raises(HTTPException) as exc:
         await service.get_prueba("inexistente")
@@ -92,14 +101,14 @@ async def test_get_pruebas_ok():
     """
     Verifica el listado paginado de pruebas.
     """
-    repo = Mock()
-    repo.list = AsyncMock(return_value=[{"id": 1}, {"id": 2}])
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
+    prueba_repo.list.return_value = [{"id": 1}, {"id": 2}]
 
-    service = PruebaService(repo)
-
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
     result = await service.get_pruebas(skip=0, limit=10)
 
-    repo.list.assert_awaited_once_with(0, 10)
+    prueba_repo.list.assert_awaited_once_with(0, 10)
     assert len(result) == 2
 
 
@@ -111,22 +120,23 @@ async def test_update_prueba_ok():
     """
     Verifica la actualización de una prueba existente.
     """
-    repo = Mock()
-    # Mock get() para encontrar la prueba primero
-    repo.get = AsyncMock(return_value={"external_id": "123", "nombre": "Viejo"})
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
+    # Mock get_by_external_id() para encontrar la prueba primero
+    prueba_repo.get_by_external_id.return_value = {"external_id": "123", "nombre": "Viejo"}
     # Mock update() para devolver la prueba actualizada
-    repo.update = AsyncMock(return_value={"external_id": "123", "nombre": "Nuevo nombre"})
+    prueba_repo.update.return_value = {"external_id": "123", "nombre": "Nuevo nombre"}
 
-    service = PruebaService(repo)
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
 
     data = PruebaUpdate(nombre="Nuevo nombre")
 
     result = await service.update_prueba("123", data)
 
     # Verifica que primero buscó si existía
-    repo.get.assert_awaited_once_with("123")
+    prueba_repo.get_by_external_id.assert_awaited_once_with("123")
     # Verifica que llamó a update
-    repo.update.assert_awaited_once_with("123", data)
+    prueba_repo.update.assert_awaited_once_with("123", data)
     assert result["nombre"] == "Nuevo nombre"
 
 
@@ -135,11 +145,12 @@ async def test_update_prueba_not_found():
     """
     Verifica que se lance 404 al intentar actualizar una prueba inexistente.
     """
-    repo = Mock()
-    # Mock get() devolviendo None
-    repo.get = AsyncMock(return_value=None)
+    prueba_repo = AsyncMock()
+    tipo_disciplina_repo = AsyncMock()
+    # Mock get_by_external_id() devolviendo None
+    prueba_repo.get_by_external_id.return_value = None
 
-    service = PruebaService(repo)
+    service = PruebaService(prueba_repo, tipo_disciplina_repo)
 
     data = PruebaUpdate(nombre="Imposible")
 
@@ -147,4 +158,4 @@ async def test_update_prueba_not_found():
         await service.update_prueba("inexistente", data)
     
     assert exc.value.status_code == 404
-    repo.update.assert_not_called()
+    prueba_repo.update.assert_not_called()

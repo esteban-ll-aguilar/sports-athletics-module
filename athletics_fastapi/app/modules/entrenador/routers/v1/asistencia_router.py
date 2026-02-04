@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from typing import List
+from datetime import date
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.database import get_session
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
@@ -24,37 +25,189 @@ async def get_asistencia_service(session: AsyncSession = Depends(get_session)) -
 
 # --- Enrollment Endpoints ---
 
-@router.post("/inscripcion", response_model=RegistroAsistenciasResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/inscripcion", 
+    response_model=RegistroAsistenciasResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Inscribir atleta en horario",
+    description="Inscribe a un atleta en un horario de entrenamiento específico. Esta acción crea un registro de inscripción."
+)
 async def inscribir_atleta(
     data: RegistroAsistenciasCreate,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Inscribe un atleta en un horario específico (RegistroAsistencias).
+    Inscribe un atleta en un horario específico (crea un RegistroAsistencias).
+    
+    Requiere ser entrenador.
     """
     return await service.registrar_atleta_horario(data, current_entrenador.id)
 
-@router.get("/inscripcion/horario/{horario_id}", response_model=List[RegistroAsistenciasResponse])
+from app.modules.auth.dependencies import get_current_user
+from app.modules.auth.domain.models.user_model import UserModel
+
+@router.get(
+    "/inscripcion/horario/{horario_id}", 
+    response_model=List[RegistroAsistenciasResponse],
+    summary="Listar atletas inscritos en un horario",
+    description="Obtiene la lista de todos los atletas registrados en un horario de entrenamiento particular."
+)
 async def listar_inscritos(
     horario_id: int,
-    current_entrenador: Entrenador = Depends(get_current_entrenador),
+    current_user: UserModel = Depends(get_current_user),
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Lista los atletas inscritos en un horario.
+    Lista todos los atletas que están inscritos en un horario determinado.
+    
+    Disponible para usuarios autenticados (Entrenadores para ver sus alumnos, Atletas para ver compañeros, etc.).
     """
     return await service.get_atletas_by_horario(horario_id)
 
 # --- Daily Attendance Endpoints ---
 
-@router.post("/registro", response_model=AsistenciaResponse, status_code=status.HTTP_201_CREATED)
+@router.delete(
+    "/inscripcion/{registro_id}", 
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar inscripción de atleta",
+    description="Remueve a un atleta de un horario de entrenamiento (desinscripción)."
+)
+async def eliminar_inscripcion(
+    registro_id: int,
+    current_entrenador: Entrenador = Depends(get_current_entrenador),
+    service: AsistenciaService = Depends(get_asistencia_service)
+):
+    """
+    Elimina la inscripción de un atleta de un horario (desinscribir).
+    """
+    await service.remove_atleta_horario(registro_id)
+
+@router.post(
+    "/registro", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar asistencia diaria manualmente",
+    description="Permite al entrenador registrar la asistencia de un atleta de forma manual para una fecha específica."
+)
 async def registrar_asistencia(
     data: AsistenciaCreate,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Registra la asistencia diaria de un atleta (vinculado a su inscripción).
+    Crea manualmente un registro de asistencia diaria para un atleta inscrito.
     """
     return await service.registrar_asistencia_diaria(data)
+
+# --- NEW: Confirmación y Control de Asistencia ---
+
+@router.post(
+    "/confirmar/{registro_id}", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Confirmar asistencia por el atleta",
+    description="Permite que un atleta confirme su presencia para un próximo entrenamiento."
+)
+async def confirmar_asistencia(
+    registro_id: int,
+    fecha_entrenamiento: date = Query(..., description="Fecha del entrenamiento"),
+    service: AsistenciaService = Depends(get_asistencia_service)
+):
+    """
+    Endpoint para que un atleta confirme su asistencia a un próximo entrenamiento.
+    
+    Genera un registro de asistencia con estado de confirmación positivo.
+    """
+    return await service.confirmar_asistencia_atleta(registro_id, fecha_entrenamiento)
+
+@router.post(
+    "/rechazar/{registro_id}", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Notificar inasistencia por el atleta",
+    description="Permite que un atleta informe con antelación que no podrá asistir a un entrenamiento."
+)
+async def rechazar_asistencia(
+    registro_id: int,
+    fecha_entrenamiento: date = Query(..., description="Fecha del entrenamiento"),
+    service: AsistenciaService = Depends(get_asistencia_service)
+):
+    """
+    Endpoint para que un atleta notifique que NO asistirá a un entrenamiento.
+    """
+    return await service.rechazar_asistencia_atleta(registro_id, fecha_entrenamiento)
+
+@router.put(
+    "/marcar-presente/{asistencia_id}", 
+    response_model=AsistenciaResponse,
+    summary="Marcar atleta como presente",
+    description="Actualiza el estado de asistencia de un atleta a 'Presente'. Operación realizada por el entrenador."
+)
+async def marcar_presente(
+    asistencia_id: int,
+    current_entrenador: Entrenador = Depends(get_current_entrenador),
+    service: AsistenciaService = Depends(get_asistencia_service)
+):
+    """
+    Actualiza una asistencia para marcar que el atleta estuvo presente.
+    """
+    return await service.marcar_presente(asistencia_id)
+
+@router.put(
+    "/marcar-ausente/{asistencia_id}", 
+    response_model=AsistenciaResponse,
+    summary="Marcar atleta como ausente",
+    description="Actualiza el estado de asistencia de un atleta a 'Ausente'. Operación realizada por el entrenador."
+)
+async def marcar_ausente(
+    asistencia_id: int,
+    current_entrenador: Entrenador = Depends(get_current_entrenador),
+    service: AsistenciaService = Depends(get_asistencia_service)
+):
+    """
+    Actualiza una asistencia para marcar que el atleta estuvo ausente.
+    """
+    return await service.marcar_ausente(asistencia_id)
+
+@router.get(
+    "/mis-registros", 
+    response_model=List[RegistroAsistenciasResponse],
+    summary="Obtener inscripciones de un atleta",
+    description="Obtiene todos los horarios y entrenamientos en los que un atleta específico está inscrito."
+)
+async def obtener_mis_registros(
+    atleta_id: int = Query(..., description="ID del atleta"),
+    service: AsistenciaService = Depends(get_asistencia_service),
+    session: AsyncSession = Depends(get_session)
+):
+    """
+    Devuelve lista de entenamientos/horarios en los que está inscrito un atleta (para su vista de calendario o listado).
+    """
+    from app.modules.entrenador.repositories.registro_asistencias_repository import RegistroAsistenciasRepository
+    from sqlalchemy import select
+    from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
+    from sqlalchemy.orm import selectinload
+    from app.modules.atleta.domain.models.atleta_model import Atleta
+    from app.modules.entrenador.domain.models.horario_model import Horario
+    from app.modules.auth.domain.models.user_model import UserModel
+    
+    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+    from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+    
+    # Using alias for clarity if needed, but direct imports work with selectinload
+    
+    repo = RegistroAsistenciasRepository(session)
+    result = await session.execute(
+        select(RegistroAsistencias)
+        .where(RegistroAsistencias.atleta_id == atleta_id)
+        .options(
+            selectinload(RegistroAsistencias.horario)
+                .selectinload(Horario.entrenamiento)
+                .selectinload(Entrenamiento.entrenador)
+                .selectinload(Entrenador.user),
+            selectinload(RegistroAsistencias.atleta).selectinload(Atleta.user).selectinload(UserModel.auth),
+            selectinload(RegistroAsistencias.asistencias)
+        )
+    )
+    return result.scalars().all()

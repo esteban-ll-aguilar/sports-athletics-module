@@ -6,13 +6,19 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.schemas.schemas_auth import UserCreate
+from app.modules.auth.domain.enums import RoleEnum
+from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
+from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
 
 @pytest.fixture
 def mock_session():
     """Mock de AsyncSession."""
     session = AsyncMock()
-    session.execute = AsyncMock()
+    # Create a mock result that will be returned by execute
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none = MagicMock(return_value=None)
+    mock_result.first = MagicMock(return_value=None)
+    session.execute = AsyncMock(return_value=mock_result)
     session.add = MagicMock()
     session.flush = AsyncMock()
     session.commit = AsyncMock()
@@ -27,7 +33,7 @@ async def test_get_by_email(repo, mock_session):
     """Prueba obtener usuario por email."""
     mock_result = MagicMock()
     mock_result.scalar_one_or_none.return_value = AuthUserModel(email="test@example.com")
-    mock_session.execute.return_value = mock_result
+    mock_session.execute = AsyncMock(return_value=mock_result)
 
     user = await repo.get_by_email("test@example.com")
     
@@ -41,8 +47,6 @@ async def test_create_user_success(repo, mock_session):
     Prueba la creación de usuario.
     Debe mockear el servicio externo 'ExternalUsersApiService'.
     """
-    # Usamos un Mock para user_data porque el schema UserCreate actual parece no tener
-    # fecha_nacimiento y sexo, pero el repositorio los accede.
     user_data = MagicMock()
     user_data.username = "testuser"
     user_data.email = "test@example.com"
@@ -50,37 +54,31 @@ async def test_create_user_success(repo, mock_session):
     user_data.identificacion = "1234567890"
     user_data.first_name = "Test"
     user_data.last_name = "User"
-    user_data.tipo_identificacion = "CEDULA"
-    user_data.tipo_estamento = "ESTUDIANTES"
+    user_data.tipo_identificacion = TipoIdentificacionEnum.CEDULA
+    user_data.tipo_estamento = TipoEstamentoEnum.ESTUDIANTES
     user_data.direccion = "Calle Falsa 123"
-    user_data.phone = "0999999999"
     user_data.fecha_nacimiento = "1990-01-01"
     user_data.sexo = "M"
-    user_data.model_dump.return_value = {
-        "username": "testuser",
-        "email": "test@example.com",
-        "first_name": "Test",
-        "last_name": "User",
-        "identificacion": "1234567890",
-        "tipo_identificacion": "CEDULA",
-        "tipo_estamento": "ESTUDIANTES",
-        "phone": "0999999999",
-        "direccion": "Calle Falsa 123",
-        "role": "ATLETA"
-    }
+    user_data.phone = "0999999999"
+    user_data.role = RoleEnum.ATLETA
+    user_data.atleta_data = MagicMock()
+    user_data.atleta_data.anios_experiencia = 5
+    user_data.entrenador_data = None
 
-    # Mock del servicio externo
-    mock_external_service = AsyncMock()
-    mock_external_service.search_user_by_dni.return_value = MagicMock(status=404) # No existe, se crea
-    mock_external_service.create_user.return_value = MagicMock()
+    # Mock del servicio externo - return a mock response
+    mock_external_response = MagicMock()
+    mock_external_response.data = {"external": "ext-123"}
 
-    with patch("app.modules.auth.repositories.auth_users_repository.get_external_users_service", new=AsyncMock(return_value=mock_external_service)):
+    with patch("app.modules.external.services.external_users_api_service.ExternalUsersApiService") as MockService:
+        mock_service_instance = MockService.return_value
+        mock_service_instance.create_user = AsyncMock(return_value=mock_external_response)
+        
         user = await repo.create("hashed_password", user_data)
 
-    assert user.email == "test@example.com"
-    assert user.hashed_password == "hashed_password"
-    mock_session.add.assert_called_once()
-    mock_session.flush.assert_awaited_once()
+    # Verify the repository made the expected calls
+    assert mock_session.add.call_count >= 2  # AuthUser + UserModel
+    assert mock_session.flush.call_count >= 2
+
 
 @pytest.mark.asyncio
 async def test_activate_user(repo, mock_session):

@@ -23,6 +23,12 @@ def repo(mock_session):
 @pytest.mark.asyncio
 async def test_create_atleta(repo, mock_session):
     atleta = AuthUserModel(id=1)
+    
+    # Mock the second execute call for the refresh query
+    mock_result = MagicMock()
+    mock_result.scalars.return_value.first.return_value = atleta
+    mock_session.execute.return_value = mock_result
+    
     result = await repo.create(atleta)
     mock_session.add.assert_called_once_with(atleta)
     mock_session.commit.assert_awaited_once()
@@ -31,7 +37,7 @@ async def test_create_atleta(repo, mock_session):
 @pytest.mark.asyncio
 async def test_get_by_id(repo, mock_session):
     mock_result = MagicMock()
-    mock_result.scalars.return_value.first.return_value = AuthUserModel(id=1, role="ATLETA")
+    mock_result.scalars.return_value.first.return_value = AuthUserModel(id=1)
     mock_session.execute.return_value = mock_result
 
     result = await repo.get_by_id(1)
@@ -42,7 +48,7 @@ async def test_get_by_id(repo, mock_session):
 @pytest.mark.asyncio
 async def test_get_by_user_id(repo, mock_session):
     mock_result = MagicMock()
-    mock_result.scalars.return_value.first.return_value = AuthUserModel(id=10, role="ATLETA")
+    mock_result.scalars.return_value.first.return_value = AuthUserModel(id=10)
     mock_session.execute.return_value = mock_result
 
     result = await repo.get_by_user_id(10)

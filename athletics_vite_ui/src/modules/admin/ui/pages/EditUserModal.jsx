@@ -1,13 +1,33 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
-import { Shield } from "lucide-react";
+import { Shield, User, Mail, Activity } from "lucide-react";
 import authService from "../../../auth/services/auth_service";
 
 const ROLES = [
   { value: "ADMINISTRADOR", label: "Administrador" },
   { value: "ATLETA", label: "Atleta" },
   { value: "ENTRENADOR", label: "Entrenador" },
+  { value: "PASANTE", label: "Pasante" },
   { value: "REPRESENTANTE", label: "Representante" },
 ];
+
+const InputField = ({ icon: Icon, id, ...props }) => (
+  <div className="relative w-full">
+    {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />}
+    <input
+      {...props}
+      id={id}
+      className={`w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+      text-gray-900 dark:text-gray-100 rounded-xl py-2.5 ${Icon ? 'pl-10' : 'pl-4'} pr-4
+      focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all placeholder-gray-400`}
+    />
+  </div>
+);
+
+InputField.propTypes = {
+  icon: PropTypes.elementType,
+  id: PropTypes.string.isRequired,
+};
 
 const EditUserModal = ({ user, onClose, onUpdated }) => {
   const [formData, setFormData] = useState({
@@ -48,57 +68,82 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-6">
-        <h3 className="text-lg font-semibold text-gray-800">Editar Usuario</h3>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <button
+        className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm transition-opacity cursor-default"
+        onClick={onClose}
+        aria-label="Cerrar modal"
+      />
+
+      <div className="relative z-10 w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#332122] flex flex-col max-h-[90vh]">
+
+        {/* HEADER */}
+        <div className="px-6 py-5 border-b border-gray-100 dark:border-[#332122] flex items-center justify-between rounded-t-2xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-[#b30c25] flex items-center justify-center">
+              <Shield size={20} />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              Editar Usuario
+            </h2>
+          </div>
+
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors" aria-label="Cerrar modal">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
+
           {/* Usuario */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Usuario
-            </label>
-            <input
+          <div className="space-y-1">
+            <label htmlFor="edit-username" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Usuario</label>
+            <InputField
+              id="edit-username"
+              icon={User}
+              placeholder="Nombre de usuario"
               value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              required
             />
           </div>
 
           {/* Correo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Correo
-            </label>
-            <input
+          <div className="space-y-1">
+            <label htmlFor="edit-email" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Correo Electrónico</label>
+            <InputField
+              id="edit-email"
+              icon={Mail}
               type="email"
+              placeholder="ejemplo@correo.com"
               value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
             />
           </div>
 
           {/* Rol */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Rol
-            </label>
+          <div className="space-y-1">
+            <label htmlFor="edit-role" className="text-sm font-semibold text-gray-700 dark:text-gray-300">Rol del Sistema</label>
             <div className="relative">
               <Shield
-                size={16}
+                size={18}
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <select
+                id="edit-role"
                 value={formData.role}
-                onChange={(e) =>
-                  setFormData({ ...formData, role: e.target.value })
-                }
-                className="w-full pl-10 pr-4 py-2 rounded-lg border bg-white focus:ring-2 focus:ring-indigo-500"
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="
+                    w-full bg-gray-50 dark:bg-[#212121] border border-gray-300 dark:border-[#332122]
+                    text-gray-900 dark:text-gray-100 rounded-xl py-2.5 pl-10 pr-10 appearance-none cursor-pointer
+                    focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all
+                "
+                required
               >
                 {ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
@@ -106,58 +151,80 @@ const EditUserModal = ({ user, onClose, onUpdated }) => {
                   </option>
                 ))}
               </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined">
+                expand_more
+              </span>
             </div>
           </div>
 
           {/* Estado */}
-          <button
-            type="button"
-            onClick={() =>
-              setFormData((p) => ({ ...p, is_active: !p.is_active }))
-            }
-            className="flex w-full items-center justify-between rounded-xl border px-6 py-5 hover:bg-gray-50 active:scale-[0.98] transition"
-          >
-            <div className="text-left">
-              <p className="text-sm font-medium text-gray-800">
-                Estado del usuario
-              </p>
-              <p className="text-xs text-gray-500">
-                {formData.is_active ? "Activo" : "Inactivo"}
-              </p>
-            </div>
-            <span
-              className={`rounded-full px-4 py-1 text-xs font-semibold ${
-                formData.is_active
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-              }`}
+          <div className="space-y-1">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Estado</span>
+            <button
+              type="button"
+              onClick={() => setFormData((p) => ({ ...p, is_active: !p.is_active }))}
+              className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 transition-colors
+                    ${formData.is_active
+                  ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-900/30'
+                  : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30'}
+                `}
             >
-              {formData.is_active ? "Activo" : "Inactivo"}
-            </span>
-          </button>
+              <div className="flex items-center gap-3">
+                <Activity size={18} className={formData.is_active ? 'text-green-600 dark:text-green-500' : 'text-red-600 dark:text-red-500'} />
+                <div className="text-left">
+                  <p className={`text-sm font-medium ${formData.is_active ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                    {formData.is_active ? "Usuario Activo" : "Usuario Inactivo"}
+                  </p>
+                </div>
+              </div>
 
-          {/* Acciones */}
-          <div className="flex justify-end gap-3 pt-2">
+              <div className={`w-10 h-6 flex items-center rounded-full p-1 duration-300 ease-in-out ${formData.is_active ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                <div className={`bg-white w-4 h-4 rounded-full shadow-md transform duration-300 ease-in-out ${formData.is_active ? 'translate-x-4' : ''}`}></div>
+              </div>
+            </button>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-[#332122] mt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-[#2a2829] transition-colors"
               disabled={loading}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+              className="
+                        flex-1 px-4 py-2.5 rounded-xl text-white font-medium
+                        bg-linear-to-r from-[#b30c25] to-[#80091b]
+                        hover:shadow-lg hover:shadow-red-900/20 active:scale-95
+                        disabled:opacity-70 disabled:cursor-not-allowed
+                        transition-all duration-300
+                    "
               disabled={loading}
             >
-              {loading ? "Guardando..." : "Guardar"}
+              {loading ? "Guardando..." : "Guardar Cambios"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
+};
+
+EditUserModal.propTypes = {
+  user: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string,
+    email: PropTypes.string,
+    role: PropTypes.string,
+    is_active: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+    profile_image: PropTypes.string,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onUpdated: PropTypes.func.isRequired,
 };
 
 export default EditUserModal;

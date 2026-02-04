@@ -1,4 +1,4 @@
-import axios from 'axios';
+import ApiClient from '../../../core/api/apiClient';
 import Settings from '../../../config/enviroment';
 
 const API_URL = `${Settings.API_URL}/api/v1/competencia/competencias`;
@@ -7,13 +7,8 @@ class CompetenciaRepository {
     // GET /api/v1/competencia/competencias/
     async getAll() {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.get(`${API_URL}`);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -22,13 +17,8 @@ class CompetenciaRepository {
     // GET /api/v1/competencia/competencias/{external_id}
     async getById(externalId) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}/${externalId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.get(`${API_URL}/${externalId}`);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -37,15 +27,12 @@ class CompetenciaRepository {
     // POST /api/v1/competencia/competencias/
     async create(competenciaData) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}`, competenciaData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            console.log("CompetenciaRepository create payload:", competenciaData);
+            const responseData = await ApiClient.post(`${API_URL}`, competenciaData);
+            console.log("CompetenciaRepository create response:", responseData);
+            return responseData;
         } catch (error) {
+            console.error("CompetenciaRepository create error:", error);
             throw error.response ? error.response.data : error;
         }
     }
@@ -53,14 +40,8 @@ class CompetenciaRepository {
     // PUT /api/v1/competencia/competencias/{external_id}
     async update(externalId, competenciaData) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/${externalId}`, competenciaData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.put(`${API_URL}/${externalId}`, competenciaData);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -68,13 +49,8 @@ class CompetenciaRepository {
     // DELETE /api/v1/competencia/competencias/{external_id}
     async delete(externalId) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.delete(`${API_URL}/${externalId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.delete(`${API_URL}/${externalId}`);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

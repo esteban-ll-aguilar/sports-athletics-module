@@ -1,0 +1,42 @@
+# ============================================
+# Dockerfile para SonarQube Scanner
+# Análisis de código para Backend (Python) y Frontend (TypeScript/JavaScript)
+# ============================================
+
+FROM sonarsource/sonar-scanner-cli:latest
+
+USER root
+
+# Instalar dependencias necesarias
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    nodejs \
+    npm \
+    git \
+    curl \
+    bash
+
+# Instalar herramientas de análisis para Python
+RUN pip3 install --no-cache-dir \
+    pylint \
+    pytest \
+    pytest-cov \
+    coverage
+
+# Configurar variables de entorno
+ENV SONAR_SCANNER_HOME=/opt/sonar-scanner
+ENV PATH="${SONAR_SCANNER_HOME}/bin:${PATH}"
+
+# Crear directorio de trabajo
+WORKDIR /usr/src
+
+# Copiar el proyecto
+COPY . .
+
+# Script de entrada para ejecutar análisis
+COPY ci/run-sonar-analysis.sh /usr/local/bin/run-sonar-analysis.sh
+RUN chmod +x /usr/local/bin/run-sonar-analysis.sh
+
+# Comando por defecto
+CMD ["/usr/local/bin/run-sonar-analysis.sh"]

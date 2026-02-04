@@ -7,7 +7,6 @@ import {
 } from 'react-router-dom';
 
 // Layouts
-import MainLayout from '@shared/components/MainLayout';
 import DashboardLayout from '@modules/home/ui/dashboard/layouts/DashboardLayout';
 
 // Páginas públicas
@@ -19,9 +18,22 @@ import PasswordResetPage from '@modules/auth/ui/pages/PasswordResetPage';
 
 // Proteccion
 import ProtectedRoute from './ProtectedRoute';
+import { getUserRole } from '@modules/auth/utils/roleUtils';
 
-// Dashboard pages
-import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
+// Helper component for role-based dashboard routing
+const RoleBasedDashboard = () => {
+  const userRole = getUserRole();
+
+  // Redirect ATLETA users to their specific dashboard
+  if (userRole === 'ATLETA') {
+    return <Navigate to="/dashboard/atleta" replace />;
+  }
+
+  return <DashboardPage />;
+};
+
+// Dashboard redirect
+import DashboardRedirect from '@core/router/components/DashboardRedirect';
 
 // Admin
 import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
@@ -29,34 +41,45 @@ import AdminUsersTable from '@modules/admin/ui/pages/admin_controller_user_ui';
 
 // Competencia
 import PruebasPage from '@modules/competencia/ui/pages/PruebasPage';
+import RegistroPruebasPage from '@modules/competencia/ui/pages/RegistroPrueba.jsx';
 import BaremosPage from '@modules/competencia/ui/pages/BaremosPage';
+import BaremosSimplePage from '@modules/competencia/ui/pages/BaremosSimplePage';
 import TipoDisciplinaPage from '@modules/competencia/ui/pages/TipoDisciplinaPage';
 import CompetenciasPage from '@modules/competencia/ui/pages/CompetenciaPage';
 import ResultadosPage from '@modules/competencia/ui/pages/ResultadosPage';
 
 // Atleta
 import AthletesTable from '@modules/atleta/ui/pages/atletlas';
+import DashboardAtletaPage from '@modules/atleta/ui/pages/DashboardAtletaPage';
+import ConfirmacionEntrenamientoPage from '@modules/atleta/ui/pages/ConfirmacionEntrenamientoPage';
 
 // Entrenador
 import GestionEntrenamientosPage from '@modules/entrenador/ui/pages/GestionEntrenamientosPage';
 import GestionAsistenciaPage from '@modules/entrenador/ui/pages/GestionAsistenciaPage';
+import HistorialMedicoPage from '@modules/entrenador/ui/pages/HistorialMedicoPage';
+import RendimientoPage from '@modules/entrenador/ui/pages/RendimientoPage';
+import ResultadosEntrenamientoPage from '@modules/entrenador/ui/pages/ResultadosEntrenamientoPage';
+import PasantesPage from '@modules/entrenador/ui/pages/PasantesPage';
 
+
+// Representante
 // Representante
 import RegisterAthletePage from '@modules/representante/ui/pages/RegisterAthletePage';
 import MisAtletasPage from '@modules/representante/ui/pages/MisAtletasPage';
+import DetalleAtletaPage from '@modules/representante/ui/pages/DetalleAtletaPage';
 
 // Profile
 import ProfilePage from '@modules/auth/ui/pages/ProfilePage';
 // Seguridad
 // Seguridad
 
-const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE'];
+const ALLOWED_ALL_ROLES = ['ADMINISTRADOR', 'ENTRENADOR', 'ATLETA', 'REPRESENTANTE', 'PASANTE'];
 
 const router = createBrowserRouter([
   // Public Routes
   {
     path: '/',
-    element: <MainLayout />,
+    element: <Outlet />,
     children: [
       { index: true, element: <HomePage /> },
     ],
@@ -74,8 +97,8 @@ const router = createBrowserRouter([
       {
         element: <DashboardLayout />,
         children: [
-          // /dashboard
-          { index: true, element: <DashboardPage /> },
+          // /dashboard - Redirige automáticamente al primer elemento del sidebar según el rol
+          { index: true, element: <DashboardRedirect /> },
 
           // --- ADMIN ROUTES ---
           {
@@ -91,30 +114,39 @@ const router = createBrowserRouter([
 
           // --- COMPETENCIA / PRUEBAS ROUTES ---
           {
-            path: 'pruebas',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            path: 'registro-pruebas',
+            element: (
+              <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />
+            ),
             children: [
-              { index: true, element: <PruebasPage /> },
-              { path: 'baremos', element: <BaremosPage /> },
-              { path: 'disciplinas', element: <TipoDisciplinaPage /> },
-              { path: 'competencias', element: <CompetenciasPage /> },
+              {
+                element: <Outlet />,
+                children: [
+                  { index: true, element: <PruebasPage /> },
+                  { path: 'resultados', element: <RegistroPruebasPage /> },
+                  { path: 'baremos', element: <BaremosPage /> },
+                  { path: 'baremos-simple', element: <BaremosSimplePage /> },
+                  { path: 'disciplinas', element: <TipoDisciplinaPage /> },
+                ]
+              }
             ],
           },
+
           {
             path: 'competitions',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [{ index: true, element: <CompetenciasPage /> }],
           },
           {
             path: 'results',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [{ index: true, element: <ResultadosPage /> }],
           },
 
           // --- ATLETA ROUTES ---
           {
             path: 'athletes',
-            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ADMINISTRADOR', 'ENTRENADOR', 'PASANTE']} />,
             children: [
               { index: true, element: <AthletesTable /> }
             ],
@@ -123,11 +155,29 @@ const router = createBrowserRouter([
           // --- ENTRENADOR ROUTES ---
           {
             path: 'entrenamientos',
-            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR', 'PASANTE']} />,
             children: [
               { index: true, element: <GestionEntrenamientosPage /> },
+              { path: 'resultados', element: <ResultadosEntrenamientoPage /> },
               { path: ':id/asistencia', element: <GestionAsistenciaPage /> },
+              { path: ':id/resultados', element: <ResultadosEntrenamientoPage /> },
+
             ],
+          },
+          {
+            path: 'historial-medico',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <HistorialMedicoPage /> }],
+          },
+          {
+            path: 'rendimiento',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <RendimientoPage /> }],
+          },
+          {
+            path: 'pasantes',
+            element: <ProtectedRoute allowedRoles={['ENTRENADOR']} />,
+            children: [{ index: true, element: <PasantesPage /> }],
           },
 
           // --- REPRESENTANTE ROUTES ---
@@ -136,9 +186,27 @@ const router = createBrowserRouter([
             element: <ProtectedRoute allowedRoles={['REPRESENTANTE']} />,
             children: [
               { path: 'mis-atletas', element: <MisAtletasPage /> },
-              { path: 'register-athlete', element: <RegisterAthletePage /> }
+              { path: 'register-athlete', element: <RegisterAthletePage /> },
+              { path: 'atleta/:id', element: <DetalleAtletaPage /> }
             ]
-          }
+          },
+
+          // --- ATLETA DASHBOARD (HU-020) ---
+          {
+            path: 'atleta',
+            element: <ProtectedRoute allowedRoles={['ATLETA']} />,
+            children: [
+              { index: true, element: <DashboardAtletaPage /> },
+              { path: 'entrenamiento/:id/confirmar', element: <ConfirmacionEntrenamientoPage /> },
+            ],
+          },
+          {
+            path: 'schedule',
+            element: <ProtectedRoute allowedRoles={['ATLETA']} />,
+            children: [
+              { index: true, element: <ConfirmacionEntrenamientoPage /> }
+            ],
+          },
 
         ],
       },

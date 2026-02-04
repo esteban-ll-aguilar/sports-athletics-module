@@ -1,0 +1,21 @@
+# Locust stress tests - Gitignore
+
+# Resultados
+results/
+!results/.gitkeep
+*.csv
+*.html
+*.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Archivos generados
+users.csv
+
+# Sistema
+.DS_Store
+Thumbs.db

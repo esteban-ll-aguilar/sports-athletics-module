@@ -10,13 +10,14 @@ from app.modules.auth.domain.enums.role_enum import RoleEnum
 # ============================
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
 from app.modules.competencia.services.baremo_service import BaremoService
-
+from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 
 async def get_baremo_service(
     session: AsyncSession = Depends(get_session)
 ) -> BaremoService:
     repo = BaremoRepository(session)
-    return BaremoService(repo)
+    prueba_repo = PruebaRepository(session)
+    return BaremoService(repo, prueba_repo)
 
 
 # ============================
@@ -40,7 +41,6 @@ async def get_tipo_disciplina_service(
 # ============================
 # PRUEBA
 # ============================
-from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.services.prueba_service import PruebaService
 
 
@@ -48,7 +48,8 @@ async def get_prueba_service(
     session: AsyncSession = Depends(get_session)
 ) -> PruebaService:
     repo = PruebaRepository(session)
-    return PruebaService(repo)
+    tipo_disciplina_repo = TipoDisciplinaRepository(session)
+    return PruebaService(repo, tipo_disciplina_repo)
 
 
 # ============================
@@ -88,6 +89,7 @@ async def get_resultado_competencia_service(
     competencia_repo = CompetenciaRepository(session)
     atleta_repo = AtletaRepository(session)
     prueba_repo = PruebaRepository(session)
+    baremo_repo = BaremoRepository(session)
 
     return ResultadoCompetenciaService(
         resultado_repo,
@@ -121,9 +123,10 @@ async def get_registro_prueba_competencia_service(
 async def get_current_admin_or_entrenador(
     current_user=Depends(get_current_user)
 ):
-    if current_user.role not in (
+    if current_user.profile.role not in (
         RoleEnum.ADMINISTRADOR,
-        RoleEnum.ENTRENADOR
+        RoleEnum.ENTRENADOR,
+        RoleEnum.PASANTE
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -38,26 +38,27 @@ class TipoEnfermedad(str, Enum):
     OTRA = "Otra"
 
 
-
-
 class HistorialMedicoBase(BaseModel):
     talla: float = Field(..., description="Talla en metros")
     peso: float = Field(..., description="Peso en kg")
     imc: Optional[float] = Field(None, description="Índice de masa corporal")
     
 
-    alergias: Optional[TipoAlergia] = Field(
-        default=TipoAlergia.NINGUNA, 
+    alergias: Optional[str] = Field(
+        default="Ninguna", 
         description="Alergias conocidas"
     )
-    enfermedades_hereditarias: Optional[TipoEnfermedadHereditaria] = Field(
-        default=TipoEnfermedadHereditaria.NINGUNA, 
+    enfermedades_hereditarias: Optional[str] = Field(
+        default="Ninguna", 
         description="Antecedentes familiares"
     )
-    enfermedades: Optional[TipoEnfermedad] = Field(
-        default=TipoEnfermedad.NINGUNA, 
+    enfermedades: Optional[str] = Field(
+        default="Ninguna", 
         description="Enfermedades actuales"
     )
+
+    contacto_emergencia_nombre: Optional[str] = Field(None, description="Nombre del contacto de emergencia")
+    contacto_emergencia_telefono: Optional[str] = Field(None, description="Teléfono del contacto de emergencia")
 
     # Mantenemos tus validadores (son importantes para evitar divisiones por cero o datos locos)
     @field_validator('talla')
@@ -85,11 +86,13 @@ class HistorialMedicoUpdate(BaseModel):
     alergias: Optional[str] = None
     enfermedades_hereditarias: Optional[str] = None
     enfermedades: Optional[str] = None
+    contacto_emergencia_nombre: Optional[str] = None
+    contacto_emergencia_telefono: Optional[str] = None
 
 
 class HistorialMedicoRead(HistorialMedicoBase):
     id: int
     external_id: UUID
-    auth_user_id: int
+    atleta_id: int
 
     model_config = ConfigDict(from_attributes=True)

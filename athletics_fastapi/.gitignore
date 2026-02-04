@@ -7,7 +7,7 @@ __pycache__/
 *.so
 .pytest_cache
 *.env 
-
+*.xml
 # Distribution / packaging
 .Python
 build/
@@ -55,6 +55,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+
+*.png
+*.jpg
+*.jpeg
 
 # Translations
 *.mo
@@ -223,3 +227,4 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 usuarios.pdf
+data/profile_pictures/*

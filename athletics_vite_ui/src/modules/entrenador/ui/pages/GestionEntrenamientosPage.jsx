@@ -4,6 +4,9 @@ import { toast } from 'react-hot-toast';
 import EntrenamientoService from '../../services/EntrenamientoService';
 import EntrenamientoForm from '../components/EntrenamientoForm';
 import HorarioManager from '../components/HorarioManager';
+import Swal from 'sweetalert2';
+import { Power, CheckCircle } from 'lucide-react';
+import { Plus, Search, Dumbbell, Calendar, Users, Edit, Trash2, Info } from 'lucide-react';
 
 const GestionEntrenamientosPage = () => {
     const [entrenamientos, setEntrenamientos] = useState([]);
@@ -11,6 +14,7 @@ const GestionEntrenamientosPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [showHorarioModal, setShowHorarioModal] = useState(false);
     const [selectedEntrenamiento, setSelectedEntrenamiento] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const navigate = useNavigate();
 
@@ -45,132 +49,283 @@ const GestionEntrenamientosPage = () => {
         navigate(`/dashboard/entrenamientos/${entrenamiento.id}/asistencia`);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de eliminar este entrenamiento?')) return;
+    const toggleStatus = async (entrenamiento) => {
+        const nuevoEstado = !entrenamiento.estado;
+
+        const result = await Swal.fire({
+            title: '¿Estás seguro?',
+            text: nuevoEstado
+                ? `¿Desea activar el entrenamiento: ${entrenamiento.tipo_entrenamiento}?`
+                : `¿Desea desactivar el entrenamiento: ${entrenamiento.tipo_entrenamiento}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+            cancelButtonText: 'Cancelar',
+            background: '#1a1a1a',
+            color: '#fff',
+            customClass: {
+                popup: 'dark:bg-[#1a1a1a] dark:text-white dark:border dark:border-[#332122]'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
-            await EntrenamientoService.delete(id);
-            toast.success('Entrenamiento eliminado');
-            loadEntrenamientos();
+            await EntrenamientoService.update(entrenamiento.id, {
+                ...entrenamiento,
+                estado: nuevoEstado
+            });
+
+            // 🔹 actualización local inmediata
+            setEntrenamientos(prev =>
+                prev.map(e =>
+                    e.id === entrenamiento.id
+                        ? { ...e, estado: nuevoEstado }
+                        : e
+                )
+            );
+
+            Swal.fire({
+                title: '¡Éxito!',
+                text: nuevoEstado
+                    ? 'Entrenamiento activado correctamente'
+                    : 'Entrenamiento desactivado correctamente',
+                icon: 'success',
+                confirmButtonColor: '#b30c25',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
+
         } catch (error) {
-            console.error(error);
-            toast.error('Error al eliminar');
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudo cambiar el estado del entrenamiento',
+                icon: 'error',
+                confirmButtonColor: '#b30c25',
+                background: '#1a1a1a',
+                color: '#fff'
+            });
         }
     };
+
 
     const handleSave = () => {
         loadEntrenamientos();
     };
 
+    // Filter logic
+    const filteredEntrenamientos = entrenamientos.filter(ent =>
+        ent.tipo_entrenamiento?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ent.descripcion?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 font-['Lexend'] text-gray-900 p-4 md:p-10">
-            <div className="max-w-7xl mx-auto">
-                {/* Cabecera */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-10">
-                    <div>
-                        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-gray-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-gray-900 dark:text-gray-100">
                             Gestión de Entrenamientos
                         </h1>
-                        <p className="text-gray-600 text-lg mt-2">
-                            Planifica y administra las sesiones de entrenamiento
+                        <p className="text-gray-500 dark:text-gray-400 text-lg">
+                            Administra las sesiones, horarios y asistencia de los atletas.
                         </p>
                     </div>
+                    {/* Separador */}
+                    <div className="mt-8 mb-6 border-b border-gray-200 dark:border-[#332122]" />
 
-                    <button
-                        onClick={handleCreate}
-                        className="group flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-4 rounded-2xl font-bold shadow-xl shadow-red-200 transition-all hover:shadow-2xl hover:scale-105 active:scale-100 duration-200"
-                    >
-                        <span className="material-symbols-outlined group-hover:rotate-90 transition-transform duration-300">
-                            add
-                        </span>
-                        Nuevo Entrenamiento
-                    </button>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                        <button
+                            onClick={() => navigate('/dashboard/entrenamientos/resultados')}
+                            className="
+                                flex-1 md:flex-none flex items-center justify-center gap-2
+                                px-6 py-3 rounded-xl
+                                text-sm font-bold text-[#b30c25]
+                                bg-red-50 dark:bg-[#b30c25]/10
+                                hover:bg-red-100 dark:hover:bg-[#b30c25]/20
+                                border border-[#b30c25]/20
+                                active:scale-95 transition-all
+                            "
+                        >
+                            <Dumbbell size={20} className="flex flex-col sm:flex-row gap-4 w-full md:w-auto" />
+                            Ver Resultados
+                        </button>
+                        <button
+                            onClick={handleCreate}
+                            className="
+                                group flex items-center justify-center gap-2
+                                px-6 py-3 rounded-xl
+                                text-sm font-bold text-white
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
+                                hover:brightness-110
+                                shadow-lg shadow-red-900/20 active:scale-95
+                                transition-all duration-300
+                            "
+                        >
+                            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+                            Nuevo Entrenamiento
+                        </button>
+                    </div>
                 </div>
 
-                {/* Tabla */}
-                <div className="bg-white rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden">
+                {/* Filters & Search */}
+                <div className="flex flex-col sm:flex-row gap-6 mb-8 mt-6">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Buscar por tipo o descripción..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="
+                w-full pl-12 pr-4 py-3 rounded-xl 
+                bg-white dark:bg-[#212121]
+                border border-gray-200 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400 dark:placeholder-gray-500
+                focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25]/30
+                outline-none transition-all shadow-sm
+              "
+                        />
+                    </div>
+                    {/* Placeholder filter button if needed */}
+                    {/* <button className="px-4 py-3 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#332122] rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <Filter size={20} />
+                    </button> */}
+                </div>
+
+                {/* Table */}
+                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                        <table className="w-full text- text-sm">
                             <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 tracking-wider">
-                                        Tipo
+                                <tr className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        Entrenamiento
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600">
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Descripción
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-center">
+                                    <th className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Fecha
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-bold uppercase text-gray-600 text-right">
+                                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         Acciones
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {isLoading ? (
-                                    <tr>
-                                        <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 font-semibold">Cargando entrenamientos...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : entrenamientos.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="4" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <span className="material-symbols-outlined text-6xl text-gray-300">
-                                                    fitness_center
-                                                </span>
-                                                <span className="text-gray-400 font-semibold">No hay entrenamientos registrados</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    entrenamientos.map((ent) => (
-                                        <tr key={ent.id} className="hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent transition-all duration-200">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-gray-900">
-                                                    {ent.tipo_entrenamiento}
+                            <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
+                                {(() => {
+                                    if (isLoading) {
+                                        return (
+                                            <tr>
+                                                <td colSpan="4" className="py-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="w-10 h-10 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                                                        <span className="text-gray-500 dark:text-gray-400 font-medium">Cargando entrenamientos...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+
+                                    if (filteredEntrenamientos.length === 0) {
+                                        return (
+                                            <tr>
+                                                <td colSpan="4" className="py-20 text-center">
+                                                    <div className="flex flex-col items-center gap-3">
+                                                        <div className="p-4 bg-gray-100 dark:bg-[#2a2829] rounded-full">
+                                                            <Dumbbell className="text-gray-400" size={32} />
+                                                        </div>
+                                                        <p className="text-gray-500 dark:text-gray-400 font-medium">
+                                                            No se encontraron entrenamientos.
+                                                        </p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    }
+
+                                    return filteredEntrenamientos.map((ent) => (
+                                        <tr
+                                            key={ent.id}
+                                            className={`transition-colors ${!ent.estado
+                                                ? "bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60"
+                                                : "hover:bg-gray-50 dark:hover:bg-[#2a2829]"
+                                                }`}                                        >
+                                            <td className="px-6 py-5">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="shrink-0 w-12 h-12 bg-red-50 dark:bg-[#b30c25]/10 rounded-xl flex items-center justify-center text-[#b30c25]">
+                                                        <Dumbbell size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-gray-900 dark:text-white text-lg">
+                                                            {ent.tipo_entrenamiento}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600 text-sm max-w-xs truncate">
-                                                {ent.descripcion}
+                                            <td className="px-6 py-5">
+                                                <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs truncate font-medium flex items-center gap-2">
+                                                    {ent.descripcion ? (
+                                                        ent.descripcion
+                                                    ) : (
+                                                        <span className="italic text-gray-400 dark:text-gray-600 flex items-center gap-1">
+                                                            <Info size={14} /> Sin descripción
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-50 text-blue-700">
+                                            <td className="px-6 py-5 text-center">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-gray-100 dark:bg-[#1f1c1d] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#332122]">
+                                                    <Calendar size={14} className="text-[#b30c25]" />
                                                     {ent.fecha_entrenamiento}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-right">
+                                            <td className="px-6 py-5">
                                                 <div className="flex justify-end gap-2">
                                                     <button
-                                                        onClick={() => handleHorarios(ent)}
-                                                        className="p-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 group"
-                                                        title="Gestionar Horarios"
+                                                        onClick={() => navigate(`/dashboard/entrenamientos/${ent.id}/resultados`)}
+                                                        className="p-2 text-gray-500 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10 rounded-lg transition-all"
+                                                        title="Gestionar Resultados"
                                                     >
-                                                        <span className="material-symbols-outlined group-hover:text-amber-600">schedule</span>
+                                                        <Dumbbell size={20} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleHorarios(ent)}
+                                                        className="p-2 text-gray-500 hover:text-[#b30c25] hover:bg-red-50 dark:hover:bg-[#b30c25]/10 rounded-lg transition-all"
+                                                        title="Gestionar Asistencia"
+                                                    >
+                                                        <Users size={20} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleEdit(ent)}
-                                                        className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
+                                                        className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-all"
                                                         title="Editar"
                                                     >
-                                                        <span className="material-symbols-outlined">edit</span>
+                                                        <Edit size={20} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(ent.id)}
-                                                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                                                        title="Eliminar"
+                                                        onClick={() => toggleStatus(ent)}
+                                                        className={`p-2 rounded-lg transition-colors ${ent.estado
+                                                            ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10'
+                                                            : 'text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10'
+                                                            }`}
+                                                        title={ent.estado ? "Desactivar" : "Activar"}
                                                     >
-                                                        <span className="material-symbols-outlined">delete</span>
+                                                        {ent.estado ? <Power size={20} /> : <CheckCircle size={20} />}
                                                     </button>
+
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
-                                )}
+                                    ));
+                                })()}
                             </tbody>
                         </table>
                     </div>

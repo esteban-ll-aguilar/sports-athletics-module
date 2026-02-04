@@ -51,7 +51,16 @@ class ResultadoCompetenciaService:
             raise HTTPException(status_code=400, detail="atleta_id debe ser un UUID válido")
         atleta = await self.atleta_repo.get_by_external_id(atleta_uuid)
         if not atleta:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Atleta no encontrado")
+            # Si no se encuentra por UUID de atleta, intentar por UUID de usuario
+            from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
+            user_repo = AuthUsersRepository(self.repo.session)
+            user = await user_repo.get_by_external_id(str(atleta_uuid))
+            if user:
+                # Buscar perfil de atleta por user_id de forma explícita
+                atleta = await self.atleta_repo.get_by_user_id(user.id)
+            
+            if not atleta:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Atleta no encontrado. Asegúrese de que el usuario tenga un perfil de atleta.")
 
         # Buscar entidad prueba por external_id
         try:
@@ -65,7 +74,7 @@ class ResultadoCompetenciaService:
         # Crear resultado usando IDs internos
         resultado = ResultadoCompetencia(
             competencia_id=competencia.id,
-            atleta_id=atleta.id,
+            atleta_id=atleta.user_id,
             prueba_id=prueba.id,
             resultado=data.resultado,
             unidad_medida=data.unidad_medida,
@@ -93,6 +102,13 @@ class ResultadoCompetenciaService:
 
     async def get_all(self, incluir_inactivos: bool = True, entrenador_id: int = None):
         return await self.repo.get_all(incluir_inactivos, entrenador_id)
+
+    async def get_by_user_id(self, user_id: int):
+        atleta = await self.atleta_repo.get_by_user_id(user_id)
+        if not atleta:
+             return []
+        return await self.repo.get_by_atleta(atleta.user_id) # The repo expects internal ID, but check if correct.
+
 
     async def update(self, external_id: UUID, data: ResultadoCompetenciaUpdate) -> ResultadoCompetencia:
         resultado = await self.get_by_external_id(external_id)

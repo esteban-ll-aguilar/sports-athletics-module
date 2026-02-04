@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock
 from app.modules.auth.dependencies import get_admin_user_service
 from app.modules.auth.dependencies import get_current_admin_user
 from app.modules.auth.services.admin_user_service import AdminUserService
-from app.modules.auth.domain.models import AuthUserModel
 from app.modules.auth.domain.enums import RoleEnum
 
 @pytest.fixture
@@ -34,10 +33,11 @@ async def override_get_current_admin_user():
     """
     Override para simular un usuario administrador autenticado.
     """
-    user = MagicMock(spec=AuthUserModel)
+    user = MagicMock()
     user.id = "admin_id"
     user.email = "admin@example.com"
-    user.role.name = RoleEnum.ADMINISTRADOR
+    user.profile = MagicMock()
+    user.profile.role = RoleEnum.ADMINISTRADOR
     return user
 
 @pytest.mark.asyncio
@@ -51,6 +51,8 @@ async def test_admin_list_users(client: AsyncClient, mock_admin_service):
     
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
+    from app.core.jwt.jwt import get_current_user
+    _APP.dependency_overrides[get_current_user] = override_get_current_admin_user
     
     response = await client.get("/api/v1/auth/users/")
     
@@ -59,9 +61,9 @@ async def test_admin_list_users(client: AsyncClient, mock_admin_service):
     
     # 200 OK
     assert response.status_code == 200
-    data = response.json()
-    assert "items" in data
-    assert data["items"] == []
+    json_response = response.json()
+    assert "items" in json_response
+    assert json_response["items"] == []
 
 @pytest.mark.asyncio
 async def test_admin_update_role(client: AsyncClient, mock_admin_service):
@@ -75,33 +77,59 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     from uuid import uuid4
     from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
     from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
+    from app.modules.auth.domain.enums import SexoEnum
 
-    mock_user_updated = MagicMock()
-    mock_user_updated.id = 1
-    mock_user_updated.email = "test@test.com"
-    mock_user_updated.username = "testuser"
-    mock_user_updated.role = RoleEnum.ENTRENADOR
-    mock_user_updated.is_active = True
+    # Create mock with proper values for Pydantic validation
+    test_uuid = uuid4()
+    test_date = date(2000, 1, 1)
+    test_datetime = datetime.now()
     
-    # Campos adicionales requeridos por UserRead
-    mock_user_updated.first_name = "Test"
-    mock_user_updated.last_name = "User"
-    mock_user_updated.tipo_identificacion = TipoIdentificacionEnum.CEDULA
-    mock_user_updated.identificacion = "1101101101"
-    mock_user_updated.tipo_estamento = TipoEstamentoEnum.ESTUDIANTES
-    mock_user_updated.phone = "0999999999"
-    mock_user_updated.direccion = "Direccion Mock"
-    mock_user_updated.fecha_nacimiento = date(2000, 1, 1)
-    mock_user_updated.sexo = "M" 
+    class MockUser:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+        
+        def get(self, key, default=None):
+            return getattr(self, key, default)
 
-    mock_user_updated.created_at = datetime.now()
-    mock_user_updated.updated_at = datetime.now()
-    mock_user_updated.external_id = uuid4()
-    mock_user_updated.profile_image = None
-    # Asegurar que el response model pueda leer el enum correctamente o su valor
-    # En esquemas de auth/admin suele ser role: RoleEnum
+        def __getitem__(self, key):
+            return getattr(self, key)
     
-    mock_admin_service.update_user_role.return_value = mock_user_updated
+    user_data = {
+        'id': 1,
+        'auth_user_id': 1,
+        'external_id': test_uuid,
+        'username': "testuser",
+        'email': "test@test.com",
+        'first_name': "Test",
+        'last_name': "User",
+        'phone': "0999999999",
+        'profile_image': "",
+        'direccion': "Direccion Mock",
+        'tipo_identificacion': TipoIdentificacionEnum.CEDULA,
+        'identificacion': "1101101101",
+        'tipo_estamento': TipoEstamentoEnum.ESTUDIANTES,
+        'fecha_nacimiento': test_date,
+        'sexo': SexoEnum.M,
+        'role': RoleEnum.ENTRENADOR,
+        'is_active': True,
+        'two_factor_enabled': False,
+        'created_at': test_datetime,
+        'updated_at': test_datetime
+    }
+    
+    # Use simple object
+    mock_user_updated = MockUser(**user_data)
+    
+    # Add auth mock
+    mock_user_updated.auth = MockUser(email="test@test.com")
+    
+    # Configure service return value
+    # The service returns a dict structure, not just the user model
+    mock_admin_service.update_user_role.return_value = {
+        "success": True,
+        "user": mock_user_updated
+    }
     
     _APP.dependency_overrides[get_admin_user_service] = lambda: mock_admin_service
     _APP.dependency_overrides[get_current_admin_user] = override_get_current_admin_user
@@ -111,4 +139,5 @@ async def test_admin_update_role(client: AsyncClient, mock_admin_service):
     _APP.dependency_overrides = {}
     
     assert response.status_code == 200
-    assert response.json()["role"] == "ENTRENADOR"
+    json_response = response.json()
+    assert json_response["role"] == "ENTRENADOR"

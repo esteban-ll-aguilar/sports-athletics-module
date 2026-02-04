@@ -9,3 +9,7 @@ alembic revision --autogenerate -m "primera migración"
 ``` bash
 alembic upgrade head
 ```
+
+
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;

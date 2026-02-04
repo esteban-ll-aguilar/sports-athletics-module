@@ -11,71 +11,228 @@ from app.modules.competencia.domain.schemas.competencia_schema import (
 )
 from app.modules.competencia.dependencies import get_competencia_service
 from app.modules.auth.domain.enums.role_enum import RoleEnum
-
+from app.public.schemas.base_response import BaseResponse
+from app.utils.response_handler import ResponseHandler
+# Instancia del router
 router = APIRouter()
 
-
-@router.post("", response_model=CompetenciaRead, status_code=status.HTTP_201_CREATED)
+# -------------------------------------------------------------------------
+# ENDPOINT: Crear Competencia
+# -------------------------------------------------------------------------
+@router.post(
+    "", 
+    response_model=BaseResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear competencia",
+    description="Registra un nuevo evento o torneo deportivo en el sistema."
+)
 async def crear_competencia(
     data: CompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Crear una nueva competencia."""
-    return await service.create(data, current_user.id)
+    """
+    Crea un nuevo evento de competencia.
+    Restringido a: ADMINISTRADOR, ENTRENADOR y PASANTE.
+    """
+    try:
+        # Validar permisos - usar .value para comparar enums correctamente
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        if role_str not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+             return ResponseHandler.forbidden_response(
+                 message="No tienes permisos para crear competencias"
+             )
 
-
-@router.get("", response_model=list[CompetenciaRead])
+        nueva_competencia = await service.create(data, current_user.profile.id)
+        return ResponseHandler.success_response(
+            summary="Competencia creado con exito",
+            message="Competencia creado con exito",
+            data=CompetenciaRead.model_validate(nueva_competencia).model_dump(),
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al crear competencia",
+            message=str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+# -------------------------------------------------------------------------
+# ENDPOINT: Listar Competencias
+# -------------------------------------------------------------------------
+@router.get(
+    "", 
+    response_model=BaseResponse,
+    summary="Listar competencias",
+    description="Obtiene el listado de todos los eventos deportivos registrados."
+)
 async def listar_competencias(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todas las competencias del entrenador."""
-    return await service.get_all(incluir_inactivos, current_user.id)
+    """
+    Lista las competencias. 
+    Los roles de gestión ven todas; otros roles podrían ver una lista filtrada.
+    """
+    try:
+        entrenador_id = current_user.id
+        
+        # Obtener rol como string de forma segura
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        # Si es admin, entrenador o pasante, ve todo (entrenador_id=None)
+        # Entrenadores también deben ver todas las competencias para participar.
+        if role_str in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+            entrenador_id = None
+            
+        competencias = await service.get_all(incluir_inactivos, entrenador_id)
+        if not competencias:
+             return ResponseHandler.success_response(
+                summary="No hay competencias registradas",
+                message="No se encontraron competencias",
+                data={"items": []}
+            )
+        
+        # Serializar lista de objetos ORM a lista de dicts
+        items = [CompetenciaRead.model_validate(c).model_dump() for c in competencias]
+        
+        return ResponseHandler.success_response(
+            summary="Lista de competencias obtenida",
+            message="Competencias encontradas",
+            data={"items": items}
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al listar competencias",
+            message=str(e)
+        )
 
-
-@router.get("/{external_id}", response_model=CompetenciaRead)
+# -------------------------------------------------------------------------
+# ENDPOINT: Obtener una Competencia
+# -------------------------------------------------------------------------
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de competencia",
+    description="Muestra la información completa de una competencia específica."
+)
 async def obtener_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Obtener detalles de una competencia."""
-    return await service.get_by_external_id(external_id)
-
-from app.modules.auth.domain.enums.role_enum import RoleEnum
-
-@router.put("/{external_id}", response_model=CompetenciaRead)
+    """Obtiene el detalle completo de una competencia mediante su UUID.""" 
+    try:
+        competencia = await service.get_by_external_id(external_id)
+        return ResponseHandler.success_response(
+            summary="Competencia encontrada",
+            message="Detalle de competencia obtenido",
+            data=CompetenciaRead.model_validate(competencia).model_dump()
+        )
+    except HTTPException as e:
+         if e.status_code == status.HTTP_404_NOT_FOUND:
+            return ResponseHandler.not_found_response(
+                entity="Competencia",
+                message="Competencia no existe"
+            )
+         return ResponseHandler.error_response(
+            summary="Error al obtener competencia",
+            message=e.detail,
+            status_code=e.status_code
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error interno",
+            message=str(e)
+        )
+# -------------------------------------------------------------------------
+# ENDPOINT: Actualizar Competencia
+# -------------------------------------------------------------------------
+@router.put(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Actualizar competencia",
+    description="Modifica los datos generales de un evento deportivo."
+)
 async def actualizar_competencia(
     external_id: UUID,
     data: CompetenciaUpdate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Actualizar una competencia (solo rol ENTRENADOR)."""
+    """Actualizar una competencia (Admin o Entrenador propietario)."""
+    try:
+        # Validación de rol
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+             return ResponseHandler.forbidden_response(
+                 message="Solo administradores, entrenadores y pasantes pueden modificar competencias"
+             )
 
-    if current_user.role != RoleEnum.ENTRENADOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los entrenadores pueden modificar competencias"
+        competencia_actualizada = await service.update(external_id, data)
+        return ResponseHandler.success_response(
+            summary="Competencia actualizada con exito",
+            message="Competencia actualizada correctamente",
+            data=CompetenciaRead.model_validate(competencia_actualizada).model_dump()
         )
-
-    return await service.update(external_id, data)
-
-    return await service.update(external_id, data)
-
-
-@router.delete("/{external_id}", status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException as e:
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+             return ResponseHandler.not_found_response(
+                entity="Competencia",
+                message="Competencia no encontrada para actualización"
+            )
+        return ResponseHandler.error_response(
+            summary="Error al actualizar competencia",
+            message=e.detail,
+            status_code=e.status_code
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+             summary="Error interno",
+             message=str(e)
+        )
+# -------------------------------------------------------------------------
+# ENDPOINT: Eliminar Competencia
+# -------------------------------------------------------------------------
+@router.delete(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Eliminar competencia",
+    description="Remueve un evento deportivo del sistema."
+)
 async def eliminar_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Eliminar una competencia (solo rol ENTRENADOR)."""
-    if current_user.role != RoleEnum.ENTRENADOR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los entrenadores pueden eliminar competencias"
+    """Eliminar una competencia (Admin o Entrenador)."""
+    try:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+            return ResponseHandler.forbidden_response(
+                message="Solo administradores, entrenadores y pasantes pueden eliminar competencias"
+            )
+            
+        await service.delete(external_id)
+        return ResponseHandler.success_response(
+            summary="Competencia eliminada con exito",
+            message="Competencia eliminada correctamente",
+            data={}
         )
-    await service.delete(external_id)
+    except HTTPException as e:
+        if e.status_code == status.HTTP_404_NOT_FOUND:
+            return ResponseHandler.not_found_response(
+                entity="Competencia",
+                message="Competencia no encontrada para eliminación"
+            )
+        return ResponseHandler.error_response(
+            summary="Error al eliminar competencia",
+            message=e.detail,
+            status_code=e.status_code
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error interno",
+            message=str(e)
+        )

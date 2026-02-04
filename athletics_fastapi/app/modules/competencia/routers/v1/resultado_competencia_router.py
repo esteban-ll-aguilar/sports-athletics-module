@@ -9,10 +9,18 @@ from app.modules.competencia.domain.schemas.competencia_schema import (
     ResultadoCompetenciaRead,
 )
 from app.modules.competencia.dependencies import get_resultado_competencia_service
+from app.public.schemas.base_response import BaseResponse
+from app.utils.response_handler import ResponseHandler
 
 router = APIRouter()
 
-@router.post("", response_model=ResultadoCompetenciaRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", 
+    response_model=BaseResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar resultado de competencia",
+    description="Captura el desempeño de un atleta en una competencia oficial vinculando el evento y la prueba."
+)
 async def crear_resultado(
     data: ResultadoCompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -22,38 +30,142 @@ async def crear_resultado(
     Registrar un resultado de competencia usando external_id.
     Se reciben UUIDs desde el frontend y el Service los convierte a IDs internos.
     """
-    return await service.create(data, current_user.id)
+    try:
+        nuevo_resultado = await service.create(data, current_user.profile.id)
+        return ResponseHandler.success_response(
+            summary="Resultado de competencia creado con exito",
+            message="Resultado de competencia creado con exito",
+            data=ResultadoCompetenciaRead.model_validate(nuevo_resultado).model_dump(),
+            status_code=status.HTTP_201_CREATED
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al crear resultado de competencia",
+            message=str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
-@router.get("", response_model=list[ResultadoCompetenciaRead])
+from app.modules.auth.domain.enums import RoleEnum
+
+@router.get(
+    "", 
+    response_model=BaseResponse,
+    summary="Listar todos los resultados",
+    description="Obtiene el historial de resultados de competencia. El alcance del listado depende del rol del usuario."
+)
 async def listar_resultados(
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todos los resultados del entrenador (filtra por estado y entrenador)."""
-    return await service.get_all(incluir_inactivos, current_user.id)
+    """Listar todos los resultados. Administradores ven todo, Entrenadores tambien."""
+    try:
+        entrenador_id = current_user.profile.id
+        
+        # Obtener rol como string de forma segura
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+
+        # Entrenadores, Admins y Pasantes ven todo (o filtrado por entrenador)
+        if role_str == "ATLETA":
+            resultados = await service.get_by_user_id(current_user.profile.id)
+        else:
+            if role_str in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+                 entrenador_id = None
+            
+            resultados = await service.get_all(incluir_inactivos, entrenador_id)
+        if not resultados:
+             return ResponseHandler.success_response(
+                summary="No hay resultados de competencia registrados",
+                message="No se encontraron resultados de competencia",
+                data={"items": []}
+            )
+        
+        items = [ResultadoCompetenciaRead.model_validate(r).model_dump() for r in resultados]
+        
+        return ResponseHandler.success_response(
+            summary="Lista de resultados de competencia obtenida",
+            message="Resultados de competencia encontrados",
+            data={"items": items}
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al listar resultados de competencia",
+            message=str(e)
+        )
 
 
-@router.get("/competencia/{external_id}", response_model=list[ResultadoCompetenciaRead])
+@router.get(
+    "/competencia/{external_id}", 
+    response_model=BaseResponse,
+    summary="Listar resultados por competencia",
+    description="Filtra todos los resultados obtenidos por los atletas en un evento de competencia específico."
+)
 async def listar_resultados_por_competencia(
     external_id: UUID,
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
 ):
     """Listar resultados de una competencia usando su external_id."""
-    return await service.get_by_competencia_external_id(external_id)
+    try:
+        resultados = await service.get_by_competencia_external_id(external_id)
+        if not resultados:
+              return ResponseHandler.success_response(
+                summary="No hay resultados para esta competencia",
+                message="No se encontraron resultados",
+                data={"items": []}
+            )
+
+        items = [ResultadoCompetenciaRead.model_validate(r).model_dump() for r in resultados]
+        
+        return ResponseHandler.success_response(
+            summary="Resultados por competencia obtenidos",
+            message="Resultados encontrados",
+            data={"items": items}
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al listar resultados por competencia",
+            message=str(e)
+        )
 
 
-@router.get("/{external_id}", response_model=ResultadoCompetenciaRead)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de resultado",
+    description="Recupera la información pormenorizada de un registro de desempeño en competencia."
+)
 async def obtener_resultado(
     external_id: UUID,
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
 ):
     """Obtener detalle de un resultado usando su external_id."""
-    return await service.get_by_external_id(external_id)
+    try:
+        resultado = await service.get_by_external_id(external_id)
+        if not resultado:
+            return ResponseHandler.not_found_response(
+                entity="Resultado de competencia",
+                message="Resultado no encontrado"
+            )
+        return ResponseHandler.success_response(
+            summary="Resultado encontrado",
+            message="Detalle de resultado obtenido",
+            data=ResultadoCompetenciaRead.model_validate(resultado).model_dump()
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error al obtener resultado",
+            message=str(e)
+        )
 
 
-@router.put("/{external_id}", response_model=ResultadoCompetenciaRead)
+@router.put(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Actualizar resultado",
+    description="Modifica los valores de un registro de resultado (ej. tiempo, marca, posición)."
+)
 async def actualizar_resultado(
     external_id: UUID,
     data: ResultadoCompetenciaUpdate,
@@ -64,7 +176,33 @@ async def actualizar_resultado(
     Actualizar un resultado usando su external_id.
     Solo puede actualizarlo el entrenador propietario o un administrador.
     """
-    resultado = await service.get_by_external_id(external_id)
-    if resultado.entrenador_id != current_user.id and current_user.role != "ADMINISTRADOR":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso")
-    return await service.update(external_id, data)
+    try:
+        resultado = await service.get_by_external_id(external_id)
+        if not resultado:
+             return ResponseHandler.not_found_response(
+                entity="Resultado de competencia",
+                message="Resultado no encontrado para actualización"
+            )
+
+        if resultado.entrenador_id != current_user.profile.id and current_user.profile.role not in ["ADMINISTRADOR", "PASANTE"]:
+             return ResponseHandler.forbidden_response(
+                 message="No tienes permiso para actualizar este resultado"
+             )
+
+        resultado_actualizado = await service.update(external_id, data)
+        return ResponseHandler.success_response(
+            summary="Resultado actualizado con exito",
+            message="Resultado actualizado correctamente",
+            data=ResultadoCompetenciaRead.model_validate(resultado_actualizado).model_dump()
+        )
+    except HTTPException as e:
+        return ResponseHandler.error_response(
+            summary="Error al actualizar resultado",
+            message=e.detail,
+            status_code=e.status_code
+        )
+    except Exception as e:
+        return ResponseHandler.error_response(
+            summary="Error interno",
+            message=str(e)
+        )

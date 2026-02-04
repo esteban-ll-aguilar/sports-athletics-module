@@ -1,9 +1,9 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Boolean, DateTime, Text, JSON, func
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Boolean, DateTime, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
-import uuid, datetime
-from typing import TYPE_CHECKING
+import uuid
+import datetime
 
 class ExampleModel(Base):
     __tablename__ = "examples"

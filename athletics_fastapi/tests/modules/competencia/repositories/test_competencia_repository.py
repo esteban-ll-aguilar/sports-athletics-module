@@ -46,7 +46,6 @@ def repository(async_session):
 async def test_create_competencia(repository, async_session):
     """
     Verifica la creación exitosa de una competencia.
-    Mockea el constructor de Competencia para verificar la instanciación.
     """
     data = {
         "nombre": "Competencia Test",
@@ -54,20 +53,21 @@ async def test_create_competencia(repository, async_session):
         "entrenador_id": 1,
     }
 
-    fake_competencia = MagicMock(spec=Competencia)
+    competencia = await repository.create(data)
 
-    # 🔑 Mock del constructor del modelo
-    with patch(
-        "app.modules.competencia.repositories.competencia_repository.Competencia",
-        return_value=fake_competencia,
-    ):
-        competencia = await repository.create(data)
-
-    async_session.add.assert_called_once_with(fake_competencia)
+    # Verify add was called with a Competencia instance
+    async_session.add.assert_called_once()
+    args, _ = async_session.add.call_args
+    assert isinstance(args[0], Competencia)
+    assert args[0].nombre == "Competencia Test"
+    
     async_session.commit.assert_called_once()
-    async_session.refresh.assert_called_once_with(fake_competencia)
+    # refresh is called in implementation to reload the object from DB
+    async_session.refresh.assert_called_once()
 
-    assert competencia == fake_competencia
+    assert competencia.nombre == "Competencia Test"
+    assert competencia.estado is True
+    assert competencia.entrenador_id == 1
 
 
 # ---------------------------------
@@ -171,7 +171,8 @@ async def test_update_competencia(repository, async_session):
     """
     Verifica la actualización de los campos de una competencia.
     """
-    competencia = MagicMock(spec=Competencia)
+    competencia = Competencia(nombre="Viejo Nombre", estado=True)
+    competencia.id = 1
 
     changes = {
         "nombre": "Nuevo Nombre",
@@ -183,6 +184,7 @@ async def test_update_competencia(repository, async_session):
     assert competencia.nombre == "Nuevo Nombre"
     assert competencia.estado is False
     async_session.commit.assert_called_once()
+    # refresh is called in implementation to reload the object from DB
     async_session.refresh.assert_called_once_with(competencia)
     assert result == competencia
 

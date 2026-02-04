@@ -19,24 +19,22 @@ async def get_current_entrenador(
     entrenador_repo: EntrenadorRepository = Depends(get_entrenador_repo)
 ) -> Entrenador:
     
-    # 1. Verificar Rol
-    if current_user.role != RoleEnum.ENTRENADOR:
-        # Nota: Si se permite que admin actúe como entrenador, ajustar aquí.
-        # Por ahora estricto a que tenga el rol.
+    # 1. Verificar Rol - Permitir ENTRENADOR, PASANTE y ADMINISTRADOR
+    if current_user.profile.role not in [RoleEnum.ENTRENADOR, RoleEnum.PASANTE, RoleEnum.ADMINISTRADOR]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Se requiere rol de Entrenador"
+            detail="Se requiere rol de Entrenador, Pasante o Administrador"
         )
 
     # 2. Buscar Entrenador
-    entrenador = await entrenador_repo.get_by_user_id(current_user.id)
+    entrenador = await entrenador_repo.get_by_user_id(current_user.profile.id)
 
     # 3. Auto-creación si no existe
     if not entrenador:
         new_entrenador = Entrenador(
-            user_id=current_user.id,
+            user_id=current_user.profile.id,
             anios_experiencia=0,
-            is_pasante=False
+            is_pasante=(current_user.profile.role == RoleEnum.PASANTE)
             # Otros campos opcionales van por defecto o nulos
         )
         entrenador = await entrenador_repo.create(new_entrenador)

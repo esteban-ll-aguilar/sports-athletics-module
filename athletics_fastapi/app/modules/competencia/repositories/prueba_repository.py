@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from ..domain.models.prueba_model import Prueba
+from ..domain.models.baremo_model import Baremo
 from ..domain.schemas.prueba_schema import PruebaCreate, PruebaUpdate
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 
 class PruebaRepository:
     """Repositorio para manejar CRUD de Pruebas deportivas"""
@@ -14,18 +16,29 @@ class PruebaRepository:
     # Crear prueba
     # ----------------------
     async def create(self, data: PruebaCreate) -> Prueba:
-        prueba = Prueba(**data.dict())
+        prueba = Prueba(**data.model_dump())
         self.db.add(prueba)
         await self.db.commit()
         await self.db.refresh(prueba)
-        return prueba
+        
+        # Eager load relationships to avoid lazy loading errors
+        result = await self.db.execute(
+            select(Prueba)
+            .where(Prueba.id == prueba.id)
+            .options(
+                selectinload(Prueba.baremos).selectinload(Baremo.items)
+            )
+        )
+        return result.scalar_one()
 
     # ----------------------
     # Obtener por external_id
     # ----------------------
     async def get_by_external_id(self, external_id: str) -> Prueba | None:
         result = await self.db.execute(
-            select(Prueba).where(Prueba.external_id == external_id)
+            select(Prueba)
+            .options(selectinload(Prueba.baremos).selectinload(Baremo.items))
+            .where(Prueba.external_id == external_id)
         )
         return result.scalar_one_or_none()
 
@@ -34,7 +47,9 @@ class PruebaRepository:
     # ----------------------
     async def list(self, skip: int = 0, limit: int = 100) -> list[Prueba]:
         result = await self.db.execute(
-            select(Prueba).offset(skip).limit(limit)
+            select(Prueba)
+            .options(selectinload(Prueba.baremos).selectinload(Baremo.items))
+            .offset(skip).limit(limit)
         )
         return result.scalars().all()
 
@@ -45,7 +60,7 @@ class PruebaRepository:
         prueba = await self.get_by_external_id(external_id)
         if not prueba:
             return None
-        for field, value in data.dict(exclude_unset=True).items():
+        for field, value in data.model_dump(exclude_unset=True).items():
             setattr(prueba, field, value)
         await self.db.commit()
         await self.db.refresh(prueba)

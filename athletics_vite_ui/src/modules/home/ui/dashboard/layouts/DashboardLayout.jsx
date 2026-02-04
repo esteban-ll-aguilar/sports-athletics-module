@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { Outlet } from 'react-router-dom';
-import { checkSession } from '@core/utils/authGuard';
 
 const DashboardLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     return (
-        <div className="min-h-screen bg-gray-50 pl-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-100 transition-colors duration-300">
             <Sidebar
                 isOpen={isSidebarOpen}
                 toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -21,7 +20,9 @@ const DashboardLayout = () => {
                     min-h-screen
                 `}
             >
-                <Outlet />
+                <div className="p-0">
+                    <Outlet />
+                </div>
             </main>
         </div>
     );

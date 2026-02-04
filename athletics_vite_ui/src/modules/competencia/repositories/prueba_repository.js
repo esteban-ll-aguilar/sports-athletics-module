@@ -1,4 +1,4 @@
-import axios from 'axios';
+import ApiClient from '../../../core/api/apiClient';
 import Settings from '../../../config/enviroment';
 
 const API_URL = `${Settings.API_URL}/api/v1/competencia/pruebas`;
@@ -6,8 +6,8 @@ const API_URL = `${Settings.API_URL}/api/v1/competencia/pruebas`;
 class PruebaRepository {
     async getAll() {
         try {
-            const response = await axios.get(`${API_URL}/`);
-            return response.data;
+            const responseData = await ApiClient.get(`${API_URL}/`);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -15,14 +15,8 @@ class PruebaRepository {
 
     async create(data) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.post(`${API_URL}/`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.post(`${API_URL}/`, data);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -30,14 +24,8 @@ class PruebaRepository {
 
     async update(externalId, data) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/${externalId}`, data, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.put(`${API_URL}/${externalId}`, data);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

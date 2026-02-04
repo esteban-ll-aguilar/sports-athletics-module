@@ -1,11 +1,28 @@
-from pydantic import BaseModel
-from typing import Optional, List
+from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional
 
 class BaseResponse(BaseModel):
     """
-    Schema para la respuesta de un modelo
+    Schema estandarizado para las respuestas de las APIs.
     """
-    data: dict
-    message: str
-    errors: Optional[List[str]] = []
-    status: int
+    summary: str = Field(..., description="Resumen breve de la operación")
+    status_code: int = Field(..., description="Código de estado HTTP")
+    errors: Dict[str, Any] = Field(default_factory=dict, description="Diccionario de errores")
+    message: str = Field(..., description="Mensaje descriptivo de la operación")
+    data: Dict[str, Any] = Field(default_factory=dict, description="Datos de respuesta")
+    status: int = Field(..., description="Código de estado (duplicado para compatibilidad)")
+    code: str = Field(..., description="Código de respuesta (COD_OK o COD_ERROR)")
+    success: Optional[bool] = Field(True, description="Indicador de éxito de la operación")
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "summary": "Operación exitosa",
+                "status_code": 200,
+                "errors": {},
+                "message": "La operación se completó correctamente",
+                "data": {},
+                "status": 200,
+                "code": "OK"
+            }
+        }

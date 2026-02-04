@@ -4,7 +4,7 @@ Valida la gestión de sesiones (crear, revocar, limpiar).
 """
 import pytest
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from unittest.mock import AsyncMock, MagicMock
 from app.modules.auth.repositories.sessions_repository import SessionsRepository
 from app.modules.auth.domain.models.auth_users_sessions_model import AuthUsersSessionsModel
@@ -29,7 +29,7 @@ async def test_create_session(repo, mock_session):
     user_id = uuid.uuid4()
     access_jti = "access_123"
     refresh_jti = "refresh_123"
-    expires = datetime.utcnow() + timedelta(hours=1)
+    expires = datetime.now(UTC) + timedelta(hours=1)
 
     session = await repo.create_session(user_id, access_jti, refresh_jti, expires)
 

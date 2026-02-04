@@ -1,38 +1,116 @@
 import { useEffect, useState } from "react";
+import PropTypes from "prop-types";
 import tipoDisciplinaService from "../../services/tipo_disciplina_service";
-import baremoService from "../../services/baremo_service";
 import Swal from "sweetalert2";
+import { X, Type, Calendar, Info, Activity, Ruler, Hash, Target } from "lucide-react";
+
+const InputField = ({ label, icon: Icon, id, ...props }) => (
+    <div className="space-y-1">
+        <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <input
+                {...props}
+                id={id}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-3 py-2.5 rounded-lg
+                bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm
+            `}
+            />
+        </div>
+    </div>
+);
+
+InputField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    id: PropTypes.string.isRequired
+};
+
+const SelectField = ({ label, icon: Icon, id, children, ...props }) => (
+    <div className="space-y-1">
+        <label htmlFor={id} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">{label}</label>
+        <div className="relative">
+            {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />}
+            <select
+                {...props}
+                id={id}
+                className={`
+                w-full ${Icon ? 'pl-9' : 'pl-3'} pr-8 py-2.5 rounded-lg
+                 bg-white dark:bg-[#212121] 
+                border border-gray-300 dark:border-[#332122]
+                text-gray-900 dark:text-gray-100
+                placeholder-gray-400
+                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                outline-none transition-all sm:text-sm appearance-none
+            `}
+            >
+                {children}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+        </div>
+    </div>
+);
+
+SelectField.propTypes = {
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.elementType,
+    id: PropTypes.string.isRequired,
+    children: PropTypes.node
+};
 
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
+    const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
+        nombre: "",
+        fecha_prueba: "",
         siglas: "",
         tipo_prueba: "COMPETENCIA",
+        tipo_medicion: "TIEMPO",
         unidad_medida: "",
         estado: true,
         tipo_disciplina_id: "",
-        baremo_id: ""
+        fecha_registro: "",
     });
 
     const [disciplinas, setDisciplinas] = useState([]);
-    const [baremos, setBaremos] = useState([]);
+
 
     useEffect(() => {
         if (isOpen) {
             cargarCatalogos();
             if (editingData) {
+                const normalizeUnit = (u) => {
+                    if (!u) return "";
+                    if (u === "m" || u === "METROS") return "METROS";
+                    if (u === "s" || u === "SEGUNDOS") return "SEGUNDOS";
+                    return u;
+                };
                 setForm({
                     ...editingData,
+                    nombre: editingData.nombre || "",
+                    fecha_prueba: editingData.fecha_prueba || "",
                     tipo_disciplina_id: editingData.tipo_disciplina_id?.toString() || "",
-                    baremo_id: editingData.baremo_id?.toString() || ""
+                    unidad_medida: normalizeUnit(editingData.unidad_medida)
                 });
             } else {
                 setForm({
+                    nombre: "",
+                    fecha_prueba: "",
                     siglas: "",
                     tipo_prueba: "COMPETENCIA",
+                    tipo_medicion: "TIEMPO",
                     unidad_medida: "",
                     estado: true,
                     tipo_disciplina_id: "",
-                    baremo_id: ""
+                    fecha_registro: "",
                 });
             }
         }
@@ -40,12 +118,10 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
     const cargarCatalogos = async () => {
         try {
-            const [resD, resB] = await Promise.all([
+            const [resD] = await Promise.all([
                 tipoDisciplinaService.getAll(),
-                baremoService.getAll()
             ]);
             setDisciplinas(Array.isArray(resD) ? resD : []);
-            setBaremos(Array.isArray(resB) ? resB : []);
         } catch (err) { console.error(err); }
     };
 
@@ -54,6 +130,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     // Manejar creación o edición
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (submitting) return;
 
         const result = await Swal.fire({
             title: editingData ? '¿Desea actualizar esta prueba?' : '¿Desea crear esta prueba?',
@@ -64,20 +141,36 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: 'Sí',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#1a1a1a',
+            color: '#fff',
+            customClass: {
+                popup: 'dark:bg-[#1a1a1a] dark:text-white dark:border dark:border-[#332122]'
+            }
         });
 
         if (result.isConfirmed) {
-            onSubmit(form);
+            setSubmitting(true);
+            try {
+                const success = await onSubmit(form);
 
-            await Swal.fire({
-                icon: 'success',
-                title: editingData ? 'Prueba actualizada' : 'Prueba creada',
-                text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
-            });
-
-            onClose();
+                if (success) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: editingData ? 'Prueba actualizada' : 'Prueba creada',
+                        text: `La prueba ha sido ${editingData ? 'actualizada' : 'creada'} correctamente.`,
+                        confirmButtonColor: '#b30c25',
+                        background: '#1a1a1a',
+                        color: '#fff'
+                    });
+                    onClose();
+                }
+            } catch (error) {
+                console.error("Error en modal:", error);
+            } finally {
+                setSubmitting(false);
+            }
         }
     };
 
@@ -91,120 +184,226 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
             showCancelButton: true,
             confirmButtonText: `Sí, ${action}`,
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#ec1313'
+            confirmButtonColor: '#b30c25',
+            cancelButtonColor: '#6b7280',
+            background: '#1a1a1a',
+            color: '#fff'
         });
 
         if (result.isConfirmed) {
-            setForm({...form, estado: !form.estado});
+            setForm({ ...form, estado: !form.estado });
 
             Swal.fire({
                 icon: 'success',
                 title: `Prueba ${form.estado ? 'desactivada' : 'activada'}`,
                 text: `La prueba ha sido ${form.estado ? 'desactivada' : 'activada'} correctamente.`,
-                confirmButtonColor: '#ec1313'
+                confirmButtonColor: '#b30c25',
+                background: '#1a1a1a',
+                color: '#fff'
             });
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-            <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                    <h2 className="text-xl font-black">{editingData ? 'Editar Prueba' : 'Nueva Prueba'}</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-black">
-                        <span className="material-symbols-outlined">close</span>
+        <dialog
+            open={isOpen}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm w-full h-full border-none outline-none"
+        >
+            <button
+                type="button"
+                className="absolute inset-0 w-full h-full cursor-default bg-transparent"
+                onClick={onClose}
+                aria-label="Cerrar modal"
+            />
+            <div className="relative w-full max-w-xl rounded-2xl bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#332122] shadow-2xl flex flex-col max-h-[90vh]">
+
+                {/* Header */}
+                <div className="px-6 py-5 border-b border-gray-100 dark:border-[#332122] flex justify-between items-center rounded-t-2xl bg-gray-50 dark:bg-[#212121]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-[#b30c25] flex items-center justify-center font-bold">
+                            {editingData ? <Activity size={20} /> : <Target size={20} />}
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                                {editingData ? 'Editar Prueba' : 'Nueva Prueba'}
+                            </h2>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Detalles de la prueba técnica</p>
+                        </div>
+
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <X size={20} />
                     </button>
                 </div>
-                
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
                     {/* Switch de Estado (Activar/Desactivar) */}
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <div>
-                            <span className="block text-xs font-black uppercase text-gray-400">Estado del Registro</span>
-                            <span className={`text-sm font-bold ${form.estado ? 'text-green-600' : 'text-red-600'}`}>
-                                {form.estado ? 'PRUEBA ACTIVA' : 'PRUEBA DESACTIVADA'}
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-[#332122]">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Estado</span>
+                            <span className={`text-sm font-bold ${form.estado ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {form.estado ? 'ACTIVO' : 'INACTIVO'}
                             </span>
                         </div>
-                        <button 
+                        <button
                             type="button"
                             onClick={toggleEstado}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-300'}`}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${form.estado ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${form.estado ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${form.estado ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Siglas</label>
-                            <input 
-                                type="text" 
-                                value={form.siglas} 
-                                onChange={(e) => setForm({...form, siglas: e.target.value.toUpperCase()})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:border-[#ec1313] font-bold" 
-                                required 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Unidad Medida</label>
-                            <input 
-                                type="text" 
-                                value={form.unidad_medida} 
-                                onChange={(e) => setForm({...form, unidad_medida: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:border-[#ec1313]" 
-                                required 
-                            />
-                        </div>
+                        <InputField
+                            label="Nombre"
+                            id="pr-nombre"
+                            icon={Type}
+                            type="text"
+                            value={form.nombre}
+                            onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                            required
+                            placeholder="Ej. 100m Planos"
+                        />
+                        <InputField
+                            label="Siglas"
+                            id="pr-siglas"
+                            icon={Hash}
+                            type="text"
+                            value={form.siglas}
+                            onChange={(e) => setForm({ ...form, siglas: e.target.value.toUpperCase() })}
+                            required
+                            placeholder="Ej. 100M"
+                        />
                     </div>
 
-                    <div>
-                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Tipo de Prueba</label>
-                        <select 
-                            value={form.tipo_prueba} 
-                            onChange={(e) => setForm({...form, tipo_prueba: e.target.value})} 
-                            className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white font-semibold"
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <SelectField
+                            label="Tipo de Prueba"
+                            id="pr-tipo"
+                            icon={Target}
+                            value={form.tipo_prueba}
+                            onChange={(e) => setForm({ ...form, tipo_prueba: e.target.value })}
                             required
                         >
                             <option value="COMPETENCIA">COMPETENCIA</option>
                             <option value="NORMAL">NORMAL</option>
-                        </select>
+                        </SelectField>
+
+                        <SelectField
+                            label="Tipo de Medición"
+                            id="pr-medicion"
+                            icon={Ruler}
+                            value={form.tipo_medicion}
+                            onChange={(e) => {
+                                const newTipo = e.target.value;
+                                setForm({
+                                    ...form,
+                                    tipo_medicion: newTipo,
+                                    unidad_medida: newTipo === "TIEMPO" ? "SEGUNDOS" : "METROS"
+                                });
+                            }}
+                            required
+                        >
+                            <option value="TIEMPO">TIEMPO</option>
+                            <option value="DISTANCIA">DISTANCIA</option>
+                        </SelectField>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField
+                            label="Unidad de Medida"
+                            id="pr-unidad"
+                            icon={Info}
+                            type="text"
+                            value={form.unidad_medida}
+                            disabled
+                            className="bg-gray-100 dark:bg-[#2a2829] cursor-not-allowed opacity-70"
+                            placeholder="Auto-completado"
+                        />
+                        <SelectField
+                            label="Disciplina"
+                            id="pr-disciplina"
+                            icon={Activity}
+                            value={form.tipo_disciplina_id}
+                            onChange={(e) => setForm({ ...form, tipo_disciplina_id: e.target.value })}
+                            required
+                        >
+                            <option value="">Seleccione...</option>
+                            {disciplinas.map(d => (<option key={d.id} value={d.id}>{d.nombre}</option>))}
+                        </SelectField>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Disciplina</label>
-                            <select 
-                                value={form.tipo_disciplina_id} 
-                                onChange={(e) => setForm({...form, tipo_disciplina_id: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white" required
-                            >
-                                <option value="">Seleccione...</option>
-                                {disciplinas.map(d => (<option key={d.id} value={d.id}>{d.nombre}</option>))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Baremo</label>
-                            <select 
-                                value={form.baremo_id} 
-                                onChange={(e) => setForm({...form, baremo_id: e.target.value})} 
-                                className="w-full border border-gray-200 rounded-xl p-3 outline-none bg-white" required
-                            >
-                                <option value="">Seleccione...</option>
-                                {baremos.map(b => (<option key={b.id} value={b.id}>Clase {b.clasificacion} ({b.valor_baremo} pts)</option>))}
-                            </select>
-                        </div>
+                        <InputField
+                            label="Fecha de Registro"
+                            id="pr-fecha-reg"
+                            icon={Calendar}
+                            type="date"
+                            value={form.fecha_registro}
+                            onChange={(e) => setForm({ ...form, fecha_registro: e.target.value })}
+                            required
+                        />
+                        <InputField
+                            label="Fecha de Prueba"
+                            id="pr-fecha-pru"
+                            icon={Calendar}
+                            type="date"
+                            value={form.fecha_prueba}
+                            onChange={(e) => setForm({ ...form, fecha_prueba: e.target.value })}
+                        />
                     </div>
 
-                    <div className="flex gap-3 pt-6">
-                        <button type="button" onClick={onClose} className="flex-1 p-4 border border-gray-100 rounded-xl font-bold text-gray-400 text-xs uppercase">Cancelar</button>
-                        <button type="submit" className="flex-1 p-4 bg-[#ec1313] text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-50 text-xs uppercase">
-                            Guardar Cambios
+                    <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-[#332122]">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={submitting}
+                            className="
+                                flex-1 px-4 py-3 rounded-xl font-semibold
+                                border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300
+                                hover:bg-gray-50 dark:hover:bg-[#212121] transition
+                                disabled:opacity-50
+                            "
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="
+                                flex-1 px-4 py-3 rounded-xl font-bold text-white
+                                bg-linear-to-r from-[#b30c25] to-[#80091b]
+                                hover:shadow-lg hover:shadow-red-900/20 active:scale-95
+                                disabled:opacity-70 disabled:cursor-not-allowed
+                                transition-all duration-300
+                            "
+                        >
+                            {submitting ? 'Guardando...' : 'Guardar Cambios'}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </dialog>
     );
+};
+
+PruebaModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+    editingData: PropTypes.shape({
+        external_id: PropTypes.string,
+        nombre: PropTypes.string,
+        siglas: PropTypes.string,
+        fecha_prueba: PropTypes.string,
+        tipo_prueba: PropTypes.string,
+        tipo_medicion: PropTypes.string,
+        unidad_medida: PropTypes.string,
+        estado: PropTypes.bool,
+        tipo_disciplina_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        fecha_registro: PropTypes.string
+    })
 };
 
 export default PruebaModal;

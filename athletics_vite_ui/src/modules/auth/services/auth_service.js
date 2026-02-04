@@ -1,14 +1,30 @@
 import authRepository from '../repositories/auth_repository';
+import { jwtDecode } from 'jwt-decode';
+import { getAccessToken, setAccessToken } from '../../../core/api/apiClient';
 
 class AuthService {
 
     async login(email, password) {
-        const data = await authRepository.login(email, password);
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
+        const response = await authRepository.login(email, password);
+
+        // Si el login fue exitoso y tenemos un token de acceso
+        if (response.success && response.data && response.data.access_token) {
+            try {
+                // Obtener el perfil completo del usuario inmediatamente
+                const profileResponse = await this.getProfile();
+                const userData = profileResponse.data || profileResponse;
+
+                if (userData) {
+                    // Guardar en localStorage para que esté disponible globalmente
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    console.log('👤 Usuario guardado en localStorage:', userData);
+                }
+            } catch (error) {
+                console.error("Error al obtener perfil tras login:", error);
+            }
         }
-        return data;
+
+        return response;
     }
 
     async register(userData) {
@@ -35,13 +51,34 @@ class AuthService {
         return await authRepository.getProfile();
     }
 
-    async updateProfile(userData) {
-        return await authRepository.updateProfile(userData);
+    async updateProfile(formData) {
+        if (!(formData instanceof FormData)) {
+            throw new Error("updateProfile requiere FormData");
+        }
+
+        return await authRepository.updateProfile(formData);
     }
+
+
+    // Flag to manage concurrent refresh requests
+    _refreshPromise = null;
 
     // New methods delegating to repository
     async refreshToken() {
-        return await authRepository.refreshToken();
+        if (this._refreshPromise) {
+            return this._refreshPromise;
+        }
+
+        this._refreshPromise = (async () => {
+            try {
+                const result = await authRepository.refreshToken();
+                return result;
+            } finally {
+                this._refreshPromise = null;
+            }
+        })();
+
+        return this._refreshPromise;
     }
 
     async getSessions() {
@@ -64,26 +101,20 @@ class AuthService {
         return await authRepository.verify2FA(code);
     }
 
-    async disable2FA() {
-        return await authRepository.disable2FA();
+    async disable2FA(password, code) {
+        return await authRepository.disable2FA(password, code);
     }
 
-    async login2FA(email, code) {
-        const data = await authRepository.login2FA(email, code);
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
-        }
-        return data;
+    async login2FA(email, code, temp_token) {
+        const responseCtx = await authRepository.login2FA(email, code, temp_token);
+        // authRepository handles token setAccessToken via _saveTokens
+        return responseCtx;
     }
 
-    async loginBackup(email, code) {
-        const data = await authRepository.loginBackup(email, code);
-        if (data.access_token) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
-        }
-        return data;
+    async loginBackup(email, code, temp_token) {
+        const responseCtx = await authRepository.loginBackup(email, code, temp_token);
+        // authRepository handles token setAccessToken via _saveTokens
+        return responseCtx;
     }
 
     async logout() {
@@ -92,34 +123,47 @@ class AuthService {
         } catch (error) {
             console.error("Logout failed", error);
         } finally {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            setAccessToken(null);
         }
     }
 
     isAuthenticated() {
-        const token = localStorage.getItem('access_token');
+        const token = getAccessToken();
         if (!token) return false;
 
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = jwtDecode(token);
             const isExpired = payload.exp * 1000 < Date.now();
 
             if (isExpired) {
-                this.logout();
+                // If expired in memory, we assume client interceptor will refresh or has failed.
+                // But specifically for UI checking "is logged in", validation fails.
                 return false;
             }
 
             return true;
         } catch (error) {
-            this.logout();
+            console.error("Token validation failed:", error);
+            return false;
+        }
+    }
+
+    // New method to initialize app state
+    async checkAuth() {
+        if (this.isAuthenticated()) return true;
+        try {
+            // Try silent refresh (uses deduplication logic in refreshToken)
+            await this.refreshToken();
+            return !!getAccessToken(); // Check if access token was set by repository
+        } catch (e) {
             return false;
         }
     }
 
     getToken() {
-        return localStorage.getItem('access_token');
+        return getAccessToken();
     }
 }
 
 export default new AuthService();
+

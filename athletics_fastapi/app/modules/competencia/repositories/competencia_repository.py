@@ -14,10 +14,12 @@ class CompetenciaRepository:
         self.session = session
 
     async def create(self, data: dict) -> Competencia:
+        print(f"📝 Creando competencia con datos: {data}")
         competencia = Competencia(**data)
         self.session.add(competencia)
         await self.session.commit()
         await self.session.refresh(competencia)
+        print(f"✅ Competencia creada con ID: {competencia.id}, estado: {competencia.estado}")
         return competencia
 
     async def get_by_id(self, id: int) -> Competencia | None:
@@ -33,6 +35,7 @@ class CompetenciaRepository:
         return result.scalars().first()
 
     async def get_all(self, incluir_inactivos: bool = True, entrenador_id: int = None):
+        print(f"🔍 GET ALL - incluir_inactivos: {incluir_inactivos}, entrenador_id: {entrenador_id}")
         query = select(Competencia)
 
         if not incluir_inactivos:
@@ -42,7 +45,11 @@ class CompetenciaRepository:
             query = query.where(Competencia.entrenador_id == entrenador_id)
 
         result = await self.session.execute(query)
-        return result.scalars().all()
+        competencias = result.scalars().all()
+        print(f"📊 Competencias encontradas: {len(competencias)}")
+        for c in competencias:
+            print(f"  - ID: {c.id}, Nombre: {c.nombre}, Estado: {c.estado}")
+        return competencias
 
     async def update(self, competencia: Competencia, changes: dict) -> Competencia:
         for field, value in changes.items():

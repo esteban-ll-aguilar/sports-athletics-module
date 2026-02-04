@@ -9,6 +9,16 @@ class EntrenamientoService:
         self.repository = repository
 
     async def create_entrenamiento(self, schema: EntrenamientoCreate, entrenador_id: int) -> Entrenamiento:
+        """
+        Crea un nuevo plan de entrenamiento con sus horarios asociados.
+        
+        Args:
+            schema (EntrenamientoCreate): Datos del entrenamiento y lista de horarios.
+            entrenador_id (int): ID del entrenador que crea el plan.
+            
+        Returns:
+            Entrenamiento: El entrenamiento creado con sus horarios.
+        """
         entrenamiento_data = schema.model_dump(exclude={'horarios'})
         horarios_data = schema.horarios or []
 
@@ -27,15 +37,58 @@ class EntrenamientoService:
         return await self.repository.create(entrenamiento)
 
     async def get_mis_entrenamientos(self, entrenador_id: int) -> List[Entrenamiento]:
+        """
+        Obtiene lista de entrenamientos creados por un entrenador específico.
+        
+        Args:
+            entrenador_id (int): ID del entrenador.
+            
+        Returns:
+            List[Entrenamiento]: Lista de entrenamientos.
+        """
         return await self.repository.get_all_by_entrenador(entrenador_id)
 
+    async def get_all_entrenamientos(self) -> List[Entrenamiento]:
+        """
+        Obtiene lista de todos los entrenamientos.
+        """
+        return await self.repository.get_all()
+
     async def get_entrenamiento_detalle(self, entrenamiento_id: int, entrenador_id: int) -> Entrenamiento:
+        """
+        Obtiene los detalles de un entrenamiento específico.
+        
+        Valida que el entrenamiento exista y pertenezca al entrenador.
+        
+        Args:
+            entrenamiento_id (int): ID del entrenamiento.
+            entrenador_id (int): ID del entrenador (para verificación de propiedad).
+            
+        Returns:
+            Entrenamiento: Detalles del entrenamiento.
+            
+        Raises:
+            HTTPException: 404 si no se encuentra o no pertenece al entrenador.
+        """
         entrenamiento = await self.repository.get_by_id_and_entrenador(entrenamiento_id, entrenador_id)
         if not entrenamiento:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entrenamiento no encontrado")
         return entrenamiento
 
     async def update_entrenamiento(self, entrenamiento_id: int, schema: EntrenamientoUpdate, entrenador_id: int) -> Entrenamiento:
+        """
+        Actualiza un entrenamiento existente y gestiona sus horarios.
+        
+        Si se proporcionan horarios, reemplaza la lista existente con la nueva (Full Replacement).
+        
+        Args:
+            entrenamiento_id (int): ID del entrenamiento a actualizar.
+            schema (EntrenamientoUpdate): Datos a actualizar.
+            entrenador_id (int): ID del entrenador.
+            
+        Returns:
+            Entrenamiento: El entrenamiento actualizado.
+        """
         entrenamiento = await self.get_entrenamiento_detalle(entrenamiento_id, entrenador_id)
         
         update_data = schema.model_dump(exclude_unset=True)
@@ -55,5 +108,12 @@ class EntrenamientoService:
         return await self.repository.update(entrenamiento)
 
     async def delete_entrenamiento(self, entrenamiento_id: int, entrenador_id: int) -> None:
+        """
+        Elimina un entrenamiento y sus horarios asociados.
+        
+        Args:
+            entrenamiento_id (int): ID del entrenamiento.
+            entrenador_id (int): ID del entrenador.
+        """
         entrenamiento = await self.get_entrenamiento_detalle(entrenamiento_id, entrenador_id)
         await self.repository.delete(entrenamiento)

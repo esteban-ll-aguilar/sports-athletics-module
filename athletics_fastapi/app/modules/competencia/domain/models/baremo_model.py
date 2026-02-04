@@ -1,16 +1,39 @@
-from sqlalchemy import Integer, Float, Boolean, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String, Boolean, ForeignKey, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
-from app.modules.competencia.domain.enums.enum import TipoClasificacion
-from sqlalchemy.dialects.postgresql import UUID
+from app.modules.competencia.domain.enums.enum import Sexo
 import uuid
+from typing import List, TYPE_CHECKING
 
-# Modelo de datos para la entidad Baremo
+if TYPE_CHECKING:
+    from app.modules.competencia.domain.models.prueba_model import Prueba
+    from app.modules.competencia.domain.models.item_baremo_model import ItemBaremo
+
+# Modelo de datos para la entidad Baremo (Contexto de evaluación)
 class Baremo(Base):
+    """
+    Representa la tabla de baremación (escalas de evaluación) para una prueba específica.
+    
+    Esta entidad define los criterios de evaluación segmentados por sexo y rangos de edad,
+    permitiendo asociar puntajes específicos a los resultados obtenidos por los atletas.
+    """
     __tablename__ = "baremo"
-
+    # Identificadores
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
-    external_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, index=True, default=uuid.uuid4, onupdate=uuid.uuid4)
-    valor_baremo: Mapped[float] = mapped_column(Float)
-    clasificacion: Mapped[TipoClasificacion] = mapped_column(String)
+    external_id: Mapped[uuid.UUID] = mapped_column(
+        default=uuid.uuid4,
+        unique=True,
+        index=True,
+        server_default=text("gen_random_uuid()"),
+        server_onupdate=text("gen_random_uuid()")
+    )
+    # Llaves Foráneas y Filtros de Negocio
+    prueba_id: Mapped[int] = mapped_column(Integer, ForeignKey("prueba.id"), nullable=False)
+    sexo: Mapped[Sexo] = mapped_column(String, nullable=False)
+    edad_min: Mapped[int] = mapped_column(Integer, nullable=False)
+    edad_max: Mapped[int] = mapped_column(Integer, nullable=False)
     estado: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Relalaciones 
+    prueba: Mapped["Prueba"] = relationship("Prueba", back_populates="baremos")
+    items: Mapped[List["ItemBaremo"]] = relationship("ItemBaremo", back_populates="baremo", cascade="all, delete-orphan")

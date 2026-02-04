@@ -169,10 +169,16 @@ async def test_update_competencia_ok():
         lugar="X",
         fecha=date.today()
     )
+    
+    competencia_updated = SimpleNamespace(
+        nombre="Nueva",
+        lugar="X",
+        fecha=date.today()
+    )
 
     repo = Mock()
     repo.get_by_external_id = AsyncMock(return_value=competencia)
-    repo.update = AsyncMock(return_value=competencia)
+    repo.update = AsyncMock(return_value=competencia_updated)
 
     service = CompetenciaService(repo)
 

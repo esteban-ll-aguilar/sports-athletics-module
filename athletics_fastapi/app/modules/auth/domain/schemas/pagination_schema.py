@@ -1,13 +1,23 @@
 """
-Paginacion de usuarios para respuestas de API
+Paginación de usuarios para respuestas de API
 """
-from app.modules.auth.domain.schemas.schemas_auth import UserRead
 from pydantic import BaseModel
-#define el esquema de paginación para usuarios
-# incluye la lista de usuarios, total, página actual, tamaño de página y total de páginas
+from typing import List
+from app.modules.auth.domain.schemas.schemas_users import UserResponseSchema, UserWithRelationsSchema
+
+
 class PaginatedUsers(BaseModel):
-    items: list[UserRead]
+    items: List[UserResponseSchema]
     total: int
     page: int
-    size: int 
+    size: int
     pages: int
+
+
+class PaginatedUsersWithRelations(BaseModel):
+    items: List[UserWithRelationsSchema]
+    total: int
+    page: int
+    size: int
+    pages: int
+

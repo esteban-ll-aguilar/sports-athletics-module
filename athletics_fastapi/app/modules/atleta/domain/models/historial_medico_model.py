@@ -20,16 +20,23 @@ class HistorialMedico(Base):
     enfermedades_hereditarias = Column(String, nullable=True)
     enfermedades = Column(String, nullable=True)
 
-    # 🔥 AQUÍ ESTABA EL ERROR
-    auth_user_id = Column(
+    contacto_emergencia_nombre = Column(String, nullable=True)
+    contacto_emergencia_telefono = Column(String, nullable=True)
+
+    atleta_id = Column(
         Integer,
-        ForeignKey("auth_users.id", ondelete="CASCADE"),  # ✅ nombre correcto
+        ForeignKey("atleta.id", ondelete="CASCADE"),  
         unique=True,
         nullable=False
     )
 
-    user = relationship(
-        "AuthUserModel",
+    atleta = relationship(
+        "Atleta",
         back_populates="historial_medico",
         uselist=False
     )
+
+    @property
+    def user_id(self) -> int:
+        return self.atleta.user_id if self.atleta else 0
+
