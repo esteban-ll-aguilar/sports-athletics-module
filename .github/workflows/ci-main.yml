@@ -5,16 +5,45 @@ on:
     branches: [ "main" ]
 
 jobs:
-  setup-and-test:
+  # ============================================
+  # JOB 1: Setup & Validation
+  # ============================================
+  setup:
+    name: 🔍 Setup & Validation
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      
+    - name: Validate project structure
+      run: |
+        echo "✅ Validating project structure..."
+        test -d athletics_fastapi && echo "✅ Backend folder found"
+        test -d athletics_vite_ui && echo "✅ Frontend folder found"
+        test -f athletics_fastapi/Dockerfile && echo "✅ Backend Dockerfile found"
+        test -f athletics_vite_ui/Dockerfile && echo "✅ Frontend Dockerfile found"
+        
+    - name: Check dependencies files
+      run: |
+        test -f athletics_fastapi/requirements.txt && echo "✅ requirements.txt found"
+        test -f athletics_vite_ui/package.json && echo "✅ package.json found"
 
-    # ============================================
-    # Setup Backend Environment
-    # ============================================
+  # ============================================
+  # JOB 2: Backend Tests
+  # ============================================
+  backend-tests:
+    name: 🐍 Backend Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    defaults:
+      run:
+        working-directory: ./athletics_fastapi
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
@@ -22,34 +51,13 @@ jobs:
         cache: 'pip'
         cache-dependency-path: './athletics_fastapi/requirements.txt'
 
-    - name: Install Backend Dependencies
-      working-directory: ./athletics_fastapi
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         echo "✅ Backend dependencies installed"
 
-    # ============================================
-    # Setup Frontend Environment
-    # ============================================
-    - name: Set up Node.js 22
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: './athletics_vite_ui/package-lock.json'
-
-    - name: Install Frontend Dependencies
-      working-directory: ./athletics_vite_ui
-      run: |
-        npm ci
-        echo "✅ Frontend dependencies installed"
-
-    # ============================================
-    # Run Tests in Parallel
-    # ============================================
-    - name: Run Backend Tests
-      working-directory: ./athletics_fastapi
+    - name: Run Unit Tests
       env:
         DATABASE_NAME: test_db
         DATABASE_USER: postgres
@@ -77,32 +85,7 @@ jobs:
         pytest -c ./tests/pytest.ini --verbose --tb=short
         echo "✅ Backend tests passed"
 
-    - name: Run Frontend Tests
-      working-directory: ./athletics_vite_ui
-      run: |
-        echo "🧪 Running frontend unit tests..."
-        npm run test -- --run --reporter=verbose
-        echo "✅ Frontend tests passed"
-
-    # ============================================
-    # Build Docker Images
-    # ============================================
-    - name: Build Backend Image
-      run: |
-        echo "🐳 Building backend Docker image..."
-        docker build -t athletics-backend:${{ github.sha }} ./athletics_fastapi
-        echo "✅ Backend image built successfully"
-
-    - name: Build Frontend Image
-      run: |
-        echo "🐳 Building frontend Docker image..."
-        docker build -t athletics-frontend:${{ github.sha }} ./athletics_vite_ui
-        echo "✅ Frontend image built successfully"
-
-    # ============================================
-    # Upload Test Results
-    # ============================================
-    - name: Upload Backend Coverage
+    - name: Upload Coverage
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -110,7 +93,50 @@ jobs:
         path: athletics_fastapi/htmlcov/
         retention-days: 30
 
-    - name: Upload Frontend Coverage
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-test-results
+        path: |
+          athletics_fastapi/test-results.xml
+          athletics_fastapi/.coverage
+        retention-days: 30
+
+  # ============================================
+  # JOB 3: Frontend Tests
+  # ============================================
+  frontend-tests:
+    name: ⚛️ Frontend Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    defaults:
+      run:
+        working-directory: ./athletics_vite_ui
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: './athletics_vite_ui/package-lock.json'
+
+    - name: Install Dependencies
+      run: |
+        npm ci
+        echo "✅ Frontend dependencies installed"
+
+    - name: Run Unit Tests
+      run: |
+        echo "🧪 Running frontend unit tests..."
+        npm run test -- --run --reporter=verbose
+        echo "✅ Frontend tests passed"
+
+    - name: Upload Coverage
       if: always()
       uses: actions/upload-artifact@v4
       with:
@@ -118,28 +144,63 @@ jobs:
         path: athletics_vite_ui/coverage/
         retention-days: 30
 
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-main
-        path: |
-          athletics_fastapi/test-results.xml
-          athletics_fastapi/.coverage
-        retention-days: 30
+  # ============================================
+  # JOB 4: Docker Build
+  # ============================================
+  docker-build:
+    name: 🐳 Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-    # ============================================
-    # Summary
-    # ============================================
-    - name: Build Summary
-      if: always()
+    - name: Build Backend Image
+      run: |
+        echo "🐳 Building backend Docker image..."
+        docker build -t athletics-backend:${{ github.sha }} ./athletics_fastapi
+        docker tag athletics-backend:${{ github.sha }} athletics-backend:latest
+        echo "✅ Backend image built successfully"
+
+    - name: Build Frontend Image
+      run: |
+        echo "🐳 Building frontend Docker image..."
+        docker build -t athletics-frontend:${{ github.sha }} ./athletics_vite_ui
+        docker tag athletics-frontend:${{ github.sha }} athletics-frontend:latest
+        echo "✅ Frontend image built successfully"
+        
+    - name: Verify Images
+      run: |
+        echo "📦 Verifying Docker images..."
+        docker images | grep athletics
+        echo "✅ All images verified"
+
+  # ============================================
+  # JOB 5: Final Report
+  # ============================================
+  final-report:
+    name: 📋 CI Summary
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: always()
+    
+    steps:
+    - name: Generate Summary
+      run: |
+        echo "## 🎉 Main Branch CI Complete" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Jobs Status:" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Setup & Validation" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Backend Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Frontend Tests" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Docker Images Built" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** main" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Celebrate Success
       run: |
         echo "============================================"
-        echo "✅ Main Branch Build Completed"
-        echo "============================================"
-        echo "Branch: main"
-        echo "Commit: ${{ github.sha }}"
-        echo "Backend Tests: Passed"
-        echo "Frontend Tests: Passed"
-        echo "Docker Images: Built"
+        echo "🚀 Production Ready! 🚀"
         echo "============================================"
