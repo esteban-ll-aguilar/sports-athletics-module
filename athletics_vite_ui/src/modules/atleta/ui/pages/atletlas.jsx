@@ -28,7 +28,7 @@ const AthletesTable = () => {
     try {
       setLoading(true);
       const response = await AtletaService.getAthletes();
-      const athletes = response || [];
+      const athletes = response?.items || response || [];
 
       // Asegurar que todos los campos existan
       const sanitizedAthletes = athletes.map((u) => ({

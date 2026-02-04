@@ -36,7 +36,7 @@ const RegistroPruebasPage = () => {
             console.log("📊 Primer resultado (estructura completa):", resResultados[0]);
 
             setResultados(Array.isArray(resResultados) ? resResultados : resResultados.data || []);
-            setAtletas(resAtletas || []);
+            setAtletas(resAtletas?.items || resAtletas || []);
             setPruebas(Array.isArray(resPruebas) ? resPruebas : resPruebas?.data || []);
             setBaremos(Array.isArray(resBaremos) ? resBaremos : resBaremos?.data || []);
             setCompetencias(Array.isArray(resComp) ? resComp : resComp.data || []);

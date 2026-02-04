@@ -51,7 +51,7 @@ const ResultadosPage = () => {
   const fetchAtletas = async () => {
     try {
       const response = await AtletaService.getAthletes(1, 200);
-      setAtletas(response || []);
+      setAtletas(response?.items || response || []);
     } catch (err) { }
   };
 
