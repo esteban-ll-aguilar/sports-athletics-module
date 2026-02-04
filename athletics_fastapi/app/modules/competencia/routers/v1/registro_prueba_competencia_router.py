@@ -26,7 +26,9 @@ router = APIRouter()
 @router.post(
     "/",
     response_model=BaseResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    summary="Vincular prueba a competencia",
+    description="Crea una asociación entre una prueba física y un evento de competencia."
 )
 async def create_registro(
     data: RegistroPruebaCompetenciaCreate,
@@ -61,7 +63,9 @@ async def create_registro(
 # -------------------------------------------------------------------------
 @router.get(
     "/",
-    response_model=BaseResponse
+    response_model=BaseResponse,
+    summary="Listar todos los vínculos prueba-competencia",
+    description="Obtiene todos los registros de pruebas asociadas a competencias en el sistema."
 )
 async def get_all_registros(
     service: RegistroPruebaCompetenciaService = Depends(
@@ -95,7 +99,9 @@ async def get_all_registros(
 # -------------------------------------------------------------------------
 @router.get(
     "/{external_id}",
-    response_model=BaseResponse
+    response_model=BaseResponse,
+    summary="Obtener detalle de vínculo",
+    description="Recupera la información técnica del vínculo entre una prueba y una competencia."
 )
 async def get_registro(
     external_id: UUID,
@@ -130,7 +136,9 @@ async def get_registro(
 # -------------------------------------------------------------------------
 @router.put(
     "/{external_id}",
-    response_model=BaseResponse
+    response_model=BaseResponse,
+    summary="Actualizar vínculo",
+    description="Modifica un registro de vinculación existente."
 )
 async def update_registro(
     external_id: UUID,

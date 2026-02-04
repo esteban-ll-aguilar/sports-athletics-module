@@ -23,6 +23,8 @@ router = APIRouter()
     "/",
     response_model=BaseResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Crear tipo de disciplina",
+    description="Registra una nueva categoría deportiva o disciplina en el catálogo del sistema.",
     dependencies=[Depends(get_current_admin_or_entrenador)]
 )
 async def create_tipo(
@@ -51,7 +53,12 @@ async def create_tipo(
 # GET: Listar Categorías (Paginado)
 # -------------------------------------------------------------------------
 
-@router.get("/", response_model=BaseResponse)
+@router.get(
+    "/", 
+    response_model=BaseResponse,
+    summary="Listar tipos de disciplinas",
+    description="Obtiene el listado de todas las categorías deportivas con soporte para paginación."
+)
 async def list_tipos(
     skip: int = 0,
     limit: int = 100,
@@ -86,7 +93,12 @@ async def list_tipos(
 # GET: Obtener por ID (UUID)
 # -------------------------------------------------------------------------
 
-@router.get("/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener tipo de disciplina",
+    description="Recupera la información de una categoría deportiva específica por su UUID."
+)
 async def get_tipo(
     external_id: UUID,
     service: TipoDisciplinaService = Depends(get_tipo_disciplina_service)
@@ -118,6 +130,8 @@ async def get_tipo(
 @router.put(
     "/{external_id}",
     response_model=BaseResponse,
+    summary="Actualizar tipo de disciplina",
+    description="Modifica los datos de una categoría deportiva existente.",
     dependencies=[Depends(get_current_admin_or_entrenador)]
 )
 async def update_tipo(

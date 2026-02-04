@@ -13,6 +13,8 @@ from app.utils.response_codes import ResponseCodes
 from prometheus_fastapi_instrumentator import Instrumentator
 
 import asyncio
+import os
+from pathlib import Path
 
 
 
@@ -139,6 +141,9 @@ _APP = FastAPI(
 Instrumentator().instrument(_APP).expose(_APP, endpoint="/metrics", include_in_schema=True)
 
 # ✅ 2. LUEGO MONTAS STATIC FILES
+# Crear directorio data si no existe (necesario para CI/CD)
+data_dir = Path("data")
+data_dir.mkdir(exist_ok=True)
 
 _APP.mount("/data", StaticFiles(directory="data"), name="data")
 

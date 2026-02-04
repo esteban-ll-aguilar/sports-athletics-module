@@ -196,8 +196,8 @@ pipeline {
                     
                     # Forzar eliminación de contenedores específicos que pueden estar huérfanos
                     echo "Removing specific containers if they exist..."
-                    docker stop redis-cache postgres-db mariadb-db springboot-app 2>/dev/null || true
-                    docker rm -f redis-cache postgres-db mariadb-db springboot-app 2>/dev/null || true
+                    docker stop redis-cache postgres-db mariadb-db springboot-app springboot-init fastapi-app 2>/dev/null || true
+                    docker rm -f redis-cache postgres-db mariadb-db springboot-app springboot-init fastapi-app 2>/dev/null || true
                     
                     echo "Starting services..."
                     docker-compose -f docker-compose.dev.yml up -d

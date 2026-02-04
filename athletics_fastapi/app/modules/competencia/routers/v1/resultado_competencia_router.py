@@ -14,7 +14,13 @@ from app.utils.response_handler import ResponseHandler
 
 router = APIRouter()
 
-@router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", 
+    response_model=BaseResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar resultado de competencia",
+    description="Captura el desempeño de un atleta en una competencia oficial vinculando el evento y la prueba."
+)
 async def crear_resultado(
     data: ResultadoCompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -42,7 +48,12 @@ async def crear_resultado(
 
 from app.modules.auth.domain.enums import RoleEnum
 
-@router.get("", response_model=BaseResponse)
+@router.get(
+    "", 
+    response_model=BaseResponse,
+    summary="Listar todos los resultados",
+    description="Obtiene el historial de resultados de competencia. El alcance del listado depende del rol del usuario."
+)
 async def listar_resultados(
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
@@ -85,7 +96,12 @@ async def listar_resultados(
         )
 
 
-@router.get("/competencia/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/competencia/{external_id}", 
+    response_model=BaseResponse,
+    summary="Listar resultados por competencia",
+    description="Filtra todos los resultados obtenidos por los atletas en un evento de competencia específico."
+)
 async def listar_resultados_por_competencia(
     external_id: UUID,
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
@@ -114,7 +130,12 @@ async def listar_resultados_por_competencia(
         )
 
 
-@router.get("/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de resultado",
+    description="Recupera la información pormenorizada de un registro de desempeño en competencia."
+)
 async def obtener_resultado(
     external_id: UUID,
     service: ResultadoCompetenciaService = Depends(get_resultado_competencia_service),
@@ -139,7 +160,12 @@ async def obtener_resultado(
         )
 
 
-@router.put("/{external_id}", response_model=BaseResponse)
+@router.put(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Actualizar resultado",
+    description="Modifica los valores de un registro de resultado (ej. tiempo, marca, posición)."
+)
 async def actualizar_resultado(
     external_id: UUID,
     data: ResultadoCompetenciaUpdate,
