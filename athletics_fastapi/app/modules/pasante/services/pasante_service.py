@@ -55,7 +55,7 @@ class PasanteService:
             self.db.add(auth_user)
             await self.db.flush() # Get ID
 
-            # B. Create User Profile
+            # B. Create User Profile (trigger will auto-create Pasante)
             new_user = UserModel(
                 auth_user_id=auth_user.id,
                 username=data.email.split("@")[0], # Simple username gen
@@ -70,17 +70,21 @@ class PasanteService:
                 tipo_estamento=TipoEstamentoEnum.ESTUDIANTES # interns are typically students
             )
             self.db.add(new_user)
-            await self.db.flush()
+            await self.db.flush() # This triggers sync_user_role() which creates Pasante
 
-            # C. Create Pasante Record
-            new_pasante = Pasante(
-                user_id=new_user.id,
-                fecha_inicio=data.fecha_inicio,
-                especialidad=data.especialidad,
-                institucion_origen=data.institucion_origen,
-                estado=True
+            # C. Find the auto-created Pasante record and update it
+            result_pasante = await self.db.execute(
+                select(Pasante).where(Pasante.user_id == new_user.id)
             )
-            await self.repository.create(new_pasante)
+            new_pasante = result_pasante.scalar_one()
+            
+            # Update with provided data
+            new_pasante.fecha_inicio = data.fecha_inicio
+            new_pasante.especialidad = data.especialidad
+            new_pasante.institucion_origen = data.institucion_origen
+            new_pasante.estado = True
+            
+            await self.db.flush()
 
             await self.db.commit()
             await self.db.refresh(new_pasante)

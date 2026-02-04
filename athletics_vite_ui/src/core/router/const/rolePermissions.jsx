@@ -5,17 +5,19 @@ const rolePermissions = {
         { path: '/dashboard/users', icon: Users, label: 'Gestión de Roles' },
         { path: '/dashboard/athletes', icon: Users, label: 'Atletas' },
         { path: '/dashboard/admin', icon: Users, label: 'Administración' },
-        {
-            path: '/dashboard/registro-pruebas',
-            icon: Users,
-            label: 'Gestión de Pruebas',
-            children: [
-                { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos Especificos' },
-                { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos Simples' },
-                { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
-                { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }
-            ]
-        },
+        { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
+
+        // {
+        //     path: '/dashboard/registro-pruebas',
+        //     icon: Users,
+        //     label: 'Gestión de Pruebas',
+        //     children: [
+        //         // { path: '/dashboard/registro-pruebas/baremos', label: 'Baremos Especificos' },
+        //         // { path: '/dashboard/registro-pruebas/baremos-simple', label: 'Baremos Simples' },
+        //         // { path: '/dashboard/registro-pruebas/disciplinas', label: 'Disciplinas' },
+        //         // { path: '/dashboard/registro-pruebas/resultados', label: 'Resultados (Tests)' }
+        //     ]
+        // },
     ],
 
     ATLETA: [
@@ -78,7 +80,7 @@ const rolePermissions = {
                 { path: '/dashboard/entrenamientos/resultados', label: 'Resultados (Train)' }
             ]
         },
-        { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
+        // { path: '/dashboard/competitions', icon: Trophy, label: 'Gestión de Competencias' },
         { path: '/dashboard/results', icon: Activity, label: 'Gestión de Resultados (Comp)' },
     ]
 };

@@ -16,7 +16,13 @@ from app.modules.atleta.services.historial_medico_service import HistorialMedico
 router = APIRouter()
 
 
-@router.post("/", response_model=HistorialMedicoRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", 
+    response_model=HistorialMedicoRead, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear historial médico",
+    description="Registra la ficha médica inicial del atleta autenticado."
+)
 async def create_historial(
     data: HistorialMedicoCreate,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -34,7 +40,12 @@ async def create_historial(
     return await service.create(data, current_user.id)
 
 
-@router.get("/me", response_model=HistorialMedicoRead | None)
+@router.get(
+    "/me", 
+    response_model=HistorialMedicoRead | None,
+    summary="Obtener mi historial médico",
+    description="Recupera la ficha médica del atleta actualmente en sesión."
+)
 async def get_my_historial(
     current_user: AuthUserModel = Depends(get_current_user),
     db: AsyncSession = Depends(get_session)
@@ -58,7 +69,12 @@ async def get_my_historial(
         raise e
 
 
-@router.get("/{external_id}", response_model=HistorialMedicoRead)
+@router.get(
+    "/{external_id}", 
+    response_model=HistorialMedicoRead,
+    summary="Obtener historial médico por UUID",
+    description="Busca una ficha médica específica mediante su identificador único."
+)
 async def get_historial(external_id: UUID, db: AsyncSession = Depends(get_session)):
     """
     Obtiene un historial médico por su ID externo (UUID).
@@ -67,7 +83,12 @@ async def get_historial(external_id: UUID, db: AsyncSession = Depends(get_sessio
     return await service.get(external_id)
 
 
-@router.get("/", response_model=list[HistorialMedicoRead])
+@router.get(
+    "/", 
+    response_model=list[HistorialMedicoRead],
+    summary="Listar todos los historiales médicos",
+    description="Obtiene el listado general de fichas médicas registradas."
+)
 async def list_historiales(
     skip: int = 0,
     limit: int = 100,
@@ -80,7 +101,12 @@ async def list_historiales(
     return await service.get_all(skip, limit)
 
 
-@router.put("/{external_id}", response_model=HistorialMedicoRead)
+@router.put(
+    "/{external_id}", 
+    response_model=HistorialMedicoRead,
+    summary="Actualizar historial médico",
+    description="Modifica los datos de una ficha médica existente."
+)
 async def update_historial(
     external_id: UUID,
     data: HistorialMedicoUpdate,
@@ -93,7 +119,12 @@ async def update_historial(
     return await service.update(external_id, data)
 
 
-@router.get("/user/{user_id}", response_model=HistorialMedicoRead)
+@router.get(
+    "/user/{user_id}", 
+    response_model=HistorialMedicoRead,
+    summary="Obtener historial médico de usuario",
+    description="Recupera la ficha médica de un atleta específico mediante su ID de perfil. Solo para personal autorizado."
+)
 async def get_historial_by_user(
     user_id: int,
     current_user: AuthUserModel = Depends(get_current_user),

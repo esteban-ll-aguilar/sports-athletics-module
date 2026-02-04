@@ -2,7 +2,7 @@ import React, { useEffect, useState, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RepresentanteService from '../../services/RepresentanteService';
 import { toast } from 'react-hot-toast';
-import { Users, Activity, Plus, User, Hash, Edit } from 'lucide-react';
+import { Users, Activity, Plus, User, Hash, Edit, X, Phone, Calendar, Briefcase, Save, Mail } from 'lucide-react';
 
 const MisAtletasPage = () => {
     const navigate = useNavigate();
@@ -38,7 +38,8 @@ const MisAtletasPage = () => {
         first_name: '',
         last_name: '',
         identificacion: '',
-        direccion: '',
+        fecha_nacimiento: '',
+        sexo: 'M',
         phone: '',
         anios_experiencia: 0
     });
@@ -54,7 +55,8 @@ const MisAtletasPage = () => {
                     first_name: detail.user?.first_name || '',
                     last_name: detail.user?.last_name || '',
                     identificacion: detail.user?.identificacion || '',
-                    direccion: detail.user?.direccion || '',
+                    fecha_nacimiento: detail.user?.fecha_nacimiento || '',
+                    sexo: detail.user?.sexo || 'M',
                     phone: detail.user?.phone || '',
                     anios_experiencia: detail.anios_experiencia || 0,
                 });
@@ -77,7 +79,8 @@ const MisAtletasPage = () => {
                 first_name: editFormData.first_name,
                 last_name: editFormData.last_name,
                 identificacion: editFormData.identificacion,
-                direccion: editFormData.direccion,
+                fecha_nacimiento: editFormData.fecha_nacimiento,
+                sexo: editFormData.sexo,
                 phone: editFormData.phone,
                 atleta_data: {
                     anios_experiencia: parseInt(editFormData.anios_experiencia)
@@ -167,6 +170,10 @@ const MisAtletasPage = () => {
                                             <p className="text-sm text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
                                                 <User size={12} />
                                                 {atleta.user?.username}
+                                            </p>
+                                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate flex items-center gap-1 mt-1" title={atleta.user?.email}>
+                                                <Mail size={10} />
+                                                {atleta.user?.email}
                                             </p>
                                         </div>
                                     </div>
@@ -285,18 +292,37 @@ const MisAtletasPage = () => {
                                         />
                                     </div>
                                 </div>
-                                <div className="md:col-span-2 space-y-1.5">
-                                    <label htmlFor={`${baseId}-direccion`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Dirección</label>
+                                <div className="space-y-1.5">
+                                    <label htmlFor={`${baseId}-fecha_nacimiento`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Fecha de Nacimiento</label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                         <input
-                                            id={`${baseId}-direccion`}
-                                            type="text"
-                                            name="direccion"
-                                            value={editFormData.direccion}
+                                            id={`${baseId}-fecha_nacimiento`}
+                                            type="date"
+                                            name="fecha_nacimiento"
+                                            value={editFormData.fecha_nacimiento}
                                             onChange={handleChange}
                                             className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all"
                                         />
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label htmlFor={`${baseId}-sexo`} className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Sexo</label>
+                                    <div className="relative">
+                                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                        <select
+                                            id={`${baseId}-sexo`}
+                                            name="sexo"
+                                            value={editFormData.sexo}
+                                            onChange={handleChange}
+                                            className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-gray-300 dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25] outline-none transition-all appearance-none"
+                                        >
+                                            <option value="M">Masculino</option>
+                                            <option value="F">Femenino</option>
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">

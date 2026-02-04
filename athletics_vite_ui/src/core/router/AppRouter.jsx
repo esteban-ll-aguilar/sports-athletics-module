@@ -32,8 +32,8 @@ const RoleBasedDashboard = () => {
   return <DashboardPage />;
 };
 
-// Dashboard pages
-import DashboardPage from '@modules/home/ui/dashboard/pages/DashboardPage';
+// Dashboard redirect
+import DashboardRedirect from '@core/router/components/DashboardRedirect';
 
 // Admin
 import UserRoleManagementPage from '@modules/admin/ui/pages/UserRoleManagementPage';
@@ -97,8 +97,8 @@ const router = createBrowserRouter([
       {
         element: <DashboardLayout />,
         children: [
-          // /dashboard
-          { index: true, element: <RoleBasedDashboard /> },
+          // /dashboard - Redirige automáticamente al primer elemento del sidebar según el rol
+          { index: true, element: <DashboardRedirect /> },
 
           // --- ADMIN ROUTES ---
           {

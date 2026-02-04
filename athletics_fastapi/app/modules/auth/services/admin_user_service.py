@@ -75,8 +75,29 @@ class AdminUserService:
 
             if not entrenador:
                 self.users_repo.db.add(
-                    Entrenador(user_id=user.id, anios_experiencia=0)
+                    Entrenador(user_id=user.id, anios_experiencia=0, is_pasante=False)
                 )
+            else:
+                # Si ya existe, asegurarse que is_pasante sea False
+                entrenador.is_pasante = False
+
+        # =========================
+        # PASANTE (Entrenador pasante)
+        # =========================
+        elif new_role == RoleEnum.PASANTE:
+            result = await self.users_repo.db.execute(
+                select(Entrenador).where(Entrenador.user_id == user.id)
+            )
+            entrenador = result.scalar_one_or_none()
+
+            if not entrenador:
+                # Crear entrenador con is_pasante=True
+                self.users_repo.db.add(
+                    Entrenador(user_id=user.id, anios_experiencia=0, is_pasante=True)
+                )
+            else:
+                # Si ya existe, marcar como pasante
+                entrenador.is_pasante = True
 
         # =========================
         # REPRESENTANTE

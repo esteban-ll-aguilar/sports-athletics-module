@@ -3,7 +3,7 @@
 ATLETA MODULE LOAD TEST
 =================================================================
 Archivo: ci/stress_tests/locust/atleta_load.py
-Uso: locust -f atleta_load.py --host=http://localhost:8081
+Uso: locust -f atleta_load.py --host=http://localhost:8080
 
 Endpoints testeados (sin trailing slash):
   POST /api/v1/tests/atleta/           - Crear perfil atleta

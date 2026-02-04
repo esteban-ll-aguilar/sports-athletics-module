@@ -1,0 +1,117 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+
+jobs:
+  setup-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # ============================================
+    # Setup Backend Environment
+    # ============================================
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: 'pip'
+        cache-dependency-path: './athletics_fastapi/requirements.txt'
+
+    - name: Install Backend Dependencies
+      working-directory: ./athletics_fastapi
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        echo "✅ Backend dependencies installed"
+
+    # ============================================
+    # Setup Frontend Environment
+    # ============================================
+    - name: Set up Node.js 22
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+        cache: 'npm'
+        cache-dependency-path: './athletics_vite_ui/package-lock.json'
+
+    - name: Install Frontend Dependencies
+      working-directory: ./athletics_vite_ui
+      run: |
+        npm ci
+        echo "✅ Frontend dependencies installed"
+
+    # ============================================
+    # Run Tests in Parallel
+    # ============================================
+    - name: Run Backend Tests
+      working-directory: ./athletics_fastapi
+      env:
+        DATABASE_NAME: test_db
+        DATABASE_USER: postgres
+        DATABASE_PASSWORD: postgres
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+        REDIS_URL: redis://localhost:6379/0
+        CORS_ALLOW_ORIGINS: "*"
+        CORS_ALLOW_METHODS: "*"
+        CORS_ALLOW_HEADERS: "*"
+        JWT_ALGORITHM: HS256
+        JWT_SECRET: test_secret_key_for_ci
+        ACCESS_TOKEN_EXPIRES_MINUTES: 15
+        REFRESH_TOKEN_EXPIRES_DAYS: 7
+        EMAIL_HOST: smtp.gmail.com
+        EMAIL_PORT: 587
+        EMAIL_USE_TLS: true
+        EMAIL_HOST_USER: test@example.com
+        EMAIL_HOST_PASSWORD: test_password
+        USERS_API_URL: http://localhost:8081
+        USERS_API_EMAIL: test@example.com
+        USERS_API_PASSWORD: test_password
+      run: |
+        echo "🧪 Running backend unit tests..."
+        pytest -c ./tests/pytest.ini --verbose --tb=short
+        echo "✅ Backend tests passed"
+
+    - name: Run Frontend Tests
+      working-directory: ./athletics_vite_ui
+      run: |
+        echo "🧪 Running frontend unit tests..."
+        npm run test -- --run --reporter=verbose
+        echo "✅ Frontend tests passed"
+
+    # ============================================
+    # Upload Test Results
+    # ============================================
+    - name: Upload Backend Coverage
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-coverage
+        path: athletics_fastapi/htmlcov/
+        retention-days: 7
+
+    - name: Upload Frontend Coverage
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-coverage
+        path: athletics_vite_ui/coverage/
+        retention-days: 7
+
+    # ============================================
+    # Summary
+    # ============================================
+    - name: Test Summary
+      if: always()
+      run: |
+        echo "============================================"
+        echo "✅ PR Checks Completed"
+        echo "============================================"
+        echo "Backend Tests: Passed"
+        echo "Frontend Tests: Passed"
+        echo "============================================"

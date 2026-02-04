@@ -25,7 +25,13 @@ async def get_asistencia_service(session: AsyncSession = Depends(get_session)) -
 
 # --- Enrollment Endpoints ---
 
-@router.post("/inscripcion", response_model=RegistroAsistenciasResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/inscripcion", 
+    response_model=RegistroAsistenciasResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Inscribir atleta en horario",
+    description="Inscribe a un atleta en un horario de entrenamiento específico. Esta acción crea un registro de inscripción."
+)
 async def inscribir_atleta(
     data: RegistroAsistenciasCreate,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -41,7 +47,12 @@ async def inscribir_atleta(
 from app.modules.auth.dependencies import get_current_user
 from app.modules.auth.domain.models.user_model import UserModel
 
-@router.get("/inscripcion/horario/{horario_id}", response_model=List[RegistroAsistenciasResponse])
+@router.get(
+    "/inscripcion/horario/{horario_id}", 
+    response_model=List[RegistroAsistenciasResponse],
+    summary="Listar atletas inscritos en un horario",
+    description="Obtiene la lista de todos los atletas registrados en un horario de entrenamiento particular."
+)
 async def listar_inscritos(
     horario_id: int,
     current_user: UserModel = Depends(get_current_user),
@@ -56,7 +67,12 @@ async def listar_inscritos(
 
 # --- Daily Attendance Endpoints ---
 
-@router.delete("/inscripcion/{registro_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/inscripcion/{registro_id}", 
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar inscripción de atleta",
+    description="Remueve a un atleta de un horario de entrenamiento (desinscripción)."
+)
 async def eliminar_inscripcion(
     registro_id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -67,7 +83,13 @@ async def eliminar_inscripcion(
     """
     await service.remove_atleta_horario(registro_id)
 
-@router.post("/registro", response_model=AsistenciaResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/registro", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar asistencia diaria manualmente",
+    description="Permite al entrenador registrar la asistencia de un atleta de forma manual para una fecha específica."
+)
 async def registrar_asistencia(
     data: AsistenciaCreate,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -80,7 +102,13 @@ async def registrar_asistencia(
 
 # --- NEW: Confirmación y Control de Asistencia ---
 
-@router.post("/confirmar/{registro_id}", response_model=AsistenciaResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/confirmar/{registro_id}", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Confirmar asistencia por el atleta",
+    description="Permite que un atleta confirme su presencia para un próximo entrenamiento."
+)
 async def confirmar_asistencia(
     registro_id: int,
     fecha_entrenamiento: date = Query(..., description="Fecha del entrenamiento"),
@@ -93,7 +121,13 @@ async def confirmar_asistencia(
     """
     return await service.confirmar_asistencia_atleta(registro_id, fecha_entrenamiento)
 
-@router.post("/rechazar/{registro_id}", response_model=AsistenciaResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rechazar/{registro_id}", 
+    response_model=AsistenciaResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Notificar inasistencia por el atleta",
+    description="Permite que un atleta informe con antelación que no podrá asistir a un entrenamiento."
+)
 async def rechazar_asistencia(
     registro_id: int,
     fecha_entrenamiento: date = Query(..., description="Fecha del entrenamiento"),
@@ -104,7 +138,12 @@ async def rechazar_asistencia(
     """
     return await service.rechazar_asistencia_atleta(registro_id, fecha_entrenamiento)
 
-@router.put("/marcar-presente/{asistencia_id}", response_model=AsistenciaResponse)
+@router.put(
+    "/marcar-presente/{asistencia_id}", 
+    response_model=AsistenciaResponse,
+    summary="Marcar atleta como presente",
+    description="Actualiza el estado de asistencia de un atleta a 'Presente'. Operación realizada por el entrenador."
+)
 async def marcar_presente(
     asistencia_id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -115,7 +154,12 @@ async def marcar_presente(
     """
     return await service.marcar_presente(asistencia_id)
 
-@router.put("/marcar-ausente/{asistencia_id}", response_model=AsistenciaResponse)
+@router.put(
+    "/marcar-ausente/{asistencia_id}", 
+    response_model=AsistenciaResponse,
+    summary="Marcar atleta como ausente",
+    description="Actualiza el estado de asistencia de un atleta a 'Ausente'. Operación realizada por el entrenador."
+)
 async def marcar_ausente(
     asistencia_id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -126,7 +170,12 @@ async def marcar_ausente(
     """
     return await service.marcar_ausente(asistencia_id)
 
-@router.get("/mis-registros", response_model=List[RegistroAsistenciasResponse])
+@router.get(
+    "/mis-registros", 
+    response_model=List[RegistroAsistenciasResponse],
+    summary="Obtener inscripciones de un atleta",
+    description="Obtiene todos los horarios y entrenamientos en los que un atleta específico está inscrito."
+)
 async def obtener_mis_registros(
     atleta_id: int = Query(..., description="ID del atleta"),
     service: AsistenciaService = Depends(get_asistencia_service),

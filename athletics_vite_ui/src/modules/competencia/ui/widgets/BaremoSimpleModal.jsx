@@ -100,17 +100,17 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 overflow-y-auto w-full h-full border-none outline-none"
             aria-labelledby="modal-title"
         >
-            <div className="w-full max-w-2xl bg-[#1e1e1e] rounded-2xl shadow-2xl border border-[#333] my-8">
+            <div className="w-full max-w-2xl bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl border border-gray-200 dark:border-[#333] my-8">
 
                 {/* HEADER */}
-                <div className="px-8 py-6 border-b border-[#333] flex justify-between items-center bg-[#252525] rounded-t-2xl">
+                <div className="px-8 py-6 border-b border-gray-200 dark:border-[#333] flex justify-between items-center bg-gray-50 dark:bg-[#252525] rounded-t-2xl">
                     <div>
-                        <h2 id="modal-title" className="text-2xl font-bold text-white mb-1">
+                        <h2 id="modal-title" className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                             {editingBaremo ? 'Editar Baremo' : 'Nuevo Baremo'}
                         </h2>
-                        <p className="text-gray-400 text-sm">Configura la información básica del baremo</p>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Configura la información básica del baremo</p>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Cerrar modal">
+                    <button onClick={onClose} className="text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" aria-label="Cerrar modal">
                         <span className="material-symbols-outlined text-3xl" aria-hidden="true">close</span>
                     </button>
                 </div>
@@ -133,8 +133,8 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Sexo</label>
-                            <fieldset className="flex bg-[#121212] rounded-xl p-1 border border-[#444]" aria-label="Seleccionar sexo">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sexo</label>
+                            <fieldset className="flex bg-gray-100 dark:bg-[#121212] rounded-xl p-1 border border-gray-300 dark:border-[#444]" aria-label="Seleccionar sexo">
                                 {['M', 'F'].map(sex => (
                                     <button
                                         type="button"
@@ -143,8 +143,8 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                                         aria-pressed={form.sexo === sex}
                                         className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${form.sexo === sex
                                             ? 'bg-[#b30c25] text-white shadow-lg'
-                                            : 'text-gray-400 hover:text-white'
-                                            }`}
+                                            : 'bg-transparent text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
+                                        }`}
                                     >
                                         {sex === 'M' ? 'Masculino' : 'Femenino'}
                                     </button>
@@ -153,8 +153,8 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">Estado</label>
-                            <fieldset className="flex bg-[#121212] rounded-xl p-1 border border-[#444]" aria-label="Seleccionar estado">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Estado</label>
+                            <fieldset className="flex bg-gray-100 dark:bg-[#121212] rounded-xl p-1 border border-gray-300 dark:border-[#444]" aria-label="Seleccionar estado">
                                 {[
                                     { value: true, label: 'Activo' },
                                     { value: false, label: 'Inactivo' }
@@ -166,7 +166,7 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                                         aria-pressed={form.estado === option.value}
                                         className={`flex-1 py-2 rounded-lg text-sm font-bold transition ${form.estado === option.value
                                             ? 'bg-[#b30c25] text-white shadow-lg'
-                                            : 'text-gray-400 hover:text-white'
+                                            : 'bg-transparent text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#1e1e1e]'
                                             }`}
                                     >
                                         {option.label}
@@ -176,11 +176,11 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                         </div>
 
                         <div>
-                            <label htmlFor="baremo-edad-min" className="block text-sm font-medium text-gray-300 mb-2">Edad Mínima (años)</label>
+                            <label htmlFor="baremo-edad-min" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Edad Mínima (años)</label>
                             <input
                                 id="baremo-edad-min"
                                 type="number"
-                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
+                                className="w-full bg-white dark:bg-[#121212] border border-gray-300 dark:border-[#444] rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-[#b30c25] outline-none"
                                 value={form.edad_min}
                                 onChange={e => setForm({ ...form, edad_min: e.target.value })}
                                 required
@@ -188,11 +188,11 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                         </div>
 
                         <div>
-                            <label htmlFor="baremo-edad-max" className="block text-sm font-medium text-gray-300 mb-2">Edad Máxima (años)</label>
+                            <label htmlFor="baremo-edad-max" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Edad Máxima (años)</label>
                             <input
                                 id="baremo-edad-max"
                                 type="number"
-                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
+                                className="w-full bg-white dark:bg-[#121212] border border-gray-300 dark:border-[#444] rounded-xl px-4 py-3 text-gray-900 dark:text-white focus:border-[#b30c25] outline-none"
                                 value={form.edad_max}
                                 onChange={e => setForm({ ...form, edad_max: e.target.value })}
                                 required
@@ -227,11 +227,11 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                     </div>
 
                     {/* BOTONES */}
-                    <div className="flex gap-4 pt-4 border-t border-[#333]">
+                    <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-[#333]">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-3.5 rounded-xl font-bold text-gray-400 border border-[#444] hover:bg-[#252525] transition"
+                            className="flex-1 py-3.5 rounded-xl font-bold text-gray-700 dark:text-gray-400 border border-gray-300 dark:border-[#444] hover:bg-gray-50 dark:hover:bg-[#252525] transition"
                         >
                             Cancelar
                         </button>

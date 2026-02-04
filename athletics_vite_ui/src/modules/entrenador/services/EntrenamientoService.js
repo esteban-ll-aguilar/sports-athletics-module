@@ -5,7 +5,8 @@ const ENDPOINT = '/entrenador/entrenamientos';
 const EntrenamientoService = {
     getAll: async () => {
         const response = await ApiClient.get(ENDPOINT + '/');
-        return response?.items || response || [];
+        // Backend returns array directly in this case, not wrapped in {items: [...]}
+        return Array.isArray(response) ? response : (response?.data || response || []);
     },
 
     getById: async (id) => {

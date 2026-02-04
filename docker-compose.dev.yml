@@ -22,37 +22,24 @@ services:
     restart: "no"
 
   # ============================================
-  # Balanceador de Carga NGINX
+  # API Principal (Python/FastAPI)
   # ============================================
-  nginx:
-    image: nginx:alpine
-    container_name: nginx-lb
-    depends_on:
-      - api-1
-      - api-2
-      - api-3
-    ports:
-      - "8081:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    restart: unless-stopped
-    networks:
-      - app-network
-
-  # ============================================
-  # API Principal (Python/FastAPI) - Instancia 1
-  # ============================================
-  api-1:
+  fastapi-app:
     build:
       context: ./athletics_fastapi
       dockerfile: Dockerfile
     image: athletics_fastapi:latest
-    container_name: fastapi-app-1
+    container_name: fastapi-app
     depends_on:
-      - postgres
-      - redis
-      - springboot-app
-    environment: &api-env  # Anchor para reutilizar la configuración
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      springboot-app:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    environment:
       # Configuración de la aplicación
       APPLICATION_HOST: 0.0.0.0
       APPLICATION_PORT: 8080
@@ -66,12 +53,11 @@ services:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       
-      # Database Pool Configuration - Optimizado para 3 instancias
-      # Total pool: 3 instancias × (15 + 10) = 75 conexiones máx
-      DATABASE_POOL_SIZE: 15
-      DATABASE_MAX_OVERFLOW: 10
-      DATABASE_POOL_TIMEOUT: 45
-      DATABASE_POOL_RECYCLE: 300
+      # Database Pool Configuration
+      DATABASE_POOL_SIZE: 5
+      DATABASE_MAX_OVERFLOW: 5
+      DATABASE_POOL_TIMEOUT: 30
+      DATABASE_POOL_RECYCLE: 3600
 
       # Redis
       REDIS_URL: redis://redis:6379/0
@@ -109,43 +95,7 @@ services:
       - app-network
     restart: unless-stopped
 
-  # ============================================
-  # API Principal (Python/FastAPI) - Instancia 2
-  # ============================================
-  api-2:
-    build:
-      context: ./athletics_fastapi
-      dockerfile: Dockerfile
-    image: athletics_fastapi:latest
-    container_name: fastapi-app-2
-    depends_on:
-      - postgres
-      - redis
-      - springboot-app
-    environment: *api-env  # Reutilizar la misma configuración
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  # ============================================
-  # API Principal (Python/FastAPI) - Instancia 3
-  # ============================================
-  api-3:
-    build:
-      context: ./athletics_fastapi
-      dockerfile: Dockerfile
-    image: athletics_fastapi:latest
-    container_name: fastapi-app-3
-    depends_on:
-      - postgres
-      - redis
-      - springboot-app
-    environment: *api-env  # Reutilizar la misma configuración
-    networks:
-      - app-network
-    restart: unless-stopped
-
-
+  
   # ============================================
   # Microservicio de Usuarios (Spring Boot)
   # ============================================
@@ -211,18 +161,30 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d BaseDeDatos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     command:
       - "postgres"
       - "-c"
-      - "max_connections=200"  # Aumentar conexiones máximas (default: 100)
+      - "max_connections=300"  # Aumentar para soportar 3 instancias API + stress test
       - "-c"
-      - "shared_buffers=256MB"  # Mejorar rendimiento de cache
+      - "shared_buffers=512MB"  # Cache mejorado para alta concurrencia
       - "-c"
-      - "effective_cache_size=1GB"
+      - "effective_cache_size=2GB"
       - "-c"
-      - "work_mem=16MB"  # Memoria por operación de ordenamiento
+      - "work_mem=8MB"  # Reducir para permitir más conexiones concurrentes
       - "-c"
       - "maintenance_work_mem=128MB"
+      - "-c"
+      - "max_wal_size=2GB"  # Checkpoint menos frecuentes
+      - "-c"
+      - "checkpoint_completion_target=0.9"  # Suavizar I/O
+      - "-c"
+      - "random_page_cost=1.1"  # Optimizado para SSD
     networks:
       - app-network
 
@@ -250,11 +212,11 @@ services:
     image: athletics_vite_ui:latest
     container_name: vite-ui
     depends_on:
-      - nginx
+      - fastapi-app
     ports:
       - "5173:80"
     environment:
-      - VITE_API_URL=http://localhost:8081
+      - VITE_API_URL=http://localhost:8080
     restart: unless-stopped
     networks:
       - app-network

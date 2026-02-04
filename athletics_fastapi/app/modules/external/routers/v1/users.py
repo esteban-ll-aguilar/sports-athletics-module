@@ -8,9 +8,15 @@ from app.modules.external.dependencies import get_external_users_service
 users_router = APIRouter()
 
 
-@users_router.put("/token")
+@users_router.put(
+    "/token",
+    summary="Actualizar token de integración externa",
+    description="Sincroniza y almacena un nuevo token desde un proveedor externo para integraciones del sistema."
+)
 async def update_token(service: ExternalUsersApiService = Depends(get_external_users_service)):
-
+    """
+    Solicita un nuevo token al servicio externo y lo persiste en la base de datos local.
+    """
     token, external_id = await service.fetch_and_store_token()
 
     return BaseResponse(

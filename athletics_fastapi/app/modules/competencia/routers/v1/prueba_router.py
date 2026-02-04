@@ -16,6 +16,8 @@ router = APIRouter()
     "/",
     response_model=BaseResponse,
     status_code=status.HTTP_201_CREATED,
+    summary="Crear nueva prueba",
+    description="Agrega una nueva definición de prueba física (ej. 100m planos) al catálogo del sistema.",
     dependencies=[Depends(get_current_admin_or_entrenador)]
 )
 async def create_prueba(
@@ -40,7 +42,12 @@ async def create_prueba(
 # -------------------------------------------------------------------------
 # ENDPOINT: Listar Pruebas (Paginado)
 # -------------------------------------------------------------------------
-@router.get("/", response_model=BaseResponse)
+@router.get(
+    "/", 
+    response_model=BaseResponse,
+    summary="Listar todas las pruebas",
+    description="Recupera el catálogo maestro de pruebas físicas configuradas."
+)
 async def list_pruebas(
     skip: int = 0,
     limit: int = 100,
@@ -71,7 +78,12 @@ async def list_pruebas(
 # -------------------------------------------------------------------------
 # ENDPOINT: Obtener Prueba por external id
 # -------------------------------------------------------------------------
-@router.get("/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de prueba",
+    description="Muestra la configuración técnica de una prueba física específica."
+)
 async def get_prueba(
     external_id: UUID,
     service: PruebaService = Depends(get_prueba_service)
@@ -100,6 +112,8 @@ async def get_prueba(
 @router.put(
     "/{external_id}",
     response_model=BaseResponse,
+    summary="Actualizar prueba",
+    description="Modifica los parámetros o metadatos de una prueba física existente.",
     dependencies=[Depends(get_current_admin_or_entrenador)]
 )
 async def update_prueba(

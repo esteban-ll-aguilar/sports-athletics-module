@@ -28,10 +28,10 @@ class Settings(BaseSettings):
     database_port: int = Field(5432, alias="DATABASE_PORT", required=True)
     
     # Database Pool Configuration
-    database_pool_size: int = Field(30, alias="DATABASE_POOL_SIZE")
-    database_max_overflow: int = Field(20, alias="DATABASE_MAX_OVERFLOW")
+    database_pool_size: int = Field(5, alias="DATABASE_POOL_SIZE")
+    database_max_overflow: int = Field(5, alias="DATABASE_MAX_OVERFLOW")
     database_pool_timeout: int = Field(30, alias="DATABASE_POOL_TIMEOUT")
-    database_pool_recycle: int = Field(300, alias="DATABASE_POOL_RECYCLE")
+    database_pool_recycle: int = Field(3600, alias="DATABASE_POOL_RECYCLE")
 
     # Redis
     redis_url: str = Field(..., alias="REDIS_URL", required=True)

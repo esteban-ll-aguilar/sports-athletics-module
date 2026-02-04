@@ -1,22 +1,23 @@
-import axios from "../../../core/api/apiClient";
+import ApiClient from "../../../core/api/apiClient";
 
 const pasanteService = {
     getAll: async () => {
-        return await axios.get("/pasantes/");
+        const response = await ApiClient.get("/pasantes/");
+        // Backend devuelve List[PasanteRead] directamente
+        return Array.isArray(response) ? response : (response?.data || []);
     },
 
     create: async (data) => {
         console.log(data);
-        return await axios.post("/pasantes/", data);
-
+        return await ApiClient.post("/pasantes/", data);
     },
 
     update: async (id, data) => {
-        return await axios.put(`/pasantes/${id}`, data);
+        return await ApiClient.put(`/pasantes/${id}`, data);
     },
 
     delete: async (id) => {
-        return await axios.delete(`/pasantes/${id}`);
+        return await ApiClient.delete(`/pasantes/${id}`);
     },
 };
 

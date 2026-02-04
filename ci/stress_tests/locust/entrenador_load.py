@@ -3,7 +3,7 @@
 ENTRENADOR MODULE LOAD TEST
 =================================================================
 Archivo: ci/stress_tests/locust/entrenador_load.py
-Uso: locust -f entrenador_load.py --host=http://localhost:8081
+Uso: locust -f entrenador_load.py --host=http://localhost:8080
 
 Endpoints testeados (sin trailing slash):
   

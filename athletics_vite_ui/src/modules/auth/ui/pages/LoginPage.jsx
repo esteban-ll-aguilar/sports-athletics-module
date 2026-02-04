@@ -84,10 +84,13 @@ const LoginPage = () => {
             console.error("Login error:", err);
 
             // Detectar si el error es por usuario inactivo
-            if (err.detail === "Usuario inactivo, por favor verifica tu email") {
+            const errorDetail = err.detail || err.message || '';
+            
+            if (errorDetail.includes("Usuario inactivo") || errorDetail.includes("verifica tu email")) {
                 setShowVerificationModal(true);
+                toast.info('Por favor verifica tu email para activar tu cuenta');
             } else {
-                const errorMessage = err.detail || 'Error al iniciar sesión. Por favor verifica tus credenciales.';
+                const errorMessage = errorDetail || 'Error al iniciar sesión. Por favor verifica tus credenciales.';
                 setError(errorMessage);
                 toast.error(errorMessage);
             }

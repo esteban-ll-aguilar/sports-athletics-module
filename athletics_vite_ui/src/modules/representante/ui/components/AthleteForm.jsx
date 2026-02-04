@@ -15,7 +15,9 @@ const AthleteForm = ({ athleteId = null, onSuccess, onCancel }) => {
         identificacion: '',
         tipo_estamento: 'EXTERNOS',
         phone: '',
-        direccion: ''
+        direccion: '',
+        sexo: 'M',
+        fecha_nacimiento: ''
     });
 
     const [loading, setLoading] = useState(false);
@@ -45,7 +47,9 @@ const AthleteForm = ({ athleteId = null, onSuccess, onCancel }) => {
                     identificacion: data.identificacion || '',
                     tipo_estamento: data.tipo_estamento || 'EXTERNOS',
                     phone: data.phone || '',
-                    direccion: data.direccion || ''
+                    direccion: data.direccion || '',
+                    sexo: data.sexo || 'M',
+                    fecha_nacimiento: data.fecha_nacimiento || ''
                 });
             } else {
                 toast.error("No se pudo cargar la información del atleta.");
@@ -286,6 +290,54 @@ const AthleteForm = ({ athleteId = null, onSuccess, onCancel }) => {
                     onChange={handleChange}
                     placeholder="Dirección de residencia"
                 />
+                
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Fecha de Nacimiento</label>
+                    <div className="relative">
+                        <input
+                            type="date"
+                            name="fecha_nacimiento"
+                            required
+                            value={formData.fecha_nacimiento}
+                            onChange={handleChange}
+                            className="
+                                w-full pl-3 pr-3 py-3 rounded-xl
+                                bg-gray-50 dark:bg-[#1a1a1a]
+                                border border-gray-200 dark:border-[#332122]
+                                text-gray-900 dark:text-white
+                                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                                outline-none transition-all
+                            "
+                        />
+                    </div>
+                </div>
+                
+                <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Sexo</label>
+                    <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <select
+                            name="sexo"
+                            required
+                            value={formData.sexo}
+                            onChange={handleChange}
+                            className="
+                                w-full pl-10 pr-8 py-3 rounded-xl
+                                bg-gray-50 dark:bg-[#1a1a1a]
+                                border border-gray-200 dark:border-[#332122]
+                                text-gray-900 dark:text-white
+                                focus:ring-2 focus:ring-[#b30c25] focus:border-[#b30c25]
+                                outline-none transition-all appearance-none
+                            "
+                        >
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-[#332122] mt-8">

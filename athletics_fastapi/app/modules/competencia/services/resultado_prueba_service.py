@@ -91,14 +91,24 @@ class ResultadoPruebaService:
         edad = today.year - atleta.user.fecha_nacimiento.year - (
             (today.month, today.day) < (atleta.user.fecha_nacimiento.month, atleta.user.fecha_nacimiento.day)
         )
-        sexo_atleta = atleta.user.sexo 
+        sexo_atleta = atleta.user.sexo
+        
+        # Validar que el atleta tenga sexo configurado
+        if not sexo_atleta:
+            raise HTTPException(
+                status_code=400,
+                detail=f"El atleta '{atleta.user.first_name} {atleta.user.last_name}' no tiene el campo 'sexo' configurado. Por favor, actualice la información del atleta antes de registrar resultados."
+            )
+        
+        # Extraer valor del enum si es un enum
+        sexo_valor = sexo_atleta.value if hasattr(sexo_atleta, 'value') else str(sexo_atleta)
         
         # 3. Match Automático del Baremo
-        baremo = await self.baremo_repo.find_by_context(prueba.id, sexo_atleta, edad)
+        baremo = await self.baremo_repo.find_by_context(prueba.id, sexo_valor, edad)
         if not baremo:
             raise HTTPException(
                 status_code=400, 
-                detail=f"No se encontró un baremo (reglas) para Sexo: {sexo_atleta}, Edad: {edad} en esta prueba."
+                detail=f"No se encontró un baremo (reglas) para Sexo: {sexo_valor}, Edad: {edad} en esta prueba."
             )
 
         # 4. Clasificación Automática

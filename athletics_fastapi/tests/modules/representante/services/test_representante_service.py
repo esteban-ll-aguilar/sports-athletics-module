@@ -28,7 +28,7 @@ def service(mock_session):
          patch('app.modules.representante.services.representante_service.AtletaRepository'), \
          patch('app.modules.representante.services.representante_service.ResultadoCompetenciaRepository'), \
          patch('app.modules.representante.services.representante_service.PasswordHasher'):
-        return RepresentanteService(mock_session)
+        yield RepresentanteService(mock_session)
 
 
 @pytest.fixture
@@ -164,8 +164,12 @@ class TestRepresentanteServiceUpdate:
         })
         
         updated_user = MagicMock(spec=AuthUserModel)
+        updated_user.first_name = "Juan Carlos"
+        
+        # Mock all async methods used in update_child_athlete
         service.users_repo.get_by_id_profile = AsyncMock(return_value=updated_user)
         service.users_repo.update = AsyncMock(return_value=updated_user)
+        service.atleta_repo.get_by_id = AsyncMock(return_value=mock_atleta)
         
         update_data = UserUpdateSchema(
             first_name="Juan Carlos"
@@ -236,6 +240,8 @@ class TestRepresentanteServiceGet:
     @pytest.mark.asyncio
     async def test_get_athlete_historial_success(self, service, mock_atleta):
         """Test obtener historial de atleta"""
+        from datetime import date
+        from uuid import uuid4
         # Arrange
         service._validate_relation = AsyncMock(return_value={
             "success": True,
@@ -243,7 +249,44 @@ class TestRepresentanteServiceGet:
             "status_code": 200
         })
         
-        historial = [MagicMock() for _ in range(5)]
+        # Create proper mock objects with all required fields
+        def create_resultado_mock():
+            mock = MagicMock()
+            mock.id = 1
+            mock.external_id = uuid4()
+            mock.atleta_id = 1
+            mock.competencia_id = 1
+            mock.prueba_id = 1
+            mock.resultado = "10.5"
+            mock.unidad_medida = "segundos"
+            mock.posicion_final = "1"
+            mock.observaciones = "Excelente"
+            mock.fecha_registro = date(2024, 1, 1)
+            
+            # Nested competencia
+            mock.competencia = MagicMock()
+            mock.competencia.id = 1
+            mock.competencia.nombre = "Campeonato Nacional"
+            mock.competencia.descripcion = "Descripción"
+            mock.competencia.fecha = date(2024, 1, 15)
+            mock.competencia.lugar = "Quito"
+            mock.competencia.external_id = uuid4()
+            
+            # Nested prueba
+            mock.prueba = MagicMock()
+            mock.prueba.id = 1
+            mock.prueba.nombre = "100m"
+            mock.prueba.siglas = "100M"
+            mock.prueba.fecha_registro = date(2024, 1, 1)
+            mock.prueba.fecha_prueba = date(2024, 1, 15)
+            mock.prueba.tipo_prueba = "COMPETENCIA"
+            mock.prueba.tipo_medicion = "TIEMPO"
+            mock.prueba.unidad_medida = "segundos"
+            mock.prueba.external_id = uuid4()
+            
+            return mock
+        
+        historial = [create_resultado_mock() for _ in range(5)]
         service.resultado_repo.get_by_atleta = AsyncMock(return_value=historial)
         
         # Act

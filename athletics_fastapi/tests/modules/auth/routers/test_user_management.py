@@ -50,31 +50,67 @@ async def client() -> AsyncClient:
     async with AsyncClient(transport=ASGITransport(app=_APP), base_url="http://test") as c:
         yield c
 
-# Helper to create a user dict compatible with UserResponseSchema
-def create_user_dict(user_id=1, username="user1", email="user1@test.com", role="ATLETA", is_active=True):
+# Helper to create a user mock object compatible with UserResponseSchema
+# Helper to create a user mock object compatible with UserResponseSchema
+class MockUser:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self._data = kwargs
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
+    
+    def __getitem__(self, key):
+        return getattr(self, key)
+    
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+    
+    # Required for Pydantic from_attributes=True to not fail when checking for __dict__ or other internal attrs
+    # It seems Pydantic might be trying to inspect the object. 
+    # Providing a clean object is key.
+
+def create_user_mock(user_id=1, username="user1", email="user1@test.com", role="ATLETA", is_active=True):
     from uuid import uuid4
-    return {
-        "id": user_id,
-        "external_id": str(uuid4()),  # Required UUID
-        "auth_user_id": user_id,  # Required
-        "username": username,
-        "email": email,
-        "role": role,
-        "is_active": is_active,
-        "first_name": "Test",
-        "last_name": "User",
-        "profile_image": None,
-        "direccion": None,  # Optional string
-        "tipo_identificacion": "CEDULA",
-        "identificacion": "1104680135",  # Valid Ecuador cedula
-        "phone": "0999999999",
-        "tipo_estamento": "ESTUDIANTES",  # Valid enum value
-        "fecha_nacimiento": None,
-        "sexo": "M",  # Valid enum 'M' or 'F'
-        "two_factor_enabled": False,
-        "created_at": "2024-01-01T00:00:00",
-        "updated_at": "2024-01-01T00:00:00"
+    from datetime import date, datetime
+    from app.modules.auth.domain.enums.tipo_identificacion_enum import TipoIdentificacionEnum
+    from app.modules.auth.domain.enums.tipo_estamento_enum import TipoEstamentoEnum
+    from app.modules.auth.domain.enums import SexoEnum
+    
+    test_uuid = uuid4()
+    test_date = date(2000, 1, 1)
+    
+    user_data = {
+        'id': user_id,
+        'auth_user_id': user_id,
+        'external_id': test_uuid,
+        'username': username,
+        'email': email,
+        'role': role,
+        'is_active': is_active,
+        'first_name': "Test",
+        'last_name': "User",
+        'profile_image': "",
+        'direccion': "Test Address",
+        'tipo_identificacion': TipoIdentificacionEnum.CEDULA,
+        'identificacion': "1104680135",
+        'phone': "0999999999",
+        'tipo_estamento': TipoEstamentoEnum.ESTUDIANTES,
+        'fecha_nacimiento': test_date,
+        'sexo': SexoEnum.M,
+        'created_at': datetime(2024, 1, 1),
+        'updated_at': datetime(2024, 1, 1),
+        'two_factor_enabled': False # REQUIRED FIELD MISSING BEFORE
     }
+    
+    # Create simple object
+    mock = MockUser(**user_data)
+    
+    # Add auth mock
+    mock.auth = MockUser(email=email)
+    
+    return mock
 
 # --------------------------
 # TC-UM-01: Listar Usuarios (Éxito)
@@ -87,7 +123,7 @@ async def test_tc_um_01_list_users_success(client: AsyncClient, override_deps):
     """
     service, admin = override_deps
     service.get_all_users.return_value = {
-        "items": [create_user_dict()],
+        "items": [create_user_mock()],
         "total": 1,
         "page": 1,
         "size": 20,
@@ -113,7 +149,7 @@ async def test_tc_um_02_list_users_filter_role(client: AsyncClient, override_dep
     """
     service, admin = override_deps
     service.get_all_users.return_value = {
-        "items": [create_user_dict(user_id=1, username="atleta1", role="ATLETA")],
+        "items": [create_user_mock(user_id=1, username="atleta1", role="ATLETA")],
         "total": 1,
         "page": 1,
         "size": 20,
@@ -164,14 +200,14 @@ async def test_tc_um_05_update_user_role_success(client: AsyncClient, override_d
     service, admin = override_deps
     
     # Create a mock user object that can be validated by Pydantic
-    updated_user_data = create_user_dict(user_id=1, username="user1", role="ENTRENADOR")
+    mock_user = create_user_mock(user_id=1, username="user1", role="ENTRENADOR")
     
-    # Create a MagicMock that behaves like an ORM model
-    mock_user = MagicMock()
-    for key, value in updated_user_data.items():
-        setattr(mock_user, key, value)
-    
-    service.update_user_role.return_value = mock_user
+    # Service returns a dictionary with metadata and the object
+    service.update_user_role.return_value = {
+        "success": True,
+        "status_code": 200,
+        "user": mock_user
+    }
     
     payload = {"role": "ENTRENADOR"}
     response = await client.put("/api/v1/auth/users/1/role", json=payload)
@@ -254,4 +290,5 @@ async def test_tc_um_08_update_user_role_invalid_role(client: AsyncClient, overr
     
     assert response.status_code == 422
     data = response.json()
-    assert "detail" in data  # FastAPI validation error format
+    # FastAPI validation error format can have "detail" or "errors" depending on configuration
+    assert "errors" in data or "detail" in data

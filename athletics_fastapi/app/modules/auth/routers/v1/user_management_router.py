@@ -67,7 +67,17 @@ async def update_user_role(
     Returns:
         UserResponseSchema: Usuario actualizado.
     """
-    updated_user = await service.update_user_role(user_id, role_data.role)
+    result = await service.update_user_role(user_id, role_data.role)
+    
+    # Manejar respuesta de error del servicio
+    if not result.get("success", True):
+        raise HTTPException(
+            status_code=result.get("status_code", 500),
+            detail=result.get("message", "Error al actualizar rol")
+        )
+    
+    # Extraer el usuario del resultado
+    updated_user = result.get("user")
     return UserResponseSchema.model_validate(updated_user)
 
 

@@ -326,7 +326,7 @@ const RendimientoPage = () => {
                             // Simplified for now: use the indicator computed in reduce.
                             return (
                                 <option key={atleta.id} value={atleta.id}>
-                                    {atleta.first_name || atleta.user?.first_name} {atleta.last_name || atleta.user?.last_name} (ID: {atleta.id}) {atleta.hasData ? '✅' : ''}
+                                    {atleta.first_name || atleta.user?.first_name} {atleta.last_name || atleta.user?.last_name}  {atleta.hasData ? '✅' : ''}
                                 </option>
                             );
                         })}

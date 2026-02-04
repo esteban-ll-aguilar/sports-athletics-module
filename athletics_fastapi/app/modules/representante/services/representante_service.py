@@ -7,6 +7,7 @@ from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
 from app.modules.representante.domain.models.representante_model import Representante
 from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
+from app.modules.competencia.domain.schemas.competencia_schema import ResultadoCompetenciaRead
 from sqlalchemy import select
 
 class RepresentanteService:
@@ -159,10 +160,14 @@ class RepresentanteService:
             
         atleta = atleta_check["data"]
         historial = await self.resultado_repo.get_by_atleta(atleta.user_id)
+        
+        # Convertir modelos SQLAlchemy a schemas Pydantic
+        historial_data = [ResultadoCompetenciaRead.model_validate(h) for h in historial]
+        
         return {
             "success": True,
             "message": "Historial obtenido",
-            "data": historial,
+            "data": historial_data,
             "status_code": 200
         }
 

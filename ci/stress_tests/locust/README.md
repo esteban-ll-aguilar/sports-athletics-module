@@ -36,36 +36,36 @@ ci/stress_tests/locust/
 cd ci/stress_tests/locust
 
 # Autenticación
-locust -f auth_load.py --host=http://localhost:8081
+locust -f auth_load.py --host=http://localhost:8080
 
 # Atletas
-locust -f atleta_load.py --host=http://localhost:8081
+locust -f atleta_load.py --host=http://localhost:8080
 
 # Entrenadores
-locust -f entrenador_load.py --host=http://localhost:8081
+locust -f entrenador_load.py --host=http://localhost:8080
 
 # Competencias
-locust -f competencia_load.py --host=http://localhost:8081
+locust -f competencia_load.py --host=http://localhost:8080
 
 # Representantes
-locust -f representante_load.py --host=http://localhost:8081
+locust -f representante_load.py --host=http://localhost:8080
 
 # Admin
-locust -f admin_load.py --host=http://localhost:8081
+locust -f admin_load.py --host=http://localhost:8080
 ```
 
 ### Probar todos los módulos
 
 ```bash
 cd ci/stress_tests/locust
-locust -f locustfile.py --host=http://localhost:8081
+locust -f locustfile.py --host=http://localhost:8080
 ```
 
 ### Modo headless (sin interfaz web)
 
 ```bash
 # 10 usuarios, spawn rate 2/s, duración 60s
-locust -f auth_load.py --host=http://localhost:8081 \
+locust -f auth_load.py --host=http://localhost:8080 \
     --headless -u 10 -r 2 --run-time 60s
 ```
 
@@ -83,7 +83,7 @@ docker-compose -f docker-compose-stress.yml up
 3. Configurar:
    - **Number of users**: Cantidad total de usuarios
    - **Spawn rate**: Usuarios por segundo
-   - **Host**: http://localhost:8081
+   - **Host**: http://localhost:8080
 
 ## 📊 Endpoints por Módulo
 

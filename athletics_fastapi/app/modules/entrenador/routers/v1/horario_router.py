@@ -10,7 +10,13 @@ router = APIRouter(
     tags=["Entrenador - Horarios"]
 )
 
-@router.post("/entrenamiento/{entrenamiento_id}", response_model=HorarioResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/entrenamiento/{entrenamiento_id}", 
+    response_model=HorarioResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Añadir horario a entrenamiento",
+    description="Permite definir una nueva franja horaria (día y hora) para un entrenamiento específico."
+)
 async def create_horario(
     entrenamiento_id: int,
     horario_data: HorarioCreate,
@@ -22,7 +28,12 @@ async def create_horario(
     """
     return await service.create_horario(entrenamiento_id, horario_data, current_entrenador.id)
 
-@router.get("/entrenamiento/{entrenamiento_id}", response_model=List[HorarioResponse])
+@router.get(
+    "/entrenamiento/{entrenamiento_id}", 
+    response_model=List[HorarioResponse],
+    summary="Listar horarios por entrenamiento",
+    description="Recupera todas las sesiones programadas para un entrenamiento dado."
+)
 async def list_horarios(
     entrenamiento_id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -33,7 +44,12 @@ async def list_horarios(
     """
     return await service.get_horarios_by_entrenamiento(entrenamiento_id, current_entrenador.id)
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{id}", 
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar horario",
+    description="Remueve una franja horaria del calendario del entrenamiento."
+)
 async def delete_horario(
     id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),

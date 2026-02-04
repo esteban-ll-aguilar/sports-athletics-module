@@ -8,8 +8,8 @@ import time
 import asyncio
 
 # Número máximo de intentos
-MAX_RETRIES = 30
-RETRY_INTERVAL = 2  # segundos
+MAX_RETRIES = 60  # Aumentado para dar más tiempo a PgBouncer
+RETRY_INTERVAL = 3  # segundos
 
 
 async def check_database_connection():

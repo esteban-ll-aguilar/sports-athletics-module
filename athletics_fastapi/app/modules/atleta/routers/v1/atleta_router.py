@@ -35,6 +35,8 @@ def get_atleta_service(
     "/",
     response_model=AtletaRead,
     status_code=status.HTTP_201_CREATED,
+    summary="Crear perfil de atleta",
+    description="Crea un perfil de atleta vinculado al usuario autenticado."
 )
 async def create_atleta(
     data: AtletaCreate,
@@ -52,6 +54,8 @@ async def create_atleta(
 @router.get(
     "/me",
     response_model=AtletaRead,
+    summary="Obtener mi perfil",
+    description="Recupera la información del perfil de atleta del usuario actual."
 )
 async def get_my_atleta(
     current_user: AuthUserModel = Depends(get_current_user),
@@ -65,6 +69,8 @@ async def get_my_atleta(
 
 @router.get(
     "/historial",
+    summary="Obtener mi historial",
+    description="Recupera el registro de todas las participaciones en competencias del atleta actual."
 )
 async def get_my_historial(
     current_user: AuthUserModel = Depends(get_current_user),
@@ -79,6 +85,8 @@ async def get_my_historial(
 
 @router.get(
     "/estadisticas",
+    summary="Obtener mis estadísticas",
+    description="Calcula indicadores de desempeño del atleta actual."
 )
 async def get_my_estadisticas(
     current_user: AuthUserModel = Depends(get_current_user),
@@ -94,6 +102,8 @@ async def get_my_estadisticas(
 @router.get(
     "/{atleta_id}",
     response_model=AtletaRead,
+    summary="Obtener detalles de atleta",
+    description="Busca el perfil de un atleta específico por su ID numérico."
 )
 async def get_atleta(
     atleta_id: int,
@@ -108,6 +118,8 @@ async def get_atleta(
 @router.get(
     "/",
     response_model=list[AtletaRead],
+    summary="Listar todos los atletas",
+    description="Obtiene el listado general de atletas registrados en el sistema."
 )
 async def list_atletas(
     skip: int = 0,
@@ -123,6 +135,8 @@ async def list_atletas(
 @router.put(
     "/{atleta_id}",
     response_model=AtletaRead,
+    summary="Actualizar atleta",
+    description="Actualiza los datos demográficos o deportivos de un perfil de atleta."
 )
 async def update_atleta(
     atleta_id: int,
@@ -138,6 +152,8 @@ async def update_atleta(
 @router.delete(
     "/{atleta_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar atleta",
+    description="Elimina el registro de un atleta del sistema."
 )
 async def delete_atleta(
     atleta_id: int,

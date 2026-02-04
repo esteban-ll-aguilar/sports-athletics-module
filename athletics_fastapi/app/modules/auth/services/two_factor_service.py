@@ -11,7 +11,7 @@ class TwoFactorService:
     """Servicio para gestionar autenticación de dos factores (2FA) con TOTP."""
     
     def __init__(self):
-        self.issuer_name = "Dalios Facturacion SRI"
+        self.issuer_name = "Aplicación de Atletismo"
         # Hasher para backup codes (mismo que contraseñas)
         self.hasher = CryptContext(schemes=["argon2"], deprecated="auto")
     

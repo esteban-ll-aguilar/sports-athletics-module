@@ -227,4 +227,4 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 usuarios.pdf
-data/
+data/profile_pictures/*
