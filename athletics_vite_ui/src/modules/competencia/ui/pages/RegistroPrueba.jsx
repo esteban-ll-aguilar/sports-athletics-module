@@ -76,7 +76,8 @@ const RegistroPruebasPage = () => {
 
     const getBaremoInfo = (id) => {
         const b = baremos.find(x => x.id === id);
-        return b ? `Baremo #${b.id} ` : `ID: ${id}`;
+        if (b && b.nombre) return b.nombre;
+        return b ? `Baremo #${b.id}` : `ID: ${id}`;
     };
 
     const getPruebaUnit = (id) => {
@@ -292,7 +293,9 @@ const RegistroPruebasPage = () => {
                                                     {getPruebaName(row.prueba_id)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{getBaremoInfo(row.baremo_id)}</td>
+                                            <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
+                                                {row.baremo?.nombre || getBaremoInfo(row.baremo_id)}
+                                            </td>
                                             <td className="px-6 py-4 font-mono text-[#b30c25] font-bold">{row.marca_obtenida} {getPruebaUnit(row.prueba_id)}</td>
                                             <td className="px-6 py-4">
                                                 <span className="px-2.5 py-1 bg-gray-100 dark:bg-[#333] rounded-lg text-xs font-bold text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-[#444]">

@@ -12,6 +12,8 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
         sexo: "M",
         edad_min: "",
         edad_max: "",
+        marca_min_valida: "",
+        marca_max_valida: "",
         estado: true
     });
 
@@ -31,19 +33,25 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
             if (editingBaremo) {
                 const pruebaExternalId = editingBaremo.prueba_external_id || editingBaremo.prueba_id || "";
                 setForm({
-                    prueba_id: pruebaExternalId,
+                    prueba_id: editingBaremo.prueba_external_id || editingBaremo.prueba_id || "",
+                    nombre: editingBaremo.nombre ?? "",
                     sexo: editingBaremo.sexo || "M",
-                    edad_min: editingBaremo.edad_min || "",
-                    edad_max: editingBaremo.edad_max || "",
+                    edad_min: editingBaremo.edad_min ?? "",
+                    edad_max: editingBaremo.edad_max ?? "",
+                    marca_min_valida: editingBaremo.marca_min_valida ?? "",
+                    marca_max_valida: editingBaremo.marca_max_valida ?? "",
                     estado: editingBaremo.estado !== undefined ? editingBaremo.estado : true
                 });
             } else {
                 // Reset
                 setForm({
                     prueba_id: "",
+                    nombre: "",
                     sexo: "M",
                     edad_min: "",
                     edad_max: "",
+                    marca_min_valida: "",
+                    marca_max_valida: "",
                     estado: true
                 });
             }
@@ -56,12 +64,16 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
         e.preventDefault();
 
         // Validaciones básicas
-        if (!form.prueba_id) return Swal.fire("Error", "Seleccione una prueba", "error");
+        if (!form.nombre.trim()) return Swal.fire("Error", "Ingrese un nombre para el baremo", "error");
 
         const payload = {
             ...form,
             edad_min: Number(form.edad_min),
-            edad_max: Number(form.edad_max)
+            edad_max: Number(form.edad_max),
+            marca_min_valida: Number(form.marca_min_valida),
+            marca_max_valida: Number(form.marca_max_valida),
+            prueba_id: form.prueba_id || null,
+            items: []
         };
 
         const result = await Swal.fire({
@@ -108,21 +120,16 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                     {/* CAMPOS DEL FORMULARIO */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
-                            <label htmlFor="baremo-prueba" className="block text-sm font-medium text-gray-300 mb-2">Prueba</label>
-                            <select
-                                id="baremo-prueba"
-                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] focus:ring-1 focus:ring-[#b30c25] outline-none transition"
-                                value={form.prueba_id}
-                                onChange={e => setForm({ ...form, prueba_id: e.target.value })}
+                            <label htmlFor="baremo-nombre" className="block text-sm font-medium text-gray-300 mb-2">Nombre del Baremo</label>
+                            <input
+                                id="baremo-nombre"
+                                type="text"
+                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
+                                value={form.nombre}
+                                onChange={e => setForm({ ...form, nombre: e.target.value })}
+                                placeholder="Ej. Baremo Simple - General"
                                 required
-                            >
-                                <option value="">Seleccione Prueba...</option>
-                                {pruebas.map(p => (
-                                    <option key={p.external_id} value={p.external_id}>
-                                        {p.nombre} ({p.tipo_medicion})
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
 
                         <div>
@@ -188,6 +195,32 @@ const BaremoSimpleModal = ({ isOpen, onClose, onSubmit, editingBaremo }) => {
                                 className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
                                 value={form.edad_max}
                                 onChange={e => setForm({ ...form, edad_max: e.target.value })}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="baremo-marca-min" className="block text-sm font-medium text-gray-300 mb-2">Marca Mínima Global</label>
+                            <input
+                                id="baremo-marca-min"
+                                type="number"
+                                step="0.01"
+                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
+                                value={form.marca_min_valida}
+                                onChange={e => setForm({ ...form, marca_min_valida: e.target.value })}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="baremo-marca-max" className="block text-sm font-medium text-gray-300 mb-2">Marca Máxima Global</label>
+                            <input
+                                id="baremo-marca-max"
+                                type="number"
+                                step="0.01"
+                                className="w-full bg-[#121212] border border-[#444] rounded-xl px-4 py-3 text-white focus:border-[#b30c25] outline-none"
+                                value={form.marca_max_valida}
+                                onChange={e => setForm({ ...form, marca_max_valida: e.target.value })}
                                 required
                             />
                         </div>

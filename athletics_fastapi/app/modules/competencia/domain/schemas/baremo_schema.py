@@ -9,26 +9,34 @@ class BaremoBase(BaseModel):
     sexo: Sexo
     edad_min: int
     edad_max: int
+    marca_min_valida: float | None = None
+    marca_max_valida: float | None = None
     estado: bool = True
 
 # Modelo para la creación de un Baremo (incluye items)
+# Modelo para la creación de un Baremo (incluye items)
 class BaremoCreate(BaremoBase):
-    prueba_id: UUID
-    items: List[ItemBaremoCreate]
+    nombre: str = "Baremo General" # Added name
+    prueba_id: UUID | None = None
+    items: List[ItemBaremoCreate] = []
 
 # Modelo para la actualización de un Baremo
 class BaremoUpdate(BaseModel):
+    nombre: str | None = None
     sexo: Sexo | None = None
     edad_min: int | None = None
     edad_max: int | None = None
+    marca_min_valida: float | None = None
+    marca_max_valida: float | None = None
     estado: bool | None = None
     items: List[ItemBaremoCreate] | None = None
 
 # Modelo para la lectura de un Baremo
 class BaremoRead(BaremoBase):
     id: int
+    nombre: str # Added name read
     external_id: UUID
-    prueba_id: int
+    prueba_id: int | None
     items: List[ItemBaremoRead] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -23,12 +23,14 @@ class ResultadoPruebaRepository:
         from sqlalchemy.orm import selectinload
         from app.modules.atleta.domain.models.atleta_model import Atleta
         from app.modules.competencia.domain.models.prueba_model import Prueba
+        from app.modules.competencia.domain.models.baremo_model import Baremo
         
         stmt = (
             select(ResultadoPrueba)
             .options(
                 selectinload(ResultadoPrueba.atleta).selectinload(Atleta.user),
-                selectinload(ResultadoPrueba.prueba)
+                selectinload(ResultadoPrueba.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoPrueba.baremo)
             )
             .order_by(ResultadoPrueba.fecha_creacion.desc())
         )
@@ -37,8 +39,20 @@ class ResultadoPruebaRepository:
 
     async def get_by_external_id(self, external_id: UUID) -> Optional[ResultadoPrueba]:
         """Obtiene un resultado de prueba por su external_id."""
-        # Busca un resultado de prueba utilizando su external_id
-        stmt = select(ResultadoPrueba).where(ResultadoPrueba.external_id == external_id)
+        from sqlalchemy.orm import selectinload
+        from app.modules.atleta.domain.models.atleta_model import Atleta
+        from app.modules.competencia.domain.models.prueba_model import Prueba
+        from app.modules.competencia.domain.models.baremo_model import Baremo
+
+        stmt = (
+            select(ResultadoPrueba)
+            .where(ResultadoPrueba.external_id == external_id)
+            .options(
+                selectinload(ResultadoPrueba.atleta).selectinload(Atleta.user),
+                selectinload(ResultadoPrueba.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoPrueba.baremo)
+            )
+        )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -54,3 +68,10 @@ class ResultadoPruebaRepository:
         # Elimina el resultado de la sesión y confirma los cambios
         await self.session.delete(resultado)
         await self.session.commit()
+
+    async def get_count_by_baremo_id(self, baremo_id: int) -> int:
+        """Cuenta cuántos resultados utilizan un baremo específico."""
+        from sqlalchemy import func
+        stmt = select(func.count()).select_from(ResultadoPrueba).where(ResultadoPrueba.baremo_id == baremo_id)
+        result = await self.session.execute(stmt)
+        return result.scalar() or 0

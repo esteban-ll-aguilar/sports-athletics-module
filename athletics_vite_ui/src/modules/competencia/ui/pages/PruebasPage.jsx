@@ -40,6 +40,7 @@ const PruebasPage = () => {
                 unidad_medida: String(formData.unidad_medida || "").trim(),
                 estado: formData.estado === "false" || formData.estado === false ? false : true,
                 tipo_disciplina_id: formData.tipo_disciplina_id ? parseInt(formData.tipo_disciplina_id, 10) : null,
+                baremos_ids: formData.baremos_ids || []
             };
 
             if (selectedPrueba) {
@@ -254,8 +255,8 @@ const PruebasPage = () => {
                 {/* Header */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                     <div className="space-y-1">
-                       
-                  
+
+
                         <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                             Catálogo de Pruebas
                         </h1>
@@ -287,7 +288,7 @@ const PruebasPage = () => {
                             className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-[#332122] rounded-xl text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-[#b30c25] outline-none transition-all placeholder-gray-400"
                         />
                     </div>
-                  
+
                 </div>
 
                 {/* Quick Access Cards */}
@@ -354,7 +355,7 @@ const PruebasPage = () => {
                 </div>
 
                 {/* Table */}
-        <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
+                <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>

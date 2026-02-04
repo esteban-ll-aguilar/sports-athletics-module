@@ -15,6 +15,8 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
     sexo: "M",
     edad_min: "",
     edad_max: "",
+    marca_min_valida: "",
+    marca_max_valida: "",
     estado: true,
     items: [] // { marca_minima, marca_maxima, clasificacion }
   });
@@ -33,21 +35,28 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
       loadPruebas();
 
       if (editingBaremo) {
-        // Mapear datos existentes - need to find prueba external_id from prueba_id
-        const pruebaExternalId = editingBaremo.prueba_external_id || editingBaremo.prueba_id || "";
-
+        // ...
         setForm({
           ...editingBaremo,
-          prueba_id: pruebaExternalId,
+          nombre: editingBaremo.nombre || "Baremo Sin Nombre", // Ensure name
+          marca_min_valida: editingBaremo.marca_min_valida ?? "",
+          marca_max_valida: editingBaremo.marca_max_valida ?? "",
+          sexo: editingBaremo.sexo || "M",
+          edad_min: editingBaremo.edad_min || "",
+          edad_max: editingBaremo.edad_max || "",
+          estado: editingBaremo.estado !== undefined ? editingBaremo.estado : true,
           items: editingBaremo.items || []
         });
       } else {
         // Reset
         setForm({
+          nombre: "", // Init name
           prueba_id: "",
           sexo: "M",
           edad_min: "",
           edad_max: "",
+          marca_min_valida: "",
+          marca_max_valida: "",
           estado: true,
           items: [{ marca_minima: "", marca_maxima: "", clasificacion: "PRINCIPIANTE" }]
         });
@@ -80,7 +89,9 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
     e.preventDefault();
 
     // Validaciones básicas
-    if (!form.prueba_id && !form.prueba_external_id) return Swal.fire("Error", "Seleccione una prueba", "error");
+    if (!form.nombre?.trim()) return Swal.fire("Error", "El nombre del baremo es obligatorio", "error");
+    // prueba_id no longer strict
+    // if (!form.prueba_id && !form.prueba_external_id) return Swal.fire("Error", "Seleccione una prueba", "error");
     if (form.items.length === 0) return Swal.fire("Error", "Agregue al menos un rango de calificación", "error");
 
     // Determinar si estamos editando (ya sea por editingBaremo o por selectedBaremoId)
@@ -91,6 +102,8 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
       ...form,
       edad_min: Number(form.edad_min),
       edad_max: Number(form.edad_max),
+      marca_min_valida: Number(form.marca_min_valida),
+      marca_max_valida: Number(form.marca_max_valida),
       items: form.items.map(i => ({
         ...i,
         marca_minima: Number(i.marca_minima),
@@ -184,6 +197,8 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                       setForm({
                         ...baremo,
                         prueba_external_id: prueba?.external_id || baremo.prueba_id,
+                        marca_min_valida: baremo.marca_min_valida ?? "",
+                        marca_max_valida: baremo.marca_max_valida ?? "",
                         items: baremo.items || []
                       });
                     }
@@ -195,7 +210,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                     const prueba = pruebas.find(p => p.id === b.prueba_id || p.external_id === b.prueba_id);
                     return (
                       <option key={b.external_id} value={b.external_id}>
-                        {prueba?.nombre || 'Prueba'} - {b.sexo === 'M' ? 'Masculino' : 'Femenino'} - {b.edad_min}-{b.edad_max} años ({b.items?.length || 0} ítems)
+                        {b.nombre} - {b.sexo === 'M' ? 'Masculino' : 'Femenino'} - {b.edad_min}-{b.edad_max} años
                       </option>
                     );
                   })}
@@ -208,6 +223,7 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
                       <p><span className="font-medium">Prueba:</span> {pruebas.find(p => p.external_id === form.prueba_external_id || p.id === form.prueba_id)?.nombre}</p>
                       <p><span className="font-medium">Sexo:</span> {form.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
                       <p><span className="font-medium">Rango de Edad:</span> {form.edad_min} - {form.edad_max} años</p>
+                      <p><span className="font-medium">Marcas Globales:</span> {form.marca_min_valida} - {form.marca_max_valida}</p>
                       <p><span className="font-medium">Ítems actuales:</span> {form.items?.length || 0}</p>
                     </div>
                   </div>
@@ -216,6 +232,35 @@ const BaremoModal = ({ isOpen, onClose, onSubmit, editingBaremo, baremos = [] })
 
               <hr className="border-[#333]" />
             </>
+          )}
+
+          {/* CONFIGURACIÓN GLOBAL (Title added) */}
+          {(editingBaremo || selectedBaremoId) && (
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-white mb-4">Configuración General</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Marca Mínima Global</label>
+                  <input
+                    type="number"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-gray-400 focus:outline-none cursor-not-allowed"
+                    value={form.marca_min_valida}
+                    disabled
+                    title="Edite este valor en la configuración básica del baremo"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Marca Máxima Global</label>
+                  <input
+                    type="number"
+                    className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-4 py-2 text-gray-400 focus:outline-none cursor-not-allowed"
+                    value={form.marca_max_valida}
+                    disabled
+                    title="Edite este valor en la configuración básica del baremo"
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
           {/* SECCIÓN DE ITEMS (RANGOS) - Solo mostrar si hay un baremo seleccionado */}

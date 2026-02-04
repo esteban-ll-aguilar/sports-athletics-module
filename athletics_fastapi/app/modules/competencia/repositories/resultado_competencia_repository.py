@@ -26,6 +26,7 @@ from uuid import UUID
 from typing import List, Optional
 from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
 from app.modules.competencia.domain.models.prueba_model import Prueba
+from app.modules.competencia.domain.models.baremo_model import Baremo
 
 
 class ResultadoCompetenciaRepository:
@@ -45,6 +46,12 @@ class ResultadoCompetenciaRepository:
         """Obtener resultado por ID interno (int)."""
         result = await self.session.execute(
             select(ResultadoCompetencia).where(ResultadoCompetencia.id == id)
+            .options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
+            )
         )
         return result.scalars().first()
 
@@ -52,6 +59,12 @@ class ResultadoCompetenciaRepository:
         """Obtener resultado por external_id (UUID)."""
         result = await self.session.execute(
             select(ResultadoCompetencia).where(ResultadoCompetencia.external_id == external_id)
+            .options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
+            )
         )
         return result.scalars().first()
 
@@ -61,6 +74,12 @@ class ResultadoCompetenciaRepository:
             select(ResultadoCompetencia)
             .where(ResultadoCompetencia.competencia_id == competencia_id)
             .where(ResultadoCompetencia.estado == True)
+            .options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
+            )
         )
         return result.scalars().all() or []
 
@@ -70,6 +89,11 @@ class ResultadoCompetenciaRepository:
             select(ResultadoCompetencia).where(
                 (ResultadoCompetencia.atleta_id == atleta_id) &
                 (ResultadoCompetencia.competencia_id == competencia_id)
+            ).options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
             )
         )
         return result.scalars().all() or []
@@ -78,7 +102,7 @@ class ResultadoCompetenciaRepository:
         """Obtener todos los resultados, filtrando por estado y entrenador si aplica."""
         query = select(ResultadoCompetencia).options(
             selectinload(ResultadoCompetencia.competencia),
-            selectinload(ResultadoCompetencia.prueba),
+            selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
             selectinload(ResultadoCompetencia.atleta),
             selectinload(ResultadoCompetencia.entrenador)
         )
@@ -119,7 +143,7 @@ class ResultadoCompetenciaRepository:
             .order_by(ResultadoCompetencia.fecha_registro.desc())
             .options(
                 selectinload(ResultadoCompetencia.competencia),
-                selectinload(ResultadoCompetencia.prueba),
+                selectinload(ResultadoCompetencia.prueba).selectinload(Prueba.baremos).selectinload(Baremo.items),
                 selectinload(ResultadoCompetencia.atleta),
                 selectinload(ResultadoCompetencia.entrenador)
             )

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Swal from "sweetalert2";
-import { X, User, Activity, Clock, Ruler, Calendar, Save, Edit3, Type } from "lucide-react";
+import { X, User, Activity, Clock, Ruler, Calendar, Save, Edit3, Type, Search } from "lucide-react";
+import AtletaService from "../../../atleta/services/AtletaService"; // Updated import path
 
 const InputField = ({ label, icon: Icon, ...props }) => (
     <div className="space-y-1">
@@ -61,183 +63,157 @@ SelectField.propTypes = {
     children: PropTypes.node
 };
 
-const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competencias = [], atletas = [], pruebas = [] }) => {
+const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competencias = [], preselectedAtleta, pruebas = [] }) => {
     const [submitting, setSubmitting] = useState(false);
-    const normalizeUnit = (u) => {
-        if (!u) return "METROS";
-        if (u === "m" || u === "METROS") return "METROS";
-        if (u === "s" || u === "SEGUNDOS") return "SEGUNDOS";
-        return u;
-    };
-
     const [form, setForm] = useState({
-        atleta_id: "",
         prueba_id: "",
         valor: "",
-        unidad_medida: "METROS",
-        estado: true,
-        fecha: new Date().toISOString().substring(0, 16)
+        unidad_medida: "TIEMPO", // Default
+        fecha: new Date().toISOString().slice(0, 16),
     });
 
-    // Auto-fill unit based on selected test
-    useEffect(() => {
-        if (form.prueba_id) {
-            const p = pruebas.find(x => x.external_id === form.prueba_id || x.id === form.prueba_id);
-            if (p) {
-                setForm(prev => ({
-                    ...prev,
-                    unidad_medida: p.tipo_medicion === "TIEMPO" ? "SEGUNDOS" : "METROS"
-                }));
-            }
-        }
-    }, [form.prueba_id, pruebas]);
+    // Estado para búsqueda de atleta
+    const [atletas, setAtletas] = useState([]);
+    const [filteredAtletas, setFilteredAtletas] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedAtleta, setSelectedAtleta] = useState(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef(null);
 
+    // Cargar Atletas
+    useEffect(() => {
+        if (isOpen) {
+            const loadAtletas = async () => {
+                try {
+                    const data = await AtletaService.getAll();
+                    const list = Array.isArray(data) ? data : (data.items || []);
+                    setAtletas(list);
+                    setFilteredAtletas(list);
+                } catch (err) { console.error("Error loading athletes", err); }
+            };
+            loadAtletas();
+        }
+    }, [isOpen]);
+
+    // Filtrar atletas
+    useEffect(() => {
+        if (!searchTerm) {
+            setFilteredAtletas(atletas);
+        } else {
+            const term = searchTerm.toLowerCase();
+            const filtered = atletas.filter(a => {
+                const user = a.user || {};
+                return (
+                    (user.first_name || "").toLowerCase().includes(term) ||
+                    (user.last_name || "").toLowerCase().includes(term) ||
+                    (user.identificacion || "").includes(term)
+                );
+            });
+            setFilteredAtletas(filtered);
+        }
+    }, [searchTerm, atletas]);
+
+    // Inicializar formulario y seleccionado
     useEffect(() => {
         if (editingItem) {
-            const atletaId = editingItem.atleta_external_id || editingItem.atleta_id || "";
-            const pruebaId = editingItem.prueba_external_id || editingItem.prueba_id || "";
-
             setForm({
-                atleta_id: atletaId,
-                prueba_id: pruebaId,
-                valor: editingItem.valor || "",
-                unidad_medida: normalizeUnit(editingItem.unidad_medida),
-                estado: editingItem.estado,
-                fecha: editingItem.fecha ? new Date(editingItem.fecha).toISOString().substring(0, 16) : new Date().toISOString().substring(0, 16)
+                prueba_id: editingItem.prueba_external_id || editingItem.prueba_id,
+                valor: editingItem.valor,
+                unidad_medida: editingItem.unidad_medida || "TIEMPO",
+                fecha: editingItem.fecha ? new Date(editingItem.fecha).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
             });
+            // Si hay editingItem, intentar setear selectedAtleta si tenemos la info
+            // Ojo: editingItem podría no tener datos completos del atleta, solo ID.
+            // Si atletas ya cargó, buscamos.
+            if (atletas.length > 0) {
+                const found = atletas.find(a => a.external_id === editingItem.atleta_external_id || a.id === editingItem.atleta_id);
+                if (found) setSelectedAtleta(found);
+            }
         } else {
             setForm({
-                atleta_id: "",
                 prueba_id: "",
                 valor: "",
-                unidad_medida: "METROS",
-                estado: true,
-                fecha: new Date().toISOString().substring(0, 16)
+                unidad_medida: "TIEMPO",
+                fecha: new Date().toISOString().slice(0, 16)
             });
+            // Si es nuevo y hay preseleccionado (ej: desde perfil), usarlo por defecto
+            if (preselectedAtleta) {
+                setSelectedAtleta(preselectedAtleta);
+            } else {
+                setSelectedAtleta(null);
+            }
         }
-    }, [editingItem, atletas, isOpen]);
+    }, [editingItem, isOpen, preselectedAtleta, atletas.length]); // Dependencias: reload if athletes load
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
+        setForm(prev => {
+            const updates = { ...prev, [name]: value };
+
+            // Auto update unit when prueba changes
+            if (name === "prueba_id") {
+                const prueba = pruebas.find(p => p.external_id === value);
+                if (prueba) {
+                    updates.unidad_medida = prueba.unidad_medida === "SEGUNDOS" ? "SEGUNDOS" : (prueba.unidad_medida || "METROS");
+                }
+            }
+            return updates;
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (submitting) return;
 
-        // Convertir external_ids a IDs internos
-        const atleta = atletas.find(a => a.external_id === form.atleta_id || a.id === form.atleta_id);
-        const prueba = pruebas.find(p => p.external_id === form.prueba_id || p.id === form.prueba_id);
-
-        if (!atleta) {
-            Swal.fire("Error", "Atleta no encontrado", "error");
+        // Validar Atleta Seleccionado
+        if (!selectedAtleta) {
+            Swal.fire("Error", "Debe seleccionar un atleta", "error");
             return;
         }
+
+        const prueba = pruebas.find(p => p.external_id === form.prueba_id || p.id === form.prueba_id);
+
         if (!prueba) {
             Swal.fire("Error", "Prueba no encontrada", "error");
             return;
         }
 
-        // El backend espera ResultadoPruebaCreate schema:
-        // - marca_obtenida (float)
-        // - atleta_id (UUID)
-        // - prueba_id (UUID)
-        // - fecha (datetime)
-        // - clasificacion_final (optional string)
-        // - estado (bool)
         const payload = {
-            atleta_id: atleta.external_id,  // Usar UUID del atleta
-            prueba_id: prueba.external_id,  // Usar UUID de la prueba
-            marca_obtenida: Number(form.valor),  // Backend espera marca_obtenida
-            fecha: new Date(form.fecha).toISOString(),  // Backend espera datetime completo
+            atleta_id: selectedAtleta.external_id || selectedAtleta.id,
+            prueba_id: prueba.external_id,
+            marca_obtenida: Number(form.valor),
+            fecha: new Date(form.fecha).toISOString(),
             estado: true
         };
 
-        console.log("📤 Payload a enviar:", payload);
-        console.log("👤 Atleta encontrado:", atleta);
-        console.log("🏃 Prueba encontrada:", prueba);
-        console.log("📅 Fecha original:", form.fecha);
-        console.log("📅 Fecha ISO:", payload.fecha);
-
-        const result = await Swal.fire({
-            title: editingItem ? '¿Actualizar Resultado?' : '¿Registrar Resultado?',
-            text: "Verifique que los datos sean correctos.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#b30c25',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar',
-            background: '#1a1a1a',
-            color: '#fff',
-            customClass: {
-                popup: 'dark:bg-[#1a1a1a] dark:text-white dark:border dark:border-[#332122]'
-            }
-        });
-
-        if (result.isConfirmed) {
+        try {
             setSubmitting(true);
-            try {
-                const success = await onSubmit(payload);
-                if (success) {
-                    await Swal.fire({
-                        title: "Éxito",
-                        text: "Registro guardado correctamente",
-                        icon: "success",
-                        confirmButtonColor: '#b30c25',
-                        background: '#1a1a1a',
-                        color: '#fff'
-                    });
-                    onClose();
-                }
-            } catch (error) {
-                console.error("Error modal:", error);
-
-                // Extraer mensaje de error detallado del backend
-                let errorMessage = "No se pudo guardar el registro";
-
-                if (error.response?.data?.detail) {
-                    errorMessage = error.response.data.detail;
-                } else if (error.response?.data?.message) {
-                    errorMessage = error.response.data.message;
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
-
-                await Swal.fire({
-                    title: "Error al guardar",
-                    html: `<div style="text-align: left;">
-                        <p><strong>No se pudo crear el registro:</strong></p>
-                        <p style="color: #f87171; margin-top: 10px;">${errorMessage}</p>
-                        ${errorMessage.includes('baremo') ?
-                            '<p style="margin-top: 15px; color: #fbbf24;"><strong>💡 Sugerencia:</strong> Asegúrate de que exista un baremo configurado para esta prueba, sexo y edad del atleta.</p>'
-                            : ''}
-                    </div>`,
-                    icon: "error",
-                    confirmButtonColor: '#b30c25',
-                    background: '#1a1a1a',
-                    color: '#fff',
-                    width: '500px'
-                });
-            } finally {
-                setSubmitting(false);
-            }
+            await onSubmit(payload, editingItem);
+            setSubmitting(false);
+            onClose();
+        } catch (error) {
+            console.error(error);
+            setSubmitting(false);
+            Swal.fire("Error", "No se pudo guardar", "error");
         }
     };
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchRef.current && !searchRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] w-full h-full"
-        >
-            <button
-                type="button"
-                className="absolute inset-0 w-full h-full cursor-default bg-transparent"
-                onClick={onClose}
-                aria-label="Cerrar modal"
-            />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-left font-['Lexend'] w-full h-full">
+            <button type="button" className="absolute inset-0 w-full h-full cursor-default bg-transparent" onClick={onClose} aria-label="Cerrar modal" />
             <div className="relative w-full max-w-lg bg-white dark:bg-[#1a1a1a] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
@@ -250,28 +226,72 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                             {editingItem ? 'Editar Resultado' : 'Registrar Resultado'}
                         </h2>
                     </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                        <X size={20} />
-                    </button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"><X size={20} /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto">
-                    {/* ATLETA */}
-                    <SelectField
-                        label="Atleta"
-                        icon={User}
-                        name="atleta_id"
-                        value={form.atleta_id}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Seleccione Atleta</option>
-                        {atletas.map(a => (
-                            <option key={a.id} value={a.external_id}>{a.first_name} {a.last_name}</option>
-                        ))}
-                    </SelectField>
+                    {/* ATLETA SELECTOR (SEARCHABLE) */}
+                    <div className="space-y-1" ref={searchRef}>
+                        <label className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Atleta</label>
+                        {selectedAtleta ? (
+                            <div className="bg-gray-100 dark:bg-[#252525] p-3 rounded-xl border border-gray-200 dark:border-[#333] flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="bg-gray-200 dark:bg-[#333] p-2 rounded-full">
+                                        <User size={20} className="text-gray-500 dark:text-gray-400" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-800 dark:text-white text-sm">
+                                            {selectedAtleta.user?.first_name} {selectedAtleta.user?.last_name}
+                                        </p>
+                                        <p className="text-xs text-gray-500">{selectedAtleta.user?.identificacion || "Sin Identificación"}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedAtleta(null); setSearchTerm(""); }}
+                                    className="p-1 hover:bg-gray-200 dark:hover:bg-[#333] rounded-full text-gray-500 transition"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <input
+                                    type="text"
+                                    className="w-full pl-9 pr-3 py-2.5 rounded-lg bg-white dark:bg-[#212121] border border-gray-300 dark:border-[#332122] text-gray-900 dark:text-gray-100 outline-none focus:border-[#b30c25]"
+                                    placeholder="Buscar por nombre o cédula..."
+                                    value={searchTerm}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setShowDropdown(true); }}
+                                    onFocus={() => setShowDropdown(true)}
+                                />
+                                {showDropdown && (
+                                    <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-[#332122] rounded-xl max-h-48 overflow-y-auto shadow-xl">
+                                        {filteredAtletas.length > 0 ? (
+                                            filteredAtletas.map(a => (
+                                                <li
+                                                    key={a.id}
+                                                    className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-[#252525] cursor-pointer border-b last:border-0 border-gray-100 dark:border-[#332122]"
+                                                    onClick={() => {
+                                                        setSelectedAtleta(a);
+                                                        setShowDropdown(false);
+                                                        setSearchTerm("");
+                                                    }}
+                                                >
+                                                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{a.user?.first_name} {a.user?.last_name}</p>
+                                                    <p className="text-xs text-gray-500">{a.user?.identificacion}</p>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="px-4 py-3 text-sm text-gray-500 text-center">No se encontraron atletas</li>
+                                        )}
+                                    </ul>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
-                    {/* PRUEBA */}
+                    {/* PRUEBA SELECTOR */}
                     <SelectField
                         label="Prueba"
                         icon={Activity}
@@ -289,7 +309,6 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                     {/* MARCA & UNIDAD */}
                     <div className="grid grid-cols-2 gap-4">
                         {form.unidad_medida === "SEGUNDOS" ? (
-                            // For TIME: Show Minutes and Seconds
                             <>
                                 <InputField
                                     label="Minutos"
@@ -325,10 +344,9 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                                 />
                             </>
                         ) : (
-                            // For DISTANCE: Show single input
                             <>
                                 <InputField
-                                    label={`Marca (${form.unidad_medida})`}
+                                    label={`Marca(${form.unidad_medida})`}
                                     icon={Ruler}
                                     type="number"
                                     step="0.01"
@@ -359,7 +377,7 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                         value={form.fecha}
                         onChange={handleChange}
                         required
-                        style={{ colorScheme: "dark" }} // Keeps native picker dark compatible if browser supports
+                        style={{ colorScheme: "dark" }}
                     />
 
                     <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 dark:border-[#332122]">
@@ -367,25 +385,14 @@ const RegistroPruebaModal = ({ isOpen, onClose, onSubmit, editingItem, competenc
                             type="button"
                             onClick={onClose}
                             disabled={submitting}
-                            className="
-                                flex-1 px-4 py-3 rounded-xl font-semibold
-                                border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300
-                                hover:bg-gray-50 dark:hover:bg-[#212121] transition
-                                disabled:opacity-50
-                            "
+                            className="flex-1 px-4 py-3 rounded-xl font-semibold border border-gray-300 dark:border-[#332122] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#212121] transition disabled:opacity-50"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="
-                                flex-1 px-4 py-3 rounded-xl font-bold text-white
-                                bg-linear-to-r from-[#b30c25] to-[#80091b]
-                                hover:shadow-lg hover:shadow-red-900/20 active:scale-95
-                                disabled:opacity-70 disabled:cursor-wait
-                                transition-all duration-300
-                            "
+                            className="flex-1 px-4 py-3 rounded-xl font-bold text-white bg-linear-to-r from-[#b30c25] to-[#80091b] hover:shadow-lg hover:shadow-red-900/20 active:scale-95 disabled:opacity-70 disabled:cursor-wait transition-all duration-300"
                         >
                             {submitting ? 'Guardando...' : (editingItem ? 'Actualizar' : 'Guardar Resultado')}
                         </button>

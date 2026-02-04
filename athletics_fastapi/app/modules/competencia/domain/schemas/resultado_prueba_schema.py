@@ -58,8 +58,10 @@ class ResultadoPruebaRead(ResultadoPruebaBase):
     # 🔗 Nested Objects
     prueba: Optional["PruebaRead"] = None
     atleta: Optional["AtletaSimpleResponse"] = None
+    baremo: Optional["BaremoRead"] = None
 
 # Import after class definition to avoid circular imports
 from app.modules.competencia.domain.schemas.prueba_schema import PruebaRead
 from app.modules.atleta.domain.schemas.atleta_simple_schema import AtletaSimpleResponse
+from app.modules.competencia.domain.schemas.baremo_schema import BaremoRead
 ResultadoPruebaRead.model_rebuild()

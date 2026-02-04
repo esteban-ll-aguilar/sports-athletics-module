@@ -1,9 +1,9 @@
-from sqlalchemy import Integer, String, Boolean, ForeignKey, text
+from sqlalchemy import Integer, String, Boolean, ForeignKey, text, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 from app.modules.competencia.domain.enums.enum import Sexo
 import uuid
-from typing import List, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.modules.competencia.domain.models.prueba_model import Prueba
@@ -27,11 +27,15 @@ class Baremo(Base):
         server_default=text("gen_random_uuid()"),
         server_onupdate=text("gen_random_uuid()")
     )
+    nombre: Mapped[str] = mapped_column(String, nullable=False, default="Baremo General", server_default="Baremo General")
+    
     # Llaves Foráneas y Filtros de Negocio
-    prueba_id: Mapped[int] = mapped_column(Integer, ForeignKey("prueba.id"), nullable=False)
+    prueba_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("prueba.id"), nullable=True)
     sexo: Mapped[Sexo] = mapped_column(String, nullable=False)
     edad_min: Mapped[int] = mapped_column(Integer, nullable=False)
     edad_max: Mapped[int] = mapped_column(Integer, nullable=False)
+    marca_min_valida: Mapped[float] = mapped_column(Float, nullable=True, default=0.0)
+    marca_max_valida: Mapped[float] = mapped_column(Float, nullable=True, default=0.0)
     estado: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Relalaciones 

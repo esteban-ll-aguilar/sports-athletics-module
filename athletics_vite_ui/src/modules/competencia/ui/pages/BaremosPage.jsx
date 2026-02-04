@@ -114,7 +114,7 @@ const BaremosPage = () => {
 
   // Update filteredBaremos to filter by Prueba, Contexto (Sexo/Edad), and Estado
   const filteredBaremos = baremos.filter(baremo => {
-    const pruebaName = getPruebaName(baremo.prueba_id).toLowerCase();
+    const pruebaName = String(getPruebaName(baremo.prueba_id) || "").toLowerCase();
     const contexto = `${baremo.sexo === 'M' ? 'Masculino' : 'Femenino'} ${baremo.edad_min} - ${baremo.edad_max}`.toLowerCase();
     const estado = baremo.estado ? "Activo" : "Inactivo";
 
@@ -157,7 +157,7 @@ const BaremosPage = () => {
               Agregar Ítems
             </button>
           </div>
-        </div>      
+        </div>
 
         {/* Filters */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -232,7 +232,7 @@ const BaremosPage = () => {
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
                 <tr>
-                  <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                  <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre</th>
                   <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contexto (Sexo / Edad)</th>
                   <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rangos</th>
                   <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Estado</th>
@@ -275,9 +275,12 @@ const BaremosPage = () => {
                           </div>
                           <div>
                             <div className="font-bold text-gray-900 dark:text-gray-100 text-base">
-                              {b.items && b.items.length > 0 ? "Baremo Compuesto" : "Baremo Simple"}
+                              {b.nombre}
                             </div>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{getPruebaName(b.prueba_id)}</span>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 flex flex-col">
+                              <span>{b.items && b.items.length > 0 ? "Baremo Compuesto" : "Baremo Simple"}</span>
+                              <span className="text-xs opacity-75">{getPruebaName(b.prueba_id)}</span>
+                            </div>
                           </div>
                         </div>
                       </td>

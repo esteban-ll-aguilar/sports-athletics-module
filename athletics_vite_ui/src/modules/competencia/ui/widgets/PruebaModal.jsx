@@ -66,6 +66,10 @@ SelectField.propTypes = {
     children: PropTypes.node
 };
 
+import baremoService from "../../services/baremo_service"; // Added import
+
+// ...
+
 const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
     const [submitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
@@ -78,10 +82,11 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
         estado: true,
         tipo_disciplina_id: "",
         fecha_registro: "",
+        baremos_ids: [] // Added default
     });
 
     const [disciplinas, setDisciplinas] = useState([]);
-
+    const [orphanBaremos, setOrphanBaremos] = useState([]); // Added state
 
     useEffect(() => {
         if (isOpen) {
@@ -98,7 +103,8 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     nombre: editingData.nombre || "",
                     fecha_prueba: editingData.fecha_prueba || "",
                     tipo_disciplina_id: editingData.tipo_disciplina_id?.toString() || "",
-                    unidad_medida: normalizeUnit(editingData.unidad_medida)
+                    unidad_medida: normalizeUnit(editingData.unidad_medida),
+                    baremos_ids: editingData.baremos ? editingData.baremos.map(b => b.external_id) : []
                 });
             } else {
                 setForm({
@@ -111,6 +117,7 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                     estado: true,
                     tipo_disciplina_id: "",
                     fecha_registro: "",
+                    baremos_ids: []
                 });
             }
         }
@@ -118,10 +125,21 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
 
     const cargarCatalogos = async () => {
         try {
-            const [resD] = await Promise.all([
+            const [resD, resB] = await Promise.all([
                 tipoDisciplinaService.getAll(),
+                baremoService.getAll() // Fetch All Baremos
             ]);
             setDisciplinas(Array.isArray(resD) ? resD : []);
+
+            // Filter Orphans OR Currently Assigned to THIS prueba
+            const allBaremos = Array.isArray(resB) ? resB : [];
+            const currentPruebaId = editingData?.id;
+
+            const orphans = allBaremos.filter(b =>
+                b.estado && (!b.prueba_id || (currentPruebaId && b.prueba_id === currentPruebaId))
+            );
+            setOrphanBaremos(orphans);
+
         } catch (err) { console.error(err); }
     };
 
@@ -352,6 +370,45 @@ const PruebaModal = ({ isOpen, onClose, onSubmit, editingData }) => {
                             value={form.fecha_prueba}
                             onChange={(e) => setForm({ ...form, fecha_prueba: e.target.value })}
                         />
+                    </div>
+                    {/* Asignación de Baremos (Disponibles o Asignados) */}
+                    <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-[#332122]">
+                        <h3 className="text-sm font-bold uppercase text-gray-500 dark:text-gray-400">Asignar Baremos Asociados</h3>
+
+                        {orphanBaremos.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-gray-50 dark:bg-[#212121] rounded-lg border border-gray-200 dark:border-[#332122]">
+                                {orphanBaremos.map(b => (
+                                    <label key={b.external_id} className="flex items-center gap-2 p-2 hover:bg-gray-200 dark:hover:bg-[#333] rounded cursor-pointer transition">
+                                        <input
+                                            type="checkbox"
+                                            className="accent-[#b30c25] h-4 w-4"
+                                            checked={form.baremos_ids.includes(b.external_id)}
+                                            onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                setForm(prev => ({
+                                                    ...prev,
+                                                    baremos_ids: checked
+                                                        ? [...prev.baremos_ids, b.external_id]
+                                                        : prev.baremos_ids.filter(id => id !== b.external_id)
+                                                }));
+                                            }}
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                                            {b.nombre} <span className="text-xs text-gray-500">({b.sexo}, {b.edad_min}-{b.edad_max} años)</span>
+                                        </span>
+                                    </label>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-4 bg-gray-50 dark:bg-[#212121] rounded-lg border border-gray-200 dark:border-[#332122] text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                    No hay baremos libres disponibles.
+                                </p>
+                                <p className="text-xs text-gray-400 dark:text-gray-600 mt-1">
+                                    Puede crear uno nuevo en la sección de Baremos.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-[#332122]">

@@ -1,33 +1,30 @@
-import axios from "axios";
-import Settings from "../../../config/enviroment";
+import ApiClient from "../../../core/api/apiClient";
 
-const API_URL = `${Settings.API_URL}/api/v1/competencia/resultados-pruebas`;
+const API_PATH = "/competencia/resultados-pruebas";
 
 const resultadoPruebaService = {
     getAll: async () => {
-        const response = await axios.get(API_URL);
-        // Backend returns { data: { items: [...] } }
-        // We must extract.items
-        return response.data.data.items || response.data.data;
+        const response = await ApiClient.get(`${API_PATH}/`);
+        // ApiClient returns response.data directly.
+        // Backend returns { success: true, data: { items: [...] } }
+        return response.data?.items || response.data || [];
     },
 
     getById: async (id) => {
-        const response = await axios.get(`${API_URL}/${id}`);
-        return response.data.data;
+        const response = await ApiClient.get(`${API_PATH}/${id}`);
+        return response.data;
     },
 
     create: async (data) => {
-        const response = await axios.post(API_URL, data);
-        return response.data.data;
+        // ApiClient.post returns response.data
+        const response = await ApiClient.post(`${API_PATH}/`, data);
+        return response.data;
     },
 
     update: async (id, data) => {
-        const response = await axios.put(`${API_URL}/${id}`, data);
-        return response.data.data;
-    },
-
-    // Delete usually just updates status, but if needed:
-    // delete: async (id) => { ... }
+        const response = await ApiClient.put(`${API_PATH}/${id}`, data);
+        return response.data;
+    }
 };
 
 export default resultadoPruebaService;

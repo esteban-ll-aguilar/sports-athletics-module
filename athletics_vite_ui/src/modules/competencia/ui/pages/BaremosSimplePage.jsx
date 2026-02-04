@@ -154,9 +154,9 @@ const BaremosSimplePage = () => {
 
     // Update filteredBaremos to filter by prueba, sexo, edad mínima, and estado
     const filteredBaremos = baremos.filter(baremo => {
-        const pruebaName = getPruebaName(baremo.prueba_id).toLowerCase();
-        const sexo = baremo.sexo === 'M' ? 'masculino' : 'femenino';
-        const edadMinima = baremo.edad_min.toString();
+        const pruebaName = (getPruebaName(baremo.prueba_id) || "").toLowerCase();
+        const sexo = (baremo.sexo === 'M' ? 'masculino' : 'femenino') || "";
+        const edadMinima = (baremo.edad_min || "").toString();
         const estado = baremo.estado ? "activo" : "inactivo";
 
         const matchSearch =
@@ -170,10 +170,10 @@ const BaremosSimplePage = () => {
     });
 
     return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-gray-200 font-['Lexend'] transition-colors duration-300">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
-              
+
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-8">
@@ -245,7 +245,7 @@ const BaremosSimplePage = () => {
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
                                 <tr>
-                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                                    <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Nombre</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sexo</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Edad Mínima</th>
                                     <th className="px-6 py-4 font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Edad Máxima</th>
@@ -281,7 +281,6 @@ const BaremosSimplePage = () => {
                                                 : "hover:bg-gray-50 dark:hover:bg-[#2a2829]"
                                                 }`}
                                         >
-                                            {/* PRUEBA */}
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 bg-red-50 dark:bg-red-900/10 rounded-lg text-[#b30c25]">
@@ -289,7 +288,10 @@ const BaremosSimplePage = () => {
                                                     </div>
                                                     <div>
                                                         <div className="font-bold text-gray-900 dark:text-gray-100 text-base">
-                                                            {getPruebaName(b.prueba_id)}
+                                                            {b.nombre}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {b.prueba_id ? getPruebaName(b.prueba_id) : "Sin Prueba Asignada"}
                                                         </div>
                                                     </div>
                                                 </div>

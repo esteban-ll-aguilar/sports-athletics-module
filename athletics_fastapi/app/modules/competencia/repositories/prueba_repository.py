@@ -16,7 +16,9 @@ class PruebaRepository:
     # Crear prueba
     # ----------------------
     async def create(self, data: PruebaCreate) -> Prueba:
-        prueba = Prueba(**data.model_dump())
+        # Excluir 'baremos_ids' ya que no es columna de la tabla Prueba
+        prueba_data = data.model_dump(exclude={"baremos_ids"})
+        prueba = Prueba(**prueba_data)
         self.db.add(prueba)
         await self.db.commit()
         await self.db.refresh(prueba)
@@ -60,7 +62,7 @@ class PruebaRepository:
         prueba = await self.get_by_external_id(external_id)
         if not prueba:
             return None
-        for field, value in data.model_dump(exclude_unset=True).items():
+        for field, value in data.model_dump(exclude_unset=True, exclude={'baremos_ids'}).items():
             setattr(prueba, field, value)
         await self.db.commit()
         await self.db.refresh(prueba)

@@ -26,7 +26,7 @@ class PruebaCreate(PruebaBase):
     """
     Esquema para la creación de una nueva prueba.
     """
-    pass
+    baremos_ids: List[UUID] | None = None
 
 class PruebaUpdate(BaseModel):
     """
@@ -41,6 +41,7 @@ class PruebaUpdate(BaseModel):
     unidad_medida: str | None = None
     estado: bool | None = None
     tipo_disciplina_id: int | None = None
+    baremos_ids: List[UUID] | None = None
 
 class PruebaRead(PruebaBase):
     """
@@ -48,6 +49,6 @@ class PruebaRead(PruebaBase):
     """
     id: int
     external_id: UUID
-    # baremos excluded - not needed for dashboard display
+    baremos: List[BaremoRead] = []
 
     model_config = ConfigDict(from_attributes=True)

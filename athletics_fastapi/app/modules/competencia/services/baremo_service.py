@@ -10,23 +10,27 @@ from app.modules.competencia.repositories.baremo_repository import BaremoReposit
 # Servicio para la gestión de Baremos
 class BaremoService:
 
-    def __init__(self, repo: BaremoRepository, prueba_repo: PruebaRepository):
+    def __init__(self, repo: BaremoRepository, prueba_repo: PruebaRepository, resultado_repo=None):
         self.repo = repo
         self.prueba_repo = prueba_repo
+        self.resultado_repo = resultado_repo
 
     async def create(self, data: BaremoCreate) -> Baremo:
-        # 1. Obtener y validar Prueba por UUID
-        prueba_uuid = data.prueba_id
-        prueba = await self.prueba_repo.get_by_external_id(prueba_uuid)
-        if not prueba:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prueba no encontrada")
+        # ... (same as before)
+        # 1. Obtener y validar Prueba por UUID (si existe)
+        prueba_id_final = None
+        if data.prueba_id:
+            prueba = await self.prueba_repo.get_by_external_id(data.prueba_id)
+            if not prueba:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Prueba no encontrada")
+            prueba_id_final = prueba.id
 
         # Convertir datos principal a dict
         baremo_data = data.model_dump()
         items_data = baremo_data.pop("items", [])
         
-        # Reemplazar UUID por ID interno
-        baremo_data['prueba_id'] = prueba.id
+        # Reemplazar UUID por ID interno (puede ser None)
+        baremo_data['prueba_id'] = prueba_id_final
         
         from app.modules.competencia.domain.models.baremo_model import Baremo
         from app.modules.competencia.domain.models.item_baremo_model import ItemBaremo
@@ -39,6 +43,26 @@ class BaremoService:
             baremo.items = [ItemBaremo(**item) for item in items_data]
             
         return await self.repo.create(baremo)
+
+    async def update(self, external_id: UUID, data: BaremoUpdate) -> Baremo:
+        baremo = await self.repo.get_by_external_id(external_id)
+
+        if not baremo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Baremo no encontrado"
+            )
+
+        if self.resultado_repo:
+            # Check if any result uses this baremo
+            count = await self.resultado_repo.get_count_by_baremo_id(baremo.id)
+            if count > 0:
+                 raise HTTPException(
+                     status_code=status.HTTP_400_BAD_REQUEST, 
+                     detail="No se puede editar este baremo porque ya tiene resultados registrados. Cree uno nuevo si es necesario."
+                 ) 
+        
+        # ... (rest of update)
         
     async def get(self, external_id: UUID) -> Baremo:
         return await self.repo.get_by_external_id(external_id)
