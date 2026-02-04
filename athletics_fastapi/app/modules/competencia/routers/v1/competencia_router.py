@@ -19,7 +19,13 @@ router = APIRouter()
 # -------------------------------------------------------------------------
 # ENDPOINT: Crear Competencia
 # -------------------------------------------------------------------------
-@router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "", 
+    response_model=BaseResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear competencia",
+    description="Registra un nuevo evento o torneo deportivo en el sistema."
+)
 async def crear_competencia(
     data: CompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -55,7 +61,12 @@ async def crear_competencia(
 # -------------------------------------------------------------------------
 # ENDPOINT: Listar Competencias
 # -------------------------------------------------------------------------
-@router.get("", response_model=BaseResponse)
+@router.get(
+    "", 
+    response_model=BaseResponse,
+    summary="Listar competencias",
+    description="Obtiene el listado de todos los eventos deportivos registrados."
+)
 async def listar_competencias(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
@@ -102,7 +113,12 @@ async def listar_competencias(
 # -------------------------------------------------------------------------
 # ENDPOINT: Obtener una Competencia
 # -------------------------------------------------------------------------
-@router.get("/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de competencia",
+    description="Muestra la información completa de una competencia específica."
+)
 async def obtener_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
@@ -135,7 +151,12 @@ async def obtener_competencia(
 # -------------------------------------------------------------------------
 # ENDPOINT: Actualizar Competencia
 # -------------------------------------------------------------------------
-@router.put("/{external_id}", response_model=BaseResponse)
+@router.put(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Actualizar competencia",
+    description="Modifica los datos generales de un evento deportivo."
+)
 async def actualizar_competencia(
     external_id: UUID,
     data: CompetenciaUpdate,
@@ -175,7 +196,12 @@ async def actualizar_competencia(
 # -------------------------------------------------------------------------
 # ENDPOINT: Eliminar Competencia
 # -------------------------------------------------------------------------
-@router.delete("/{external_id}", response_model=BaseResponse)
+@router.delete(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Eliminar competencia",
+    description="Remueve un evento deportivo del sistema."
+)
 async def eliminar_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),

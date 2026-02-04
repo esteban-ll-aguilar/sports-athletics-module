@@ -39,7 +39,14 @@ router = APIRouter()
 # -------------------------------------------------------------------------
 # ENDPOINT: POST / (Crear Resultado)
 # -------------------------------------------------------------------------
-@router.post("/", response_model=BaseResponse, status_code=status.HTTP_201_CREATED, dependencies=[Depends(get_current_admin_or_entrenador)])
+@router.post(
+    "/", 
+    response_model=BaseResponse, 
+    status_code=status.HTTP_201_CREATED, 
+    summary="Registrar resultado de prueba/test",
+    description="Captura el desempeño de un atleta en una prueba física de control (test). Recalcula la clasificación según baremo.",
+    dependencies=[Depends(get_current_admin_or_entrenador)]
+)
 async def create_resultado_prueba(
     data: ResultadoPruebaCreate,
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
@@ -100,7 +107,12 @@ async def create_resultado_prueba(
 # -------------------------------------------------------------------------
 # ENDPOINT: GET / (Listar Resultados)
 # -------------------------------------------------------------------------
-@router.get("/", response_model=BaseResponse)
+@router.get(
+    "/", 
+    response_model=BaseResponse,
+    summary="Listar resultados de pruebas/tests",
+    description="Obtiene el historial completo de tests físicos realizados por los atletas."
+)
 async def get_all_resultados_prueba(
     service: ResultadoPruebaService = Depends(get_resultado_prueba_service)
 ):
@@ -155,7 +167,13 @@ async def get_all_resultados_prueba(
 # -------------------------------------------------------------------------
 # ENDPOINT: PUT /{external_id} (Actualizar)
 # -------------------------------------------------------------------------
-@router.put("/{external_id}", response_model=BaseResponse, dependencies=[Depends(get_current_admin_or_entrenador)])
+@router.put(
+    "/{external_id}", 
+    response_model=BaseResponse, 
+    summary="Actualizar resultado de test",
+    description="Modifica un registro de test físico y actualiza su clasificación si la marca cambia.",
+    dependencies=[Depends(get_current_admin_or_entrenador)]
+)
 async def update_resultado_prueba(
     external_id: UUID,
     data: ResultadoPruebaUpdate,

@@ -17,7 +17,9 @@ router = APIRouter()
 @router.post(
     "/",
     response_model=BaseResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear nuevo baremo",
+    description="Registra un nuevo criterio de calificación (baremo) en el sistema para una prueba específica."
 )
 async def create_baremo(
     data: BaremoCreate,
@@ -46,7 +48,12 @@ async def create_baremo(
 # ----------------------
 # List Baremos (público)
 # ----------------------
-@router.get("/", response_model=BaseResponse)
+@router.get(
+    "/", 
+    response_model=BaseResponse,
+    summary="Listar todos los baremos",
+    description="Obtiene el catálogo completo de baremos configurados para las distintas disciplinas."
+)
 async def list_baremos(
     incluir_inactivos: bool = True,
     service: BaremoService = Depends(get_baremo_service)
@@ -81,7 +88,12 @@ async def list_baremos(
 # ----------------------
 # Get Baremo by ID (público)
 # ----------------------
-@router.get("/{external_id}", response_model=BaseResponse)
+@router.get(
+    "/{external_id}", 
+    response_model=BaseResponse,
+    summary="Obtener detalle de baremo",
+    description="Recupera la información técnica y administrativa de un baremo por su UUID."
+)
 async def get_baremo(
     external_id: UUID,
     service: BaremoService = Depends(get_baremo_service)
@@ -112,7 +124,9 @@ async def get_baremo(
 # ----------------------
 @router.put(
     "/{external_id}",
-    response_model=BaseResponse
+    response_model=BaseResponse,
+    summary="Actualizar baremo",
+    description="Permite modificar los valores o metadatos de un baremo existente."
 )
 async def update_baremo(
     external_id: UUID,

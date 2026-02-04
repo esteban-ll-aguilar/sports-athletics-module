@@ -19,7 +19,13 @@ async def get_entrenamiento_service(session: AsyncSession = Depends(get_session)
     repo = EntrenamientoRepository(session)
     return EntrenamientoService(repo)
 
-@router.post("/", response_model=EntrenamientoResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", 
+    response_model=EntrenamientoResponse, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear nuevo entrenamiento",
+    description="Registra un nuevo plan de entrenamiento y sus horarios asociados para el entrenador autenticado."
+)
 async def create_entrenamiento(
     entrenamiento_data: EntrenamientoCreate,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -30,7 +36,12 @@ async def create_entrenamiento(
     """
     return await service.create_entrenamiento(entrenamiento_data, current_entrenador.id)
 
-@router.get("/", response_model=List[EntrenamientoResponse])
+@router.get(
+    "/", 
+    response_model=List[EntrenamientoResponse],
+    summary="Listar todos los entrenamientos",
+    description="Obtiene una lista de entrenamientos. Los administradores y pasantes ven todos, mientras que los entrenadores ven solo los suyos."
+)
 async def list_entrenamientos(
     current_user: AuthUserModel = Depends(get_current_user),
     service: EntrenamientoService = Depends(get_entrenamiento_service),
@@ -52,7 +63,12 @@ async def list_entrenamientos(
         
     return await service.get_mis_entrenamientos(current_entrenador.id)
 
-@router.get("/{id}", response_model=EntrenamientoResponse)
+@router.get(
+    "/{id}", 
+    response_model=EntrenamientoResponse,
+    summary="Obtener detalle de entrenamiento",
+    description="Obtiene la información detallada de un entrenamiento específico por su ID, incluyendo sus horarios."
+)
 async def get_entrenamiento(
     id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),
@@ -63,7 +79,12 @@ async def get_entrenamiento(
     """
     return await service.get_entrenamiento_detalle(id, current_entrenador.id)
 
-@router.put("/{id}", response_model=EntrenamientoResponse)
+@router.put(
+    "/{id}", 
+    response_model=EntrenamientoResponse,
+    summary="Actualizar entrenamiento",
+    description="Modifica un entrenamiento existente y actualiza su programación de horarios."
+)
 async def update_entrenamiento(
     id: int,
     entrenamiento_update: EntrenamientoUpdate,
@@ -75,7 +96,12 @@ async def update_entrenamiento(
     """
     return await service.update_entrenamiento(id, entrenamiento_update, current_entrenador.id)
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{id}", 
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar entrenamiento",
+    description="Elimina físicamente un registro de entrenamiento y todos sus horarios vinculados."
+)
 async def delete_entrenamiento(
     id: int,
     current_entrenador: Entrenador = Depends(get_current_entrenador),

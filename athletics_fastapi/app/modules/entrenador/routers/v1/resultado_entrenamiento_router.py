@@ -17,13 +17,21 @@ router = APIRouter(
 def get_service(session: AsyncSession = Depends(get_session)):
     return ResultadoEntrenamientoService(session)
 
-@router.get("/", response_model=List[ResultadoEntrenamientoRead])
+@router.get(
+    "/", 
+    response_model=List[ResultadoEntrenamientoRead],
+    summary="Listar resultados de entrenamiento",
+    description="Obtiene una lista de resultados de entrenamientos. Filtra por entrenador si el usuario tiene dicho rol."
+)
 async def get_all(
     incluir_inactivos: bool = False,
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoEntrenamientoService = Depends(get_service),
     session: AsyncSession = Depends(get_session)
 ):
+    """
+    Retorna todos los registros de resultados de entrenamiento, permitiendo filtrar activos/inactivos.
+    """
     from sqlalchemy import select
     from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 
@@ -56,27 +64,52 @@ async def get_all(
 
     return await service.get_all(incluir_inactivos, entrenador_id)
 
-@router.post("/", response_model=ResultadoEntrenamientoRead, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/", 
+    response_model=ResultadoEntrenamientoRead, 
+    status_code=status.HTTP_201_CREATED,
+    summary="Registrar resultado de entrenamiento",
+    description="Crea un nuevo registro para capturar el desempeño de un atleta en una sesión específica."
+)
 async def create(
     schema: ResultadoEntrenamientoCreate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoEntrenamientoService = Depends(get_service)
 ):
+    """
+    Crea un nuevo resultado asociado a un entrenamiento y un atleta.
+    """
     return await service.create(schema)
 
-@router.put("/{external_id}", response_model=ResultadoEntrenamientoRead)
+@router.put(
+    "/{external_id}", 
+    response_model=ResultadoEntrenamientoRead,
+    summary="Actualizar resultado de entrenamiento",
+    description="Modifica los datos de un resultado de entrenamiento existente."
+)
 async def update(
     external_id: uuid.UUID,
     schema: ResultadoEntrenamientoUpdate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoEntrenamientoService = Depends(get_service)
 ):
+    """
+    Actualiza la información de un resultado identificado por su UUID externo.
+    """
     return await service.update(external_id, schema)
 
-@router.delete("/{external_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{external_id}", 
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar resultado de entrenamiento",
+    description="Elimina del sistema un registro de resultado de entrenamiento."
+)
 async def delete(
     external_id: uuid.UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: ResultadoEntrenamientoService = Depends(get_service)
 ):
+    """
+    Realiza la eliminación logica o física de un resultado.
+    """
     await service.delete(external_id)

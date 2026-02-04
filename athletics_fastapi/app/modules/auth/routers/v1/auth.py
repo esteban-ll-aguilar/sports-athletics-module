@@ -88,14 +88,25 @@ async def register(
         code = verification_service.generate_verification_code()
         await verification_service.store_verification_code(data.email, code)
 
+        email_sent = False
+        email_error_message = None
+        
         try:
             email_service.send_email_verification_code(data.email, code)
+            email_sent = True
+            logger.info(f"Usuario registrado y código enviado: {data.email}")
         except Exception as e:
             logger.error(f"Error enviando email de verificación: {e}")
+            email_error_message = "No se pudo enviar el código de verificación por email. Usa 'Reenviar código' En el Inicio de sesión para intentar nuevamente."
+
+        if email_sent:
+            message = "Usuario registrado exitosamente. Por favor verifica tu email."
+        else:
+            message = f"Usuario registrado exitosamente. {email_error_message}"
 
         return APIResponse(
             success=True,
-            message="Usuario registrado exitosamente. Por favor verifica tu email.",
+            message=message,
             data=UserResponseSchema.model_validate(user)
         )
     except HTTPException:
