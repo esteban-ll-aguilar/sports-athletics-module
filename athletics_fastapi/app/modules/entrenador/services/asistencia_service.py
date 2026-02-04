@@ -7,7 +7,7 @@ from app.modules.entrenador.repositories.horario_repository import HorarioReposi
 from app.modules.entrenador.domain.models.registro_asistencias_model import RegistroAsistencias
 from app.modules.entrenador.domain.models.asistencia_model import Asistencia
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate
-from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, ConfirmacionAsistenciaCreate
+from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate
 
 class AsistenciaService:
     def __init__(
@@ -23,6 +23,23 @@ class AsistenciaService:
     # --- Enrollment Logic (Atleta -> Horario) ---
 
     async def registrar_atleta_horario(self, schema: RegistroAsistenciasCreate, entrenador_id: int) -> RegistroAsistencias:
+        """
+        Inscribe a un atleta en un horario específico.
+        
+        Verifica que el horario exista y que el atleta no esté ya inscrito en ese mismo horario.
+        
+        Args:
+            schema (RegistroAsistenciasCreate): Datos de inscripción (atleta_id, horario_id).
+            entrenador_id (int): ID del entrenador que realiza la acción (actualmente no validado estrictamente pero pasado para contexto).
+            
+        Returns:
+            RegistroAsistencias: El registro de inscripción creado.
+            
+        Raises:
+            HTTPException: 
+                - 404 Si el horario no existe.
+                - 400 Si el atleta ya está inscrito.
+        """
         # 1. Verify Horario exists and belongs to Entrenador (indirectly via Entrenamiento)
         # Assuming HorarioRepo or we can use EntrenamientoRepo. 
         # For simplicity, verifying Horario ID existence first.
@@ -42,11 +59,26 @@ class AsistenciaService:
         return await self.registro_repo.create(registro)
 
     async def get_atletas_by_horario(self, horario_id: int) -> List[RegistroAsistencias]:
+        """
+        Obtiene la lista de atletas inscritos en un horario.
+        
+        Args:
+            horario_id (int): ID del horario.
+            
+        Returns:
+            List[RegistroAsistencias]: Lista de inscripciones.
+        """
         return await self.registro_repo.get_by_horario(horario_id)
 
     async def remove_atleta_horario(self, registro_id: int) -> None:
         """
-        Elimina la inscripción de un atleta.
+        Elimina (desinscribe) a un atleta de un horario.
+        
+        Args:
+            registro_id (int): ID del registro de inscripción.
+            
+        Raises:
+            HTTPException: 404 si la inscripción no es encontrada.
         """
         registro = await self.registro_repo.get_by_id(registro_id)
         if not registro:
@@ -57,6 +89,15 @@ class AsistenciaService:
     # --- Daily Attendance Logic ---
 
     async def registrar_asistencia_diaria(self, schema: AsistenciaCreate) -> Asistencia:
+        """
+        Crea un registro de asistencia para un día específico (uso manual o admin).
+        
+        Args:
+            schema (AsistenciaCreate): Datos de la asistencia.
+            
+        Returns:
+            Asistencia: El registro de asistencia creado.
+        """
         # 1. Verify enrollment exists
         # We assume checking registro_asistencias_id implies checking if the student is valid for that schedule.
         # But `registro_asistencias_id` IS the enrollment ID.
@@ -65,6 +106,9 @@ class AsistenciaService:
         return await self.asistencia_repo.create(asistencia)
 
     async def get_asistencias_by_enrollment(self, registro_asistencias_id: int) -> List[Asistencia]:
+        """
+        Obtiene el historial de asistencias de una inscripción específica.
+        """
         return await self.asistencia_repo.get_by_registro_asistencias(registro_asistencias_id)
     
     # --- NEW: Confirmación de Atleta ---
@@ -72,7 +116,18 @@ class AsistenciaService:
     
     async def confirmar_asistencia_atleta(self, registro_id: int, fecha_entrenamiento: date) -> Asistencia:
         """
-        El atleta confirma que asistirá. Crea un registro de Asistencia con fecha_confirmacion.
+        Permite al atleta confirmar su asistencia a un entrenamiento futuro.
+        
+        Si ya existe una confirmación previa (positiva), lanza error.
+        Si existe un rechazo previo, lo actualiza a confirmado.
+        Si no existe, crea un nuevo registro.
+        
+        Args:
+            registro_id (int): ID de inscripción del atleta en el horario.
+            fecha_entrenamiento (date): Fecha del entrenamiento.
+            
+        Returns:
+            Asistencia: El objeto asistencia actualizado o creado.
         """
         # 1. Verificar que el registro existe
         registro = await self.registro_repo.get_by_id(registro_id)
@@ -110,7 +165,9 @@ class AsistenciaService:
 
     async def rechazar_asistencia_atleta(self, registro_id: int, fecha_entrenamiento: date) -> Asistencia:
         """
-        El atleta indica que NO asistirá.
+        Permite al atleta notificar que NO asistirá a un entrenamiento.
+        
+        Actualiza el estado 'atleta_confirmo' a False.
         """
         # 1. Verificar que el registro existe
         registro = await self.registro_repo.get_by_id(registro_id)
@@ -143,7 +200,9 @@ class AsistenciaService:
     
     async def marcar_presente(self, asistencia_id: int) -> Asistencia:
         """
-        El entrenador marca al atleta como presente.
+        Marca la asistencia como 'Presente' (realizada por el entrenador).
+        
+        Actualiza el campo 'asistio' a True y registra la hora de llegada actual.
         """
         asistencia = await self.asistencia_repo.get_by_id(asistencia_id)
         if not asistencia:
@@ -157,7 +216,9 @@ class AsistenciaService:
     
     async def marcar_ausente(self, asistencia_id: int) -> Asistencia:
         """
-        El entrenador confirma que el atleta no asistió (mantiene asistio=False).
+        Marca la asistencia como 'Ausente' (realizada por el entrenador).
+        
+        Actualiza el campo 'asistio' a False.
         """
         asistencia = await self.asistencia_repo.get_by_id(asistencia_id)
         if not asistencia:
@@ -167,3 +228,9 @@ class AsistenciaService:
         asistencia.asistio = False
         
         return await self.asistencia_repo.update(asistencia)
+        
+    async def get_registros_by_atleta(self, atleta_id: int) -> List[RegistroAsistencias]:
+        """
+        Obtiene todos los registros de inscripción de un atleta.
+        """
+        return await self.registro_repo.get_by_atleta(atleta_id)

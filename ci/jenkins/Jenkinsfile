@@ -1,0 +1,267 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Nombres de las imágenes
+        BACKEND_IMAGE = 'athletics-fastapi'
+        FRONTEND_IMAGE = 'athletics-vite-ui'
+        
+        // Tags de versión
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        
+        // Variables de entorno para builds
+        BACKEND_PORT = '8080'
+        WORKERS = '4'
+        
+        // Workspace con el código fuente montado
+        WORKSPACE_ROOT = '/workspace'
+    }
+    
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+    }
+    
+    stages {
+        // ============================================
+        // ETAPA 1: SETUP ENTORNO
+        // ============================================
+        stage('1. Setup Environment') {
+            steps {
+                echo '⚙️ Setting up environment and installing dependencies...'
+                
+                script {
+                    sh '''
+                        echo "============================================"
+                        echo "Build #${BUILD_NUMBER}"
+                        echo "============================================"
+                    '''
+                }
+                
+                // Backend Dependencies
+                echo '📦 Installing Backend Dependencies...'
+                dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                    sh '''
+                        # Crear venv solo si no existe
+                        if [ ! -d "jenkins-venv" ]; then
+                            python3 -m venv jenkins-venv
+                        fi
+                        
+                        . jenkins-venv/bin/activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                        echo "✅ Backend dependencies installed"
+                    '''
+                }
+                
+                // Frontend Dependencies
+                echo '📦 Installing Frontend Dependencies...'
+                dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
+                    sh '''
+                        # Detectar si estamos en Linux (contenedor Jenkins)
+                        if [ "$(uname)" = "Linux" ]; then
+                            echo "Detected Linux environment - cleaning node_modules completely..."
+                            # En Linux, limpiar completamente para evitar conflictos con binarios de Windows
+                            # Intentar cambiar permisos primero para archivos bloqueados
+                            chmod -R u+w node_modules 2>/dev/null || true
+                            # Intentar eliminar normalmente
+                            rm -rf node_modules 2>/dev/null || {
+                                echo "Warning: Could not remove some files, moving to temp location..."
+                                mv node_modules node_modules.old.$$ || true
+                            }
+                            # Asegurar que no existe node_modules
+                            [ ! -d "node_modules" ] || mkdir -p node_modules.backup && mv node_modules/* node_modules.backup/ 2>/dev/null || true
+                            
+                            npm ci --prefer-offline
+                        else
+                            # En otros entornos, solo limpiar caches
+                            echo "Detected non-Linux environment - cleaning caches only..."
+                            find node_modules -name "*.node" -type f -delete 2>/dev/null || true
+                            find node_modules -name "*.dll" -type f -delete 2>/dev/null || true
+                            npm install
+                        fi
+                        echo "✅ Frontend dependencies installed"
+                    '''
+                }
+            }
+        }
+        
+        // ============================================
+        // ETAPA 2: TESTS UNITARIOS
+        // ============================================
+        stage('2. Unit Tests') {
+            parallel {
+                stage('Backend Tests') {
+                    steps {
+                        echo '🧪 Running Backend Tests...'
+                        dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                            sh '''
+                                . jenkins-venv/bin/activate
+                                pytest -c ./tests/pytest.ini
+                                echo "✅ Backend tests passed"
+                            '''
+                            
+                            junit 'test-results.xml'
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'htmlcov',
+                                reportFiles: 'index.html',
+                                reportName: 'Backend Coverage'
+                            ])
+                        }
+                    }
+                }
+                
+                stage('Frontend Tests') {
+                    steps {
+                        echo '🧪 Running Frontend Tests...'
+                        dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
+                            sh '''
+                                npm run test -- --run --reporter=verbose
+                                echo "✅ Frontend tests passed"
+                            '''
+                            
+                            publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'coverage',
+                                reportFiles: 'index.html',
+                                reportName: 'Frontend Coverage'
+                            ])
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // ETAPA 3: BUILD IMÁGENES
+        // ============================================
+        stage('3. Build Docker Images') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        echo '🏗️ Building Backend Image...'
+                        dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                            sh '''
+                                docker build \
+                                    --build-arg APPLICATION_PORT=${BACKEND_PORT} \
+                                    --build-arg WORKERS=${WORKERS} \
+                                    --build-arg ENV=development \
+                                    -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
+                                    -t ${BACKEND_IMAGE}:latest \
+                                    .
+                                echo "✅ Backend image built"
+                            '''
+                        }
+                    }
+                }
+                
+                stage('Build Frontend') {
+                    steps {
+                        echo '🏗️ Building Frontend Image...'
+                        dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
+                            sh '''
+                                docker build \
+                                    --build-arg VITE_API_URL=http://localhost:8080 \
+                                    --build-arg NODE_ENV=development \
+                                    -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                                    -t ${FRONTEND_IMAGE}:latest \
+                                    .
+                                echo "✅ Frontend image built"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // ETAPA 4: TESTS DE INTEGRACIÓN
+        // ============================================
+        stage('4. Integration Tests') {
+            steps {
+                echo '🔗 Starting services and running integration tests...'
+                
+                // Limpiar servicios previos y levantar nuevos
+                sh '''
+                    cd ${WORKSPACE_ROOT}
+                    
+                    echo "Cleaning up previous services..."
+                    docker-compose -f docker-compose.dev.yml down --volumes --remove-orphans 2>/dev/null || true
+                    
+                    echo "Starting services..."
+                    docker-compose -f docker-compose.dev.yml up -d
+                    
+                    echo "Waiting for services to be ready..."
+                    sleep 30
+                    
+                    echo "✅ Services ready"
+                '''
+                
+                // Ejecutar tests de integración
+                dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                    sh '''
+                        . jenkins-venv/bin/activate
+                        
+                        echo "Running integration tests..."
+                        pytest -c ci/integration_test/pytest.ini --verbose --tb=short || true
+                        
+                        echo "✅ Integration tests completed"
+                    '''
+                    
+                    // Publicar resultados
+                    junit allowEmptyResults: true, testResults: 'ci/integration_test/test-results.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'ci/integration_test/htmlcov',
+                        reportFiles: 'index.html',
+                        reportName: 'Integration Tests'
+                    ])
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Cleaning up...'
+            sh '''
+                cd ${WORKSPACE_ROOT}
+                
+                # Detener servicios
+                docker-compose -f docker-compose.dev.yml down || true
+                
+                # Limpiar solo archivos temporales, mantener dependencias
+                rm -rf athletics_fastapi/jenkins-venv/__pycache__ || true
+                rm -rf athletics_vite_ui/node_modules/.vite || true
+                rm -rf athletics_vite_ui/node_modules/.cache || true
+                
+                echo "✅ Cleanup completed (dependencies cached)"
+            '''
+        }
+        success {
+            echo '✅ Pipeline completed successfully!'
+            echo """
+            ============================================
+            ✅ BUILD #${BUILD_NUMBER} PASSED
+            ============================================
+            """
+        }
+        failure {
+            echo '❌ Pipeline failed!'
+            echo """
+            ============================================
+            ❌ BUILD #${BUILD_NUMBER} FAILED
+            ============================================
+            """
+        }
+    }
+}
+   

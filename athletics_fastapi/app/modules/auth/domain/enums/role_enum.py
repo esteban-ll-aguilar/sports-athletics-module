@@ -5,6 +5,7 @@ class RoleEnum(str, Enum):
     ATLETA = "ATLETA"
     ENTRENADOR = "ENTRENADOR"
     REPRESENTANTE = "REPRESENTANTE"
+    PASANTE = "PASANTE"
 
 class SexoEnum(str, Enum):
     M = "M"

@@ -1,12 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.db.database import get_session
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 from app.modules.entrenador.domain.schemas.horario_schema import HorarioResponse, HorarioCreate
 from app.modules.entrenador.services.horario_service import HorarioService
-from app.modules.entrenador.repositories.horario_repository import HorarioRepository
-from app.modules.entrenador.repositories.entrenamiento_repository import EntrenamientoRepository
 from app.modules.entrenador.dependencies import get_current_entrenador, get_horario_service
 
 router = APIRouter(
@@ -22,7 +18,7 @@ async def create_horario(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Crea un nuevo horario para un entrenamiento específico.
+    Agrega un nuevo horario (día, horas) a un entrenamiento existente.
     """
     return await service.create_horario(entrenamiento_id, horario_data, current_entrenador.id)
 
@@ -33,7 +29,7 @@ async def list_horarios(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Lista todos los horarios de un entrenamiento específico.
+    Obtiene todos los horarios definidos para un entrenamiento.
     """
     return await service.get_horarios_by_entrenamiento(entrenamiento_id, current_entrenador.id)
 
@@ -44,6 +40,6 @@ async def delete_horario(
     service: HorarioService = Depends(get_horario_service)
 ):
     """
-    Elimina un horario por su ID.
+    Elimina físicamente un horario.
     """
     await service.delete_horario(id, current_entrenador.id)

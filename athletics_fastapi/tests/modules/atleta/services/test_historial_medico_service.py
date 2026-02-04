@@ -6,7 +6,6 @@ Cubre todos los casos de prueba: TC-A21 a TC-A29
 
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from datetime import date
 from fastapi import HTTPException, status
 from app.modules.atleta.services.historial_medico_service import HistorialMedicoService
 from app.modules.atleta.domain.schemas.historial_medico_schema import (

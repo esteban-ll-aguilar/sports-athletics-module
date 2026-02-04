@@ -1,5 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+"""
+Router para la gestión de Tipos de Disciplina.
+Define los endpoints para clasificar las categorías deportivas del sistema.
+"""
+from fastapi import APIRouter, Depends, status
 from uuid import UUID
 
 from ...domain.schemas.tipo_disciplina_schema import (
@@ -13,7 +16,9 @@ from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
 
 router = APIRouter()
-
+# -------------------------------------------------------------------------
+# POST: Crear Tipo de Disciplina
+# -------------------------------------------------------------------------
 @router.post(
     "/",
     response_model=BaseResponse,
@@ -24,6 +29,10 @@ async def create_tipo(
     tipo: TipoDisciplinaCreate,
     service: TipoDisciplinaService = Depends(get_tipo_disciplina_service)
 ):
+    """
+    Crea una nueva categoría de disciplina.
+    Requiere permisos de Administrador o Entrenador.
+    """
     try:
         nuevo_tipo = await service.create_tipo(tipo)
         return ResponseHandler.success_response(
@@ -38,7 +47,9 @@ async def create_tipo(
             message=str(e),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
+# -------------------------------------------------------------------------
+# GET: Listar Categorías (Paginado)
+# -------------------------------------------------------------------------
 
 @router.get("/", response_model=BaseResponse)
 async def list_tipos(
@@ -46,6 +57,10 @@ async def list_tipos(
     limit: int = 100,
     service: TipoDisciplinaService = Depends(get_tipo_disciplina_service)
 ):
+    """
+    Obtiene el listado de todos los tipos de disciplinas registrados.
+    Soporta paginación básica mediante 'skip' y 'limit'.
+    """
     try:
         tipos = await service.get_tipos(skip, limit)
         if not tipos:
@@ -67,13 +82,18 @@ async def list_tipos(
             summary="Error al listar tipos de disciplinas",
             message=str(e)
         )
-
+# -------------------------------------------------------------------------
+# GET: Obtener por ID (UUID)
+# -------------------------------------------------------------------------
 
 @router.get("/{external_id}", response_model=BaseResponse)
 async def get_tipo(
     external_id: UUID,
     service: TipoDisciplinaService = Depends(get_tipo_disciplina_service)
 ):
+    """
+    Busca una categoría específica mediante su identificador externo (UUID).
+    """
     try:
         tipo = await service.get_tipo(external_id)
         if not tipo:
@@ -91,7 +111,9 @@ async def get_tipo(
             summary="Error al obtener tipo de disciplina",
             message=str(e)
         )
-
+# -------------------------------------------------------------------------
+# PUT: Actualizar Categoría
+# -------------------------------------------------------------------------
 
 @router.put(
     "/{external_id}",
@@ -103,6 +125,10 @@ async def update_tipo(
     tipo_data: TipoDisciplinaUpdate,
     service: TipoDisciplinaService = Depends(get_tipo_disciplina_service)
 ):
+    """
+    Actualiza el nombre o descripción de una categoría existente.
+    Requiere permisos elevados.
+    """
     try:
         tipo = await service.update_tipo(external_id, tipo_data)
         if not tipo:

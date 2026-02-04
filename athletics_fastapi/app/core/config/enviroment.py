@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     database_password: str = Field(..., alias="DATABASE_PASSWORD", required=True)
     database_host: str = Field("db", alias="DATABASE_HOST", required=True)
     database_port: int = Field(5432, alias="DATABASE_PORT", required=True)
+    
+    # Database Pool Configuration
+    database_pool_size: int = Field(5, alias="DATABASE_POOL_SIZE")
+    database_max_overflow: int = Field(5, alias="DATABASE_MAX_OVERFLOW")
+    database_pool_timeout: int = Field(30, alias="DATABASE_POOL_TIMEOUT")
+    database_pool_recycle: int = Field(3600, alias="DATABASE_POOL_RECYCLE")
 
     # Redis
     redis_url: str = Field(..., alias="REDIS_URL", required=True)
@@ -66,12 +72,6 @@ class Settings(BaseSettings):
             f"@{self.database_host}:{self.database_port}/{self.database_name}"
         )
     
-    # @property
-    # def database_url_sync(self) -> str:
-    #     return (
-    #         f"postgresql://{self.database_user}:{self.database_password}"
-    #         f"@{self.database_host}:{self.database_port}/{self.database_name}"
-    #     )
 
 
 @lru_cache

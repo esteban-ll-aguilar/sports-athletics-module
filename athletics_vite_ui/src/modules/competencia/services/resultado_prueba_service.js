@@ -1,29 +1,25 @@
-import axios from "axios";
-import Settings from "../../../config/enviroment";
-
-const API_URL = `${Settings.API_URL}/api/v1/competencia/resultados-pruebas`;
+import ApiClient from "../../../core/api/apiClient";
 
 const resultadoPruebaService = {
     getAll: async () => {
-        const response = await axios.get(API_URL);
-        // Backend returns { data: { items: [...] } }
-        // We must extract.items
-        return response.data.data.items || response.data.data;
+        const response = await ApiClient.get('/competencia/resultados-pruebas/');
+        // ApiClient already unwraps one level, so response.data is the backend's "data" field
+        return response.data?.items || response.data || [];
     },
 
     getById: async (id) => {
-        const response = await axios.get(`${API_URL}/${id}`);
-        return response.data.data;
+        const response = await ApiClient.get(`/competencia/resultados-pruebas/${id}`);
+        return response.data;
     },
 
     create: async (data) => {
-        const response = await axios.post(API_URL, data);
-        return response.data.data;
+        const response = await ApiClient.post('/competencia/resultados-pruebas/', data);
+        return response.data;
     },
 
     update: async (id, data) => {
-        const response = await axios.put(`${API_URL}/${id}`, data);
-        return response.data.data;
+        const response = await ApiClient.put(`/competencia/resultados-pruebas/${id}`, data);
+        return response.data;
     },
 
     // Delete usually just updates status, but if needed:

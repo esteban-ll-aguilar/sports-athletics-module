@@ -1,13 +1,9 @@
-from sqlalchemy import Integer, String, Time, ForeignKey, Boolean, UUID as PG_UUID, text
+from sqlalchemy import Integer, String, Time, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
 from app.core.db.database import Base
 import uuid
-import datetime
 from typing import TYPE_CHECKING, List
 
-if TYPE_CHECKING:
-    from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 
 
 class Horario(Base):

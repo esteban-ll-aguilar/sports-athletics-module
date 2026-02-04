@@ -101,6 +101,27 @@ class RegistroAsistenciasRepository:
         )
         return result.scalars().first()
 
+    async def get_by_atleta(self, atleta_id: int) -> List[RegistroAsistencias]:
+        from app.modules.auth.domain.models.user_model import UserModel
+        from sqlalchemy.orm import selectinload
+        from app.modules.entrenador.domain.models.horario_model import Horario
+        from app.modules.entrenador.domain.models.entrenamiento_model import Entrenamiento
+        from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+
+        result = await self.session.execute(
+            select(RegistroAsistencias)
+            .where(RegistroAsistencias.atleta_id == atleta_id)
+            .options(
+                selectinload(RegistroAsistencias.atleta).selectinload(Atleta.user).selectinload(UserModel.auth),
+                selectinload(RegistroAsistencias.asistencias),
+                selectinload(RegistroAsistencias.horario)
+                    .selectinload(Horario.entrenamiento)
+                    .selectinload(Entrenamiento.entrenador)
+                    .selectinload(Entrenador.user)
+            )
+        )
+        return result.scalars().all()
+
     async def delete(self, registro: RegistroAsistencias) -> None:
         await self.session.delete(registro)
         await self.session.commit()

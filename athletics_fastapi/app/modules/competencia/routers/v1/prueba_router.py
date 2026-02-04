@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+"""Router para la gestión del catálogo de Pruebas Físicas."""
+from fastapi import APIRouter, Depends, status
 from uuid import UUID
 
 from ...domain.schemas.prueba_schema import PruebaCreate, PruebaUpdate, PruebaRead
@@ -9,7 +9,9 @@ from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
 
 router = APIRouter()
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Crear Prueba
+# -------------------------------------------------------------------------
 @router.post(
     "/",
     response_model=BaseResponse,
@@ -20,6 +22,7 @@ async def create_prueba(
     data: PruebaCreate,
     service: PruebaService = Depends(get_prueba_service)
 ):
+    """Registra una nueva prueba física en el catálogo maestro."""
     try:
         nueva_prueba = await service.create_prueba(data)
         return ResponseHandler.success_response(
@@ -34,13 +37,16 @@ async def create_prueba(
             message=str(e),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Listar Pruebas (Paginado)
+# -------------------------------------------------------------------------
 @router.get("/", response_model=BaseResponse)
 async def list_pruebas(
     skip: int = 0,
     limit: int = 100,
     service: PruebaService = Depends(get_prueba_service)
 ):
+    """Retorna el catálogo de pruebas con soporte para paginación."""
     try:
         pruebas = await service.get_pruebas(skip, limit)
         if not pruebas:
@@ -62,12 +68,15 @@ async def list_pruebas(
             summary="Error al listar pruebas",
             message=str(e)
         )
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Obtener Prueba por external id
+# -------------------------------------------------------------------------
 @router.get("/{external_id}", response_model=BaseResponse)
 async def get_prueba(
     external_id: UUID,
     service: PruebaService = Depends(get_prueba_service)
 ):
+    """Busca los detalles de una prueba específica por su UUID."""
     try:
         prueba = await service.get_prueba(external_id)
         if not prueba:
@@ -85,7 +94,9 @@ async def get_prueba(
             summary="Error al obtener prueba",
             message=str(e)
         )
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Actualizar Prueba
+# -------------------------------------------------------------------------
 @router.put(
     "/{external_id}",
     response_model=BaseResponse,
@@ -96,6 +107,7 @@ async def update_prueba(
     data: PruebaUpdate,
     service: PruebaService = Depends(get_prueba_service)
 ):
+    """Actualiza la configuración de una prueba existente."""
     try:
         prueba = await service.update_prueba(external_id, data)
         if not prueba:

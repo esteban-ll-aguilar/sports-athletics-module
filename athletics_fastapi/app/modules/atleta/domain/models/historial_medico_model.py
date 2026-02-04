@@ -20,6 +20,9 @@ class HistorialMedico(Base):
     enfermedades_hereditarias = Column(String, nullable=True)
     enfermedades = Column(String, nullable=True)
 
+    contacto_emergencia_nombre = Column(String, nullable=True)
+    contacto_emergencia_telefono = Column(String, nullable=True)
+
     atleta_id = Column(
         Integer,
         ForeignKey("atleta.id", ondelete="CASCADE"),  
@@ -32,3 +35,8 @@ class HistorialMedico(Base):
         back_populates="historial_medico",
         uselist=False
     )
+
+    @property
+    def user_id(self) -> int:
+        return self.atleta.user_id if self.atleta else 0
+

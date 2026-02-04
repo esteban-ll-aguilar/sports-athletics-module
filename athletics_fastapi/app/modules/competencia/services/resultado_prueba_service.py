@@ -1,7 +1,6 @@
 from uuid import UUID
 from fastapi import HTTPException, status
 from datetime import date
-from sqlalchemy.orm import selectinload
 
 from app.modules.competencia.domain.models.resultado_prueba_model import ResultadoPrueba
 from app.modules.competencia.domain.schemas.resultado_prueba_schema import (
@@ -12,6 +11,7 @@ from app.modules.competencia.repositories.resultado_prueba_repository import Res
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.repositories.baremo_repository import BaremoRepository
+from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 
 class ResultadoPruebaService:
     """Servicio para manejar resultados de Pruebas (Test/Control) con evaluación automática."""
@@ -22,11 +22,13 @@ class ResultadoPruebaService:
         atleta_repo: AtletaRepository,
         prueba_repo: PruebaRepository,
         baremo_repo: BaremoRepository,
+        auth_users_repo=None,  # Added optional parameter
     ):
         self.repo = repo
         self.atleta_repo = atleta_repo
         self.prueba_repo = prueba_repo
         self.baremo_repo = baremo_repo
+        self.auth_users_repo = auth_users_repo  # Store the optional parameter
 
     async def create(self, data: ResultadoPruebaCreate, entrenador_id: int) -> ResultadoPrueba:
         """
@@ -48,18 +50,18 @@ class ResultadoPruebaService:
         
         # Try to find atleta by external_id first
         atleta = await self.atleta_repo.get_by_external_id(data.atleta_id)
-        
+
         # If not found, try to find by user.external_id (in case UUID is from auth_users)
         if not atleta:
-            logger.warning(f"⚠️ Atleta no encontrado por external_id, buscando por user UUID...")
-            user_repo = AuthUsersRepository(self.atleta_repo.session)
+            logger.warning("⚠️ Atleta no encontrado por external_id, buscando por user UUID...")
+            user_repo = self.auth_users_repo or AuthUsersRepository(self.atleta_repo.session)
             user = await user_repo.get_by_external_id(data.atleta_id)
-            
+
             if user:
-                logger.info(f"✅ Usuario encontrado: {user.first_name} {user.last_name}")
+                logger.info(f"✅ Usuario encontrado: {user.first_name} {user.last_name} (ID: {user.id})")
                 # Try to find atleta by user_id
                 atleta = await self.atleta_repo.get_by_user_id(user.id)
-                
+
                 if not atleta:
                     # Create atleta record if it doesn't exist
                     logger.info(f"📝 Creando registro de Atleta para usuario {user.id}")
@@ -69,9 +71,13 @@ class ResultadoPruebaService:
                     )
                     atleta = await self.atleta_repo.create(atleta)
                     logger.info(f"✅ Atleta creado con ID: {atleta.id}")
+                else:
+                    logger.info(f"✅ Atleta encontrado: ID={atleta.id}, user_id={atleta.user_id}")
             else:
                 logger.error(f"❌ Usuario no encontrado con UUID: {data.atleta_id}")
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Atleta/Usuario no encontrado con ID: {data.atleta_id}")
+        else:
+            logger.info(f"✅ Atleta encontrado directamente por external_id: ID={atleta.id}")
              
         # 1. Validar Usuario de Atleta (para Sexo y Edad)
         if not atleta.user:
@@ -85,14 +91,24 @@ class ResultadoPruebaService:
         edad = today.year - atleta.user.fecha_nacimiento.year - (
             (today.month, today.day) < (atleta.user.fecha_nacimiento.month, atleta.user.fecha_nacimiento.day)
         )
-        sexo_atleta = atleta.user.sexo 
+        sexo_atleta = atleta.user.sexo
+        
+        # Validar que el atleta tenga sexo configurado
+        if not sexo_atleta:
+            raise HTTPException(
+                status_code=400,
+                detail=f"El atleta '{atleta.user.first_name} {atleta.user.last_name}' no tiene el campo 'sexo' configurado. Por favor, actualice la información del atleta antes de registrar resultados."
+            )
+        
+        # Extraer valor del enum si es un enum
+        sexo_valor = sexo_atleta.value if hasattr(sexo_atleta, 'value') else str(sexo_atleta)
         
         # 3. Match Automático del Baremo
-        baremo = await self.baremo_repo.find_by_context(prueba.id, sexo_atleta, edad)
+        baremo = await self.baremo_repo.find_by_context(prueba.id, sexo_valor, edad)
         if not baremo:
             raise HTTPException(
                 status_code=400, 
-                detail=f"No se encontró un baremo (reglas) para Sexo: {sexo_atleta}, Edad: {edad} en esta prueba."
+                detail=f"No se encontró un baremo (reglas) para Sexo: {sexo_valor}, Edad: {edad} en esta prueba."
             )
 
         # 4. Clasificación Automática

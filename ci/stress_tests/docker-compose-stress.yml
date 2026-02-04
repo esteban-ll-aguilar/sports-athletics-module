@@ -1,0 +1,62 @@
+version: '3.8'
+
+# ============================================
+# LOCUST STRESS TESTING - CONFIGURACIÓN SIMPLIFICADA
+# ============================================
+# Uso:
+#   docker-compose -f docker-compose-stress.yml up -d
+#   Abrir http://localhost:8089 para UI de Locust
+#
+# IMPORTANTE: El backend debe tener ENABLE_TEST_ROUTES=true
+# ============================================
+
+services:
+  # ============================================
+  # Locust - Pruebas de Carga
+  # ============================================
+  locust-master:
+    image: locustio/locust:latest
+    container_name: locust-master
+    ports:
+      - "8089:8089"  # Web UI
+    volumes:
+      - ./locust:/mnt/locust
+      - ./utils:/mnt/utils
+    environment:
+      - LOCUST_HOST=http://host.docker.internal:8081
+      - LOCUST_USERS=100
+      - LOCUST_SPAWN_RATE=10
+    command: >
+      -f /mnt/locust/locustfile.py
+      --master
+      --web-host=0.0.0.0
+    networks:
+      - locust-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Workers para pruebas distribuidas (opcional)
+  locust-worker:
+    image: locustio/locust:latest
+    volumes:
+      - ./locust:/mnt/locust
+      - ./utils:/mnt/utils
+    environment:
+      - LOCUST_HOST=http://host.docker.internal:8081
+    command: >
+      -f /mnt/locust/locustfile.py
+      --worker
+      --master-host=locust-master
+    networks:
+      - locust-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - locust-master
+    deploy:
+      replicas: 2  # Número de workers
+
+networks:
+  locust-network:
+    driver: bridge
+    name: locust-network

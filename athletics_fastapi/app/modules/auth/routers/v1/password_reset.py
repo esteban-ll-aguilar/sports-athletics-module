@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
-from slowapi.util import get_remote_address
 from app.modules.auth.domain.schemas import (
     PasswordResetRequest, PasswordResetCodeValidation, 
-    PasswordResetComplete, MessageResponse, PasswordResetConfirm
+    PasswordResetConfirm
 )
 from app.api.schemas.api_schemas import APIResponse
 from app.modules.auth.dependencies import (
@@ -15,7 +14,6 @@ from app.core.jwt.jwt import PasswordHasher
 from app.modules.auth.services.auth_email_service import AuthEmailService
 from app.modules.auth.services.password_reset_service import PasswordResetService
 from app.core.logging.logger import logger
-from app.modules.modules import APP_TAGS_V1
 from typing import Optional
 
 
@@ -33,7 +31,16 @@ async def request_password_reset(
 ):
     """
     Solicita un código de reset de contraseña por email.
-    Protegido contra timing attacks: siempre toma el mismo tiempo.
+    
+    Protegido contra timing attacks: siempre toma el mismo tiempo de respuesta
+    independientemente de si el email existe o no.
+    Nunca revela si el email está registrado en el sistema.
+    
+    Args:
+        data: Objeto con el email del usuario.
+        
+    Returns:
+        APIResponse: Mensaje genérico de seguridad.
     """
     # SIEMPRE generar código (aunque no exista el usuario) para prevenir timing attack
     code = reset_service.generate_reset_code()
@@ -94,8 +101,17 @@ async def validate_reset_code(
     reset_service: PasswordResetService = Depends(get_password_reset_service)
 ):
     """
-    PASO 2: Valida únicamente el código de reset sin consumirlo.
-    Permite al usuario verificar que el código es correcto antes de proceder.
+    Valida un código de reset sin consumirlo.
+    
+    Permite al frontend verificar si el código ingresado es válido antes de
+    mostrar el formulario de cambio de contraseña.
+    No cuenta como intento fallido ni invalida el código si es correcto.
+    
+    Args:
+        data: Email y código a validar.
+        
+    Returns:
+        APIResponse: Confirmación de validez.
     """
     # Validar el código sin consumirlo
     if not await reset_service.validate_reset_code_only(data.email, data.code):
@@ -125,7 +141,17 @@ async def complete_password_reset(
     email_service: AuthEmailService = Depends(get_email_service)
 ):
     """
-    PASO 3: Completa el reset de contraseña consumiendo el código y actualizando la contraseña.
+    Completa el proceso de restablecimiento de contraseña.
+    
+    1. Verifica el código (lo consume).
+    2. Actualiza la contraseña (hasheada).
+    3. Envía email de confirmación.
+    
+    Args:
+        data: Email, código y nueva contraseña.
+        
+    Returns:
+        APIResponse: Confirmación de éxito.
     """
     #PASO 4: Envía email de confirmación del cambio exitoso.
     # Verificar que el usuario existe

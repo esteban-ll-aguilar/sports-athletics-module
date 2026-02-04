@@ -1,10 +1,31 @@
-"""Repositorio para Resultado Competencia."""
+"""
+Repositorio para Resultado Competencia.
+
+Este módulo contiene la clase `ResultadoCompetenciaRepository`, que se encarga de realizar las operaciones CRUD (Crear, Leer, Actualizar, Eliminar) para el modelo `ResultadoCompetencia`.
+
+Clases:
+    - ResultadoCompetenciaRepository: Clase principal para manejar las operaciones de base de datos relacionadas con el modelo `ResultadoCompetencia`.
+
+Métodos:
+    - create(resultado: ResultadoCompetencia) -> ResultadoCompetencia: Crea un nuevo resultado en la base de datos.
+    - get_by_id(id: int) -> Optional[ResultadoCompetencia]: Obtiene un resultado por su ID interno.
+    - get_by_external_id(external_id: UUID) -> Optional[ResultadoCompetencia]: Obtiene un resultado por su `external_id`.
+    - get_by_competencia(competencia_id: int) -> List[ResultadoCompetencia]: Obtiene los resultados activos de una competencia específica.
+    - get_by_atleta_and_competencia(atleta_id: int, competencia_id: int) -> List[ResultadoCompetencia]: Obtiene los resultados de un atleta en una competencia específica.
+    - get_all(incluir_inactivos: bool = True, entrenador_id: Optional[int] = None) -> List[ResultadoCompetencia]: Obtiene todos los resultados, con opciones para filtrar por estado y entrenador.
+    - update(resultado: ResultadoCompetencia) -> ResultadoCompetencia: Actualiza un resultado existente.
+    - delete(id: int) -> bool: Elimina un resultado por su ID interno.
+    - count() -> int: Cuenta el número total de resultados en la base de datos.
+    - get_by_atleta(atleta_id: int) -> List[ResultadoCompetencia]: Obtiene todos los resultados de un atleta, ordenados por fecha de registro descendente.
+"""
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 from uuid import UUID
 from typing import List, Optional
 from app.modules.competencia.domain.models.resultado_competencia_model import ResultadoCompetencia
+from app.modules.competencia.domain.models.prueba_model import Prueba
 
 
 class ResultadoCompetenciaRepository:
@@ -55,7 +76,12 @@ class ResultadoCompetenciaRepository:
 
     async def get_all(self, incluir_inactivos: bool = True, entrenador_id: Optional[int] = None) -> List[ResultadoCompetencia]:
         """Obtener todos los resultados, filtrando por estado y entrenador si aplica."""
-        query = select(ResultadoCompetencia)
+        query = select(ResultadoCompetencia).options(
+            selectinload(ResultadoCompetencia.competencia),
+            selectinload(ResultadoCompetencia.prueba),
+            selectinload(ResultadoCompetencia.atleta),
+            selectinload(ResultadoCompetencia.entrenador)
+        )
         if not incluir_inactivos:
             query = query.where(ResultadoCompetencia.estado == True)
         if entrenador_id is not None:
@@ -91,5 +117,11 @@ class ResultadoCompetenciaRepository:
             .where(ResultadoCompetencia.atleta_id == atleta_id)
             .where(ResultadoCompetencia.estado == True)
             .order_by(ResultadoCompetencia.fecha_registro.desc())
+            .options(
+                selectinload(ResultadoCompetencia.competencia),
+                selectinload(ResultadoCompetencia.prueba),
+                selectinload(ResultadoCompetencia.atleta),
+                selectinload(ResultadoCompetencia.entrenador)
+            )
         )
         return result.scalars().all() or []

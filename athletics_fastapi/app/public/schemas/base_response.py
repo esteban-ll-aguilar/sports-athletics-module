@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
 
 class BaseResponse(BaseModel):
     """
@@ -12,6 +12,7 @@ class BaseResponse(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict, description="Datos de respuesta")
     status: int = Field(..., description="Código de estado (duplicado para compatibilidad)")
     code: str = Field(..., description="Código de respuesta (COD_OK o COD_ERROR)")
+    success: Optional[bool] = Field(True, description="Indicador de éxito de la operación")
     
     class Config:
         json_schema_extra = {

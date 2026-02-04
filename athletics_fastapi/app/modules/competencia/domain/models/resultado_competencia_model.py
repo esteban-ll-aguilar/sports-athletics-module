@@ -1,7 +1,6 @@
 """Modelo de Resultado de Competencia corregido para usar auth_users como atleta."""
 from sqlalchemy import Integer, String, Date, Float, Boolean, ForeignKey, DateTime, Text, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 import uuid
 import datetime
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
 
 
 class TipoPosicion(str, PyEnum):
+    """Enumeración para las posiciones cualitativas y estados de participación."""
     PRIMERO = "primero"
     SEGUNDO = "segundo"
     TERCERO = "tercero"
@@ -29,6 +29,13 @@ class TipoPosicion(str, PyEnum):
 
 
 class ResultadoCompetencia(Base):
+    """
+    Entidad que consolida el desempeño de un atleta en una competencia específica.
+    
+    Esta tabla vincula al atleta con la prueba realizada, el evento (competencia) 
+    y el entrenador responsable, almacenando tanto la métrica cuantitativa (resultado)
+    como la posición cualitativa obtenida.
+    """
     __tablename__ = "resultado_competencia"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -40,7 +47,7 @@ class ResultadoCompetencia(Base):
         server_onupdate=text("gen_random_uuid()")
     )
     
-    # FKs
+    # Llaves Foraneas
     competencia_id: Mapped[int] = mapped_column(Integer, ForeignKey("competencia.id"), nullable=False)
     atleta_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)  # <-- CORREGIDO
     prueba_id: Mapped[int] = mapped_column(Integer, ForeignKey("prueba.id"), nullable=False)
@@ -56,7 +63,7 @@ class ResultadoCompetencia(Base):
     observaciones: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     estado: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    # Timestamps
+    # Marcas de tiempo
     fecha_registro: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     fecha_creacion: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.datetime.utcnow
@@ -65,7 +72,7 @@ class ResultadoCompetencia(Base):
         DateTime(timezone=True), nullable=True, onupdate=datetime.datetime.utcnow
     )
     
-    # Relationships
+    # Relaciones
     competencia: Mapped["Competencia"] = relationship("Competencia", back_populates="resultados")
     atleta: Mapped["UserModel"] = relationship("UserModel", foreign_keys=[atleta_id])
     prueba: Mapped["Prueba"] = relationship("Prueba")

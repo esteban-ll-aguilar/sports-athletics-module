@@ -9,7 +9,6 @@ from app.main import _APP
 from app.modules.auth.dependencies import (
     get_users_repo, get_password_hasher, get_email_service, get_password_reset_service
 )
-from fastapi import status
 import pytest_asyncio
 
 # --------------------------

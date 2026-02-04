@@ -2,13 +2,11 @@
 Modelo de datos para el atleta.
 """
 
-from datetime import date
-from sqlalchemy import Date, Integer, ForeignKey, text
+from sqlalchemy import Integer, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db.database import Base
 import uuid
 from typing import Optional, TYPE_CHECKING, List
-from uuid import UUID
 
 if TYPE_CHECKING:
     from app.modules.auth.domain.models.user_model import UserModel

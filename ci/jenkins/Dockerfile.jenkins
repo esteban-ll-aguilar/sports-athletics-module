@@ -1,0 +1,60 @@
+FROM jenkins/jenkins:lts
+
+# ============================================
+# Jenkins con Configuración Automática
+# ============================================
+# Este Dockerfile extiende Jenkins para:
+# - Instalar plugins automáticamente
+# - Configurar Jenkins via Configuration as Code
+# - Crear el pipeline job automáticamente
+# - Saltarse el wizard de configuración inicial
+
+USER root
+
+# Instalar herramientas necesarias
+RUN apt-get update && apt-get install -y \
+    docker.io \
+    curl \
+    git \
+    python3 \
+    python3-pip \
+    python3-venv \
+    nodejs \
+    npm \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar docker-compose
+RUN curl -L "https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose \
+    && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# Copiar lista de plugins
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+
+# Instalar plugins de Jenkins
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins.txt
+
+# Crear directorios necesarios
+RUN mkdir -p /usr/share/jenkins/ref/casc_configs
+RUN mkdir -p /usr/share/jenkins/ref/init.groovy.d
+
+# Copiar configuración JCasC
+COPY jenkins.yaml /usr/share/jenkins/ref/casc_configs/jenkins.yaml
+
+# Copiar scripts de inicialización
+COPY init-scripts/ /usr/share/jenkins/ref/init.groovy.d/
+
+# Dar permisos
+RUN chown -R jenkins:jenkins /usr/share/jenkins/ref/casc_configs
+RUN chown -R jenkins:jenkins /usr/share/jenkins/ref/init.groovy.d/
+
+# Volver a usuario jenkins
+USER jenkins
+
+# Variables de entorno para Configuration as Code
+ENV CASC_JENKINS_CONFIG=/usr/share/jenkins/ref/casc_configs/jenkins.yaml
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false -Djenkins.install.skipSetupWizard=true -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true"
+
+# Exponer puertos
+EXPOSE 8080 50000

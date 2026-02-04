@@ -8,7 +8,6 @@ Create Date: 2026-01-23 22:04:22.147593
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
@@ -54,8 +53,33 @@ def upgrade() -> None:
     EXECUTE FUNCTION sync_user_role();
     """)
 
+    op.execute("""
+    CREATE OR REPLACE FUNCTION public.sync_user_delete()
+    RETURNS trigger
+    LANGUAGE plpgsql
+    AS $function$
+    BEGIN
+        DELETE FROM atleta WHERE user_id = OLD.id;
+        DELETE FROM entrenador WHERE user_id = OLD.id;
+        DELETE FROM representante WHERE user_id = OLD.id;
+        RETURN OLD;
+    END;
+    $function$;
+    """)
+
+    op.execute("DROP TRIGGER IF EXISTS trg_sync_user_delete ON users")
+    op.execute("""
+    CREATE TRIGGER trg_sync_user_delete
+    BEFORE DELETE ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION sync_user_delete();
+    """)
+
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.execute("DROP TRIGGER IF EXISTS trg_sync_user_role ON users")
     op.execute("DROP FUNCTION IF EXISTS public.sync_user_role()")
+
+    op.execute("DROP TRIGGER IF EXISTS trg_sync_user_delete ON users")
+    op.execute("DROP FUNCTION IF EXISTS public.sync_user_delete()")

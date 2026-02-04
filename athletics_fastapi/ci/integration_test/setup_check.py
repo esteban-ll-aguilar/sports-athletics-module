@@ -3,7 +3,6 @@ Script de inicialización rápida para pruebas de integración.
 Verifica requisitos y configura el entorno.
 """
 import sys
-import os
 
 
 def print_section(title: str):

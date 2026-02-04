@@ -10,9 +10,31 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from app.utils.response_handler import ResponseHandler
 from app.utils.response_codes import ResponseCodes
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import asyncio
 
+
+
+async def cleanup_sessions_periodically(logger):
+    """Limpia sesiones expiradas cada hora."""
+    from app.core.db.database import _db
+    from app.modules.auth.repositories.sessions_repository import SessionsRepository
+    try:
+        while True:
+            await asyncio.sleep(3600)  # Cada hora
+            try:
+                async with _db.get_session_factory()() as session:
+                    repo = SessionsRepository(session)
+                    count = await repo.cleanup_expired_sessions()
+                    await session.commit()
+                    if count > 0:
+                        logger.info(f"🧹 Cleaned up {count} expired sessions")
+            except Exception as e:
+                logger.error(f"❌ Error cleaning sessions: {e}")
+    except asyncio.CancelledError:
+         logger.info("🛑 Cleanup task cancelled")
+         return
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -62,23 +84,8 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"❌ JWT rotation check failed: {e}")
     
-    # Tarea de limpieza de sesiones expiradas
-    async def cleanup_sessions_periodically():
-        """Limpia sesiones expiradas cada hora."""
-        while True:
-            await asyncio.sleep(3600)  # Cada hora
-            try:
-                async with _db.get_session_factory()() as session:
-                    repo = SessionsRepository(session)
-                    count = await repo.cleanup_expired_sessions()
-                    await session.commit()
-                    if count > 0:
-                        logger.info(f"🧹 Cleaned up {count} expired sessions")
-            except Exception as e:
-                logger.error(f"❌ Error cleaning sessions: {e}")
-    
     # Iniciar tarea de limpieza
-    cleanup_task = asyncio.create_task(cleanup_sessions_periodically())
+    cleanup_task = asyncio.create_task(cleanup_sessions_periodically(logger))
     logger.info("🧹 Session cleanup task started")
     
     logger.info("✨ Application startup complete")
@@ -113,27 +120,39 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 _APP = FastAPI(
-    title='API Dalios Facturacion SRI',
+    title='API Modulo de Atletismo',
     description=(
-        "La API Dalios Facturacion SRI es el motor detrás de la aplicación Dalios, diseñada para gestionar todo el flujo de operaciones de un servicio de entrega eficiente y moderno. "
-        "Además, esta API está optimizada para integrarse con servicios externos, y ofrecer una experiencia fluida tanto para los administradores como para los clientes. "
-        "Con capacidades en manejo de datos, Dalios es tu solución todo en uno para administrar un negocio de entregas con eficacia y confianza."
+        "El API Modulo de Atletismo es una herramienta que permite gestionar las competiciones de atletismo."
     ),
     version=_SETTINGS.application_version,
     docs_url='/',
     redoc_url='/doc',
     contact={
-        'name': 'Equipo de Desarrollo Dalios',
-        'email': 'dalios.solutions@gmail.com',
+        'name': 'Equipo de Desarrollo',
+        'email': 'esteban.leon@unl.edu.ec',
         'url': 'https://dalios.solutions',
     },
     lifespan=lifespan
 )
+
+# Instrumentar Prometheus para métricas de rendimiento
+Instrumentator().instrument(_APP).expose(_APP, endpoint="/metrics", include_in_schema=True)
+
 # ✅ 2. LUEGO MONTAS STATIC FILES
 
 _APP.mount("/data", StaticFiles(directory="data"), name="data")
 
 
+
+
+# Health check endpoint
+@_APP.get("/health", tags=["Health"])
+async def health_check():
+    return {
+        "status": "ok",
+        "message": "Service is healthy",
+        "version": _SETTINGS.application_version
+    }
 
 # Agregar el state del limiter a la app
 _APP.state.limiter = limiter
@@ -235,11 +254,3 @@ _APP.add_middleware(
 from app.api.api_v1 import router_api_v1 as api_v1_router
 
 _APP.include_router(api_v1_router)
-@_APP.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=422,
-        content={
-            "detail": "Error de validación en la solicitud. Revisa los campos enviados.",
-        }
-    )

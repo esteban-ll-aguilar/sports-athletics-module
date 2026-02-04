@@ -19,6 +19,24 @@ class AdminUserService:
     # UPDATE USER ROLE
     # =====================================================
     async def update_user_role(self, user_id: str, new_role: RoleEnum):
+        """
+        Actualiza el rol de un usuario y crea su perfil asociado si no existe.
+        
+        Dependiendo del nuevo rol (ATLETA, ENTRENADOR, REPRESENTANTE), verifica si ya existe
+        un perfil en la tabla correspondiente. Si no, lo crea con valores por defecto.
+        
+        Args:
+            user_id (str): ID o Username del usuario a modificar.
+            new_role (RoleEnum): Nuevo rol a asignar.
+            
+        Returns:
+            dict: {
+                "success": bool,
+                "message": str (solo en error),
+                "status_code": int (solo en error),
+                "user": UserModel (en éxito)
+            }
+        """
 
         user = await self.users_repo.get_by_any_id(user_id)
 
@@ -57,8 +75,29 @@ class AdminUserService:
 
             if not entrenador:
                 self.users_repo.db.add(
-                    Entrenador(user_id=user.id, anios_experiencia=0)
+                    Entrenador(user_id=user.id, anios_experiencia=0, is_pasante=False)
                 )
+            else:
+                # Si ya existe, asegurarse que is_pasante sea False
+                entrenador.is_pasante = False
+
+        # =========================
+        # PASANTE (Entrenador pasante)
+        # =========================
+        elif new_role == RoleEnum.PASANTE:
+            result = await self.users_repo.db.execute(
+                select(Entrenador).where(Entrenador.user_id == user.id)
+            )
+            entrenador = result.scalar_one_or_none()
+
+            if not entrenador:
+                # Crear entrenador con is_pasante=True
+                self.users_repo.db.add(
+                    Entrenador(user_id=user.id, anios_experiencia=0, is_pasante=True)
+                )
+            else:
+                # Si ya existe, marcar como pasante
+                entrenador.is_pasante = True
 
         # =========================
         # REPRESENTANTE
@@ -91,11 +130,25 @@ class AdminUserService:
         size: int = 20,
         role: Optional[RoleEnum] = None
     ):
+        """
+        Obtiene una lista paginada de todos los usuarios del sistema.
+        
+        Permite filtrar por rol.
+        
+        Args:
+            page (int): Número de página actual.
+            size (int): Cantidad de items por página.
+            role (Optional[RoleEnum]): Filtro opcional por rol de usuario.
+            
+        Returns:
+            dict: Objeto paginado con items, total, página actual, etc.
+        """
         users, total = await self.users_repo.get_paginated(
             page=page,
             size=size,
             role=role
         )
+        print(f"DTO DEBUG: Users found: {len(users)}, Total: {total}")
 
         return {
             "items": users,
@@ -113,6 +166,21 @@ class AdminUserService:
         user_id: str,
         data: AdminUserUpdateRequest
     ):
+        """
+        Actualiza la información básica de un usuario (Admin operation).
+        
+        No modifica el rol en esta operación, solo datos personales y de cuenta.
+        
+        Args:
+            user_id (str): ID único del usuario.
+            data (AdminUserUpdateRequest): Objeto con los campos a actualizar.
+            
+        Returns:
+            UserModel: El usuario actualizado.
+            
+        Raises:
+            HTTPException: 404 si el usuario no existe.
+        """
         user = await self.users_repo.get_by_any_id(user_id)
 
         if not user:

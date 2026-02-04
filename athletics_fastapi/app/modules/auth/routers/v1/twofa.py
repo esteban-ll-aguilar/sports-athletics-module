@@ -19,7 +19,6 @@ from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.core.logging.logger import logger
 from app.core.cache.redis import _redis
 from datetime import datetime, timezone
-from app.modules.modules import APP_TAGS_V1
 
 # Inicializar rate limiter
 limiter = Limiter(key_func=get_remote_address)
@@ -37,9 +36,19 @@ async def enable_2fa(
     repo: AuthUsersRepository = Depends(get_users_repo)
 ):
     """
-    Habilita 2FA para el usuario autenticado.
-    Retorna el QR code y códigos de respaldo.
-    El usuario debe escanear el QR con su app y verificar con un código.
+    Inicia el proceso de habilitación de autenticación de dos factores (2FA).
+    
+    Genera un secreto TOTP único para el usuario y retorna un código QR (base64)
+    para ser escaneado por aplicaciones como Google Authenticator.
+    También genera códigos de respaldo.
+    
+    Nota: El 2FA no se activa hasta que el usuario confirma con /verify.
+    
+    Args:
+        current_user: Usuario autenticado.
+        
+    Returns:
+        APIResponse: Secret, código QR y códigos de respaldo.
     """
     if current_user.two_factor_enabled:
         return JSONResponse(
@@ -90,8 +99,16 @@ async def verify_and_activate_2fa(
     repo: AuthUsersRepository = Depends(get_users_repo)
 ):
     """
-    Verifica el código TOTP y activa 2FA.
-    Este es el último paso después de /enable.
+    Completa la activación del 2FA verificando un código TOTP.
+    
+    Si el código es correcto, el flag `two_factor_enabled` del usuario se activa.
+    A partir de este momento, el login requerirá 2FA.
+    
+    Args:
+        data: Código TOTP ingresado por el usuario.
+        
+    Returns:
+        APIResponse: Confirmación de activación.
     """
     if current_user.two_factor_enabled:
         return JSONResponse(
@@ -149,8 +166,16 @@ async def disable_2fa(
     repo: AuthUsersRepository = Depends(get_users_repo)
 ):
     """
-    Deshabilita 2FA.
-    Requiere contraseña y código TOTP válido para mayor seguridad.
+    Desactiva la autenticación de dos factores.
+    
+    Por seguridad, requiere confirmar la contraseña actual y un código TOTP válido.
+    Elimina el secreto y los códigos de respaldo del usuario.
+    
+    Args:
+        data: Contraseña y código TOTP.
+        
+    Returns:
+        APIResponse: Confirmación de desactivación.
     """
     if not current_user.two_factor_enabled:
         return JSONResponse(
@@ -214,9 +239,22 @@ async def login_with_2fa(
     jwtm: JWTManager = Depends(get_jwt_manager)
 ):
     """
-    Segundo paso del login cuando el usuario tiene 2FA habilitado.
-    Requiere el token temporal del primer paso y el código TOTP.
-    Protegido contra timing attacks y con límite de intentos por IP.
+    Realiza el segundo paso del login (verificación 2FA).
+    
+    Requiere el token temporal obtenido en el paso 1 (/auth/login) y el código TOTP.
+    Si es exitoso, retorna los tokens de acceso definitivos.
+    
+    Protecciones:
+    - Rate limit por IP.
+    - Protección contra Timing Attacks.
+    - Bloqueo temporal tras múltiples intentos fallidos.
+    
+    Args:
+        request: Request object.
+        data: Token temporal y código TOTP.
+        
+    Returns:
+        APIResponse[TokenPair]: Tokens de sesión definitivos.
     """
     # Verificar token temporal
     try:
@@ -268,7 +306,7 @@ async def login_with_2fa(
     if not user or not user.is_active or user.email != data.email or not user.two_factor_enabled or not user.totp_secret:
         # Verificar código falso para mantener mismo timing
         twofa_service.verify_totp_code("FAKESECRETFORTIMINGATTACK1234", data.code)
-        logger.warning(f"Intento de login 2FA con datos inválidos")
+        logger.warning("Intento de login 2FA con datos inválidos")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=APIResponse(
@@ -349,8 +387,17 @@ async def login_with_backup_code(
     jwtm: JWTManager = Depends(get_jwt_manager)
 ):
     """
-    Login con código de respaldo cuando el usuario no tiene acceso a su app 2FA.
-    El código se consume (solo puede usarse una vez).
+    Permite el login utilizando un código de respaldo (Backup Code).
+    
+    Alternativa al código TOTP si el usuario perdió acceso a su dispositivo.
+    El código utilizado se invalida inmediatamente (un solo uso).
+    
+    Args:
+        request: Request object.
+        data: Token temporal y código de respaldo.
+        
+    Returns:
+        APIResponse[TokenPair]: Tokens de sesión definitivos.
     """
     # Verificar token temporal
     try:
@@ -399,7 +446,7 @@ async def login_with_backup_code(
     if not user or not user.is_active or user.email != data.email or not user.two_factor_enabled or not user.totp_backup_codes:
         # Verificar código falso para mantener timing constante
         twofa_service.verify_backup_code('["fake"]', "XXXX-XXXX")
-        logger.warning(f"Intento de login con backup code inválido")
+        logger.warning("Intento de login con backup code inválido")
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content=APIResponse(

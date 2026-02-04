@@ -7,6 +7,18 @@ import asyncio
 import sys
 import os
 from typing import AsyncGenerator
+from pathlib import Path
+
+# Cargar variables de entorno de test ANTES de cualquier import de app
+from dotenv import load_dotenv
+
+# Buscar el archivo .env.test en el directorio de integration_test
+env_path = Path(__file__).parent / '.env.test'
+if env_path.exists():
+    load_dotenv(dotenv_path=env_path, override=True)
+    print(f"✅ Loaded test environment from: {env_path}")
+else:
+    print(f"⚠️ Warning: .env.test not found at {env_path}")
 
 # Asegurar imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))

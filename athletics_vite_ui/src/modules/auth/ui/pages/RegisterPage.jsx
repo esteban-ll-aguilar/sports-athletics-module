@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../../services/auth_service';
 import loginImage from '@assets/images/auth/login2.webp';
 import { toast } from 'react-hot-toast';
 
-const RegisterPage = () => {
+const RegisterPage = ({ isModal = false, onClose, onSuccess: onSuccessProp, userData = null }) => {
     const navigate = useNavigate();
+    const isEditMode = Boolean(userData);
 
     const [formData, setFormData] = useState({
         username: '',
@@ -29,6 +30,28 @@ const RegisterPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Pre-fill form data when in edit mode
+    useEffect(() => {
+        if (userData) {
+            setFormData({
+                username: userData.username || '',
+                email: userData.email || '',
+                password: '',
+                confirmPassword: '',
+                first_name: userData.first_name || '',
+                last_name: userData.last_name || '',
+                tipo_identificacion: userData.tipo_identificacion || 'CEDULA',
+                identificacion: userData.identificacion || '',
+                tipo_estamento: userData.tipo_estamento || 'EXTERNOS',
+                role: userData.role || 'ATLETA',
+                phone: userData.phone || '',
+                direccion: userData.direccion || '',
+                fecha_nacimiento: userData.fecha_nacimiento || '',
+                sexo: userData.sexo || 'M',
+            });
+        }
+    }, [userData]);
+
     // Funciones de validación específicas por campo
     const validateFirstName = (value) => {
         if (!value) return 'El nombre es requerido';
@@ -45,22 +68,40 @@ const RegisterPage = () => {
     };
 
     const validateIdentificacion = (value, tipo) => {
-        if (!value) return 'La identificación debe ser numérica';
+        if (!value) return 'La identificación es requerida';
         if (!/^\d+$/.test(value)) return 'La identificación solo debe contener números';
-        if (tipo === 'CEDULA' && value.length !== 10) return 'La cédula debe tener exactamente 10 caracteres numéricos';
+
+        if (tipo === 'CEDULA') {
+            if (value.length !== 10) return 'La cédula debe tener 10 dígitos';
+
+            // Validación de Cédula Ecuatoriana
+            const digits = value.split('').map(Number);
+            const province = Number(value.substring(0, 2));
+            const thirdDigit = digits[2];
+
+            if (province < 1 || province > 24) return 'Cédula inválida (código de provincia)';
+            if (thirdDigit >= 6) return 'Cédula inválida (tercer dígito)';
+
+            const coef = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+            let sum = 0;
+            for (let i = 0; i < 9; i++) {
+                let val = digits[i] * coef[i];
+                if (val >= 10) val -= 9;
+                sum += val;
+            }
+            const verifyDigit = sum % 10 === 0 ? 0 : 10 - (sum % 10);
+            if (verifyDigit !== digits[9]) return 'Cédula inválida (dígito verificador)';
+        }
+
+        if (tipo === 'RUC' && value.length !== 13) return 'El RUC debe tener 13 dígitos';
         if (tipo === 'PASAPORTE' && value.length < 5) return 'El pasaporte debe tener al menos 5 caracteres';
-        if (tipo === 'RUC' && value.length !== 13) return 'El RUC debe tener exactamente 13 caracteres numéricos';
+
         return '';
     };
 
     const validatePhone = (value) => {
         if (!value) return '';
-
-        // Verificar si hay caracteres inválidos antes de limpiar
-        if (!/^[0-9+\-() ]*$/.test(value)) {
-            return 'El teléfono solo debe contener números';
-        }
-
+        if (!/^\d+$/.test(value)) return 'El teléfono solo debe contener números';
         const cleanPhone = value.replace(/\D/g, '');
         if (cleanPhone.length > 0) {
             if (!cleanPhone.startsWith('09')) return 'El número celular debe empezar con 09';
@@ -70,7 +111,10 @@ const RegisterPage = () => {
     };
 
     const validateFechaNacimiento = (value) => {
-        if (!value) return 'La fecha de nacimiento es requerida';
+        if (!value) return 'La fecha a nacimiento es requerida';
+        const date = new Date(value);
+        const today = new Date();
+        if (date > today) return 'La fecha no puede estar en el futuro';
         return '';
     };
 
@@ -95,18 +139,22 @@ const RegisterPage = () => {
     };
 
     const validatePassword = (password) => {
-        if (!password) return 'La contraseña es requerida';
+        // In edit mode, password is optional (only validate if provided)
+        if (!password) {
+            if (isEditMode) return ''; // Empty is OK in edit mode
+            return 'La contraseña es requerida'; // Required in create mode
+        }
         if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
         if (!/(?=.*[A-Z])/.test(password)) return 'Debe contener al menos una mayúscula';
         if (!/(?=.*[a-z])/.test(password)) return 'Debe contener al menos una minúscula';
         if (!/(?=.*[0-9])/.test(password)) return 'Debe contener al menos un número';
-        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;\'`~])/.test(password)) return 'Debe contener al menos un carácter especial';
+        if (!/(?=.*[!@#$%^&*(),.?":{}|<>\-_=+[\]\\/;'`~])/.test(password)) return 'Debe contener al menos un carácter especial';
         return '';
     };
 
     const validateConfirmPassword = (password, confirmPassword) => {
-        if (!confirmPassword) return 'Debe confirmar la contraseña';
-        if (password !== confirmPassword) return 'Las contraseñas no coinciden';
+        if (!confirmPassword && !isEditMode) return 'Debe confirmar la contraseña';
+        if (confirmPassword && password !== confirmPassword) return 'Las contraseñas no coinciden';
         return '';
     };
 
@@ -124,8 +172,8 @@ const RegisterPage = () => {
         else if (name === 'phone') {
             // Validar ANTES de filtrar para detectar caracteres inválidos
             newErrors[name] = validatePhone(value);
-            // Luego filtrar para guardar solo números y caracteres válidos
-            processedValue = value.replace(/[^0-9+\-() ]/g, '');
+            // Luego filtrar para guardar solo números
+            processedValue = value.replace(/\D/g, '');
         }
         // Validación de nombre
         else if (name === 'first_name') {
@@ -149,7 +197,12 @@ const RegisterPage = () => {
         }
         // Validación de contraseña
         else if (name === 'password') {
-            newErrors[name] = validatePassword(value);
+            // Only validate if there's a value OR if we're in create mode
+            if (value || !isEditMode) {
+                newErrors[name] = validatePassword(value);
+            } else {
+                delete newErrors[name]; // Clear error if empty in edit mode
+            }
             if (formData.confirmPassword) {
                 newErrors['confirmPassword'] = validateConfirmPassword(value, formData.confirmPassword);
             }
@@ -181,13 +234,17 @@ const RegisterPage = () => {
         newErrors['username'] = validateUsername(formData.username);
         newErrors['email'] = validateEmail(formData.email);
         newErrors['identificacion'] = validateIdentificacion(formData.identificacion, formData.tipo_identificacion);
-        newErrors['password'] = validatePassword(formData.password);
-        newErrors['confirmPassword'] = validateConfirmPassword(formData.password, formData.confirmPassword);
+
+        // Password validation: required for create, optional for edit
+        if (!isEditMode || formData.password) {
+            newErrors['password'] = validatePassword(formData.password);
+            newErrors['confirmPassword'] = validateConfirmPassword(formData.password, formData.confirmPassword);
+        }
+
         newErrors['fecha_nacimiento'] = validateFechaNacimiento(formData.fecha_nacimiento);
         if (formData.phone) newErrors['phone'] = validatePhone(formData.phone);
         if (formData.direccion) newErrors['direccion'] = validateDireccion(formData.direccion);
 
-        // Remover campos vacíos de errores
         Object.keys(newErrors).forEach(key => {
             if (!newErrors[key]) delete newErrors[key];
         });
@@ -198,250 +255,237 @@ const RegisterPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Validar todos los campos
         if (!validateFormOnSubmit()) {
             toast.error('Por favor, corrige los errores en los campos.');
             return;
         }
 
         setLoading(true);
-
         try {
             // Remove confirmPassword before sending to API
-            const { confirmPassword, phone, direccion, ...rest } = formData;
+            const { confirmPassword, phone, direccion, password, ...rest } = formData;
 
             // Only include optional fields if they have content to avoid min_length validation errors
             const dataToSend = { ...rest };
             if (phone && phone.trim() !== '') dataToSend.phone = phone;
             if (direccion && direccion.trim() !== '') dataToSend.direccion = direccion;
 
+            // Include password only if provided (required for create, optional for edit)
+            if (password && password.trim() !== '') dataToSend.password = password;
+
             console.log("Data enviada al backend:", dataToSend);
 
-            await authService.register(dataToSend);
-            toast.success('Usuario registrado exitosamente. Verifique su correo.');
-            navigate('/login');
+            if (isEditMode) {
+                // Update existing user
+                await authService.updateUser(userData.id, dataToSend);
+                toast.success('Usuario actualizado exitosamente.');
+            } else {
+                // Create new user
+                await authService.register(dataToSend);
+                toast.success('Usuario registrado exitosamente. Verifique su correo.');
+            }
+
+            if (onSuccessProp) {
+                onSuccessProp();
+            } else {
+                navigate('/login');
+            }
         } catch (err) {
             console.error("Registration error:", err);
-            let errorMessage = 'Error al registrar usuario';
-
-            if (err.message) errorMessage = err.message;
-            // APIResponse errors extraction
+            let errorMessage = err.message || 'Error al registrar usuario';
             if (err.detail) {
-                if (typeof err.detail === 'string') {
-                    errorMessage = err.detail;
-                } else if (Array.isArray(err.detail)) {
-                    // Pydantic validation errors or APIResponse errors list if mapped there
-                    errorMessage = err.detail.map(e => e.msg).join(', ');
-                }
+                if (typeof err.detail === 'string') errorMessage = err.detail;
+                else if (Array.isArray(err.detail)) errorMessage = err.detail.map(e => e.msg).join(', ');
             }
-            // If backend sends errors list in new API format directly in data... 
-            // auth_repository probably throws the parsed error.
-
             toast.error(errorMessage);
-            try {
-                setLoading(true);
-                const response = await authService.register(formData);
-                if (response.success) {
-                    toast.success(response.message || 'Registro exitoso. Verifica tu correo electrónico.');
-                    setShowVerificationModal(true);
-                } else {
-                    let message = response.message || 'Error en el registro';
-                    if (response.errors && Array.isArray(response.errors)) {
-                        message = response.errors.map(e => e.msg).join(' | ');
-                    }
-                    if (message.toLowerCase().includes('cédula inválida')) {
-                        message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
-                    }
-                    toast.error(message);
-                }
-            } catch (err) {
-                let message = 'Error en el registro';
-                if (err.detail && typeof err.detail === 'string' && err.detail.includes('rate limit')) {
-                    message = 'Demasiados intentos. Por favor, espera un minuto antes de volver a intentarlo.';
-                } else if (err.message && typeof err.message === 'string') {
-                    message = err.message;
-                } else if (err.detail && typeof err.detail === 'string') {
-                    message = err.detail;
-                } else if (err.errors && Array.isArray(err.errors)) {
-                    message = err.errors.map(e => e.msg).join(' | ');
-                }
-                if (message.toLowerCase().includes('cédula inválida')) {
-                    message = 'La cédula ingresada no es válida. Verifica e intenta nuevamente.';
-                }
-                toast.error(message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        } finally {
+            setLoading(false);
+        }
     };
+
     return (
-        <div className="flex min-h-screen w-full bg-linear-to-br from-[#242223] via-[#212121] to-black">
+        <div className={isModal ? "" : "flex min-h-screen w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-[#242223] dark:via-[#212121] dark:to-black"}>
             {/* Left Side - Image */}
-            <div className="hidden lg:flex w-1/2 bg-gray-900 text-white items-center justify-center overflow-hidden fixed h-full">
-                <div className="absolute inset-0 z-0">
-                    <img
-                        src={loginImage}
-                        alt="Athletics Background"
-                        className="w-full h-full object-cover opacity-60"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent"></div>
+            {!isModal && (
+                <div className="hidden lg:flex w-1/2 bg-gray-900 text-gray-900 dark:text-white items-center justify-center overflow-hidden fixed h-full">
+                    <div className="absolute inset-0 z-0">
+                        <img
+                            src={loginImage}
+                            alt="Athletics Background"
+                            className="w-full h-full object-cover opacity-60"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80"></div>
+                    </div>
+                    <div className="relative text-center z-10 p-30text-center max-w-lg text-white">
+                        <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
+                        <p className="text-lg text-gray-200">
+                            Comienza tu viaje deportivo hoy mismo.
+                        </p>
+                    </div>
                 </div>
-                <div className="relative z-10 p-12 text-center max-w-lg">
-                    <h1 className="text-4xl font-bold mb-4">Únete a nosotros</h1>
-                    <p className="text-lg text-gray-200">
-                        Comienza tu viaje deportivo hoy mismo.
-                    </p>
-                </div>
-            </div>
+            )}
 
             {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto">
-                <div className="w-full max-w-lg bg-[#242223] rounded-2xl shadow-2xl p-8 border border-[#332122]">
+            <div className={isModal ? "w-full flex items-center justify-center p-8" : "w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 overflow-y-auto ml-auto"}>
+                <div className="w-full max-w-lg bg-white dark:bg-[#242223] rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-[#332122]">
                     <div className="text-center mb-8">
-                        <h2 className="text-2xl font-bold text-white">Crear Cuenta</h2>
-                        <p className="text-gray-400 mt-2">Ingresa tus datos para registrarte</p>
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{isEditMode ? 'Editar Usuario' : 'Crear Cuenta'}</h2>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">{isEditMode ? 'Actualiza los datos del usuario' : 'Ingresa tus datos para registrarte'}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-
                         {/* Sección 1: Datos Personales */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos Personales</h3>
-
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Datos Personales</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Nombre</label>
+                                    <label htmlFor="reg-first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Nombre</label>
                                     <input
+                                        id="reg-first_name"
                                         name="first_name"
                                         required
                                         value={formData.first_name}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.first_name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Nombre"
                                     />
+                                    {fieldErrors.first_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.first_name}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Apellido</label>
+                                    <label htmlFor="reg-last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Apellido</label>
                                     <input
+                                        id="reg-last_name"
                                         name="last_name"
                                         required
                                         value={formData.last_name}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.last_name ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Apellido"
                                     />
+                                    {fieldErrors.last_name && <p className="text-red-400 text-xs mt-1">{fieldErrors.last_name}</p>}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Tipo ID</label>
+                                    <label htmlFor="reg-tipo_id" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Tipo ID</label>
                                     <select
+                                        id="reg-tipo_id"
                                         name="tipo_identificacion"
                                         value={formData.tipo_identificacion}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="CEDULA">Cédula</option>
-                                        <option value="PASAPORTE">Pasaporte</option>
-                                        <option value="RUC">RUC</option>
+                                        {/* <option value="PASAPORTE">Pasaporte</option>
+                                        <option value="RUC">RUC</option> */}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">
-                                        Identificación
-                                        <span className="text-xs text-gray-500 ml-1">
-                                        </span>
+                                    <label htmlFor="reg-identificacion" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">
+                                        Identificación <span className="text-xs text-gray-600 dark:text-gray-500 ml-1">(Numérico)</span>
                                     </label>
                                     <input
+                                        id="reg-identificacion"
                                         name="identificacion"
                                         required
                                         value={formData.identificacion}
                                         onChange={handleChange}
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+                                            if (!/\d/.test(e.key) && !allowedKeys.includes(e.key)) e.preventDefault();
+                                        }}
                                         pattern="\d*"
                                         inputMode="numeric"
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300'}`}
+                                        maxLength={(() => {
+                                            if (formData.tipo_identificacion === 'CEDULA') return 10;
+                                            if (formData.tipo_identificacion === 'RUC') return 13;
+                                            return 20;
+                                        })()}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.identificacion ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="0123456789"
                                     />
+                                    {fieldErrors.identificacion && <p className="text-red-400 text-xs mt-1">{fieldErrors.identificacion}</p>}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Teléfono</label>
+                                    <label htmlFor="reg-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">
+                                        Teléfono <span className="text-xs text-gray-600 dark:text-gray-500 ml-1">(Numérico)</span>
+                                    </label>
                                     <input
+                                        id="reg-phone"
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
+                                        onKeyDown={(e) => {
+                                            const allowedKeys = ['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight'];
+                                            if (!/\d/.test(e.key) && !allowedKeys.includes(e.key)) e.preventDefault();
+                                        }}
+                                        maxLength={10}
                                         inputMode="tel"
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.phone ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="0999999999"
                                     />
+                                    {fieldErrors.phone && <p className="text-red-400 text-xs mt-1">{fieldErrors.phone}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Dirección</label>
+                                    <label htmlFor="reg-direccion" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Dirección</label>
                                     <input
+                                        id="reg-direccion"
                                         name="direccion"
                                         value={formData.direccion}
                                         onChange={handleChange}
-                                        className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300'}`}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.direccion ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                         placeholder="Tu dirección"
                                     />
+                                    {fieldErrors.direccion && <p className="text-red-400 text-xs mt-1">{fieldErrors.direccion}</p>}
                                 </div>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
-                                    Fecha de nacimiento
-                                </label>
-                                <input
-                                    type="date"
-                                    name="fecha_nacimiento"
-                                    required
-                                    value={formData.fecha_nacimiento}
-                                    onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300'}`}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">
-                                    Sexo
-                                </label>
-                                <select
-                                    name="sexo"
-                                    value={formData.sexo}
-                                    onChange={handleChange}
-                                    className="
-    block w-full pl-10 pr-3 py-2.5
-    bg-white text-black
-    border border-gray-300 rounded-lg
-    placeholder-gray-500
-    focus:ring-[#b30c25] focus:border-[#b30c25]
-    sm:text-sm
-  "
-                                >
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Femenino</option>
-                                </select>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="reg-birth" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Fecha de nacimiento</label>
+                                    <input
+                                        id="reg-birth"
+                                        type="date"
+                                        name="fecha_nacimiento"
+                                        required
+                                        value={formData.fecha_nacimiento}
+                                        onChange={handleChange}
+                                        className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.fecha_nacimiento ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                                    />
+                                    {fieldErrors.fecha_nacimiento && <p className="text-red-400 text-xs mt-1">{fieldErrors.fecha_nacimiento}</p>}
+                                </div>
+                                <div>
+                                    <label htmlFor="reg-sex" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Sexo</label>
+                                    <select
+                                        id="reg-sex"
+                                        name="sexo"
+                                        value={formData.sexo}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                    >
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Femenino</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
                         {/* Sección 2: Datos de Cuenta */}
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-200 border-b pb-2">Datos de Cuenta</h3>
-
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Datos de Cuenta</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Estamento</label>
+                                    <label htmlFor="reg-estamento" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Estamento</label>
                                     <select
+                                        id="reg-estamento"
                                         name="tipo_estamento"
                                         value={formData.tipo_estamento}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="EXTERNOS">Externos</option>
                                         <option value="ESTUDIANTES">Estudiante</option>
@@ -450,12 +494,13 @@ const RegisterPage = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Soy un..</label>
+                                    <label htmlFor="reg-role" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Soy un..</label>
                                     <select
+                                        id="reg-role"
                                         name="role"
                                         value={formData.role}
                                         onChange={handleChange}
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-white text-black border border-gray-300 rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
+                                        className="block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm"
                                     >
                                         <option value="ATLETA">Atleta</option>
                                         <option value="REPRESENTANTE">Representante</option>
@@ -464,47 +509,52 @@ const RegisterPage = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Nombre de Usuario</label>
+                                <label htmlFor="reg-username" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Nombre de Usuario</label>
                                 <input
+                                    id="reg-username"
                                     name="username"
                                     required
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.username ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="Nombre de usuario"
                                 />
+                                {fieldErrors.username && <p className="text-red-400 text-xs mt-1">{fieldErrors.username}</p>}
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-400 mb-1">Correo Electrónico</label>
+                                <label htmlFor="reg-email" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Correo Electrónico</label>
                                 <input
+                                    id="reg-email"
                                     type="email"
                                     name="email"
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300'}`}
+                                    className={`block w-full px-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.email ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                                     placeholder="correo@ejemplo.com"
                                 />
+                                {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Contraseña</label>
+                                    <label htmlFor="reg-password" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Contraseña</label>
                                     <div className="relative">
                                         <input
+                                            id="reg-password"
                                             type={showPassword ? "text" : "password"}
                                             name="password"
-                                            required
+                                            required={!isEditMode}
                                             value={formData.password}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300'}`}
-                                            placeholder="********"
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.password ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                                            placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                         >
                                             {showPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -518,23 +568,26 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
+                                    {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Confirmar Contraseña</label>
+                                    <label htmlFor="reg-conf-password" className="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-1">Confirmar Contraseña</label>
                                     <div className="relative">
                                         <input
+                                            id="reg-conf-password"
                                             type={showConfirmPassword ? "text" : "password"}
                                             name="confirmPassword"
-                                            required
+                                            required={!isEditMode}
                                             value={formData.confirmPassword}
                                             onChange={handleChange}
-                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white text-black border rounded-lg placeholder-gray-500 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300'}`}
-                                            placeholder="********"
+                                            className={`block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border rounded-lg placeholder-gray-500 dark:placeholder-gray-400 focus:ring-[#b30c25] focus:border-[#b30c25] sm:text-sm ${fieldErrors.confirmPassword ? 'border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
+                                            placeholder={isEditMode ? "Dejar en blanco para mantener la actual" : "********"}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                                         >
                                             {showConfirmPassword ? (
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -548,41 +601,32 @@ const RegisterPage = () => {
                                             )}
                                         </button>
                                     </div>
+                                    {fieldErrors.confirmPassword && <p className="text-red-400 text-xs mt-1">{fieldErrors.confirmPassword}</p>}
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-300 mt-1">Mínimo 8 caracteres, mayúscula, minúscula, número y especial.</p>
                         </div>
-
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="
-                        w-full py-3 px-4 rounded-lg
-                        text-sm font-semibold text-white
-                        bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122]
-                        hover:brightness-110
-                        focus:ring-2 focus:ring-[#b30c25]
-                        disabled:opacity-50
-                        transition-all duration-300 shadow-lg
-                        mt-6
-                        "
+                            className="w-full py-3 px-4 rounded-lg text-sm font-semibold text-white bg-linear-to-r from-[#b30c25] via-[#362022] to-[#332122] hover:brightness-110 focus:ring-2 focus:ring-[#b30c25] disabled:opacity-50 transition-all duration-300 shadow-lg mt-6"
                         >
-                            {loading ? 'Registrando...' : 'Registrarse'}
+                            {loading ? (isEditMode ? 'Actualizando...' : 'Registrando...') : (isEditMode ? 'Actualizar Usuario' : 'Registrarse')}
                         </button>
 
-                        <div className="text-center mt-4">
-                            <span className="text-sm text-gray-400">¿Ya tienes cuenta? </span>
-                            <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
-                                Inicia Sesión
-                            </Link>
-                        </div>
+                        {!isEditMode && (
+                            <div className="text-center mt-4">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">¿Ya tienes cuenta? </span>
+                                <Link to="/login" className="text-sm font-medium text-[#b30c25] hover:text-red-400">
+                                    Inicia Sesión
+                                </Link>
+                            </div>
+                        )}
                     </form>
                 </div>
             </div>
         </div>
     );
 };
-
 
 export default RegisterPage;

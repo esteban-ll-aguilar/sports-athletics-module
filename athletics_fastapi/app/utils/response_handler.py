@@ -1,5 +1,5 @@
 """Handler para respuestas estandarizadas de las APIs."""
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 from fastapi import status
 from app.utils.response_codes import ResponseCodes
 
@@ -27,6 +27,7 @@ class ResponseHandler:
             Diccionario con la respuesta estandarizada
         """
         return {
+            "success": True,
             "summary": summary,
             "status_code": status_code,
             "errors": {},
@@ -60,6 +61,7 @@ class ResponseHandler:
             Diccionario con la respuesta de error estandarizada
         """
         return {
+            "success": False,
             "summary": summary,
             "status_code": status_code,
             "errors": errors or {},

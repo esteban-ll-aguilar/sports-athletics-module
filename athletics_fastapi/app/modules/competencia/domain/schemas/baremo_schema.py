@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
-from typing import List, Optional
+from typing import List
 from app.modules.competencia.domain.enums.enum import Sexo
 from app.modules.competencia.domain.schemas.item_baremo_schema import ItemBaremoRead, ItemBaremoCreate
 
@@ -22,6 +22,7 @@ class BaremoUpdate(BaseModel):
     edad_min: int | None = None
     edad_max: int | None = None
     estado: bool | None = None
+    items: List[ItemBaremoCreate] | None = None
 
 # Modelo para la lectura de un Baremo
 class BaremoRead(BaremoBase):

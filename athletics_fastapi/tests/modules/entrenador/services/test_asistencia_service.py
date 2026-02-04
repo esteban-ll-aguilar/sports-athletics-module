@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException, status
 from datetime import datetime, date, time
-import uuid
 
 from app.modules.entrenador.services.asistencia_service import AsistenciaService
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate
@@ -272,3 +271,256 @@ class TestAsistenciaServiceGetHistorial:
         # Assert
         assert len(result) == 0
         mock_asistencia_repository.get_by_registro_asistencias.assert_called_once_with(registro_asistencias_id)
+
+
+class TestAsistenciaServiceRemoveAtleta:
+    """Tests para remover atletas de horarios"""
+
+    @pytest.mark.asyncio
+    async def test_remove_atleta_horario_success(self, asistencia_service, mock_registro_asistencias_repository):
+        """TC-AS-15: Remover atleta de horario exitoso"""
+        # Arrange
+        registro_id = 1
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        
+        # Act
+        await asistencia_service.remove_atleta_horario(registro_id)
+        
+        # Assert
+        mock_registro_asistencias_repository.get_by_id.assert_called_once_with(registro_id)
+        mock_registro_asistencias_repository.delete.assert_called_once_with(mock_registro)
+
+    @pytest.mark.asyncio
+    async def test_remove_atleta_horario_not_found(self, asistencia_service, mock_registro_asistencias_repository):
+        """TC-AS-16: Remover atleta de horario no encontrado"""
+        # Arrange
+        registro_id = 1
+        mock_registro_asistencias_repository.get_by_id.return_value = None
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.remove_atleta_horario(registro_id)
+        
+        assert exc_info.value.status_code == 404
+        assert "Inscripción no encontrada" in exc_info.value.detail
+
+
+class TestAsistenciaServiceConfirmarAsistencia:
+    """Tests para confirmar asistencia por atleta"""
+
+    @pytest.mark.asyncio
+    async def test_confirmar_asistencia_atleta_success_new(self, asistencia_service, mock_registro_asistencias_repository, mock_asistencia_repository):
+        """TC-AS-17: Confirmar asistencia nueva"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        mock_asistencia_repository.get_by_registro_and_date.return_value = None
+        mock_created = MagicMock()
+        mock_asistencia_repository.create.return_value = mock_created
+        
+        # Act
+        result = await asistencia_service.confirmar_asistencia_atleta(registro_id, fecha)
+        
+        # Assert
+        assert result == mock_created
+        mock_registro_asistencias_repository.get_by_id.assert_called_once_with(registro_id)
+        mock_asistencia_repository.get_by_registro_and_date.assert_called_once_with(registro_id, fecha)
+        mock_asistencia_repository.create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_confirmar_asistencia_atleta_update_reject_to_confirm(self, asistencia_service, mock_registro_asistencias_repository, mock_asistencia_repository):
+        """TC-AS-18: Actualizar de rechazado a confirmado"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        mock_existing = MagicMock()
+        mock_existing.fecha_confirmacion = None
+        mock_existing.atleta_confirmo = False
+        mock_asistencia_repository.get_by_registro_and_date.return_value = mock_existing
+        mock_updated = MagicMock()
+        mock_asistencia_repository.update.return_value = mock_updated
+        
+        # Act
+        result = await asistencia_service.confirmar_asistencia_atleta(registro_id, fecha)
+        
+        # Assert
+        assert result == mock_updated
+        assert mock_existing.atleta_confirmo == True
+        mock_asistencia_repository.update.assert_called_once_with(mock_existing)
+
+    @pytest.mark.asyncio
+    async def test_confirmar_asistencia_atleta_already_confirmed(self, asistencia_service, mock_registro_asistencias_repository, mock_asistencia_repository):
+        """TC-AS-19: Ya confirmado, error"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        mock_existing = MagicMock()
+        mock_existing.fecha_confirmacion = datetime.now()
+        mock_existing.atleta_confirmo = True
+        mock_asistencia_repository.get_by_registro_and_date.return_value = mock_existing
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.confirmar_asistencia_atleta(registro_id, fecha)
+        
+        assert exc_info.value.status_code == 400
+        assert "Ya has confirmado" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_confirmar_asistencia_atleta_registro_not_found(self, asistencia_service, mock_registro_asistencias_repository):
+        """TC-AS-20: Registro no encontrado"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro_asistencias_repository.get_by_id.return_value = None
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.confirmar_asistencia_atleta(registro_id, fecha)
+        
+        assert exc_info.value.status_code == 404
+        assert "Registro no encontrado" in exc_info.value.detail
+
+
+class TestAsistenciaServiceRechazarAsistencia:
+    """Tests para rechazar asistencia por atleta"""
+
+    @pytest.mark.asyncio
+    async def test_rechazar_asistencia_atleta_success_new(self, asistencia_service, mock_registro_asistencias_repository, mock_asistencia_repository):
+        """TC-AS-21: Rechazar asistencia nueva"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        mock_asistencia_repository.get_by_registro_and_date.return_value = None
+        mock_created = MagicMock()
+        mock_asistencia_repository.create.return_value = mock_created
+        
+        # Act
+        result = await asistencia_service.rechazar_asistencia_atleta(registro_id, fecha)
+        
+        # Assert
+        assert result == mock_created
+        mock_asistencia_repository.create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_rechazar_asistencia_atleta_update_existing(self, asistencia_service, mock_registro_asistencias_repository, mock_asistencia_repository):
+        """TC-AS-22: Actualizar existente a rechazado"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro = MagicMock()
+        mock_registro_asistencias_repository.get_by_id.return_value = mock_registro
+        mock_existing = MagicMock()
+        mock_existing.atleta_confirmo = True
+        mock_asistencia_repository.get_by_registro_and_date.return_value = mock_existing
+        mock_updated = MagicMock()
+        mock_asistencia_repository.update.return_value = mock_updated
+        
+        # Act
+        result = await asistencia_service.rechazar_asistencia_atleta(registro_id, fecha)
+        
+        # Assert
+        assert result == mock_updated
+        assert mock_existing.atleta_confirmo == False
+        assert mock_existing.asistio == False
+        mock_asistencia_repository.update.assert_called_once_with(mock_existing)
+
+    @pytest.mark.asyncio
+    async def test_rechazar_asistencia_atleta_registro_not_found(self, asistencia_service, mock_registro_asistencias_repository):
+        """TC-AS-23: Registro no encontrado"""
+        # Arrange
+        registro_id = 1
+        fecha = date.today()
+        mock_registro_asistencias_repository.get_by_id.return_value = None
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.rechazar_asistencia_atleta(registro_id, fecha)
+        
+        assert exc_info.value.status_code == 404
+        assert "Registro no encontrado" in exc_info.value.detail
+
+
+class TestAsistenciaServiceMarcarPresente:
+    """Tests para marcar presente por entrenador"""
+
+    @pytest.mark.asyncio
+    async def test_marcar_presente_success(self, asistencia_service, mock_asistencia_repository):
+        """TC-AS-24: Marcar presente exitoso"""
+        # Arrange
+        asistencia_id = 1
+        mock_asistencia = MagicMock()
+        mock_asistencia.asistio = False
+        mock_asistencia_repository.get_by_id.return_value = mock_asistencia
+        mock_updated = MagicMock()
+        mock_asistencia_repository.update.return_value = mock_updated
+        
+        # Act
+        result = await asistencia_service.marcar_presente(asistencia_id)
+        
+        # Assert
+        assert result == mock_updated
+        assert mock_asistencia.asistio == True
+        mock_asistencia_repository.get_by_id.assert_called_once_with(asistencia_id)
+        mock_asistencia_repository.update.assert_called_once_with(mock_asistencia)
+
+    @pytest.mark.asyncio
+    async def test_marcar_presente_not_found(self, asistencia_service, mock_asistencia_repository):
+        """TC-AS-25: Asistencia no encontrada"""
+        # Arrange
+        asistencia_id = 1
+        mock_asistencia_repository.get_by_id.return_value = None
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.marcar_presente(asistencia_id)
+        
+        assert exc_info.value.status_code == 404
+        assert "Asistencia no encontrada" in exc_info.value.detail
+
+
+class TestAsistenciaServiceMarcarAusente:
+    """Tests para marcar ausente por entrenador"""
+
+    @pytest.mark.asyncio
+    async def test_marcar_ausente_success(self, asistencia_service, mock_asistencia_repository):
+        """TC-AS-26: Marcar ausente exitoso"""
+        # Arrange
+        asistencia_id = 1
+        mock_asistencia = MagicMock()
+        mock_asistencia.asistio = True
+        mock_asistencia_repository.get_by_id.return_value = mock_asistencia
+        mock_updated = MagicMock()
+        mock_asistencia_repository.update.return_value = mock_updated
+        
+        # Act
+        result = await asistencia_service.marcar_ausente(asistencia_id)
+        
+        # Assert
+        assert result == mock_updated
+        assert mock_asistencia.asistio == False
+        mock_asistencia_repository.get_by_id.assert_called_once_with(asistencia_id)
+        mock_asistencia_repository.update.assert_called_once_with(mock_asistencia)
+
+    @pytest.mark.asyncio
+    async def test_marcar_ausente_not_found(self, asistencia_service, mock_asistencia_repository):
+        """TC-AS-27: Asistencia no encontrada"""
+        # Arrange
+        asistencia_id = 1
+        mock_asistencia_repository.get_by_id.return_value = None
+        
+        # Act & Assert
+        with pytest.raises(HTTPException) as exc_info:
+            await asistencia_service.marcar_ausente(asistencia_id)
+        
+        assert exc_info.value.status_code == 404
+        assert "Asistencia no encontrada" in exc_info.value.detail

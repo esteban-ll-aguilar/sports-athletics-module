@@ -1,31 +1,22 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import pruebaService from "../../services/prueba_service";
-import tipoDisciplinaService from "../../services/tipo_disciplina_service";
-import baremoService from "../../services/baremo_service";
 import PruebaModal from "../widgets/PruebaModal.jsx";
 import Swal from "sweetalert2";
-
+import { Search, PlusCircle, Edit3, Power, CheckCircle } from 'lucide-react';
 
 const PruebasPage = () => {
     const [pruebas, setPruebas] = useState([]);
-    const [disciplinas, setDisciplinas] = useState([]);
-    const [baremos, setBaremos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPrueba, setSelectedPrueba] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [resPruebas, resDisc, resBar] = await Promise.all([
-                pruebaService.getAll(),
-                tipoDisciplinaService.getAll(),
-                baremoService.getAll()
-            ]);
+            const resPruebas = await pruebaService.getAll();
             setPruebas(Array.isArray(resPruebas) ? resPruebas : []);
-            setDisciplinas(Array.isArray(resDisc) ? resDisc : []);
-            setBaremos(Array.isArray(resBar) ? resBar : []);
         } catch (err) {
             console.error("Error fetching Pruebas:", err);
         } finally {
@@ -36,26 +27,20 @@ const PruebasPage = () => {
     useEffect(() => { fetchData(); }, []);
 
     const handleSubmit = async (formData) => {
-        console.log("1. Datos recibidos del Modal:", formData);
         try {
             const fechaHoy = new Date().toISOString().split('T')[0];
 
-            // PAYLOAD CORREGIDO PARA EVITAR 422
             const payload = {
                 nombre: String(formData.nombre || "").trim(),
                 siglas: String(formData.siglas || "").trim(),
                 fecha_registro: formData.fecha_registro || fechaHoy,
                 fecha_prueba: formData.fecha_prueba || null,
-                // Validación estricta del Enum PruebaType
                 tipo_prueba: formData.tipo_prueba === "NORMAL" ? "NORMAL" : "COMPETENCIA",
                 tipo_medicion: formData.tipo_medicion || "TIEMPO",
                 unidad_medida: String(formData.unidad_medida || "").trim(),
                 estado: formData.estado === "false" || formData.estado === false ? false : true,
-                // Conversión forzada a Entero
                 tipo_disciplina_id: formData.tipo_disciplina_id ? parseInt(formData.tipo_disciplina_id, 10) : null,
             };
-
-            console.log("2. Enviando Payload Final:", payload);
 
             if (selectedPrueba) {
                 payload.external_id = selectedPrueba.external_id;
@@ -65,20 +50,20 @@ const PruebasPage = () => {
             }
 
             fetchData();
-            return true; // Éxito
+            return true;
 
         } catch (err) {
-            console.error("3. Error del Servidor (422 Detail):", err.response?.data);
+            console.error("Error del Servidor:", err.response?.data);
             const detail = err.response?.data?.detail;
             Swal.fire({
                 title: 'Error',
                 text: detail ? JSON.stringify(detail) : "Error de validación",
                 icon: 'error',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
-            return false; // Error
+            return false;
         }
     };
 
@@ -96,7 +81,7 @@ const PruebasPage = () => {
             cancelButtonColor: '#6b7280',
             confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
             cancelButtonText: 'Cancelar',
-            background: '#212121',
+            background: '#1a1a1a',
             color: '#fff'
         });
 
@@ -108,7 +93,6 @@ const PruebasPage = () => {
                 estado: nuevoEstado
             });
 
-            // 🔹 Actualización visual inmediata
             setPruebas(prev =>
                 prev.map(p =>
                     p.external_id === prueba.external_id
@@ -122,7 +106,7 @@ const PruebasPage = () => {
                 text: nuevoEstado ? 'Prueba activada exitosamente' : 'Prueba desactivada exitosamente',
                 icon: 'success',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
 
@@ -133,192 +117,262 @@ const PruebasPage = () => {
                 text: 'Error al cambiar el estado de la prueba',
                 icon: 'error',
                 confirmButtonColor: '#b30c25',
-                background: '#212121',
+                background: '#1a1a1a',
                 color: '#fff'
             });
         }
     };
 
+    const filteredPruebas = pruebas.filter(p =>
+        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.siglas.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    return (
-        <div className="min-h-screen bg-[#121212] font-['Lexend'] ">
-            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    const getTipoPruebaStyles = (tipo) => {
+        if (tipo === 'COMPETENCIA') {
+            return 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-900/30';
+        }
+        return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/30';
+    };
 
-                {/* Cabecera y Navegación */}
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-8">
-                    <div className="space-y-1">
-                        {/* Breadcrumb Links */}
-                        <Link
-                            to="/dashboard/pruebas"
-                            className="inline-flex items-center gap-2 text-gray-500 hover:text-red-600 font-semibold text-sm mb-6 transition-all duration-200 group"
-                        >
-                            <span className="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform duration-200">
+    const getEstadoStyles = (estado) => {
+        if (estado) {
+            return 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-900/30';
+        }
+        return 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/30';
+    };
 
-                            </span>
-                        </Link>
+    const renderTableBody = () => {
+        if (loading) {
+            return [
+                <tr key="loading-row">
+                    <td colSpan="5" className="py-20 text-center">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-12 h-12 border-4 border-[#b30c25] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-gray-500 dark:text-gray-400 font-medium animate-pulse">Cargando pruebas...</span>
+                        </div>
+                    </td>
+                </tr>
+            ];
+        }
+
+        if (filteredPruebas.length === 0) {
+            return [
+                <tr key="no-results-row">
+                    <td colSpan="5" className="py-20 text-center">
+                        <div className="flex flex-col items-center text-gray-400 dark:text-gray-500 space-y-3">
+                            <div className="bg-gray-50 dark:bg-[#1a1a1a] p-4 rounded-full border border-gray-100 dark:border-[#332122]">
+                                <Search size={40} />
+                            </div>
+                            <p className="text-lg font-medium">No se encontraron pruebas</p>
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="text-[#b30c25] hover:underline font-bold"
+                            >
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            ];
+        }
+
+        return filteredPruebas.map((p) => (
+            <tr
+                key={p.id}
+                className={`transition-colors duration-200 ${!p.estado
+                    ? 'bg-gray-50/50 dark:bg-[#1a1a1a]/50 opacity-60'
+                    : 'hover:bg-gray-50 dark:hover:bg-[#2a2829]'
+                    }`}
+            >
+                <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#212121] flex items-center justify-center text-gray-500 font-black text-sm">
+                            {p.siglas?.substring(0, 2)}
+                        </div>
                         <div>
-                            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-gray-100">
-                                Gestión de Pruebas
-                            </h1>
-                            <p className="text-gray-400 text-lg mt-2">
-                                Administra las pruebas deportivas del sistema
-                            </p>
+                            <div className="text-xs font-bold text-[#b30c25] uppercase tracking-wide">
+                                {p.siglas}
+                            </div>
+                            <div className="font-bold text-gray-900 dark:text-gray-100">
+                                {p.nombre}
+                            </div>
                         </div>
                     </div>
-
-                    <button
-                        onClick={() => { setSelectedPrueba(null); setIsModalOpen(true); }}
-                        className="
-        group flex items-center gap-3
-        px-8 py-4 rounded-2xl
-        text-sm font-semibold text-white
-        bg-gradient-to-r from-[#b30c25] via-[#362022] to-[#332122]
-        hover:brightness-110
-        focus:outline-none focus:ring-2 focus:ring-[#b30c25]
-        disabled:opacity-50 disabled:cursor-not-allowed
-        transition-all duration-300
-        shadow-lg shadow-[#b30c25]/40
-        active:scale-95
-    "                       >
-                        <span className="material-symbols-outlined transition-transform duration-300 group-hover:rotate-90">
-                            add
+                </td>
+                <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTipoPruebaStyles(p.tipo_prueba)}`}>
+                        {p.tipo_prueba}
+                    </span>
+                </td>
+                <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                        <span className="text-sm text-gray-900 dark:text-gray-200 font-bold uppercase">
+                            {p.tipo_medicion}
                         </span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                            {p.unidad_medida}
+                        </span>
+                    </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getEstadoStyles(p.estado)}`}>
+                        {p.estado ? 'Activo' : 'Inactivo'}
+                    </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                        <button
+                            onClick={() => {
+                                setSelectedPrueba(p);
+                                setIsModalOpen(true);
+                            }}
+                            className="p-2 text-gray-400 dark:text-gray-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                            title="Editar prueba"
+                        >
+                            <Edit3 size={18} />
+                        </button>
+                        <button
+                            onClick={() => toggleStatus(p)}
+                            className={`p-2 rounded-lg transition-colors ${p.estado
+                                ? 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
+                                : 'text-green-500 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                                }`}
+                            title={p.estado ? 'Desactivar' : 'Activar'}
+                        >
+                            {p.estado ? <Power size={18} /> : <CheckCircle size={18} />}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        ));
+    };
+
+    return (
+        <div className="p-6 md:p-8 min-h-screen bg-gray-50 dark:bg-[#121212] transition-colors duration-300 font-['Lexend']">
+            <div className="max-w-7xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                            Catálogo de Pruebas
+                        </h1>
+                        <p className="mt-1 text-gray-500 dark:text-gray-400">
+                            Gestiona las disciplinas y pruebas técnicas del sistema.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => {
+                            setSelectedPrueba(null);
+                            setIsModalOpen(true);
+                        }}
+                        className="flex items-center justify-center gap-2 bg-linear-to-r from-[#b30c25] to-[#80091b] text-white px-6 py-3 rounded-xl hover:shadow-lg hover:shadow-red-900/20 active:scale-95 transition-all font-bold w-full md:w-auto"
+                    >
+                        <PlusCircle size={20} />
                         Nueva Prueba
                     </button>
                 </div>
 
-                {/* Tabla de Resultados */}
-                <div className="bg-[#212121] rounded-2xl border border-[#332122] shadow-xl overflow-hidden">
+                {/* Filters/Actions */}
+                <div className="bg-white dark:bg-[#1a1a1a] p-4 rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm flex flex-col md:flex-row gap-4 items-center">
+                    <div className="relative flex-1 w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o siglas..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-[#212121] border border-gray-200 dark:border-[#332122] rounded-xl text-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-[#b30c25] outline-none transition-all placeholder-gray-400"
+                        />
+                    </div>
+                  
+                </div>
+
+                {/* Quick Access Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Link
+                        to="/dashboard/registro-pruebas/resultados"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">assignment</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Resultados</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Registrar resultados</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/baremos"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">rule</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Baremos Completos</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Con rangos e ítems</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/baremos-simple"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">speed</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Baremos Simples</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Vista simplificada</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        to="/dashboard/registro-pruebas/disciplinas"
+                        className="group bg-white dark:bg-[#1a1a1a] p-6 rounded-2xl border border-gray-200 dark:border-[#332122] hover:border-[#b30c25] dark:hover:border-[#b30c25] shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-xl text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform">
+                                <span className="material-symbols-outlined text-2xl">category</span>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">Disciplinas</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Tipos de disciplina</p>
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Table */}
+        <div className="bg-white dark:bg-[#212121] rounded-2xl border border-gray-200 dark:border-[#332122] shadow-sm overflow-hidden transition-colors">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
-                                <tr className="bg-[#1a1a1a] border-b border-[#332122]">
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
-                                        Siglas / Nombre
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
-                                        Tipo
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
-                                        Disciplina / Baremo
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
-                                        Estado
-                                    </th>
-                                    <th className="px-6 py-4 text-xs font-extrabold uppercase tracking-widest text-gray-400">
-                                        Acciones
-                                    </th>
+                                <tr className="bg-gray-50 dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#332122]">
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Prueba</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Medición</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Estado</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {loading ? (
-                                    <tr>
-                                        <td colSpan="5" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="w-12 h-12 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
-                                                <span className="text-gray-500 font-semibold">Sincronizando datos...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : pruebas.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" className="py-20 text-center">
-                                            <div className="flex flex-col items-center gap-3">
-                                                <span className="material-symbols-outlined text-6xl text-gray-300">
-                                                    sports_score
-                                                </span>
-                                                <span className="text-gray-400 font-semibold">No hay pruebas registradas</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    pruebas.map((p) => {
-                                        const disc = disciplinas.find(d => d.id === p.tipo_disciplina_id);
-                                        const bar = baremos.find(b => b.id === p.baremo_id);
-                                        return (
-                                            <tr
-                                                key={p.external_id}
-                                                className={`transition-all duration-200 ${!p.estado
-                                                    ? 'bg-gray-50/70 opacity-60'
-                                                    : 'hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent'
-                                                    }`}                     >
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-xl font-bold shadow-lg">
-                                                            {p.siglas?.substring(0, 2)}
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs font-bold text-red-600 uppercase tracking-wide">
-                                                                {p.siglas}
-                                                            </div>
-                                                            <div className="font-bold text-gray-900">
-                                                                {p.nombre}
-                                                            </div>
-                                                            <div className="text-xs text-gray-500">
-                                                                {p.tipo_prueba}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold uppercase ${p.tipo_prueba === 'COMPETENCIA'
-                                                        ? 'bg-orange-100 text-orange-700 ring-2 ring-orange-200'
-                                                        : 'bg-blue-100 text-blue-700 ring-2 ring-blue-200'
-                                                        }`}>
-                                                        {p.tipo_prueba}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="space-y-1">
-                                                        <div className="text-sm font-bold text-gray-900">
-                                                            {disc?.nombre || 'Sin Disciplina'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 font-medium">
-                                                            {bar ? `Clase ${bar.clasificacion} • ${bar.valor_baremo} pts` : 'Sin Baremo'}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 text-center">
-                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold uppercase ${p.estado
-                                                        ? 'bg-green-900/20 text-green-400 border border-green-800'
-                                                        : 'bg-red-900/20 text-red-400 border border-red-800'
-                                                        }`}>
-                                                        {p.estado ? "Activo" : "Inactivo"}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button
-                                                            onClick={() => { setSelectedPrueba(p); setIsModalOpen(true); }}
-                                                            className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95"
-                                                        >
-                                                            <span className="material-symbols-outlined">edit</span>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => toggleStatus(p)}
-                                                            className={`p-2.5 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 ${p.estado
-                                                                ? 'text-red-400 hover:bg-red-900/30'
-                                                                : 'text-green-400 hover:bg-green-900/30'
-                                                                }`}
-                                                            title={p.estado ? 'Desactivar' : 'Activar'}
-                                                        >
-                                                            <span className="material-symbols-outlined">
-                                                                {p.estado ? 'block' : 'check_circle'}
-                                                            </span>
-                                                        </button>
-
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
+                            <tbody className="divide-y divide-gray-100 dark:divide-[#332122]">
+                                {renderTableBody()}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
+            {/* Modal */}
             <PruebaModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}

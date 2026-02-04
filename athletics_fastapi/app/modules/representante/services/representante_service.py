@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 from app.modules.auth.repositories.auth_users_repository import AuthUsersRepository
 from app.modules.atleta.repositories.atleta_repository import AtletaRepository
 from app.modules.auth.domain.schemas.schemas_users import UserCreateSchema, UserUpdateSchema
@@ -8,6 +7,7 @@ from app.modules.atleta.domain.models.atleta_model import Atleta
 from app.core.jwt.jwt import PasswordHasher
 from app.modules.representante.domain.models.representante_model import Representante
 from app.modules.competencia.repositories.resultado_competencia_repository import ResultadoCompetenciaRepository
+from app.modules.competencia.domain.schemas.competencia_schema import ResultadoCompetenciaRead
 from sqlalchemy import select
 
 class RepresentanteService:
@@ -43,12 +43,14 @@ class RepresentanteService:
             atleta.anios_experiencia = update_data.atleta_data.anios_experiencia
             self.session.add(atleta)
             await self.session.commit()
-            await self.session.refresh(atleta)
+        
+        # 5. Recargar atleta con relaciones (eager loading)
+        atleta_updated = await self.atleta_repo.get_by_id(atleta_id)
             
         return {
             "success": True,
             "message": "Atleta actualizado correctamente",
-            "data": atleta,
+            "data": atleta_updated,
             "status_code": 200
         }
 
@@ -97,8 +99,8 @@ class RepresentanteService:
             existing_atleta.representante_id = representante.id
             self.session.add(existing_atleta)
             await self.session.commit()
-            await self.session.refresh(existing_atleta)
-            res_atleta = existing_atleta
+            # Recargar con relaciones
+            res_atleta = await self.atleta_repo.get_by_id(existing_atleta.id)
         else:
             new_atleta = Atleta(
                 user_id=new_user.id,
@@ -158,10 +160,14 @@ class RepresentanteService:
             
         atleta = atleta_check["data"]
         historial = await self.resultado_repo.get_by_atleta(atleta.user_id)
+        
+        # Convertir modelos SQLAlchemy a schemas Pydantic
+        historial_data = [ResultadoCompetenciaRead.model_validate(h) for h in historial]
+        
         return {
             "success": True,
             "message": "Historial obtenido",
-            "data": historial,
+            "data": historial_data,
             "status_code": 200
         }
 

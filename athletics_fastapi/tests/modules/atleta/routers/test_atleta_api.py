@@ -39,6 +39,8 @@ async def test_create_historial_medico(client: AsyncClient):
         mock_response.alergias = "Ninguna" # Ensure this is a valid Enum value
         mock_response.enfermedades = "Ninguna"
         mock_response.enfermedades_hereditarias = "Ninguna"
+        mock_response.contacto_emergencia_nombre = "Juan Perez"
+        mock_response.contacto_emergencia_telefono = "0999999999"
         
         mock_response.talla = 1.75
         mock_response.peso = 70.0
@@ -88,6 +90,8 @@ async def test_get_my_historial(client: AsyncClient):
         mock_response.alergias = "Penicilina"
         mock_response.enfermedades = "Ninguna"
         mock_response.enfermedades_hereditarias = "Ninguna"
+        mock_response.contacto_emergencia_nombre = "Maria Rodriguez"
+        mock_response.contacto_emergencia_telefono = "0987654321"
         
         mock_service_instance.get_by_user = AsyncMock(return_value=mock_response)
         

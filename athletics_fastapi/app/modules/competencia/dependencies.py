@@ -41,7 +41,6 @@ async def get_tipo_disciplina_service(
 # ============================
 # PRUEBA
 # ============================
-from app.modules.competencia.repositories.prueba_repository import PruebaRepository
 from app.modules.competencia.services.prueba_service import PruebaService
 
 
@@ -126,7 +125,8 @@ async def get_current_admin_or_entrenador(
 ):
     if current_user.profile.role not in (
         RoleEnum.ADMINISTRADOR,
-        RoleEnum.ENTRENADOR
+        RoleEnum.ENTRENADOR,
+        RoleEnum.PASANTE
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

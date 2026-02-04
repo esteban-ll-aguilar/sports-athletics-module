@@ -2,17 +2,24 @@ import React, { useEffect, useState } from 'react';
 import AppRouter from '@core/router/AppRouter';
 import { Toaster } from 'react-hot-toast';
 import authService from '@modules/auth/services/auth_service';
+import { ThemeProvider } from './core/contexts/ThemeContext';
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      await authService.checkAuth();
-      setIsLoading(false);
+      try {
+        // Silently check/refresh auth without blocking UI
+        await authService.checkAuth();
+      } catch (error) {
+        console.debug('Initial auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     initAuth();
-  }, []);
+  }, []); // Solo ejecutar una vez al montar
 
   if (isLoading) {
     return (
@@ -25,10 +32,10 @@ function App() {
   }
 
   return (
-    <>
+    <ThemeProvider>
       <Toaster position="top-right" reverseOrder={false} />
       <AppRouter />
-    </>
+    </ThemeProvider>
   );
 }
 

@@ -1,1 +1,31 @@
 *.pdf
+
+# Reportes de SonarQube
+.scannerwork/
+.sonar/
+
+# Reportes de Cobertura
+coverage/
+htmlcov/
+coverage.xml
+.coverage
+*.lcov
+lcov.info
+
+# Logs
+*.log
+
+venv/
+__pycache__/
+
+# Jenkins workspace temporales
+athletics_fastapi@tmp/
+athletics_vite_ui@tmp/
+*@tmp/
+
+# Directorios de Jenkins CI
+.jenkins/
+jenkins-venv/
+jenkins-node_modules/
+ci-venv/
+ci-node_modules/

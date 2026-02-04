@@ -91,14 +91,8 @@ class AuthRepository {
     //  Funcion para actualizar el rol de un usuario por un administrador
     async updateRole(userId, roleData) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/auth/users/${userId}/role`, roleData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.put(`${API_REF}/users/${userId}/role`, roleData);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -108,14 +102,8 @@ class AuthRepository {
     // Funcion para que un administrador pueda actualizar los datos de un usuario sin el rol
     async updateUser(userId, userData) {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.put(`${API_URL}/auth/users/${userId}`, userData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.put(`${API_REF}/users/${userId}`, userData);
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -151,13 +139,8 @@ class AuthRepository {
     // Sessions
     async getSessions() {
         try {
-            const token = localStorage.getItem('access_token');
-            const response = await axios.get(`${API_URL}/auth/sessions/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            return response.data;
+            const responseData = await ApiClient.get(`${API_REF}/sessions/`);
+            return APIResponse.fromJson(responseData); // Adjust based on return type needed, checking other methods
         } catch (error) {
             throw error.response ? error.response.data : error;
         }
@@ -214,17 +197,13 @@ class AuthRepository {
 
     async disable2FA(password, code) {
         try {
-            const response = await axios.post(`${API_URL}/auth/2fa/disable`, { password, code }, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('access_token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const responseData = await ApiClient.post(`${API_REF}/2fa/disable`, { password, code });
+
             // Backend returns APIResponse[MessageResponse]
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data; // Return MessageResponse {message}
+            if (responseData.success && responseData.data) {
+                return responseData.data;
             }
-            return response.data;
+            return responseData;
         } catch (error) {
             throw error.response ? error.response.data : error;
         }

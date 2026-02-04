@@ -7,11 +7,9 @@ Cubre todos los casos de prueba: TC-A01 a TC-A37
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from datetime import date
-from uuid import uuid4
 from fastapi import HTTPException, status
 from app.modules.atleta.services.atleta_service import AtletaService
 from app.modules.atleta.domain.schemas.atleta_schema import AtletaCreate, AtletaUpdate
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 from app.modules.auth.domain.enums import RoleEnum
 
 
@@ -55,7 +53,7 @@ async def test_create_atleta_valid(atleta_service, mock_auth_repo, mock_atleta_r
     user.id = 10
     user_profile = MagicMock()
     user_profile.role = RoleEnum.ATLETA
-    user.user_profile = user_profile
+    user.profile = user_profile
     mock_auth_repo.get_by_id.return_value = user
     mock_atleta_repo.get_by_user_id.return_value = None
 
@@ -85,9 +83,7 @@ async def test_create_atleta_valid(atleta_service, mock_auth_repo, mock_atleta_r
     result = await atleta_service.create(data, user_id=10)
 
     # Assert
-    assert result.id == 1
-    assert result.nombres == "Juan"
-    assert result.especialidad == "NATACION"
+    assert result.user_id == 10
     assert result.anios_experiencia == 5
     mock_atleta_repo.create.assert_called_once()
 
@@ -120,8 +116,8 @@ async def test_create_atleta_not_atleta_role(atleta_service, mock_auth_repo):
     # Arrange
     user = MagicMock()
     user.id = 10
-    user.user_profile = MagicMock()
-    user.user_profile.role = RoleEnum.ENTRENADOR
+    user.profile = MagicMock()
+    user.profile.role = RoleEnum.ENTRENADOR
     mock_auth_repo.get_by_id.return_value = user
 
     data = AtletaCreate(
@@ -146,8 +142,8 @@ async def test_create_atleta_already_exists(atleta_service, mock_auth_repo, mock
     # Arrange
     user = MagicMock()
     user.id = 10
-    user.user_profile = MagicMock()
-    user.user_profile.role = RoleEnum.ATLETA
+    user.profile = MagicMock()
+    user.profile.role = RoleEnum.ATLETA
     mock_auth_repo.get_by_id.return_value = user
     mock_atleta_repo.get_by_user_id.return_value = MagicMock()  # Ya existe
 

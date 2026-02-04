@@ -29,10 +29,12 @@ class EntrenamientoSimpleInHorario(BaseModel):
     entrenador: Optional[EntrenadorRead] = None
     model_config = ConfigDict(from_attributes=True)
 
-class HorarioResponse(HorarioBase):
+class HorarioSimpleResponse(HorarioBase):
     id: int
     external_id: uuid.UUID
     entrenamiento_id: int
-    entrenamiento: Optional[EntrenamientoSimpleInHorario] = None
-    
     model_config = ConfigDict(from_attributes=True)
+
+class HorarioResponse(HorarioSimpleResponse):
+    entrenamiento: Optional[EntrenamientoSimpleInHorario] = None
+

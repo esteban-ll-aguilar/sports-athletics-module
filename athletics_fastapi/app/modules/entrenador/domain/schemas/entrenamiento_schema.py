@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from app.modules.entrenador.domain.schemas.horario_schema import HorarioBase, HorarioResponse
+from app.modules.entrenador.domain.schemas.horario_schema import HorarioBase, HorarioSimpleResponse, HorarioResponse
 from typing import Optional, List
 from datetime import date
 import uuid
@@ -25,7 +25,6 @@ class EntrenamientoResponse(EntrenamientoBase):
     external_id: uuid.UUID
     entrenador_id: int
     entrenador: Optional[EntrenadorRead] = None
-    horarios: List[HorarioResponse] = []
-
+    horarios: List[HorarioSimpleResponse] = []
     
     model_config = ConfigDict(from_attributes=True)

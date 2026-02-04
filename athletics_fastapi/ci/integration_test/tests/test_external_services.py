@@ -169,7 +169,7 @@ class TestExternalServicesIntegration:
                 assert response.status_code in [404, 400], \
                     f"Expected 404/400, got {response.status_code}"
                 
-                print(f"\n✅ Users API error handling working (404 returned)")
+                print("\n✅ Users API error handling working (404 returned)")
                 
         except httpx.ConnectError:
             pytest.skip("Users API no disponible")

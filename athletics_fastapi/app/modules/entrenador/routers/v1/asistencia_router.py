@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db.database import get_session
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
 from app.modules.entrenador.domain.schemas.registro_asistencias_schema import RegistroAsistenciasCreate, RegistroAsistenciasResponse
-from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, AsistenciaResponse, ConfirmacionAsistenciaCreate
+from app.modules.entrenador.domain.schemas.asistencia_schema import AsistenciaCreate, AsistenciaResponse
 from app.modules.entrenador.services.asistencia_service import AsistenciaService
 from app.modules.entrenador.repositories.registro_asistencias_repository import RegistroAsistenciasRepository
 from app.modules.entrenador.repositories.asistencia_repository import AsistenciaRepository
@@ -32,7 +32,9 @@ async def inscribir_atleta(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Inscribe un atleta en un horario específico (RegistroAsistencias).
+    Inscribe un atleta en un horario específico (crea un RegistroAsistencias).
+    
+    Requiere ser entrenador.
     """
     return await service.registrar_atleta_horario(data, current_entrenador.id)
 
@@ -46,8 +48,9 @@ async def listar_inscritos(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Lista los atletas inscritos en un horario.
-    Acceso: Usuarios autenticados (Entrenadores y Atletas).
+    Lista todos los atletas que están inscritos en un horario determinado.
+    
+    Disponible para usuarios autenticados (Entrenadores para ver sus alumnos, Atletas para ver compañeros, etc.).
     """
     return await service.get_atletas_by_horario(horario_id)
 
@@ -60,7 +63,7 @@ async def eliminar_inscripcion(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Elimina la inscripción de un atleta de un horario.
+    Elimina la inscripción de un atleta de un horario (desinscribir).
     """
     await service.remove_atleta_horario(registro_id)
 
@@ -71,7 +74,7 @@ async def registrar_asistencia(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    Registra la asistencia diaria de un atleta (vinculado a su inscripción).
+    Crea manualmente un registro de asistencia diaria para un atleta inscrito.
     """
     return await service.registrar_asistencia_diaria(data)
 
@@ -84,8 +87,9 @@ async def confirmar_asistencia(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    El atleta confirma que asistirá al entrenamiento. 
-    Crea un registro de Asistencia con fecha_confirmacion.
+    Endpoint para que un atleta confirme su asistencia a un próximo entrenamiento.
+    
+    Genera un registro de asistencia con estado de confirmación positivo.
     """
     return await service.confirmar_asistencia_atleta(registro_id, fecha_entrenamiento)
 
@@ -96,7 +100,7 @@ async def rechazar_asistencia(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    El atleta indica que NO asistirá al entrenamiento.
+    Endpoint para que un atleta notifique que NO asistirá a un entrenamiento.
     """
     return await service.rechazar_asistencia_atleta(registro_id, fecha_entrenamiento)
 
@@ -107,7 +111,7 @@ async def marcar_presente(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    El entrenador marca al atleta como presente (asistio=True).
+    Actualiza una asistencia para marcar que el atleta estuvo presente.
     """
     return await service.marcar_presente(asistencia_id)
 
@@ -118,7 +122,7 @@ async def marcar_ausente(
     service: AsistenciaService = Depends(get_asistencia_service)
 ):
     """
-    El entrenador confirma que el atleta no asistió (asistio=False).
+    Actualiza una asistencia para marcar que el atleta estuvo ausente.
     """
     return await service.marcar_ausente(asistencia_id)
 
@@ -129,7 +133,7 @@ async def obtener_mis_registros(
     session: AsyncSession = Depends(get_session)
 ):
     """
-    Obtiene la lista de horarios/entrenamientos asignados a un atleta.
+    Devuelve lista de entenamientos/horarios en los que está inscrito un atleta (para su vista de calendario o listado).
     """
     from app.modules.entrenador.repositories.registro_asistencias_repository import RegistroAsistenciasRepository
     from sqlalchemy import select

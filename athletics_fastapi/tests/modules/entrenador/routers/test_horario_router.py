@@ -6,14 +6,10 @@ import pytest
 from httpx import AsyncClient
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
-from datetime import datetime, time
+from datetime import time
 from fastapi import HTTPException, status
 
 from app.modules.entrenador.dependencies import get_horario_service, get_current_entrenador
-from app.modules.entrenador.services.horario_service import HorarioService
-from app.modules.auth.dependencies import get_current_user
-from app.modules.auth.domain.models.auth_user_model import AuthUserModel
-from app.modules.auth.domain.enums.role_enum import RoleEnum
 
 @pytest.fixture
 def mock_horario_service():
@@ -123,7 +119,7 @@ async def test_create_horario_entrenamiento_no_encontrado(client: AsyncClient, m
     _APP.dependency_overrides = {}
     
     assert response.status_code == 404
-    assert "Entrenamiento no encontrado o no autorizado" in response.json()["detail"]
+    assert "Entrenamiento no encontrado o no autorizado" in response.json()["message"]
 
 @pytest.mark.asyncio
 async def test_create_horario_horas_invalidas(client: AsyncClient, mock_horario_service):
@@ -135,6 +131,7 @@ async def test_create_horario_horas_invalidas(client: AsyncClient, mock_horario_
     """
     from app.main import _APP
     
+    # 400 Bad Request usually goes through default exception handler, checking message
     mock_horario_service.create_horario.side_effect = HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="La hora de inicio debe ser anterior a la hora de fin"
@@ -155,7 +152,8 @@ async def test_create_horario_horas_invalidas(client: AsyncClient, mock_horario_
     _APP.dependency_overrides = {}
     
     assert response.status_code == 400
-    assert "La hora de inicio debe ser anterior a la hora de fin" in response.json()["detail"]
+    # For general errors (not 401, 403, 404), check 'message' also because global handler wraps them
+    assert "La hora de inicio debe ser anterior a la hora de fin" in response.json()["message"]
 
 # ============== TESTS PARA GET_HORARIOS_BY_ENTRENAMIENTO ==============
 
@@ -173,30 +171,37 @@ async def test_get_horarios_exitoso(client: AsyncClient, mock_horario_service):
     h1 = MagicMock()
     h1.id = 1
     h1.external_id = uuid4()
+    h1.name = "Horario Mañana"
+    h1.hora_inicio = time(8, 0)
+    h1.hora_fin = time(9, 0)
     h1.entrenamiento_id = 1
-    h1.name = "Entrenamiento Vespertino"
-    h1.hora_inicio = time(16, 0)
-    h1.hora_fin = time(18, 0)
-    
-    # Mock entrenamiento anidado
+
+    h2 = MagicMock()
+    h2.id = 2
+    h2.external_id = uuid4()
+    h2.name = "Horario Tarde"
+    h2.hora_inicio = time(17, 0)
+    h2.hora_fin = time(18, 0)
+    h2.entrenamiento_id = 1
+
     mock_entrenamiento = MagicMock()
     mock_entrenamiento.external_id = uuid4()
-    mock_entrenamiento.tipo_entrenamiento = "Resistencia"
-    mock_entrenamiento.descripcion = "Entrenamiento de resistencia"
+    mock_entrenamiento.tipo_entrenamiento = "Fuerza"
+    mock_entrenamiento.descripcion = "Entrenamiento de fuerza"
     mock_entrenamiento.fecha_entrenamiento = date.today()
-    
-    # Mock entrenador anidado
+
     mock_entrenador = MagicMock()
     mock_user = MagicMock()
-    mock_user.first_name = "María"
-    mock_user.last_name = "García"
-    mock_user.profile_image = "profile.jpg"
+    mock_user.first_name = "Juan"
+    mock_user.last_name = "Pérez"
+    mock_user.profile_image = "image.jpg"
     mock_entrenador.user = mock_user
     mock_entrenamiento.entrenador = mock_entrenador
-    
+
     h1.entrenamiento = mock_entrenamiento
-    
-    mock_horario_service.get_horarios_by_entrenamiento.return_value = [h1]
+    h2.entrenamiento = mock_entrenamiento
+
+    mock_horario_service.get_horarios_by_entrenamiento.return_value = [h1, h2]
 
     _APP.dependency_overrides[get_horario_service] = lambda: mock_horario_service
     _APP.dependency_overrides[get_current_entrenador] = override_get_current_entrenador_dependency
@@ -207,8 +212,10 @@ async def test_get_horarios_exitoso(client: AsyncClient, mock_horario_service):
     _APP.dependency_overrides = {}
     
     assert response.status_code == 200
-    assert len(response.json()) == 1
-    assert response.json()[0]["name"] == "Entrenamiento Vespertino"
+    assert len(response.json()) == 2
+    assert response.json()[0]["name"] == "Horario Mañana"
+    assert response.json()[1]["name"] == "Horario Tarde"
+    mock_horario_service.get_horarios_by_entrenamiento.assert_called_once()
 
 @pytest.mark.asyncio
 async def test_get_horarios_entrenamiento_no_encontrado(client: AsyncClient, mock_horario_service):
@@ -234,7 +241,7 @@ async def test_get_horarios_entrenamiento_no_encontrado(client: AsyncClient, moc
     _APP.dependency_overrides = {}
     
     assert response.status_code == 404
-    assert "Entrenamiento no encontrado o no autorizado" in response.json()["detail"]
+    assert "Entrenamiento no encontrado o no autorizado" in response.json()["message"]
 
 @pytest.mark.asyncio
 async def test_get_horarios_lista_vacia(client: AsyncClient, mock_horario_service):
@@ -306,7 +313,7 @@ async def test_delete_horario_no_encontrado(client: AsyncClient, mock_horario_se
     _APP.dependency_overrides = {}
     
     assert response.status_code == 404
-    assert "Horario no encontrado" in response.json()["detail"]
+    assert "Horario no encontrado" in response.json()["message"]
 
 @pytest.mark.asyncio
 async def test_delete_horario_sin_permisos(client: AsyncClient, mock_horario_service):
@@ -332,6 +339,6 @@ async def test_delete_horario_sin_permisos(client: AsyncClient, mock_horario_ser
     _APP.dependency_overrides = {}
     
     assert response.status_code == 403
-    assert "No tienes permiso para eliminar este horario" in response.json()["detail"]
+    assert "No tienes permiso para eliminar este horario" in response.json()["message"]
 
 

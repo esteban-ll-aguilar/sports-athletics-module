@@ -13,19 +13,33 @@ from app.modules.competencia.dependencies import get_competencia_service
 from app.modules.auth.domain.enums.role_enum import RoleEnum
 from app.public.schemas.base_response import BaseResponse
 from app.utils.response_handler import ResponseHandler
-
+# Instancia del router
 router = APIRouter()
 
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Crear Competencia
+# -------------------------------------------------------------------------
 @router.post("", response_model=BaseResponse, status_code=status.HTTP_201_CREATED)
 async def crear_competencia(
     data: CompetenciaCreate,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Crear una nueva competencia."""
+    """
+    Crea un nuevo evento de competencia.
+    Restringido a: ADMINISTRADOR, ENTRENADOR y PASANTE.
+    """
     try:
-        nueva_competencia = await service.create(data, current_user.id)
+        # Validar permisos - usar .value para comparar enums correctamente
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        if role_str not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+             return ResponseHandler.forbidden_response(
+                 message="No tienes permisos para crear competencias"
+             )
+
+        nueva_competencia = await service.create(data, current_user.profile.id)
         return ResponseHandler.success_response(
             summary="Competencia creado con exito",
             message="Competencia creado con exito",
@@ -38,17 +52,32 @@ async def crear_competencia(
             message=str(e),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Listar Competencias
+# -------------------------------------------------------------------------
 @router.get("", response_model=BaseResponse)
 async def listar_competencias(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
     incluir_inactivos: bool = True,
 ):
-    """Listar todas las competencias del entrenador."""
+    """
+    Lista las competencias. 
+    Los roles de gestión ven todas; otros roles podrían ver una lista filtrada.
+    """
     try:
-        competencias = await service.get_all(incluir_inactivos, current_user.id)
+        entrenador_id = current_user.id
+        
+        # Obtener rol como string de forma segura
+        role = current_user.profile.role
+        role_str = role.value if hasattr(role, 'value') else str(role)
+        
+        # Si es admin, entrenador o pasante, ve todo (entrenador_id=None)
+        # Entrenadores también deben ver todas las competencias para participar.
+        if role_str in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
+            entrenador_id = None
+            
+        competencias = await service.get_all(incluir_inactivos, entrenador_id)
         if not competencias:
              return ResponseHandler.success_response(
                 summary="No hay competencias registradas",
@@ -70,14 +99,16 @@ async def listar_competencias(
             message=str(e)
         )
 
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Obtener una Competencia
+# -------------------------------------------------------------------------
 @router.get("/{external_id}", response_model=BaseResponse)
 async def obtener_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Obtener detalles de una competencia."""
+    """Obtiene el detalle completo de una competencia mediante su UUID.""" 
     try:
         competencia = await service.get_by_external_id(external_id)
         return ResponseHandler.success_response(
@@ -101,8 +132,9 @@ async def obtener_competencia(
             summary="Error interno",
             message=str(e)
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Actualizar Competencia
+# -------------------------------------------------------------------------
 @router.put("/{external_id}", response_model=BaseResponse)
 async def actualizar_competencia(
     external_id: UUID,
@@ -110,13 +142,12 @@ async def actualizar_competencia(
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Actualizar una competencia (solo rol ENTRENADOR)."""
+    """Actualizar una competencia (Admin o Entrenador propietario)."""
     try:
-        # Validación de rol manual ya que el servicio no lo hace contextualmente (aunque podría)
-        # O dejamos que el servicio maneje lógica. Aquí seguiremos la lógica previa.
-        if current_user.profile.role != RoleEnum.ENTRENADOR:
+        # Validación de rol
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
              return ResponseHandler.forbidden_response(
-                 message="Solo los entrenadores pueden modificar competencias"
+                 message="Solo administradores, entrenadores y pasantes pueden modificar competencias"
              )
 
         competencia_actualizada = await service.update(external_id, data)
@@ -141,19 +172,20 @@ async def actualizar_competencia(
              summary="Error interno",
              message=str(e)
         )
-
-
+# -------------------------------------------------------------------------
+# ENDPOINT: Eliminar Competencia
+# -------------------------------------------------------------------------
 @router.delete("/{external_id}", response_model=BaseResponse)
 async def eliminar_competencia(
     external_id: UUID,
     current_user: AuthUserModel = Depends(get_current_user),
     service: CompetenciaService = Depends(get_competencia_service),
 ):
-    """Eliminar una competencia (solo rol ENTRENADOR)."""
+    """Eliminar una competencia (Admin o Entrenador)."""
     try:
-        if current_user.profile.role != RoleEnum.ENTRENADOR:
+        if str(current_user.profile.role) not in ["ADMINISTRADOR", "ENTRENADOR", "PASANTE"]:
             return ResponseHandler.forbidden_response(
-                message="Solo los entrenadores pueden eliminar competencias"
+                message="Solo administradores, entrenadores y pasantes pueden eliminar competencias"
             )
             
         await service.delete(external_id)

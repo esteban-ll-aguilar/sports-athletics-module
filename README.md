@@ -64,3 +64,50 @@ docker-compose up -d --build
 ### Notas Adicionales
 
 *   Asegúrese de que las variables de entorno necesarias (como las definidas en `.env`) estén configuradas en Jenkins o disponibles en el entorno de ejecución.
+
+---
+
+## 🔍 Análisis de Calidad de Código con SonarQube
+
+Este proyecto incluye configuración completa para análisis de calidad de código usando SonarQube, que analiza tanto el **backend (FastAPI)** como el **frontend (Vite UI)**.
+
+### Inicio Rápido
+
+```bash
+# Iniciar SonarQube Server
+cd ci/sonarqube
+docker-compose -f docker-compose-sonarqube.yml up -d
+
+# Ver logs
+docker-compose -f docker-compose-sonarqube.yml logs -f
+
+# Ejecutar análisis manual
+docker-compose -f docker-compose-sonarqube.yml up sonar-scanner
+
+# Detener
+docker-compose -f docker-compose-sonarqube.yml down
+```
+
+### Levantar Backend + Frontend
+
+```bash
+# Desde la raíz del proyecto
+docker-compose up -d
+```
+
+### Acceso a los Servicios
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **SonarQube**: http://localhost:9000 (usuario: `admin`, contraseña: `admin`)
+- **PostgreSQL (FastAPI)**: localhost:5432
+- **MariaDB (Spring Boot)**: localhost:3306
+- **Redis**: localhost:6379
+
+### Documentación Completa
+
+Para más detalles sobre configuración, métricas analizadas y solución de problemas, consulta: [`ci/README.md`](ci/README.md)
+
+
+
+

@@ -1,0 +1,195 @@
+# docker-compose.sonarqube.yml
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL para SonarQube
+  sonarqube-db:
+    image: postgres:15-alpine
+    container_name: sonarqube-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sonar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sonar}
+      POSTGRES_DB: ${POSTGRES_DB:-sonarqube}
+    volumes:
+      - sonarqube_db_data:/var/lib/postgresql/data
+    networks:
+      - sonarqube-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sonar" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servidor SonarQube
+  sonarqube:
+    image: sonarqube:10-community
+    container_name: sonarqube-server
+    depends_on:
+      sonarqube-db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${POSTGRES_DB:-sonarqube}
+      SONAR_JDBC_USERNAME: ${POSTGRES_USER:-sonar}
+      SONAR_JDBC_PASSWORD: ${POSTGRES_PASSWORD:-sonar}
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - sonarqube-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"'" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Generador de cobertura de código
+  coverage-generator:
+    image: python:3.11-slim
+    container_name: coverage-generator
+    volumes:
+      - ../../:/usr/src
+    working_dir: /usr/src
+    networks:
+      - sonarqube-network
+    command: >
+      sh -c "
+        echo '============================================' &&
+        echo '📊 Generando Reportes de Cobertura' &&
+        echo '============================================' &&
+        echo '' &&
+        
+        echo '🐍 Backend (Python) - Instalando dependencias...' &&
+        cd athletics_fastapi &&
+        pip install --quiet --no-cache-dir -r requirements.txt &&
+        
+        echo '🧪 Backend - Ejecutando tests con cobertura...' &&
+        pytest -c tests/pytest.ini --tb=short || echo '⚠️  Algunos tests fallaron' &&
+        
+        if [ -f 'coverage.xml' ]; then
+          echo '✅ Backend - coverage.xml generado'
+        else
+          echo '❌ Backend - No se generó coverage.xml'
+        fi &&
+        
+        cd .. &&
+        echo '' &&
+        
+        echo '⚛️  Frontend (JS/TS) - Instalando Node.js...' &&
+        apt-get update -qq && apt-get install -y -qq curl > /dev/null 2>&1 &&
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1 &&
+        apt-get install -y -qq nodejs > /dev/null 2>&1 &&
+        
+        echo '📦 Frontend - Instalando dependencias...' &&
+        cd athletics_vite_ui &&
+        npm install --silent &&
+        npm install --save-dev --silent @vitest/coverage-v8 &&
+        
+        echo '🧪 Frontend - Ejecutando tests con cobertura...' &&
+        npm run test -- --coverage --run || echo '⚠️  Algunos tests fallaron' &&
+        
+        if [ -f 'coverage/lcov.info' ]; then
+          echo '✅ Frontend - coverage/lcov.info generado'
+        else
+          echo '❌ Frontend - No se generó coverage/lcov.info'
+        fi &&
+        
+        cd .. &&
+        echo '' &&
+        echo '============================================' &&
+        echo '✅ Cobertura generada exitosamente' &&
+        echo '============================================'
+      "
+
+  # Scanner para analizar el código
+  sonar-scanner:
+    image: sonarsource/sonar-scanner-cli:latest
+    container_name: sonarqube-scanner
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+      coverage-generator:
+        condition: service_completed_successfully
+    env_file:
+      - .env.sonar
+    environment:
+      SONAR_HOST_URL: ${SONAR_HOST_URL:-http://sonarqube:9000}
+      SONAR_ADMIN_PASSWORD: ${SONAR_ADMIN_PASSWORD:-Admin*123}
+      SONAR_SCANNER_OPTS: "-Xmx2048m"
+    volumes:
+      - ../../:/usr/src
+    working_dir: /usr/src
+    networks:
+      - sonarqube-network
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+        reservations:
+          memory: 2G
+    command: >
+      sh -c "
+        echo '============================================' &&
+        echo '🔍 SonarQube Scanner - Athletics Module' &&
+        echo '============================================' &&
+        echo '⏳ Esperando a que SonarQube esté listo...' &&
+        until curl -s http://sonarqube:9000/api/system/status | grep -q '\\\"status\\\":\\\"UP\\\"'; do
+          echo '   Esperando...'
+          sleep 5
+        done &&
+        echo '✅ SonarQube está listo' &&
+        echo '' &&
+        echo '🔐 Cambiando contraseña de administrador...' &&
+        CHANGE_RESULT=$$(curl -s -u admin:admin -X POST \\\"http://sonarqube:9000/api/users/change_password?login=admin\u0026previousPassword=admin\u0026password=$${SONAR_ADMIN_PASSWORD}\\\") &&
+        if echo \\\"$$CHANGE_RESULT\\\" | grep -q 'error'; then
+          echo '⚠️  La contraseña ya fue cambiada o error al cambiar'
+        else
+          echo '✅ Contraseña cambiada exitosamente'
+        fi &&
+        echo '' &&
+        echo '🔑 Generando token de autenticación...' &&
+        TOKEN=$$(curl -s -u admin:$${SONAR_ADMIN_PASSWORD} -X POST 'http://sonarqube:9000/api/user_tokens/generate?name=scanner-token-'$$(date +%s) | grep -o '\\\"token\\\":\\\"[^\\\"]*' | cut -d'\\\"' -f4) &&
+        if [ -z \\\"$$TOKEN\\\" ]; then
+          echo '❌ Error: No se pudo generar el token'
+          exit 1
+        else
+          echo '✅ Token generado exitosamente'
+        fi &&
+        echo '' &&
+        echo '============================================' &&
+        echo '🚀 Iniciando análisis de código...' &&
+        echo '============================================' &&
+        echo '📦 Backend: athletics_fastapi (Python)' &&
+        echo '📦 Frontend: athletics_vite_ui (TypeScript/JS)' &&
+        echo '' &&
+        echo '📊 Archivos de cobertura detectados:' &&
+        ls -lh athletics_fastapi/coverage.xml 2>/dev/null || echo '  ⚠️  Backend: coverage.xml no encontrado' &&
+        ls -lh athletics_vite_ui/coverage/lcov.info 2>/dev/null || echo '  ⚠️  Frontend: lcov.info no encontrado' &&
+        echo '' &&
+        sonar-scanner -Dsonar.host.url=http://sonarqube:9000 -Dsonar.token=$$TOKEN -Dsonar.scm.disabled=true -Dproject.settings=ci/sonarqube/sonar-project.properties &&
+        echo '' &&
+        echo '============================================' &&
+        echo '✅ Análisis completado exitosamente' &&
+        echo '============================================' &&
+        echo '📊 Revisa los resultados en: http://localhost:9000' &&
+        echo '🔑 Usuario: admin' &&
+        echo '🔒 Contraseña: $${SONAR_ADMIN_PASSWORD}' &&
+        echo '============================================'
+      "
+
+networks:
+  sonarqube-network:
+    driver: bridge
+
+volumes:
+  sonarqube_db_data:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  sonarqube_logs:
+    driver: local

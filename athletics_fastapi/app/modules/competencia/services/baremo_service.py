@@ -56,7 +56,23 @@ class BaremoService:
                 detail="Baremo no encontrado"
             )
 
-        for field, value in data.model_dump(exclude_unset=True).items():
+        # Extraer items antes de actualizar otros campos
+        update_data = data.model_dump(exclude_unset=True)
+        items_data = update_data.pop("items", None)
+
+        # Actualizar campos básicos
+        for field, value in update_data.items():
             setattr(baremo, field, value)
+
+        # Si se enviaron items, actualizar la relación
+        if items_data is not None:
+            from app.modules.competencia.domain.models.item_baremo_model import ItemBaremo
+            
+            # Limpiar items existentes
+            baremo.items = []
+            
+            # Crear nuevos items
+            if items_data:
+                baremo.items = [ItemBaremo(**item) for item in items_data]
 
         return await self.repo.update(baremo)

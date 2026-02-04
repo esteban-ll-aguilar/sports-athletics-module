@@ -7,7 +7,7 @@ __pycache__/
 *.so
 .pytest_cache
 *.env 
-
+*.xml
 # Distribution / packaging
 .Python
 build/

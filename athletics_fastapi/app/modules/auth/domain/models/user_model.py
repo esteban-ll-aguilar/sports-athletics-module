@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import String, Integer, Date,Enum, Boolean, Enum as SQLAlchemyEnum, text, ForeignKey
+from sqlalchemy import String, Integer, Date, text, ForeignKey, Enum
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.core.db.database import Base
 from typing import Optional, TYPE_CHECKING
-import uuid, datetime
+import uuid
+import datetime
 
 from app.modules.auth.domain.enums import (
     TipoEstamentoEnum,
@@ -16,7 +17,6 @@ if TYPE_CHECKING:
     from app.modules.atleta.domain.models.atleta_model import Atleta
     from app.modules.entrenador.domain.models.entrenador_model import Entrenador
     from app.modules.representante.domain.models.representante_model import Representante
-    from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 
 class UserModel(Base):

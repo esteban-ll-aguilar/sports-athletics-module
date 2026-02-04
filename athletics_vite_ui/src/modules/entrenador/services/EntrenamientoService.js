@@ -4,19 +4,24 @@ const ENDPOINT = '/entrenador/entrenamientos';
 
 const EntrenamientoService = {
     getAll: async () => {
-        return await ApiClient.get(ENDPOINT + '/');
+        const response = await ApiClient.get(ENDPOINT + '/');
+        // Backend returns array directly in this case, not wrapped in {items: [...]}
+        return Array.isArray(response) ? response : (response?.data || response || []);
     },
 
     getById: async (id) => {
-        return await ApiClient.get(`${ENDPOINT}/${id}`);
+        const response = await ApiClient.get(`${ENDPOINT}/${id}`);
+        return response?.data || response;
     },
 
     create: async (data) => {
-        return await ApiClient.post(ENDPOINT + '/', data);
+        const response = await ApiClient.post(ENDPOINT + '/', data);
+        return response?.data || response;
     },
 
     update: async (id, data) => {
-        return await ApiClient.put(`${ENDPOINT}/${id}`, data);
+        const response = await ApiClient.put(`${ENDPOINT}/${id}`, data);
+        return response?.data || response;
     },
 
     delete: async (id) => {

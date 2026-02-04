@@ -7,6 +7,8 @@ from app.modules.entrenador.services.entrenamiento_service import EntrenamientoS
 from app.modules.entrenador.repositories.entrenamiento_repository import EntrenamientoRepository
 from app.modules.entrenador.dependencies import get_current_entrenador
 from app.modules.entrenador.domain.models.entrenador_model import Entrenador
+from app.core.jwt.jwt import get_current_user
+from app.modules.auth.domain.models.auth_user_model import AuthUserModel
 
 router = APIRouter(
     prefix="/entrenamientos",
@@ -23,13 +25,31 @@ async def create_entrenamiento(
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: EntrenamientoService = Depends(get_entrenamiento_service)
 ):
+    """
+    Crea un nuevo entrenamiento para el entrenador autenticado.
+    """
     return await service.create_entrenamiento(entrenamiento_data, current_entrenador.id)
 
 @router.get("/", response_model=List[EntrenamientoResponse])
 async def list_entrenamientos(
-    current_entrenador: Entrenador = Depends(get_current_entrenador),
-    service: EntrenamientoService = Depends(get_entrenamiento_service)
+    current_user: AuthUserModel = Depends(get_current_user),
+    service: EntrenamientoService = Depends(get_entrenamiento_service),
+    session: AsyncSession = Depends(get_session)
 ):
+    """
+    Obtiene todos los entrenamientos. Admins y Pasantes ven todo.
+    """
+    role = current_user.profile.role
+    role_str = role.value if hasattr(role, 'value') else str(role)
+
+    if role_str in ["ADMINISTRADOR", "PASANTE"]:
+        return await service.get_all_entrenamientos()
+    
+    # Only for ENTRENADOR role, force the entrenador profile
+    from app.modules.entrenador.dependencies import get_entrenador_repo, get_current_entrenador
+    repo = await get_entrenador_repo(session)
+    current_entrenador = await get_current_entrenador(current_user, repo)
+        
     return await service.get_mis_entrenamientos(current_entrenador.id)
 
 @router.get("/{id}", response_model=EntrenamientoResponse)
@@ -38,6 +58,9 @@ async def get_entrenamiento(
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: EntrenamientoService = Depends(get_entrenamiento_service)
 ):
+    """
+    Obtiene el detalle de un entrenamiento específico, verificando que pertenezca al entrenador.
+    """
     return await service.get_entrenamiento_detalle(id, current_entrenador.id)
 
 @router.put("/{id}", response_model=EntrenamientoResponse)
@@ -47,6 +70,9 @@ async def update_entrenamiento(
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: EntrenamientoService = Depends(get_entrenamiento_service)
 ):
+    """
+    Actualiza los datos de un entrenamiento existente y su lista de horarios.
+    """
     return await service.update_entrenamiento(id, entrenamiento_update, current_entrenador.id)
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -55,4 +81,7 @@ async def delete_entrenamiento(
     current_entrenador: Entrenador = Depends(get_current_entrenador),
     service: EntrenamientoService = Depends(get_entrenamiento_service)
 ):
+    """
+    Elimina un entrenamiento y todos sus horarios asociados.
+    """
     await service.delete_entrenamiento(id, current_entrenador.id)

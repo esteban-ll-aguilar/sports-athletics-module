@@ -11,6 +11,7 @@ Descripción:
 
 """
 # Importaciones de FastAPI y los submódulos de rutas
+import os
 from fastapi import APIRouter
 from app.modules.auth.routers.v1.api_router import api_auth_router_v1
 from app.modules.admin.routers.v1.api_router import api_admin_router_v1
@@ -18,8 +19,9 @@ from app.modules.external.routers.v1.api_router import api_external_router_v1
 from app.modules.competencia.routers.v1.api_router import api_competencia_router_v1
 from app.modules.atleta.routers.v1.api_router import api_atleta_router_v1
 from app.modules.representante.routers.v1.api_router import api_representante_router_v1
-from app.modules.auth.routers.v1.api_router import api_auth_router_v1
 from app.modules.entrenador.routers.v1.api_router import api_entrenador_router_v1
+from app.modules.pasante.routers.v1.api_router import api_pasante_router_v1
+
 # Enrutador principal de la versión 1 de la API
 router_api_v1 = APIRouter(prefix='/api/v1')
 router_api_v1.include_router(api_auth_router_v1)
@@ -29,6 +31,17 @@ router_api_v1.include_router(api_competencia_router_v1)
 router_api_v1.include_router(api_entrenador_router_v1)
 router_api_v1.include_router(api_atleta_router_v1)
 router_api_v1.include_router(api_representante_router_v1)
+router_api_v1.include_router(api_pasante_router_v1)
+
+# ======================================================
+# TEST ROUTES (NO RATE LIMITING) - Conditional Registration
+# ======================================================
+ENABLE_TEST_ROUTES = os.getenv("ENABLE_TEST_ROUTES", "false").lower() == "true"
+
+if ENABLE_TEST_ROUTES:
+    from app.modules.tests.routers import tests_router
+    router_api_v1.include_router(tests_router)
+    print("WARNING: TEST ROUTES ENABLED - NO RATE LIMITING ON /api/v1/tests/*")
 
 
 
