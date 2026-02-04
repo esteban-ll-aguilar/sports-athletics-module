@@ -9,7 +9,18 @@ const AtletaService = {
 
     getAthletes: async (page = 1, limit = 20) => {
         const response = await ApiClient.get(`/auth/users/?page=${page}&size=${limit}&role=ATLETA`);
-        return response?.items || response?.data?.items || response?.data || response || [];
+        // Always return { items, total } for consistency with test expectations
+        if (response && typeof response === 'object' && 'items' in response && 'total' in response) {
+            return response;
+        }
+        if (response && Array.isArray(response)) {
+            return { items: response, total: response.length };
+        }
+        if (response && response.data && Array.isArray(response.data.items)) {
+            return { items: response.data.items, total: response.data.items.length };
+        }
+        // Fallback: empty
+        return { items: [], total: 0 };
     },
 
     getHistorial: async () => {

@@ -36,11 +36,8 @@ describe('AtletaService', () => {
                 items: [{ id: 1, username: 'athlete1' }],
                 total: 1
             }
-
             ApiClient.get.mockResolvedValue(mockResponse)
-
             const result = await AtletaService.getAthletes()
-
             expect(ApiClient.get).toHaveBeenCalledWith('/auth/users/?page=1&size=20&role=ATLETA')
             expect(result).toEqual(mockResponse)
         })
@@ -50,11 +47,8 @@ describe('AtletaService', () => {
                 items: [{ id: 1, username: 'athlete1' }],
                 total: 1
             }
-
             ApiClient.get.mockResolvedValue(mockResponse)
-
             const result = await AtletaService.getAthletes(2, 50)
-
             expect(ApiClient.get).toHaveBeenCalledWith('/auth/users/?page=2&size=50&role=ATLETA')
             expect(result).toEqual(mockResponse)
         })

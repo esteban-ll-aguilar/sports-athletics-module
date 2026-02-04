@@ -1,9 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import resultadoPruebaService from '../../../modules/competencia/services/resultado_prueba_service'
-import axios from 'axios'
-import Settings from '../../../config/enviroment'
 
-vi.mock('axios')
+// Mock axios module with a factory so imports (like ApiClient) receive the mocked
+// axios before they execute `axios.create()` and set interceptors.
+vi.mock('axios', () => {
+    const mAxios = {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        patch: vi.fn(),
+    };
+    // axios.create should return an instance that contains interceptors and methods
+    mAxios.create = vi.fn(() => ({
+        interceptors: {
+            request: { use: vi.fn() },
+            response: { use: vi.fn() }
+        },
+        get: mAxios.get,
+        post: mAxios.post,
+        put: mAxios.put,
+        delete: mAxios.delete,
+        patch: mAxios.patch
+    }));
+    return { default: mAxios };
+});
+
+import axios from 'axios'
+import resultadoPruebaService from '../../../modules/competencia/services/resultado_prueba_service'
+import Settings from '../../../config/enviroment'
 
 describe('ResultadoPruebaService', () => {
     const API_URL = `${Settings.API_URL}/api/v1/competencia/resultados-pruebas`
@@ -23,7 +47,7 @@ describe('ResultadoPruebaService', () => {
 
             const result = await resultadoPruebaService.getAll()
 
-            expect(axios.get).toHaveBeenCalledWith(API_URL)
+            expect(axios.get).toHaveBeenCalledWith('/competencia/resultados-pruebas/', { params: {} })
             expect(result).toEqual(mockData)
         })
 
@@ -50,7 +74,7 @@ describe('ResultadoPruebaService', () => {
 
             const result = await resultadoPruebaService.getById(1)
 
-            expect(axios.get).toHaveBeenCalledWith(`${API_URL}/1`)
+            expect(axios.get).toHaveBeenCalledWith('/competencia/resultados-pruebas/1', { params: {} })
             expect(result).toEqual(mockData)
         })
     })
@@ -65,7 +89,7 @@ describe('ResultadoPruebaService', () => {
 
             const result = await resultadoPruebaService.create(newData)
 
-            expect(axios.post).toHaveBeenCalledWith(API_URL, newData)
+            expect(axios.post).toHaveBeenCalledWith('/competencia/resultados-pruebas/', newData, {})
             expect(result).toEqual(mockResponse)
         })
     })
@@ -80,7 +104,7 @@ describe('ResultadoPruebaService', () => {
 
             const result = await resultadoPruebaService.update(1, updateData)
 
-            expect(axios.put).toHaveBeenCalledWith(`${API_URL}/1`, updateData)
+            expect(axios.put).toHaveBeenCalledWith('/competencia/resultados-pruebas/1', updateData, {})
             expect(result).toEqual(mockResponse)
         })
     })

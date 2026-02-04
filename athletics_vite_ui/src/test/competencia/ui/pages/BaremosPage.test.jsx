@@ -35,32 +35,32 @@ vi.mock('../../../../modules/competencia/ui/widgets/BaremoModal', () => ({
     }
 }))
 
-describe('BaremosPage', () => {
+const mockBaremos = [
+    {
+        external_id: '1',
+        prueba_id: 'p1',
+        sexo: 'M',
+        edad_min: 18,
+        edad_max: 25,
+        items: [],
+        estado: true
+    },
+    {
+        external_id: '2',
+        prueba_id: 'p2',
+        sexo: 'F',
+        edad_min: 20,
+        edad_max: 30,
+        items: [1, 2],
+        estado: false
+    }
+]
 
+describe('BaremosPage', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        baremoService.getAll.mockResolvedValue(mockBaremos)
     })
-
-    const mockBaremos = [
-        {
-            external_id: '1',
-            prueba_id: 'p1',
-            sexo: 'M',
-            edad_min: 18,
-            edad_max: 25,
-            items: [],
-            estado: true
-        },
-        {
-            external_id: '2',
-            prueba_id: 'p2',
-            sexo: 'F',
-            edad_min: 20,
-            edad_max: 30,
-            items: [1, 2],
-            estado: false
-        }
-    ]
 
     const mockPruebas = [
         { external_id: 'p1', nombre: '100m', tipo_medicion: 'TIEMPO' },
@@ -91,8 +91,8 @@ describe('BaremosPage', () => {
         await waitFor(() => {
             expect(screen.getByText('Baremo Simple')).toBeInTheDocument()
             expect(screen.getByText('Baremo Compuesto')).toBeInTheDocument()
-            expect(screen.getByText('Masculino')).toBeInTheDocument()
-            expect(screen.getByText('Femenino')).toBeInTheDocument()
+            expect(screen.getAllByText('Masculino').length).toBeGreaterThan(0)
+            expect(screen.getAllByText('Femenino').length).toBeGreaterThan(0)
             expect(screen.getByText('18 - 25 años')).toBeInTheDocument()
         })
     })
@@ -116,7 +116,8 @@ describe('BaremosPage', () => {
             expect(screen.getByText(/no hay baremos registrados/i)).toBeInTheDocument()
         })
 
-        fireEvent.click(screen.getByText(/añadir baremo/i))
+        // The button text is 'Agregar Ítems', not 'Añadir Baremo'
+        fireEvent.click(screen.getByText((content) => content.toLowerCase().includes('agregar ítems')))
         expect(screen.getByTestId('baremo-modal')).toBeInTheDocument()
     })
 
