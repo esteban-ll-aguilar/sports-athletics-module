@@ -29,14 +29,26 @@ const DashboardAtletaPage = () => {
             try {
                 const userStr = localStorage.getItem('user');
                 console.log('📦 User from localStorage:', userStr);
+                
+                let userData = null;
                 if (userStr) {
-                    const userData = JSON.parse(userStr);
-                    console.log('👤 Parsed User Data:', userData);
+                    userData = JSON.parse(userStr);
+                } else {
+                    console.log('� No user in localStorage, fetching from API...');
+                    const profileRes = await authService.getProfile();
+                    userData = profileRes.data || profileRes;
+                    
+                    if (userData) {
+                        localStorage.setItem('user', JSON.stringify(userData));
+                    }
+                }
+
+                if (userData) {
+                    console.log('👤 Current User Data:', userData);
                     setUser(userData);
-                    // Fetch data AFTER user is set
                     await fetchData(userData);
                 } else {
-                    console.warn('⚠️ No user found in localStorage');
+                    console.warn('⚠️ No user found even after fetching');
                     setLoading(false);
                 }
             } catch (error) {
@@ -57,58 +69,49 @@ const DashboardAtletaPage = () => {
 
             let atletaId = null;
 
-            // Estrategia 1: Buscar en los perfiles del usuario (Optimización solicitada)
-            // Filtramos por rol 'ATLETA' directamente en el objeto de usuario si existe
-            if (currentUser && currentUser.perfiles && Array.isArray(currentUser.perfiles)) {
-                console.log('🔍 Buscando perfil de ATLETA en objeto usuario...');
-                // Buscamos perfil activo de tipo ATLETA
+            // Estrategia 1: Buscar en el objeto de usuario (Nueva arquitectura)
+            if (currentUser && currentUser.atleta) {
+                atletaId = currentUser.atleta.id;
+                console.log('✅ ID de atleta encontrado en currentUser.atleta:', atletaId);
+            }
+
+            // Estrategia fallback: Buscar en perfiles si existe (Antigua arquitectura)
+            if (!atletaId && currentUser && currentUser.perfiles && Array.isArray(currentUser.perfiles)) {
                 const profile = currentUser.perfiles.find(p => p.rol === 'ATLETA' || p.tipo === 'ATLETA');
                 if (profile) {
                     atletaId = profile.id;
-                    console.log('✅ ID de atleta encontrado en perfiles local:', atletaId);
+                    console.log('✅ ID de atleta encontrado en perfiles:', atletaId);
                 }
             }
 
-            // Estrategia 2: Consultar API Auth /users/me (Corrección solicitada)
+            // Estrategia 2: Consultar API Auth /users/me
             if (!atletaId) {
                 console.log('📋 Buscando perfil vía authService.getProfile()...');
                 try {
                     const profileResponse = await authService.getProfile();
-                    console.log('👤 Auth Profile Response:', profileResponse);
-
-                    // El response puede ser directamente el objeto o contenida en .data
                     const userProfile = profileResponse.data || profileResponse;
 
-                    // Buscamos perfiles dentro del usuario recuperado
-                    if (userProfile && userProfile.perfiles && Array.isArray(userProfile.perfiles)) {
-                        const profile = userProfile.perfiles.find(p => p.rol === 'ATLETA' || p.tipo === 'ATLETA');
-                        if (profile) {
-                            atletaId = profile.id;
+                    if (userProfile) {
+                        if (userProfile.atleta) {
+                            atletaId = userProfile.atleta.id;
+                        } else if (userProfile.perfiles && Array.isArray(userProfile.perfiles)) {
+                            const profile = userProfile.perfiles.find(p => p.rol === 'ATLETA' || p.tipo === 'ATLETA');
+                            if (profile) atletaId = profile.id;
+                        }
+
+                        if (!atletaId && userProfile.role === 'ATLETA') {
+                            console.warn('⚠️ User es ATLETA pero no tiene perfil vinculado. Usando ID de usuario como fallback.');
+                            atletaId = userProfile.id;
                         }
                     }
-
-                    if (!atletaId && userProfile.id && userProfile.role === 'ATLETA') {
-                        console.warn('⚠️ User es ATLETA pero no tiene lista de perfiles. Usando ID de usuario como fallback.');
-                        atletaId = userProfile.id;
-                    }
-
                 } catch (profileError) {
                     console.warn('⚠️ Could not fetch auth profile:', profileError);
-
-                    if ((profileError.response && profileError.response.status === 404) ||
-                        profileError.message.includes('404')) {
-                        console.log('✅ Handled 404 - Profile endpoint not found');
-                        setLoading(false);
-                        return;
-                    }
-                    // No re-throw para permitir renderizar vacío si falla
                 }
             }
 
-            if (!atletaId) {
-                console.warn('⚠️ No athlete profile found for user');
-                setLoading(false);
-                return;
+            if (!atletaId && currentUser && currentUser.role === 'ATLETA') {
+                 atletaId = currentUser.id;
+                 console.warn('⚠️ Fallback final: usando ID de usuario como atletaId');
             }
 
             // 1. Fetch CURRENT Authenticated User from API (Single Source of Truth)
@@ -195,7 +198,11 @@ const DashboardAtletaPage = () => {
             if (currentUser.id) validIds.add(String(currentUser.id));
             if (user && user.id) validIds.add(String(user.id));
 
-            if (currentUserApi && currentUserApi.perfiles) {
+            if (currentUserApi.atleta) {
+                validIds.add(String(currentUserApi.atleta.id));
+            }
+
+            if (currentUserApi.perfiles) {
                 const athleteProfile = currentUserApi.perfiles.find(p => p.rol === 'ATLETA');
                 if (athleteProfile) validIds.add(String(athleteProfile.id));
             }
@@ -204,7 +211,10 @@ const DashboardAtletaPage = () => {
                 const foundProfile = rawAthletes.find(a =>
                     String(a.user_id || a.user?.id) === String(currentUserApi.id)
                 );
-                if (foundProfile) validIds.add(String(foundProfile.id));
+                if (foundProfile) {
+                    validIds.add(String(foundProfile.id));
+                    if (foundProfile.user_id) validIds.add(String(foundProfile.user_id));
+                }
             }
 
             console.log('🔑 Valid IDs for User:', Array.from(validIds));

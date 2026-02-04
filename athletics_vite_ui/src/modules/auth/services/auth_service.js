@@ -5,9 +5,26 @@ import { getAccessToken, setAccessToken } from '../../../core/api/apiClient';
 class AuthService {
 
     async login(email, password) {
-        const data = await authRepository.login(email, password);
-        // data is APIResponse. authRepository handles token storage.
-        return data;
+        const response = await authRepository.login(email, password);
+
+        // Si el login fue exitoso y tenemos un token de acceso
+        if (response.success && response.data && response.data.access_token) {
+            try {
+                // Obtener el perfil completo del usuario inmediatamente
+                const profileResponse = await this.getProfile();
+                const userData = profileResponse.data || profileResponse;
+
+                if (userData) {
+                    // Guardar en localStorage para que esté disponible globalmente
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    console.log('👤 Usuario guardado en localStorage:', userData);
+                }
+            } catch (error) {
+                console.error("Error al obtener perfil tras login:", error);
+            }
+        }
+
+        return response;
     }
 
     async register(userData) {
