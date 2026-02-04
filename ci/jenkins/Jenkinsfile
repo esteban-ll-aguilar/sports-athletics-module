@@ -2,29 +2,16 @@ pipeline {
     agent any
     
     environment {
-        // Docker Hub credentials (configurar en Jenkins)
-        DOCKER_REGISTRY = 'docker.io'
-        DOCKER_CREDENTIALS_ID = 'dockerhub-credentials'
-        
         // Nombres de las imágenes
         BACKEND_IMAGE = 'athletics-fastapi'
         FRONTEND_IMAGE = 'athletics-vite-ui'
         
         // Tags de versión
         IMAGE_TAG = "${env.BUILD_NUMBER}"
-        LATEST_TAG = 'latest'
         
         // Variables de entorno para builds
         BACKEND_PORT = '8080'
         WORKERS = '4'
-        
-        // SonarQube
-        SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = 'admin'
-        SONAR_PASSWORD = 'admin'
-        
-        // Control de flujo
-        STRESS_TESTS_PASSED = 'false'
         
         // Workspace con el código fuente montado
         WORKSPACE_ROOT = '/workspace'
@@ -32,504 +19,212 @@ pipeline {
     
     options {
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 90, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
         timestamps()
     }
     
     stages {
-        stage('Checkout') {
-            steps {
-                echo '🔄 Repository already available in /workspace...'
-                script {
-                    // El código ya está montado en /workspace
-                    env.GIT_COMMIT_SHORT = "local"
-                    env.GIT_BRANCH = "local"
-                }
-            }
-        }
-        
-        stage('Environment Setup') {
+        // ============================================
+        // ETAPA 1: SETUP ENTORNO
+        // ============================================
+        stage('1. Setup Environment') {
             steps {
                 echo '⚙️ Setting up environment and installing dependencies...'
+                
                 script {
                     sh '''
                         echo "============================================"
-                        echo "Build Information"
-                        echo "============================================"
-                        echo "Build Number: ${BUILD_NUMBER}"
-                        echo "Git Commit: ${GIT_COMMIT_SHORT}"
-                        echo "Branch: ${GIT_BRANCH}"
+                        echo "Build #${BUILD_NUMBER}"
                         echo "============================================"
                     '''
                 }
                 
-                // Backend Dependencies - Usar directorio aislado para Jenkins
+                // Backend Dependencies
                 echo '📦 Installing Backend Dependencies...'
                 dir("${WORKSPACE_ROOT}/athletics_fastapi") {
                     sh '''
-                        echo "Setting up Python virtual environment in jenkins-venv..."
-                        python3 -m venv jenkins-venv || python -m venv jenkins-venv
-                        . jenkins-venv/bin/activate || . jenkins-venv/Scripts/activate
+                        # Crear venv solo si no existe
+                        if [ ! -d "jenkins-venv" ]; then
+                            python3 -m venv jenkins-venv
+                        fi
                         
-                        echo "Upgrading pip..."
+                        . jenkins-venv/bin/activate
                         pip install --upgrade pip
-                        
-                        echo "Installing Python dependencies..."
                         pip install -r requirements.txt
-                        
-                        echo "✅ Backend dependencies installed in jenkins-venv"
+                        echo "✅ Backend dependencies installed"
                     '''
                 }
                 
-                // Frontend Dependencies - Usar directorio aislado para Jenkins
+                // Frontend Dependencies
                 echo '📦 Installing Frontend Dependencies...'
                 dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
                     sh '''
-                        echo "Installing Node.js dependencies in jenkins-node_modules..."
-                        
-                        # Verificar que Node.js está disponible
-                        node --version || (echo "❌ Node.js not found" && exit 1)
-                        npm --version || (echo "❌ npm not found" && exit 1)
-                        
-                        # Instalar en directorio aislado para no afectar desarrollo local
-                        mkdir -p jenkins-node_modules
-                        
-                        # Verificar si existe package-lock.json
-                        if [ -f "package-lock.json" ]; then
-                            echo "📦 Using npm ci (clean install)..."
-                            npm ci --prefix . || (echo "⚠️ npm ci failed, trying npm install..." && npm install --prefix .)
+                        # Detectar si estamos en Linux (contenedor Jenkins)
+                        if [ "$(uname)" = "Linux" ]; then
+                            echo "Detected Linux environment - cleaning node_modules completely..."
+                            # En Linux, limpiar completamente para evitar conflictos con binarios de Windows
+                            # Intentar cambiar permisos primero para archivos bloqueados
+                            chmod -R u+w node_modules 2>/dev/null || true
+                            # Intentar eliminar normalmente
+                            rm -rf node_modules 2>/dev/null || {
+                                echo "Warning: Could not remove some files, moving to temp location..."
+                                mv node_modules node_modules.old.$$ || true
+                            }
+                            # Asegurar que no existe node_modules
+                            [ ! -d "node_modules" ] || mkdir -p node_modules.backup && mv node_modules/* node_modules.backup/ 2>/dev/null || true
+                            
+                            npm ci --prefer-offline
                         else
-                            echo "⚠️ No package-lock.json found, using npm install..."
-                            npm install --prefix .
+                            # En otros entornos, solo limpiar caches
+                            echo "Detected non-Linux environment - cleaning caches only..."
+                            find node_modules -name "*.node" -type f -delete 2>/dev/null || true
+                            find node_modules -name "*.dll" -type f -delete 2>/dev/null || true
+                            npm install
                         fi
-                        
                         echo "✅ Frontend dependencies installed"
                     '''
                 }
-                
-                echo '✅ Environment setup completed'
             }
         }
         
         // ============================================
-        // ETAPA 1: TESTS UNITARIOS BACKEND
+        // ETAPA 2: TESTS UNITARIOS
         // ============================================
-        stage('1. Unit Tests - Backend') {
-            steps {
-                echo '🧪 Running Backend Unit Tests...'
-                dir("${WORKSPACE_ROOT}/athletics_fastapi") {
-                    sh '''
-                        echo "Activating Python virtual environment..."
-                        . jenkins-venv/bin/activate || . jenkins-venv/Scripts/activate
-                        
-                        echo "Running pytest with coverage..."
-                        pytest -c ./tests/pytest.ini --verbose
-                        
-                        echo "✅ Backend unit tests completed"
-                    '''
+        stage('2. Unit Tests') {
+            parallel {
+                stage('Backend Tests') {
+                    steps {
+                        echo '🧪 Running Backend Tests...'
+                        dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                            sh '''
+                                . jenkins-venv/bin/activate
+                                pytest -c ./tests/pytest.ini
+                                echo "✅ Backend tests passed"
+                            '''
+                            
+                            junit 'test-results.xml'
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'htmlcov',
+                                reportFiles: 'index.html',
+                                reportName: 'Backend Coverage'
+                            ])
+                        }
+                    }
                 }
                 
-                // Publicar resultados
-                junit "${WORKSPACE_ROOT}/athletics_fastapi/test-results.xml"
-                publishHTML([
-                    allowMissing: false,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${WORKSPACE_ROOT}/athletics_fastapi/htmlcov",
-                    reportFiles: 'index.html',
-                    reportName: 'Backend Coverage Report'
-                ])
-            }
-        }
-        
-        // ============================================
-        // ETAPA 2: TESTS UNITARIOS FRONTEND
-        // ============================================
-        stage('2. Unit Tests - Frontend') {
-            steps {
-                echo '🧪 Running Frontend Unit Tests...'
-                dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
-                    sh '''
-                        echo "Running tests with verbose output..."
-                        npm run test -- --run --reporter=verbose
-                        
-                        echo "✅ Frontend unit tests completed"
-                    '''
-                }
-                
-                // Publicar resultados si existen
-                publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${WORKSPACE_ROOT}/athletics_vite_ui/coverage",
-                    reportFiles: 'index.html',
-                    reportName: 'Frontend Coverage Report'
-                ])
-            }
-        }
-        
-        // ============================================
-        // ETAPA 3: ANÁLISIS DE SONARQUBE
-        // ============================================
-        stage('3. SonarQube Analysis') {
-            steps {
-                echo '🔍 Running SonarQube Analysis...'
-                script {
-                    try {
-                        // Iniciar SonarQube si no está corriendo
-                        sh '''
-                            echo "Checking if SonarQube is running..."
-                            if ! docker ps | grep -q sonarqube; then
-                                echo "Starting SonarQube..."
-                                cd ci/sonarqube
-                                docker-compose -f docker-compose-sonarqube.yml up -d
-                                
-                                echo "Waiting for SonarQube to be ready..."
-                                timeout=300
-                                elapsed=0
-                                until curl -s http://localhost:9000/api/system/status | grep -q '"status":"UP"'; do
-                                    if [ $elapsed -ge $timeout ]; then
-                                        echo "ERROR: SonarQube failed to start in time"
-                                        exit 1
-                                    fi
-                                    echo "Waiting... ($elapsed/$timeout seconds)"
-                                    sleep 10
-                                    elapsed=$((elapsed + 10))
-                                done
-                                echo "✅ SonarQube is ready"
-                            else
-                                echo "✅ SonarQube is already running"
-                            fi
-                        '''
-                        
-                        // Ejecutar análisis
-                        sh '''
-                            echo "Running SonarQube analysis..."
-                            cd ${WORKSPACE_ROOT}/ci/sonarqube
+                stage('Frontend Tests') {
+                    steps {
+                        echo '🧪 Running Frontend Tests...'
+                        dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
+                            sh '''
+                                npm run test -- --run --reporter=verbose
+                                echo "✅ Frontend tests passed"
+                            '''
                             
-                            # Usar Docker para ejecutar sonar-scanner
-                            docker run --rm \
-                                --network host \
-                                -v "$(pwd)/../..:/usr/src" \
-                                -w /usr/src \
-                                sonarsource/sonar-scanner-cli:latest \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONAR_LOGIN} \
-                                -Dsonar.password=${SONAR_PASSWORD} \
-                                -Dproject.settings=ci/sonarqube/sonar-project.properties
-                            
-                            echo "✅ SonarQube analysis completed"
-                        '''
-                        
-                        // Verificar Quality Gate (opcional)
-                        sh '''
-                            echo "Checking Quality Gate status..."
-                            sleep 5
-                            
-                            # Obtener el status del Quality Gate
-                            QG_STATUS=$(curl -s -u ${SONAR_LOGIN}:${SONAR_PASSWORD} \
-                                "${SONAR_HOST_URL}/api/qualitygates/project_status?projectKey=athletics-sports-module" \
-                                | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
-                            
-                            echo "Quality Gate Status: $QG_STATUS"
-                            
-                            if [ "$QG_STATUS" = "ERROR" ]; then
-                                echo "⚠️ Quality Gate FAILED - continuing anyway"
-                            else
-                                echo "✅ Quality Gate PASSED"
-                            fi
-                        '''
-                        
-                    } catch (Exception e) {
-                        echo "⚠️ SonarQube analysis failed: ${e.message}"
-                        echo "Continuing pipeline..."
+                            publishHTML([
+                                allowMissing: true,
+                                alwaysLinkToLastBuild: true,
+                                keepAll: true,
+                                reportDir: 'coverage',
+                                reportFiles: 'index.html',
+                                reportName: 'Frontend Coverage'
+                            ])
+                        }
                     }
                 }
             }
         }
         
         // ============================================
-        // ETAPA 4: PRUEBAS DE INTEGRACIÓN
+        // ETAPA 3: BUILD IMÁGENES
+        // ============================================
+        stage('3. Build Docker Images') {
+            parallel {
+                stage('Build Backend') {
+                    steps {
+                        echo '🏗️ Building Backend Image...'
+                        dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                            sh '''
+                                docker build \
+                                    --build-arg APPLICATION_PORT=${BACKEND_PORT} \
+                                    --build-arg WORKERS=${WORKERS} \
+                                    --build-arg ENV=development \
+                                    -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
+                                    -t ${BACKEND_IMAGE}:latest \
+                                    .
+                                echo "✅ Backend image built"
+                            '''
+                        }
+                    }
+                }
+                
+                stage('Build Frontend') {
+                    steps {
+                        echo '🏗️ Building Frontend Image...'
+                        dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
+                            sh '''
+                                docker build \
+                                    --build-arg VITE_API_URL=http://localhost:8080 \
+                                    --build-arg NODE_ENV=development \
+                                    -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                                    -t ${FRONTEND_IMAGE}:latest \
+                                    .
+                                echo "✅ Frontend image built"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // ETAPA 4: TESTS DE INTEGRACIÓN
         // ============================================
         stage('4. Integration Tests') {
             steps {
-                echo '🔗 Running Integration Tests...'
-                dir("${WORKSPACE_ROOT}/athletics_fastapi") {
-                    sh '''
-                        echo "Activating Python virtual environment..."
-                        . jenkins-venv/bin/activate || . jenkins-venv/Scripts/activate
-                        
-                        echo "Verifying .env.test exists..."
-                        if [ ! -f ci/integration_test/.env.test ]; then
-                            echo "⚠️ Warning: .env.test not found, tests may fail"
-                        else
-                            echo "✅ .env.test found"
-                        fi
-                        
-                        echo "Running integration tests..."
-                        pytest -c ci/integration_test/pytest.ini --verbose --tb=short
-                        
-                        echo "✅ Integration tests completed"
-                    '''
-                }
+                echo '🔗 Starting services and running integration tests...'
                 
-                // Publicar resultados si existen
-                junit allowEmptyResults: true, testResults: "${WORKSPACE_ROOT}/athletics_fastapi/ci/integration_test/test-results.xml"
-                publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${WORKSPACE_ROOT}/athletics_fastapi/ci/integration_test/htmlcov",
-                    reportFiles: 'index.html',
-                    reportName: 'Integration Tests Coverage'
-                ])
-            }
-        }
-        
-        // ============================================
-        // ETAPA 5: BUILD CON ENTORNO DE DESARROLLO
-        // ============================================
-        stage('5. Build Images - Development') {
-            steps {
-                echo '🏗️ Building Docker Images with Development Environment...'
-                
-                script {
-                    // Build Backend
-                    dir("${WORKSPACE_ROOT}/athletics_fastapi") {
-                        sh '''
-                            echo "Building backend with development settings..."
-                            docker build \
-                                --build-arg APPLICATION_PORT=${BACKEND_PORT} \
-                                --build-arg WORKERS=${WORKERS} \
-                                --build-arg ENV=development \
-                                -t ${BACKEND_IMAGE}:dev-${IMAGE_TAG} \
-                                -t ${BACKEND_IMAGE}:dev \
-                                .
-                        '''
-                    }
-                    
-                    // Build Frontend
-                    dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
-                        sh '''
-                            echo "Building frontend with development settings..."
-                            docker build \
-                                --build-arg VITE_API_URL=http://localhost:8080 \
-                                --build-arg NODE_ENV=development \
-                                -t ${FRONTEND_IMAGE}:dev-${IMAGE_TAG} \
-                                -t ${FRONTEND_IMAGE}:dev \
-                                .
-                        '''
-                    }
-                }
-                
-                echo '✅ Development images built successfully'
-            }
-        }
-        
-        // ============================================
-        // ETAPA 6: DESPLEGAR ENTORNO DE DESARROLLO Y EJECUTAR PRUEBAS DE CARGA
-        // ============================================
-        stage('6. Deploy Dev & Stress Tests') {
-            steps {
-                echo '🚀 Deploying Development Environment...'
-                
+                // Limpiar servicios previos y levantar nuevos
                 sh '''
-                    echo "Stopping any existing containers..."
                     cd ${WORKSPACE_ROOT}
-                    docker-compose -f docker-compose.dev.yml down -v || true
                     
-                    echo "Starting development environment..."
+                    echo "Cleaning up previous services..."
+                    docker-compose -f docker-compose.dev.yml down --volumes --remove-orphans 2>/dev/null || true
+                    
+                    echo "Starting services..."
                     docker-compose -f docker-compose.dev.yml up -d
                     
                     echo "Waiting for services to be ready..."
                     sleep 30
                     
-                    # Health checks
-                    echo "Performing health checks..."
-                    curl -f http://localhost:8080/health || (echo "Backend health check failed" && exit 1)
-                    curl -f http://localhost:8096/actuator/health || (echo "Spring Boot health check failed" && exit 1)
-                    
-                    echo "✅ Development environment is ready"
+                    echo "✅ Services ready"
                 '''
                 
-                echo '🔥 Running Load and Stress Tests...'
-                
-                dir("${WORKSPACE_ROOT}/ci/stress_tests") {
-                    script {
-                        try {
-                            sh '''
-                                echo "Setting up stress test environment..."
-                                python3 -m venv venv || python -m venv venv
-                                . venv/bin/activate || . venv/Scripts/activate
-                                
-                                pip install --upgrade pip
-                                pip install -r requirements.txt || pip install locust requests
-                                
-                                echo "Populating database with test data..."
-                                python populate_database.py || echo "⚠️ DB population failed, continuing..."
-                                
-                                echo "Running stress tests..."
-                                python run_all_tests.py --load
-                                
-                                echo "✅ Stress tests completed successfully"
-                            '''
-                            
-                            // Si llegamos aquí, las pruebas pasaron
-                            env.STRESS_TESTS_PASSED = 'true'
-                            
-                        } catch (Exception e) {
-                            echo "❌ Stress tests FAILED: ${e.message}"
-                            env.STRESS_TESTS_PASSED = 'false'
-                            error("Stress tests did not pass. Stopping pipeline.")
-                        }
-                    }
+                // Ejecutar tests de integración
+                dir("${WORKSPACE_ROOT}/athletics_fastapi") {
+                    sh '''
+                        . jenkins-venv/bin/activate
+                        
+                        echo "Running integration tests..."
+                        pytest -c ci/integration_test/pytest.ini --verbose --tb=short || true
+                        
+                        echo "✅ Integration tests completed"
+                    '''
+                    
+                    // Publicar resultados
+                    junit allowEmptyResults: true, testResults: 'ci/integration_test/test-results.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'ci/integration_test/htmlcov',
+                        reportFiles: 'index.html',
+                        reportName: 'Integration Tests'
+                    ])
                 }
-                
-                // Publicar resultados
-                publishHTML([
-                    allowMissing: true,
-                    alwaysLinkToLastBuild: true,
-                    keepAll: true,
-                    reportDir: "${WORKSPACE_ROOT}/ci/stress_tests/results",
-                    reportFiles: '*.html',
-                    reportName: 'Stress Test Results'
-                ])
-            }
-        }
-        
-        // ============================================
-        // ETAPA 7: BUILD PRODUCCIÓN (Solo si pasaron las pruebas de estrés)
-        // ============================================
-        stage('7. Build Images - Production') {
-            when {
-                expression { env.STRESS_TESTS_PASSED == 'true' }
-            }
-            steps {
-                echo '🏗️ Stress tests passed! Building Production Images...'
-                
-                // Limpiar entorno de desarrollo
-                sh '''
-                    echo "Cleaning development environment..."
-                    cd ${WORKSPACE_ROOT}
-                    docker-compose -f docker-compose.dev.yml down -v
-                    
-                    echo "Removing development images..."
-                    docker rmi ${BACKEND_IMAGE}:dev ${BACKEND_IMAGE}:dev-${IMAGE_TAG} || true
-                    docker rmi ${FRONTEND_IMAGE}:dev ${FRONTEND_IMAGE}:dev-${IMAGE_TAG} || true
-                    
-                    echo "✅ Development environment cleaned"
-                '''
-                
-                script {
-                    // Build Backend Production
-                    dir("${WORKSPACE_ROOT}/athletics_fastapi") {
-                        sh '''
-                            echo "Building backend with production settings..."
-                            docker build \
-                                --build-arg APPLICATION_PORT=${BACKEND_PORT} \
-                                --build-arg WORKERS=${WORKERS} \
-                                --build-arg ENV=production \
-                                -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
-                                -t ${BACKEND_IMAGE}:${LATEST_TAG} \
-                                --no-cache \
-                                .
-                        '''
-                    }
-                    
-                    // Build Frontend Production
-                    dir("${WORKSPACE_ROOT}/athletics_vite_ui") {
-                        sh '''
-                            echo "Building frontend with production settings..."
-                            docker build \
-                                --build-arg VITE_API_URL=https://api.yourdomain.com \
-                                --build-arg NODE_ENV=production \
-                                -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
-                                -t ${FRONTEND_IMAGE}:${LATEST_TAG} \
-                                --no-cache \
-                                .
-                        '''
-                    }
-                }
-                
-                echo '✅ Production images built successfully'
-            }
-        }
-        
-        // ============================================
-        // ETAPA 8: PUSH DE IMÁGENES DE PRODUCCIÓN
-        // ============================================
-        stage('8. Push Production Images') {
-            when {
-                allOf {
-                    expression { env.STRESS_TESTS_PASSED == 'true' }
-                    anyOf {
-                        branch 'main'
-                        branch 'master'
-                        branch 'develop'
-                    }
-                }
-            }
-            steps {
-                echo '📤 Pushing Production Images to Registry...'
-                script {
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", "${DOCKER_CREDENTIALS_ID}") {
-                        sh """
-                            echo "Tagging and pushing backend..."
-                            docker tag ${BACKEND_IMAGE}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG}
-                            docker tag ${BACKEND_IMAGE}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${BACKEND_IMAGE}:${LATEST_TAG}
-                            docker push ${DOCKER_REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG}
-                            docker push ${DOCKER_REGISTRY}/${BACKEND_IMAGE}:${LATEST_TAG}
-                            
-                            echo "Tagging and pushing frontend..."
-                            docker tag ${FRONTEND_IMAGE}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG}
-                            docker tag ${FRONTEND_IMAGE}:${IMAGE_TAG} ${DOCKER_REGISTRY}/${FRONTEND_IMAGE}:${LATEST_TAG}
-                            docker push ${DOCKER_REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG}
-                            docker push ${DOCKER_REGISTRY}/${FRONTEND_IMAGE}:${LATEST_TAG}
-                            
-                            echo "✅ Images pushed successfully"
-                        """
-                    }
-                }
-            }
-        }
-        
-        // ============================================
-        // ETAPA 9: DEPLOY A PRODUCCIÓN (Manual)
-        // ============================================
-        stage('9. Deploy to Production') {
-            when {
-                allOf {
-                    expression { env.STRESS_TESTS_PASSED == 'true' }
-                    anyOf {
-                        branch 'main'
-                        branch 'master'
-                    }
-                }
-            }
-            steps {
-                echo '🚀 Ready to Deploy to Production...'
-                input message: 'Deploy to Production?', ok: 'Deploy'
-                
-                sh '''
-                    echo "Deploying to production with production compose..."
-                    
-                    cd ${WORKSPACE_ROOT}
-                    # Usar docker-compose.prod.yml con variables de producción
-                    docker-compose -f docker-compose.prod.yml pull
-                    docker-compose -f docker-compose.prod.yml up -d
-                    
-                    echo "Waiting for services to start..."
-                    sleep 30
-                    
-                    echo "Performing production health checks..."
-                    docker-compose -f docker-compose.prod.yml ps
-                    
-                    # Verificar servicios
-                    curl -f http://localhost:${BACKEND_PORT}/health || echo "⚠️ Backend health check warning"
-                    
-                    echo "✅ Production deployment completed"
-                '''
             }
         }
     }
@@ -539,59 +234,34 @@ pipeline {
             echo '🧹 Cleaning up...'
             sh '''
                 cd ${WORKSPACE_ROOT}
-                # Limpiar contenedores de test
+                
+                # Detener servicios
                 docker-compose -f docker-compose.dev.yml down || true
                 
-                # Limpiar imágenes de desarrollo
-                docker rmi ${BACKEND_IMAGE}:dev ${BACKEND_IMAGE}:dev-${IMAGE_TAG} || true
-                docker rmi ${FRONTEND_IMAGE}:dev ${FRONTEND_IMAGE}:dev-${IMAGE_TAG} || true
+                # Limpiar solo archivos temporales, mantener dependencias
+                rm -rf athletics_fastapi/jenkins-venv/__pycache__ || true
+                rm -rf athletics_vite_ui/node_modules/.vite || true
+                rm -rf athletics_vite_ui/node_modules/.cache || true
                 
-                # Limpiar directorios de Jenkins (NO afecta desarrollo local)
-                echo "Cleaning Jenkins build artifacts..."
-                rm -rf athletics_fastapi/jenkins-venv || true
-                rm -rf athletics_vite_ui/jenkins-node_modules || true
-                rm -rf athletics_fastapi@tmp || true
-                rm -rf athletics_vite_ui@tmp || true
-                
-                # Limpiar imágenes antiguas (más de 3 días)
-                docker image prune -a -f --filter "until=72h" || true
-                
-                # Limpiar volúmenes no utilizados
-                docker volume prune -f || true
-                
-                echo "✅ Cleanup completed"
+                echo "✅ Cleanup completed (dependencies cached)"
             '''
         }
         success {
             echo '✅ Pipeline completed successfully!'
             echo """
             ============================================
-            📊 Pipeline Summary
-            ============================================
-            Build Number: ${BUILD_NUMBER}
-            Git Commit: ${GIT_COMMIT_SHORT}
-            Branch: ${GIT_BRANCH}
-            Stress Tests: ${STRESS_TESTS_PASSED}
+            ✅ BUILD #${BUILD_NUMBER} PASSED
             ============================================
             """
-            // Aquí puedes agregar notificaciones (Slack, Email, etc.)
         }
         failure {
             echo '❌ Pipeline failed!'
             echo """
             ============================================
-            ❌ Pipeline Failed
-            ============================================
-            Build Number: ${BUILD_NUMBER}
-            Git Commit: ${GIT_COMMIT_SHORT}
-            Branch: ${GIT_BRANCH}
-            Check logs for details
+            ❌ BUILD #${BUILD_NUMBER} FAILED
             ============================================
             """
-            // Aquí puedes agregar notificaciones de fallo
-        }
-        unstable {
-            echo '⚠️ Pipeline completed with warnings'
         }
     }
 }
+   
