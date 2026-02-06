@@ -20,23 +20,30 @@ class DatabaseBase:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             # Inicializar engine y session factory AQUÍ, una sola vez
+            # Configuración de conexión con soporte para Azure (SSL)
+            connect_args = {
+                "server_settings": {
+                    "application_name": "athletics_fastapi",
+                    "jit": "off"  # Desactivar JIT para consultas rápidas
+                },
+                "command_timeout": 60,  # Timeout de comandos SQL
+                "timeout": 15,  # Aumentado para Azure
+            }
+
+            # Si el host es de Azure, forzar SSL
+            if "azure.com" in _SETTINGS.database_host.lower():
+                connect_args["ssl"] = "require"
+
             cls._instance._engine = create_async_engine(
                 _SETTINGS.database_url_async,
                 pool_size=_SETTINGS.database_pool_size,
                 max_overflow=_SETTINGS.database_max_overflow,
-                pool_pre_ping=True,  # Verificar conexiones antes de usarlas
+                pool_pre_ping=True,
                 pool_recycle=_SETTINGS.database_pool_recycle,
                 pool_timeout=_SETTINGS.database_pool_timeout,
-                pool_use_lifo=True,  # Reutilizar conexiones recientes (mejor cache)
-                echo=False,  # Desactivar SQL echo para reducir I/O
-                connect_args={
-                    "server_settings": {
-                        "application_name": "athletics_fastapi",
-                        "jit": "off"  # Desactivar JIT para consultas rápidas
-                    },
-                    "command_timeout": 60,  # Timeout de comandos SQL
-                    "timeout": 10,  # Timeout de conexión inicial
-                },
+                pool_use_lifo=True,
+                echo=False,
+                connect_args=connect_args,
             )
             cls._instance._session_factory = async_sessionmaker(
                 cls._instance._engine, 

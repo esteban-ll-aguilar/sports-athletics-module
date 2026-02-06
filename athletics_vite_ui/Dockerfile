@@ -6,7 +6,7 @@
 FROM node:22-alpine as builder
 
 # Argumentos de build para variables de entorno
-ARG VITE_API_URL=http://localhost:8080
+ARG VITE_API_URL=${VITE_API_URL}
 ARG NODE_ENV=production
 
 # Establecer variables de entorno en build time
@@ -47,8 +47,6 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-envsubst-on-templates.sh && \
     echo 'fi' >> /docker-entrypoint.d/40-envsubst-on-templates.sh && \
     chmod +x /docker-entrypoint.d/40-envsubst-on-templates.sh
 
-# Variables de entorno con valores por defecto
-ENV VITE_API_URL=http://localhost:8080
 
 # Exponer puerto 80
 EXPOSE 80

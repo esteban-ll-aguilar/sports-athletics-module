@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from app.utils.response_handler import ResponseHandler
 from app.utils.response_codes import ResponseCodes
+from sqlalchemy import text
 from prometheus_fastapi_instrumentator import Instrumentator
 
 import asyncio
@@ -52,25 +53,27 @@ async def lifespan(app: FastAPI):
     
     logger.info("🚀 Starting up application...")
     
-    # Inicializa base de datos
     logger.info("📊 Initializing database connection...")
-    db_engine = _db.get_engine()
     try:
+        db_engine = _db.get_engine()
         async with db_engine.begin() as conn:
+            await conn.execute(text("SELECT 1"))
             logger.info("✅ Database connection established")       
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
-        raise e
+        # En producción, no levantamos la excepción para evitar que el worker muera sin logs
+        if _SETTINGS.debug:
+            raise e
     
     # Inicializa Redis
     logger.info("📊 Initializing Redis connection...")
-    redis_client = _redis.get_client()
     try:
-        await redis_client.ping()
+        redis_client = _redis.get_client()
+        await asyncio.wait_for(redis_client.ping(), timeout=5.0)
         logger.info("✅ Redis connection established")
     except Exception as e:
         logger.error(f"❌ Redis connection failed: {e}")
-        raise e
+        # No matamos el proceso, el caché simplemente no funcionará
     
     # Verificar rotación de JWT secrets
     logger.info("🔐 Checking JWT secret rotation...")
